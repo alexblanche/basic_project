@@ -41,11 +41,10 @@ let cell_to_vector (c : cell) : vector =
 	(float_of_int (margin+size*i)+.(sizef/.2.), float_of_int (margin+size*j)+.(sizef/.2.));;
 
 (* Returns the cell that contains the vector (x,y) *)
-let vector_to_cell (v : vector) : cell =
-	let (x,y) = v in
+let vector_to_cell (x : int) (y : int) : cell =
 	if x<marginf || x>marginf+.widthf || y<marginf || y>marginf+.heightf
 		then (0,0)
-		else ((int_of_float (x-.marginf))/size, (int_of_float (y-.marginf))/size)
+		else ((x-margin)/size, ((y-margin)/size));;
 
 (* Returns the vector v scaled by factor scal *)
 let ( // ) (v : vector) (scal : float) =
@@ -93,8 +92,17 @@ let dline (a : int) (b : int) (x : int) (y : int) =
 let plot (i : int) (j : int) =
 	fill_rect (margin+size*i) (margin+size*j) size size;;
 
-(* Auxiliary function to the function f_line *)
-(* m is the pixel matrix,
+(* Traces an horizontal line between pixel (i1,j) and (i2,j) (i1 is the leftmost pixel) *)
+let horitzontal_line (i1 : int) (i2 : int) (j : int) =
+	fill_rect (margin+size*i1) (margin+size*j) ((i2-i1+1)*size) size;;
+
+(* Traces a vertical line between pixel (i,j1) and (i,j2) (j1 is the lowest pixel) *)
+let vertical_line (i : int) (j1 : int) (j2 : int) =
+	fill_rect (margin+size*i) (margin+size*j1) size ((j2-j1+1)*size);;
+
+(* Obsolete *)
+(* (* Auxiliary function to the function f_line
+	m is the pixel matrix,
 	i,j is the current position
 	k,l is the destination position *)
 let rec f_line_aux m i j k l =
@@ -150,7 +158,186 @@ let f_linebis m x y a b =
 		m.(d).(c) <- true;
 		plot c d;
 	done;
-	sync();;
+	sync();; *)
+
+(* Traces a line between pixel (i1,j1) and pixel (i2,j2)
+	through the Bresenham algorithm in the eight octants
+	+ 2 horizontals + 2 verticals *)
+let bresenham (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+	let di = i2-i1 in
+	let dj = j2 - j1 in
+	let e = ref di in
+	if di <> 0 then
+		if di > 0 then
+			if dj <> 0 then
+				if dj > 0 then (* dj > 0, di > 0, 1st quadrant *)
+					if di >= dj then (* 1st octant *)
+						let ddi = 2*di in
+						let ddj = 2*dj in
+						let j = ref j1 in
+						for i = i1 to i2 do
+							plot i !j;
+							e := !e - ddj;
+							if !e < 0 then
+								(j := !j + 1;
+								e:= !e + ddi);
+						done
+					else (* 2nd octant *)
+						()
+				else (* dj < 0, di > 0, 4th quadrant *)
+					if di >= -dj then (* 8th octant *)
+						()
+					else (* 7th octant *)
+						()
+			else (* dj = 0, di > 0, horizontal to the right *)
+				for i = i1 to i2 do
+					plot i j1
+				done
+		else (* di < 0 *)
+			if dj <> 0 then
+				if dj > 0 then (* 2nd quadrant *)
+					if -di > dj then (* 4th octant *)
+						()
+					else (* 3rd octant *)
+						()
+				else (* dj < 0, di < 0, 3rd quadrant *)
+					if di <= dj then (* 5th octant *)
+						()
+					else (* 6th octant *)
+						()
+			else (* dj = 0, di < 0, horizontal to the left *)
+				for i = i2 to i1 do
+					plot i j1
+				done
+	else (* di = 0 *)
+		if dj <> 0 then
+			if dj > 0 then (* vertical, to the top *)
+				for j = j1 to j2 do
+					plot i1 j
+				done
+			else (* vertical, to the bottom *)
+				for j = j2 to j1 do
+					plot i1 j
+				done
+		else (* i1=i2, j1=j2 *)
+			plot i1 j1;;
+
+
+(* Bresenham algorithm *)
+
+(* 1st and 8th octants *)
+let bresenham_loop_18 (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+	let di = i2 - i1 in
+	let e = ref di in (* e>0 *)
+	let ddi = 2*di in
+	let ddj = 2*(j2 - j1) in
+	(* sdj = 1 : 1st octant
+		sdj = -1 : 8th octant *)
+	let sdj = if ddj > 0 then 1 else -1 in
+	let j = ref j1 in
+	(* for i = i1 to i2-1 do
+		plot i !j;
+		e := !e - sdj*ddj;
+		if !e < 0 then
+			(j := !j + sdj;
+			e:= !e + ddi);
+	done; *)
+	let i = ref i1 in
+	(* We trace the horizontal segments in one call *)
+	let ibeg = ref i1 in
+	while !i < i2 do
+		ibeg := !i;
+		e := !e - sdj*ddj;
+		while !e>=0 || !i=i2-1 do
+			e := !e - sdj*ddj;
+			incr i
+		done;
+		horitzontal_line !ibeg !i !j;
+		j := !j + sdj;
+		e:= !e + ddi;
+		incr i
+	done;
+	plot i2 j2;;
+
+(* 4th and 5th octants *)
+let bresenham_loop_45 (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+	let di = i2 - i1 in
+	let e = ref di in (* e<0 *)
+	let ddi = 2*di in
+	let ddj = 2*(j2 - j1) in
+	(* sdj = 1 : 4th octant
+		sdj = -1 : 5th octant *)
+	let sdj = if ddj > 0 then 1 else -1 in
+	let j = ref j1 in
+	(* for i = i1 downto i2+1 do
+		plot i !j;
+		e := !e + sdj*ddj;
+		if !e >= 0 then
+			(j := !j + sdj;
+			e:= !e + ddi);
+	done; *)
+	let ibeg = ref i1 in
+	while !i > i2+1 do
+		ibeg := !i;
+		e := !e + sdj*ddj;
+		while !e<0 || !i=i2+1 do
+			e := !e + sdj*ddj;
+			decr i
+		done;
+		horitzontal_line !i !ibeg !j;
+		j := !j + sdj;
+		e:= !e + ddi;
+		decr i
+	done;
+	plot i2 j2;;
+
+(* 2nd and 3rd octants *)
+let bresenham_loop_23 (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+	let dj = j2 - j1 in
+	let e = ref dj in (* e>0 *)
+	let ddi = 2*(i2-i1) in
+	let ddj = 2*dj in
+	(* sdi = 1 : 2nd octant
+		sdi = -1 : 3rd octant *)
+	let sdi = if ddi > 0 then 1 else -1 in
+	let i = ref i1 in
+	let j = ref j1 in
+	(* We trace the vertical segments in one call *)
+	let jbeg = ref j1 in
+	while !j < j2 do
+		jbeg := !j;
+		e := !e - sdi*ddi;
+		while !e>=0 || !j=j2-1 do
+			e := !e - sdi*ddi;
+			incr j
+		done;
+		horitzontal_line !i !jbeg !j;
+		i := !i + sdi;
+		e:= !e + ddj;
+		incr j
+	done;
+	plot i2 j2;;
+
+let bresenham (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+	let di = i2 - i1 in
+	let dj = j2 - j1 in
+	match (di=0),(di>0),(dj=0),(dj>0),(di>=dj),(di>=-dj),(-di>dj),(di<=dj) with
+		| true,_,true,_,_,_,_,_ -> plot i1 j1 (* single point *)
+		| true,_,_,true,_,_,_,_ -> vertical_line i1 j1 j2 (* vertical ascending *)
+		| true,_,_,_,_,_,_,_ -> vertical_line i1 j2 j1 (* vertical descending *)
+		| _,true,true,_,_,_,_,_ -> horitzontal_line i1 i2 j (* horizontal right *)
+		| _,true,_,true,true,_,_,_ -> bresenham_loop_18 i1 j1 i2 j2 (* 1st octant *)
+		| _,true,_,true,_,_,_,_ -> (* 2nd octant *)
+		| _,true,_,_,_,true,_,_ -> bresenham_loop_18 i1 j1 i2 j2 (* 8th octant *)
+		| _,true,_,_,_,_,_,_ -> (* 7th octant *)
+		| _,_,true,_,_,_,_,_ -> horitzontal_line i2 i1 j (* horitzontal left *)
+		| _,_,_,true,_,_,true,_ -> bresenham_loop_45 i1 j1 i2 j2 (* 4th octant *)
+		| _,_,_,true,_,_,_,_ -> (* 3rd octant *)
+		| _,_,_,_,_,_,_,true -> bresenham_loop_45 i1 j1 i2 j2 (* 5th octant *)
+		| _ -> (* 6th octant *);;
+
+
+
 
 (** Graphical interface **)
 
@@ -213,7 +400,7 @@ let interface (grid : bool) : bool array array =
 					set_color black));
 			
 			(* display of the point on which we clicked *)
-			let (i,j) = vector_to_cell (float_of_int mouse_x, float_of_int mouse_y) in
+			let (i,j) = vector_to_cell mouse_x mouse_y in
 			plot i j;
 			sync();
 			m.(j).(i) <- true;
@@ -223,7 +410,7 @@ let interface (grid : bool) : bool array array =
 			match !a_pressed with
 				| None ->
 					begin
-						let (i,j) = vector_to_cell (float_of_int mouse_x, float_of_int mouse_y) in
+						let (i,j) = vector_to_cell mouse_x mouse_y in
 						set_color red;
 						plot i j;
 						sync();
@@ -232,7 +419,7 @@ let interface (grid : bool) : bool array array =
 					end
 				| Some (i,j) ->
 					begin
-						let k,l = vector_to_cell (float_of_int mouse_x, float_of_int mouse_y) in
+						let k,l = vector_to_cell mouse_x mouse_y in
 						if k<>i || j<>l
 							then
 								(f_linebis m i j k l;
