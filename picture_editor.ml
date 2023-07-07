@@ -325,10 +325,24 @@ let print_mat (m : bool array array) : unit =
 	config false;
 	set_color black;
 	cache();
+	let ibeg = ref 0 in
+	let i = ref 0 in
 	for j=0 to 63 do
-		for i=0 to 127 do
-			if m.(j).(i) then
-				plot m i j;
+		i := 0;
+		ibeg := 0;
+		while !i<>128 && (not m.(j).(!i)) do
+			incr i
+		done;
+		while !i < 128 do
+			while !i<>128 && (not m.(j).(!i))  do
+				incr i
+			done;
+			ibeg := !i;
+			while !i<>128 && m.(j).(!i) do
+				incr i
+			done;
+			fill_rect (margin+size * !ibeg) (margin+size*j) ((!i - !ibeg)*size) size;
+			incr i
 		done;
 	done;
 	sync();
