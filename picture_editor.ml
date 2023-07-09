@@ -261,7 +261,7 @@ let print_mat (m : bool array array) (grid : bool) (bg : unit -> unit) : unit =
 	print_bg grid bg;
 	let ibeg = ref 0 in
 	let i = ref 0 in
-	for j=0 to 63 do
+	for j = 0 to 63 do
 		i := 0;
 		ibeg := 0;
 		while !i<>128 && (not m.(j).(!i)) do
