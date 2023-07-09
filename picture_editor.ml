@@ -50,7 +50,7 @@ let dline (a : int) (b : int) (x : int) (y : int) =
 	lineto x y;;
 
 (* Fills the pixel x,y of the screen with the current color *)
-let plot (m : bool array array) (i : int) (j : int) =
+let ploton (m : bool array array) (i : int) (j : int) =
 	fill_rect (margin+size*i) (margin+size*j) size size;
 	m.(j).(i) <- true;;
 
@@ -95,7 +95,7 @@ let bresenham_loop_18 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j
 	let sdj = if ddj > 0 then 1 else -1 in
 	let j = ref j1 in
 	(* for i = i1 to i2-1 do
-		plot i !j;
+		ploton i !j;
 		e := !e - sdj*ddj;
 		if !e < 0 then
 			(j := !j + sdj;
@@ -116,7 +116,7 @@ let bresenham_loop_18 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j
 		e:= !e + ddi;
 		incr i
 	done;
-	plot m i2 j2;;
+	ploton m i2 j2;;
 
 (* 4th and 5th octants *)
 let bresenham_loop_45 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
@@ -129,7 +129,7 @@ let bresenham_loop_45 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j
 	let sdj = if ddj > 0 then 1 else -1 in
 	let j = ref j1 in
 	(* for i = i1 downto i2+1 do
-		plot i !j;
+		ploton i !j;
 		e := !e + sdj*ddj;
 		if !e >= 0 then
 			(j := !j + sdj;
@@ -149,7 +149,7 @@ let bresenham_loop_45 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j
 		e:= !e + ddi;
 		decr i
 	done;
-	plot m i2 j2;;
+	ploton m i2 j2;;
 
 (* 2nd and 3rd octants *)
 let bresenham_loop_23 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
@@ -175,7 +175,7 @@ let bresenham_loop_23 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j
 		e:= !e + ddj;
 		incr j
 	done;
-	plot m i2 j2;;
+	ploton m i2 j2;;
 
 (* 6th and 7th octants *)
 let bresenham_loop_67 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
@@ -201,13 +201,13 @@ let bresenham_loop_67 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j
 		e:= !e + ddj;
 		decr j
 	done;
-	plot m i2 j2;;
+	ploton m i2 j2;;
 
 let bresenham (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
 	let di = i2 - i1 in
 	let dj = j2 - j1 in
 	(match (di=0),(di>0),(dj=0),(dj>0),(di>=dj),(di>=(-dj)),(-di>dj),(di<=dj) with
-		| true,_,true,_,_,_,_,_ -> plot m i1 j1 (* single point *)
+		| true,_,true,_,_,_,_,_ -> ploton m i1 j1 (* single point *)
 		| true,_,_,true,_,_,_,_ -> vertical_line m i1 j1 j2 (* vertical ascending *)
 		| true,_,_,_,_,_,_,_ -> vertical_line m i1 j2 j1 (* vertical descending *)
 		| _,true,true,_,_,_,_,_ -> horitzontal_line m i1 i2 j1 (* horizontal right *)
@@ -225,15 +225,17 @@ let bresenham (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int)
 (** Graphical interface **)
 
 (* Opens and configure the graphical window *)
-let config (grid : bool) : unit =
+(* grid = true the display the grid in the background
+	 bg: function that prints additional things in the background *)
+let config (grid : bool) (bg : unit -> unit) : unit =
 	open_graph "";
 	resize_window (2*margin + width) (2*margin + height);
+	set_window_title "Basic Project Inferface";
 	cache ();
 	
 	(* frame *)
 	set_color black;
 	rect margin margin width height;
-	sync();
 	
 	(* grid *)
 	if grid
@@ -245,15 +247,23 @@ let config (grid : bool) : unit =
 			for j=1 to 63 do
 				dline margin (margin+size*j) (margin+width) (margin+size*j)
 			done;
-			sync();
-			set_color black);;
+			set_color black);
+	
+	(* Additional background *)
+	bg ();
 
+	sync();;
 
-
+(* Interface that lets the user add pixels, lines, delete pixels *)
 (* Returns a 128*64 matrix of pixels *)
 let interface (grid : bool) : bool array array =
 	
-	config grid;
+	let instr () =
+		(moveto 0 0;
+		draw_string "[Left-mouse] to add pixels, [d] to delete pixels, [a] on two pixels to draw a line between them, [Esc] to quit")
+	in
+
+	config grid instr;
 	let m = Array.make_matrix 64 128 false in	
 	let exit = ref false in
 	let a_pressed = ref None in
@@ -266,27 +276,24 @@ let interface (grid : bool) : bool array array =
 		exit := key = '\027';
 		
 		if button then
-		begin
-			let {mouse_x; mouse_y; button; keypressed; key} =
-				wait_next_event [Button_up; Poll]
-			in
-
-			(match !a_pressed with
-				| None -> ()
-				| Some (i,j) ->
-					(a_pressed := None;
-					plotoff m grid i j;
-					sync ()));
-			
-			(* display of the point on which we clicked *)
-			try
-				let (i,j) = coord_to_cell mouse_x mouse_y in
-				plot m i j;
-				sync()
-			with
-				| Out_of_screen -> ();
-			
-		end;
+			begin
+				(* cancellation of the line-click *)
+				(match !a_pressed with
+					| None -> ()
+					| Some (i,j) ->
+						(a_pressed := None;
+						plotoff m grid i j;
+						sync ()));
+				
+				(* display of the point on which we clicked *)
+				try
+					let (i,j) = coord_to_cell mouse_x mouse_y in
+					ploton m i j;
+					sync()
+				with
+					| Out_of_screen -> ();
+				
+			end;
 		
 		if keypressed then
 			if key = 'a' then
@@ -295,7 +302,7 @@ let interface (grid : bool) : bool array array =
 						(try
 							let (i,j) = coord_to_cell mouse_x mouse_y in
 							set_color red;
-							plot m i j;
+							ploton m i j;
 							sync ();
 							set_color black;
 							a_pressed := Some (i,j)
@@ -322,7 +329,7 @@ let interface (grid : bool) : bool array array =
 	m;;
 
 let print_mat (m : bool array array) : unit =
-	config false;
+	config false (fun () -> ());
 	set_color black;
 	cache();
 	let ibeg = ref 0 in
@@ -348,7 +355,4 @@ let print_mat (m : bool array array) : unit =
 	sync();
 	let _ = wait_next_event [Button_down; Key_pressed] in
 	close_graph ();;
-
-(* implement
-	- Floyd-Steinberg algorithm (to convert to actual monochrome) *)
 
