@@ -24,7 +24,7 @@ exception Out_of_screen
 
 (* Returns the cell that contains the vector (x,y) *)
 let coord_to_cell (x : int) (y : int) : cell =
-	if x<margin || x>margin+width || y<margin || y>margin+height
+	if x<=margin || x>=margin+width || y<=margin || y>=margin+height
 		then raise Out_of_screen
 		else ((x-margin)/size, ((y-margin)/size));;
 
@@ -224,15 +224,8 @@ let bresenham (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int)
 
 (** Graphical interface **)
 
-(* Opens and configure the graphical window *)
-(* grid = true the display the grid in the background
-	 bg: function that prints additional things in the background *)
-let config (grid : bool) (bg : unit -> unit) : unit =
-	open_graph "";
-	resize_window (2*margin + width) (2*margin + height);
-	set_window_title "Basic Project Inferface";
-	cache ();
-	
+(* Prints the background and the grid *)
+let print_bg (grid : bool) (bg : unit -> unit) : unit =
 	(* frame *)
 	set_color black;
 	rect margin margin width height;
@@ -250,88 +243,22 @@ let config (grid : bool) (bg : unit -> unit) : unit =
 			set_color black);
 	
 	(* Additional background *)
-	bg ();
+	bg ();;
 
+(* Opens and configure the graphical window *)
+(* grid = true the display the grid in the background
+	 bg: function that prints additional things in the background *)
+let config (grid : bool) (bg : unit -> unit) : unit =
+	open_graph "";
+	resize_window (2*margin + width) (2*margin + height);
+	set_window_title "Basic Project Inferface";
+	cache ();
+	print_bg grid bg;
 	sync();;
 
-(* Interface that lets the user add pixels, lines, delete pixels *)
-(* Returns a 128*64 matrix of pixels *)
-let interface (grid : bool) : bool array array =
-	
-	let instr () =
-		(moveto 0 0;
-		draw_string "[Left-mouse] to add pixels, [d] to delete pixels, [a] on two pixels to draw a line between them, [Esc] to quit")
-	in
-
-	config grid instr;
-	let m = Array.make_matrix 64 128 false in	
-	let exit = ref false in
-	let a_pressed = ref None in
-	
-	while not !exit do
-	
-		let {mouse_x; mouse_y; button; keypressed; key} =
-			wait_next_event [Button_down; Key_pressed]
-		in
-		exit := key = '\027';
-		
-		if button then
-			begin
-				(* cancellation of the line-click *)
-				(match !a_pressed with
-					| None -> ()
-					| Some (i,j) ->
-						(a_pressed := None;
-						plotoff m grid i j;
-						sync ()));
-				
-				(* display of the point on which we clicked *)
-				try
-					let (i,j) = coord_to_cell mouse_x mouse_y in
-					ploton m i j;
-					sync()
-				with
-					| Out_of_screen -> ();
-				
-			end;
-		
-		if keypressed then
-			if key = 'a' then
-				match !a_pressed with
-					| None ->
-						(try
-							let (i,j) = coord_to_cell mouse_x mouse_y in
-							set_color red;
-							ploton m i j;
-							sync ();
-							set_color black;
-							a_pressed := Some (i,j)
-						with
-							| Out_of_screen -> ())
-					| Some (i,j) ->
-							try
-								let (k,l) = coord_to_cell mouse_x mouse_y in
-								if k<>i || j<>l	then
-									(bresenham m i j k l;
-									sync();
-									a_pressed := None)
-							with
-								| Out_of_screen -> ()
-			else if key = 'd' then
-				try
-					let (i,j) = coord_to_cell mouse_x mouse_y in
-					plotoff m grid i j;
-					sync ()
-				with
-					| Out_of_screen -> ()
-	done;
-	close_graph ();
-	m;;
-
-let print_mat (m : bool array array) : unit =
-	config false (fun () -> ());
-	set_color black;
-	cache();
+let print_mat (m : bool array array) (grid : bool) (bg : unit -> unit) : unit =
+	clear_graph ();
+	print_bg grid bg;
 	let ibeg = ref 0 in
 	let i = ref 0 in
 	for j=0 to 63 do
@@ -351,8 +278,88 @@ let print_mat (m : bool array array) : unit =
 			fill_rect (margin+size * !ibeg) (margin+size*j) ((!i - !ibeg)*size) size;
 			incr i
 		done;
-	done;
+	done;;
+	
+let view_matrix (m : bool array array) =
+	config false (fun () -> ());
+	set_color black;
+	cache();
+	print_mat m false (fun () -> ());
 	sync();
 	let _ = wait_next_event [Button_down; Key_pressed] in
 	close_graph ();;
 
+(* Interface that lets the user add pixels, lines, delete pixels *)
+(* Returns a 128*64 matrix of pixels *)
+let interface (grid : bool) : bool array array =
+	
+	let instr () =
+		(moveto 0 0;
+		draw_string "[Left-mouse] to add pixels, hold to draw a line, [d] to delete pixels, [Esc] to quit")
+	in
+
+	config grid instr;
+	let m = Array.make_matrix 64 128 false in	
+	let exit = ref false in
+	let click = ref false in
+	let i0 = ref 0 in
+	let j0 = ref 0 in
+	let ifi = ref 0 in
+	let jfi = ref 0 in
+	let mblank = Array.make_matrix 64 128 false in
+	
+	while not !exit do
+	
+		let {mouse_x; mouse_y; button; keypressed; key} =
+			wait_next_event [Button_down; Key_pressed]
+		in
+		exit := key = '\027';
+		
+		if button then
+			begin				
+				try
+					begin
+						(* display of the point on which we clicked *)
+						let (i,j) = coord_to_cell mouse_x mouse_y in
+						ploton m i j;
+						sync ();
+						i0 := i;
+						j0 := j;
+						(* loop that displays the previsualized line *)
+						click := true;
+						while !click do
+							let {mouse_x; mouse_y; button; keypressed; key} =
+								wait_next_event [Button_down; Poll]
+							in
+							click := button;
+							(try
+								let (i,j) = coord_to_cell mouse_x mouse_y in
+								ifi := i;
+								jfi := j
+							with
+								| Out_of_screen -> ());
+							print_mat m grid instr;
+							bresenham mblank !i0 !j0 !ifi !jfi;
+							sync ()
+						done;
+						(* display of the final line *)
+						print_mat m grid instr;
+						bresenham m !i0 !j0 !ifi !jfi;
+						sync ();
+						i0 := 0; j0 := 0;
+						ifi := 0; jfi := 0;
+					end
+				with
+					| Out_of_screen -> ()
+			end;
+		
+		if keypressed && key = 'd' then
+			try
+				let (i,j) = coord_to_cell mouse_x mouse_y in
+				plotoff m grid i j;
+				sync ()
+			with
+				| Out_of_screen -> ()
+	done;
+	close_graph ();
+	m;;
