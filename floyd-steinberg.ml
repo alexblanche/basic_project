@@ -11,11 +11,10 @@ let closest_color (r : int) (g : int) (b : int) : bool =
 (* Returns an image of size 64*128 with averaged colors *)
 let reduce_img (img : image_mat) : image_mat =
   let height = Array.length img in
+  let width = Array.length img.(0) in
   let reduced_img = Array.make_matrix 64 128 (0,0,0) in
   let size =
-    if height < 2*width
-      then height/64
-      else width/128
+    min (height/64) (width/128)
   in
   let rt = ref 0 in
   let gt = ref 0 in
@@ -32,7 +31,6 @@ let reduce_img (img : image_mat) : image_mat =
           rt := !rt + r;
           gt := !gt + g;
           bt := !bt + b;
-          print_endline ("i = "^string_of_int(i)^", j = "^string_of_int(j)^", x = "^string_of_int(x)^", y = "^string_of_int(y));
         done
       done;
       let rm = !rt / (size*size) in
@@ -52,10 +50,10 @@ let reduce_img (img : image_mat) : image_mat =
     for i = 0 to 126 do
 ;; *)
 
-let test_reduce (img : image_mat) =
+(* let test_reduce (img : image_mat) =
   view_image img;
   let rimg = reduce_img img in
-  view_image rimg;;
+  view_image rimg;; *)
 
 (* Displays the original image and its monochromatic conversion side by side *)
 let view_side_by_side (img : image_mat) (mono : bool array array) =
@@ -104,3 +102,4 @@ let view_side_by_side (img : image_mat) (mono : bool array array) =
   synchronize();
   let _ = read_key() in
   close_graph();;
+(* Untested *)
