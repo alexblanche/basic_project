@@ -1,4 +1,4 @@
-(* Creation and manipulation of 128*64 monochrome pictures  *)
+(* Creation and manipulation of 64*128 monochrome pictures  *)
 
 #use "topfind"
 #require "graphics"
@@ -256,6 +256,8 @@ let config (grid : bool) (bg : unit -> unit) : unit =
 	print_bg grid bg;
 	sync();;
 
+(* Displays the matrix m on the screen with the grid (if grid = true) and the background bg *)
+(* Does not open a window, nor refresh it *)
 let print_mat (m : bool array array) (grid : bool) (bg : unit -> unit) : unit =
 	clear_graph ();
 	print_bg grid bg;
@@ -280,6 +282,7 @@ let print_mat (m : bool array array) (grid : bool) (bg : unit -> unit) : unit =
 		done;
 	done;;
 	
+(* Opens a new graphic window and displays the matrix m *)
 let view_matrix (m : bool array array) =
 	config false (fun () -> ());
 	set_color black;
@@ -290,7 +293,7 @@ let view_matrix (m : bool array array) =
 	close_graph ();;
 
 (* Interface that lets the user add pixels, lines, delete pixels *)
-(* Returns a 128*64 matrix of pixels *)
+(* Returns a 64*128 matrix of pixels *)
 let interface (grid : bool) : bool array array =
 	
 	let instr () =

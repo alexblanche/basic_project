@@ -12,7 +12,7 @@ type dword = int;;
 
 (* Types for images *)
 type pixel = int * int * int;;
-type image = pixel array array;;
+type image_mat = pixel array array;;
 
 (** Reading functions **)
 
@@ -23,7 +23,7 @@ let read_dword channel =
   let b = input_byte channel in
   let c = input_byte channel in
   let d = input_byte channel in
-  a + (256*b) + (256*256*c) + (256*256*256*d);;
+  a + 256*(b + 256*(c + 256*d));;
 
 let read_word channel =
   let a = input_byte channel in
@@ -61,14 +61,14 @@ let skip_info_header channel : int * int =
   Returns an image (pixel matrix) of height lines and width columns.
   Each cell contains a tuple (r,g,b). *)
 
-(* Multiple of 4 greater of equal to w *)  
+(* Offset to reach the next multiple of 4 *)  
 let offset w =
   let r = (3*w) mod 4 in
   if r = 0
     then 0
     else 4-r;;
 
-let read_pixels (width : int) (height : int) (channel : in_channel) : image =
+let read_pixels (width : int) (height : int) (channel : in_channel) : image_mat =
   let offs = offset width in
   let m = Array.make_matrix height width (0,0,0) in
   for j = 0 to height-1 do
@@ -85,7 +85,7 @@ let read_pixels (width : int) (height : int) (channel : in_channel) : image =
   m;;
 
 (* Reads a BMP picture *)
-let read_bmp (filename : string) : image =
+let read_bmp (filename : string) : image_mat =
   let channel = open_in_bin filename in
   let _ = skip_file_header channel in
   let (width, height) = skip_info_header channel in
@@ -96,7 +96,7 @@ let read_bmp (filename : string) : image =
 (** Display **)
 
 (* Displays the image on the screen as a picture *)
-let view_image (m : image) : unit =
+let view_image (m : image_mat) : unit =
   let height = Array.length m
   and width = Array.length m.(0) in
   let margin = 40 in
@@ -109,8 +109,8 @@ let view_image (m : image) : unit =
   for j = 0 to height-1 do
     for i = 0 to width-1 do
       let (r, g, b) = m.(j).(i) in
-        set_color (rgb r g b);
-        plot (i + halfmargin) (j + halfmargin)
+      set_color (rgb r g b);
+      plot (i + halfmargin) (j + halfmargin)
     done
   done;
   synchronize();
