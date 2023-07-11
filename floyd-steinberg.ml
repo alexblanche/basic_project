@@ -55,6 +55,7 @@ let reduce_img (img : image_mat) : image_mat =
   let rimg = reduce_img img in
   view_image rimg;; *)
 
+(* TO BE MOVED IN picture_editor.ml AFTER TESTING *)
 (* Displays the original image and its monochromatic conversion side by side *)
 let view_side_by_side (img : image_mat) (mono : bool array array) =
   let height = Array.length img
