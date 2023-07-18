@@ -73,7 +73,7 @@ let view_side_by_side (img : image_mat) (mono : bool array array) =
       set_color (rgb r g b);
       plot (i + halfmargin) (j + halfmargin)
     done
-  done;
+  done; 
 
   set_color black;
   let size = height/64 in
