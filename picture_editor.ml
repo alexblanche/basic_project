@@ -319,7 +319,7 @@ let interface (grid : bool) : bool array array =
 		exit := key = '\027';
 		
 		if button then
-			begin				
+			begin
 				try
 					begin
 						(* display of the point on which we clicked *)
