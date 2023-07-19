@@ -100,58 +100,65 @@ let error_propagation (img : image_mat) (i : int) (j : int) (err_r : int) (err_g
   that approximates the image rimg through the Floyd-Steinberg algorithm *)
 (* We assume that rimg is a reduced image of size 64*128 *)
 let floyd_steinberg (rimg : image_mat) : bool array array =
+  (* Creation of a copy of rimg, that we will modify in place, so that the original rimg is untouched *)
+  let img = Array.make_matrix 64 128 black in
+  for i = 0 to 127 do
+    for j = 0 to 63 do
+      img.(j).(i) <- rimg.(j).(i)
+    done
+  done;
   let mono = Array.make_matrix 64 128 false in
   (* Treatment of the image, except the bottom line *)
   for j = 63 downto 1 do
     (* Leftmost line *)
-    let (r,g,b) = reverse_rgb (rimg.(j).(0)) in
+    let (r,g,b) = reverse_rgb (img.(j).(0)) in
     let cc = closest_color r g b in
     mono.(j).(0) <- cc;
     let c = (if cc then 0 else 255) in
     let err_r = r - c in
     let err_g = g - c in
     let err_b = b - c in
-    error_propagation rimg 1 j err_r err_g err_b 7;
-    error_propagation rimg 0 (j-1) err_r err_g err_b 5;
-    error_propagation rimg 1 (j-1) err_r err_g err_b 1;
+    error_propagation img 1 j err_r err_g err_b 7;
+    error_propagation img 0 (j-1) err_r err_g err_b 5;
+    error_propagation img 1 (j-1) err_r err_g err_b 1;
     for i = 1 to 126 do
       (* Interior of the image *)
-      let (r,g,b) = reverse_rgb (rimg.(j).(i)) in
+      let (r,g,b) = reverse_rgb (img.(j).(i)) in
       let cc = closest_color r g b in
       mono.(j).(i) <- cc;
       let c = (if cc then 0 else 255) in
       let err_r = r - c in
       let err_g = g - c in
       let err_b = b - c in
-      error_propagation rimg (i+1) j err_r err_g err_b 7;
-      error_propagation rimg (i-1) (j-1) err_r err_g err_b 3;
-      error_propagation rimg i (j-1) err_r err_g err_b 5;
-      error_propagation rimg (i+1) (j-1) err_r err_g err_b 1
+      error_propagation img (i+1) j err_r err_g err_b 7;
+      error_propagation img (i-1) (j-1) err_r err_g err_b 3;
+      error_propagation img i (j-1) err_r err_g err_b 5;
+      error_propagation img (i+1) (j-1) err_r err_g err_b 1
     done;
     (* Rightmost line *)
-    let (r,g,b) = reverse_rgb (rimg.(j).(127)) in
+    let (r,g,b) = reverse_rgb (img.(j).(127)) in
     let cc = closest_color r g b in
     mono.(j).(127) <- cc;
     let c = (if cc then 0 else 255) in
     let err_r = r - c in
     let err_g = g - c in
     let err_b = b - c in
-    error_propagation rimg 126 (j-1) err_r err_g err_b 3;
-    error_propagation rimg 127 (j-1) err_r err_g err_b 5
+    error_propagation img 126 (j-1) err_r err_g err_b 3;
+    error_propagation img 127 (j-1) err_r err_g err_b 5
   done;
   (* Treatment of the bottom line *)
   for i = 0 to 126 do
-    let (r,g,b) = reverse_rgb (rimg.(0).(i)) in
+    let (r,g,b) = reverse_rgb (img.(0).(i)) in
     let cc = closest_color r g b in
     mono.(0).(i) <- cc;
     let c = (if cc then 0 else 255) in
     let err_r = r - c in
     let err_g = g - c in
     let err_b = b - c in
-    error_propagation rimg (i+1) 0 err_r err_g err_b 7
+    error_propagation img (i+1) 0 err_r err_g err_b 7
   done;
   (* Bottom-right pixel *)
-  let (r,g,b) = reverse_rgb (rimg.(0).(127)) in
+  let (r,g,b) = reverse_rgb (img.(0).(127)) in
   mono.(0).(127) <- closest_color r g b;
   mono;;
 
@@ -207,19 +214,22 @@ let view_side_by_side (img : image_mat) =
     clear_graph ();
     bg ();
     draw_image pict_img margin margin;
-    set_color black;
-    rect (2*margin + width) margin (128*size + 1) (64*size + 1);
-    (if !fs_mode
-      then draw_image pict_mono_fs (2*margin + width + 1) (margin + 1)
-      else
-        let pict_mono_th = make_image (mono_to_image_mat !mono_th size) in
-        draw_image pict_mono_th (2*margin + width + 1) (margin + 1));
+    (* Red frame around the converted part of the original image *)
     set_color red;
     (if width < height*2
       then (* Ratio < 2:1 (portrait, 16/9...) *)
         rect margin (margin + height - width/2) width (width/2)
       else (* Ratio >= 2:1 (flat landscape) *)
         rect margin margin (2*height) height);
+    (* Black frame around the monochromatic image *)
+    set_color black;
+    rect (2*margin + width) margin (128*size + 1) (64*size + 1);
+    (* Display of the monochromatic image *)
+    (if !fs_mode
+      then draw_image pict_mono_fs (2*margin + width + 1) (margin + 1)
+      else
+        let pict_mono_th = make_image (mono_to_image_mat !mono_th size) in
+        draw_image pict_mono_th (2*margin + width + 1) (margin + 1));
     synchronize ();
 
     let {mouse_x; mouse_y; button; keypressed; key} =
@@ -231,10 +241,10 @@ let view_side_by_side (img : image_mat) =
         fs_mode := not !fs_mode
       else if not !fs_mode then
         if key = '+' && !thresh <> 1. then
-          (thresh := min 1. (!thresh +. 0.1);
+          (thresh := min 1. (!thresh +. 0.05);
           mono_th := img_to_mono_threshold rimg !thresh)
         else if key = '-' && !thresh <> 0. then
-          (thresh := max 0. (!thresh -. 0.1);
+          (thresh := max 0. (!thresh -. 0.05);
           mono_th := img_to_mono_threshold rimg !thresh)
   done;
   close_graph();
