@@ -10,9 +10,8 @@ open Graphics;;
 type word  = int;;
 type dword = int;;
 
-(* Types for images *)
-type pixel = int * int * int;;
-type image_mat = pixel array array;;
+(* Types for color matrices *)
+type image_mat = color array array;;
 
 (** Reading functions **)
 
@@ -61,24 +60,24 @@ let skip_info_header channel : int * int =
   Returns an image (pixel matrix) of height lines and width columns.
   Each cell contains a tuple (r,g,b). *)
 
-(* Offset to reach the next multiple of 4 *)  
-let offset w =
+(* Padding to reach the next multiple of 4 *)  
+let padd w =
   let r = (3*w) mod 4 in
   if r = 0
     then 0
     else 4-r;;
 
 let read_pixels (width : int) (height : int) (channel : in_channel) : image_mat =
-  let offs = offset width in
-  let m = Array.make_matrix height width (0,0,0) in
+  let p = padd width in
+  let m = Array.make_matrix height width black in
   for j = 0 to height-1 do
     for i = 0 to width-1 do
       let b = input_byte channel in
       let g = input_byte channel in
       let r = input_byte channel in
-      m.(j).(i) <- (r,g,b)
+      m.(height-j-1).(i) <- rgb r g b
     done;
-    for i = 1 to offs do
+    for i = 1 to p do
       let _ = input_byte channel in ()
     done
   done;
@@ -100,18 +99,12 @@ let view_image (m : image_mat) : unit =
   let height = Array.length m
   and width = Array.length m.(0) in
   let margin = 40 in
-  let halfmargin = margin/2 in
   
   open_graph "";
-  resize_window (margin + width) (margin + height);
+  let pict_m = make_image m in
+  resize_window (2*margin + width) (2*margin + height);
   set_window_title "Image viewer";
   auto_synchronize false;
-  for j = 0 to height-1 do
-    for i = 0 to width-1 do
-      let (r, g, b) = m.(j).(i) in
-      set_color (rgb r g b);
-      plot (i + halfmargin) (j + halfmargin)
-    done
-  done;
+  draw_image pict_m margin margin;
   synchronize();
   let _ = read_key() in close_graph();;
