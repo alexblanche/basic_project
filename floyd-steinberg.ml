@@ -43,30 +43,42 @@ let reduce_img (img : image_mat) (target_height : int) (target_width : int) : im
   let width = Array.length img.(0) in
   let reduced_img = Array.make_matrix target_height target_width black in
   let size =
-    min (height/target_height) (width/target_width)
+    min (float_of_int(height)/.float_of_int(target_height)) (float_of_int(width)/.float_of_int(target_width))
   in
   let rt = ref 0 in
   let gt = ref 0 in
   let bt = ref 0 in
+  (* The bounds of the blocks are computed with floats, to circumvent the rounding *)
+  let xb = ref 0. in
+  let yb = ref 0. in
+  let cnt = ref 0 in (* Counter of the size of each block *)
+
   (* Computation of a three-color identical image of size 64*128 *)
-  for j = 63 downto 0 do
-    for i = 0 to 127 do
+  for j = 0 to target_height-1 do
+    for i = 0 to target_width-1 do
       rt := 0;
       gt := 0;
       bt := 0;
-      for x = size*i to size*(i+1)-1 do
-        for y = size*j to size*(j+1)-1 do
+      cnt := 0;
+      for x = int_of_float !xb to int_of_float (!xb +. size)-1 do
+        for y = int_of_float !yb to int_of_float (!yb +. size)-1 do
           let (r,g,b) = reverse_rgb (img.(y).(x)) in
           rt := !rt + r;
           gt := !gt + g;
           bt := !bt + b;
+          incr cnt
         done
       done;
-      let rm = !rt / (size*size) in
-      let gm = !gt / (size*size) in
-      let bm = !bt / (size*size) in
-      reduced_img.(j).(i) <- rgb rm gm bm
-    done
+      (* The number of cells in each block is approx. size*size, but it depends on roundings,
+        hence the use of a counter *)
+      let rm = !rt / !cnt in 
+      let gm = !gt / !cnt in
+      let bm = !bt / !cnt in
+      reduced_img.(j).(i) <- rgb rm gm bm;
+      xb := !xb +. size
+    done;
+    xb := 0.;
+    yb := !yb +. size
   done;
   reduced_img;;
 
@@ -148,10 +160,11 @@ let view_side_by_side (img : image_mat) (mono : bool array array) =
   and width = Array.length img.(0) in
   let margin = 20 in
   let size = min (height/64) (width/128) in
-  let img_mono = mono_to_image_mat mono size in
+  let size_conv = max size 5 in
+  let img_mono = mono_to_image_mat mono size_conv in
   
   open_graph "";
-  resize_window (3*margin + width + size*128) (2*margin + height);
+  resize_window (3*margin + width + size_conv*128) (2*margin + max height (size_conv*64));
   set_window_title "Monochromatic Conversion";
   auto_synchronize false;
 
@@ -159,8 +172,14 @@ let view_side_by_side (img : image_mat) (mono : bool array array) =
   let pict_mono = make_image img_mono in
   draw_image pict_img margin margin;
   set_color black;
-  rect (2*margin + width) margin (128*size + 1) (64*size + 1);
+  rect (2*margin + width) margin (128*size_conv + 1) (64*size_conv + 1);
   draw_image pict_mono (2*margin + width + 1) (margin + 1);
+  set_color red;
+  (if width < height*2
+    then (* Ratio < 2:1 (portrait, 16/9...) *)
+      rect margin (margin + height - width/2) width (width/2)
+    else (* Ratio >= 2:1 (flat landscape) *)
+      rect margin margin (2*height) height); 
   synchronize ();
 	
   let _ = read_key() in
@@ -173,7 +192,6 @@ let test_fs (s : string) =
   let mono = floyd_steinberg img in
   view_side_by_side img mono;;
 
-
 (* Todo:
-   - Debug (penguin.bmp)
-   - do a better reduce (with black bars) *)
+   - Take care of the threshold
+  *)
