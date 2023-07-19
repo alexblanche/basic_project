@@ -81,6 +81,25 @@ let vertical_line (m : bool array array) (i : int) (j1 : int) (j2 : int) =
 		m.(j).(i) <- true
 	done;;
 
+(* Traces a rectangle with lower-left cell (i1,j1) and upper-right cell (i2,j2) *)
+let rec rectangle_no_writing (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+	if i1 > i2 || j1 > j2
+		then rectangle_no_writing (min i1 i2) (min j1 j2) (max i1 i2) (max j1 j2)
+		else fill_rect (margin+size*i1) (margin+size*j1) ((i2-i1+1)*size) ((j2-j1+1)*size);;
+
+(* Traces a rectangle with lower-left cell (i1,j1) and upper-right cell (i2,j2)
+	and writes the pixel down in the matrix m *)
+let rectangle (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+	rectangle_no_writing i1 j1 i2 j2;
+	let i0 = min i1 i2 in
+	let il = max i1 i2 in
+	let j0 = min j1 j2 in
+	let jl = max j1 j2 in 
+	for i = i0 to il do
+		for j = j0 to jl do
+			m.(j).(i) <- true
+		done
+	done;;
 
 (* Bresenham algorithm *)
 
@@ -298,7 +317,7 @@ let interface (grid : bool) : bool array array =
 	
 	let instr () =
 		(moveto 0 0;
-		draw_string "[Left-mouse] to add pixels, hold to draw a line, [d] to delete pixels, [Esc] to quit")
+		draw_string "[Left-mouse] to add pixels, hold to draw a line/rectangle, [a] to toggle line/rectangle, [d] to delete pixels, [Esc] to quit")
 	in
 
 	config grid instr;
@@ -310,13 +329,16 @@ let interface (grid : bool) : bool array array =
 	let ifi = ref 0 in
 	let jfi = ref 0 in
 	let mblank = Array.make_matrix 64 128 false in
+	(* line = true if we draw a line, false if we draw a rectangle *)
+	let line = ref true in
 	
 	while not !exit do
 	
 		let {mouse_x; mouse_y; button; keypressed; key} =
 			wait_next_event [Button_down; Key_pressed]
 		in
-		exit := key = '\027';
+		exit := key = '\027'; (* Esc *)
+		
 		
 		if button then
 			begin
@@ -342,12 +364,16 @@ let interface (grid : bool) : bool array array =
 							with
 								| Out_of_screen -> ());
 							print_mat m grid instr;
-							bresenham mblank !i0 !j0 !ifi !jfi;
+							(if !line
+								then bresenham mblank !i0 !j0 !ifi !jfi
+								else rectangle_no_writing !i0 !j0 !ifi !jfi);
 							sync ()
 						done;
-						(* display of the final line *)
+						(* display of the final line/rectangle *)
 						print_mat m grid instr;
-						bresenham m !i0 !j0 !ifi !jfi;
+						(if !line
+							then bresenham m !i0 !j0 !ifi !jfi
+							else rectangle m !i0 !j0 !ifi !jfi);
 						sync ();
 						i0 := 0; j0 := 0;
 						ifi := 0; jfi := 0;
@@ -356,13 +382,19 @@ let interface (grid : bool) : bool array array =
 					| Out_of_screen -> ()
 			end;
 		
-		if keypressed && key = 'd' then
-			try
-				let (i,j) = coord_to_cell mouse_x mouse_y in
-				plotoff m grid i j;
-				sync ()
-			with
-				| Out_of_screen -> ()
+		if keypressed then
+			if key = 'd' then
+				try
+					let (i,j) = coord_to_cell mouse_x mouse_y in
+					plotoff m grid i j;
+					sync ()
+				with
+					| Out_of_screen -> ()
+			else if key = 'a' then
+				(line := not !line;
+				while key_pressed () do
+					()
+				done)
 	done;
 	close_graph ();
 	m;;
