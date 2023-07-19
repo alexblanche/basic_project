@@ -311,9 +311,10 @@ let view_matrix (m : bool array array) =
 	let _ = wait_next_event [Button_down; Key_pressed] in
 	close_graph ();;
 
-(* Interface that lets the user add pixels, lines, delete pixels *)
-(* Returns a 64*128 matrix of pixels *)
-let interface (grid : bool) : bool array array =
+(* Interface that lets the user add pixels, lines, rectangles
+	 and delete pixels on a 64*128 monochormatic matrix *)
+(* Modifies the matrix in place *)
+let edit (grid : bool) (m : bool array array) : unit =
 	
 	let instr () =
 		(moveto 0 0;
@@ -321,7 +322,6 @@ let interface (grid : bool) : bool array array =
 	in
 
 	config grid instr;
-	let m = Array.make_matrix 64 128 false in	
 	let exit = ref false in
 	let click = ref false in
 	let i0 = ref 0 in
@@ -332,13 +332,15 @@ let interface (grid : bool) : bool array array =
 	(* line = true if we draw a line, false if we draw a rectangle *)
 	let line = ref true in
 	
+	print_mat m grid instr;
+	sync ();
+
 	while not !exit do
 	
 		let {mouse_x; mouse_y; button; keypressed; key} =
 			wait_next_event [Button_down; Key_pressed]
 		in
 		exit := key = '\027'; (* Esc *)
-		
 		
 		if button then
 			begin
@@ -396,5 +398,10 @@ let interface (grid : bool) : bool array array =
 					()
 				done)
 	done;
-	close_graph ();
+	close_graph ();;
+
+(* Interface that lets the user draw from scratch *)
+let interface (grid : bool) : bool array array =
+	let m = Array.make_matrix 64 128 false in
+	edit grid m;
 	m;;

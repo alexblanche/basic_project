@@ -1,7 +1,18 @@
-(* Floyd-Steinberg dithering algorithm *)
+(* Creation of 64*128 monochromatic images
+  through the Floyd-Steinberg dithering algorithm
+  and the Threshold algorithm applied on existing BMP images *)
 
 #use "bmp_reader.ml"
-#use "picture_editor.ml"
+#use "picture_drawer.ml"
+
+(** Warning **)
+(* The convention of Graphics function draw_image is (0,0) = upper-left corner
+  while the convention of the rest of the Graphics library is (0,0) = lower-left corner,
+  and I respected the latest convention in picture_drawer.
+  Thus, we flip the monochromatic matrix before feeding it to the editing interface *)
+(* The convention of the matrix output by create_edit is (0,0) = lower-left corner. *)
+
+(** Useful functions **)
 
 (* Returns true if the color (r,g,b) is closer to black (pixel)
    and false if it is closer to white (no pixel) *)
@@ -23,6 +34,9 @@ let reverse_rgb (c : Graphics.color) : int * int * int =
   let b = c mod 256 in
   let c2 = c / 256 in
   (c2 / 256, c2 mod 256, b);;
+
+
+(** Conversion functions **)
 
 (* Returns an image_mat in which each pixel of the monochromatic matrix mono
   is replaced by a square of side size *)
@@ -89,6 +103,22 @@ let reduce_img (img : image_mat) (target_height : int) (target_width : int) : im
     yb := !yb +. size
   done;
   reduced_img;;
+
+(* Flips the image upside down *)
+(* Returns a new matrix *)
+let flip (m : 'a array array) : 'a array array =
+  let height = Array.length m in
+  let width = Array.length m.(0) in
+  let fm = Array.make_matrix height width m.(0).(0) in
+  for i = 0 to width-1 do
+    for j = 0 to height-1 do
+      fm.(j).(i) <- m.(height-j-1).(i)
+    done
+  done;
+  fm;;
+
+
+(** Floyd-Steinberg algorithm **)
 
 (* Auxiliary function to the Floyd-Steinberg algorithm *)
 (* Recolors the (r,g,b) pixel (i,j) as (r+err_r*coef/16,...,...) *)
@@ -162,6 +192,9 @@ let floyd_steinberg (rimg : image_mat) : bool array array =
   mono.(0).(127) <- closest_color r g b;
   mono;;
 
+
+(** Threshold algorithm **)
+
 (* Returns a 64*128 matrix of monochromatic pixels (of type bool array array)
   that approximates the image rimg through the threshold algorithm:
   each pixel (r,g,b) is set to white if (r+g+b)/3 < 255*threshold *)
@@ -176,11 +209,8 @@ let img_to_mono_threshold (rimg : image_mat) (thresh : float) : bool array array
   done;
   mono;;
 
-(* Testing *)
-let test_reduce (img : image_mat) =
-  view_image img;
-  let rimg = reduce_img img 64 128 in
-  view_image rimg;;
+
+(** Interface **)
 
 (* Displays the original image and its monochromatic conversion side by side *)
 let view_side_by_side (img : image_mat) =
@@ -230,7 +260,7 @@ let view_side_by_side (img : image_mat) =
       else
         let pict_mono_th = make_image (mono_to_image_mat !mono_th size) in
         draw_image pict_mono_th (2*margin + width + 1) (margin + 1));
-    synchronize ();
+    sync ();
 
     let {mouse_x; mouse_y; button; keypressed; key} =
 			wait_next_event [Button_down; Key_pressed]
@@ -252,13 +282,18 @@ let view_side_by_side (img : image_mat) =
     then mono_fs
     else !mono_th;;
 
+(* Full interface: reads the BMP file, generates the monochromatic image
+  through Floyd-Steinberg or the Threshold algorithm and edit the resulting image *)
+(* Convention of the matrix output: (0,0) = lower-left corner. *)
+let create_edit (file_name : string) : bool array array =
+  let img = read_bmp file_name in
+  let mono = view_side_by_side img in
+  let fmono = flip mono in
+  edit true fmono;
+  fmono;;
+
 (* Testing function *)
 let test_fs (s : string) =
   (* let img = read_bmp "/mnt/c/users/blanc/desktop/ocaml_tests/basic_project/mandelbrot_bmp.bmp" in *)
   let img = read_bmp ("/mnt/c/users/blanc/desktop/ocaml_tests/basic_project/"^s^".bmp") in
   view_side_by_side img;;
-
-(* Todo:
-   - Debug "Graphics.Graphic_failure "Xlib error: BadPixmap (invalid Pixmap parameter)"" on penguin.
-   - Threshold looks a lot like FS......
-  *)
