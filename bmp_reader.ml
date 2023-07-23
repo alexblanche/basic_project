@@ -96,8 +96,8 @@ let read_bmp (filename : string) : image_mat =
 
 (* Displays the image on the screen as a picture *)
 let view_image (m : image_mat) : unit =
-  let height = Array.length m
-  and width = Array.length m.(0) in
+  let height = Array.length m in
+  let width = Array.length m.(0) in
   let margin = 40 in
   
   open_graph "";
@@ -107,4 +107,5 @@ let view_image (m : image_mat) : unit =
   auto_synchronize false;
   draw_image pict_m margin margin;
   synchronize();
-  let _ = read_key() in close_graph();;
+  let _ = read_key() in
+  close_graph();;
