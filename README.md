@@ -18,7 +18,7 @@ The repository contains the following files:
 - picture_creator.ml: contains the functions and interface to convert RGB images to monochromatic 64*128 images through the Floyd-Steinberg dithering algorithm or the simple Threshold algorithm
 - file_to_string.ml: various file reading functions
 
-### To do next
+## To do next
 Compilers and decompilers:
 - Code a lexer and a parser with Lex, Yacc to convert G1M files to an intermediate abstract "Basic tree" type
 - Code a converter from Basic tree to readable Basic code (custom format ".cb")
@@ -30,7 +30,7 @@ Picture conversions:
 - Code a converter from G1M picture file to boolean matrix
 
 Emulation:
-- Code all operators and functions: <-, Display, If, While, Goto, And, Or, ...
+- Code all operators and functions: ->, Display, If, While, Goto, And, Or, ...
 - Code all graphic functions: PlotOn, F-Line, DrawStat
 - Encode all the characters, in text and graphic fonts
 - Code text display
