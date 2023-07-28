@@ -29,6 +29,14 @@ let read_word channel =
   let b = input_byte channel in
   a + (256*b);;
 
+let byte_repr (n : int) : bool array =
+  let t = Array.make 8 false in
+  let a = ref n in
+  for i = 0 to 7 do
+    t.(i) <- !a mod 2 = 1;
+    a := !a /2
+  done;
+  t;;
   
 (** Reading the file **)
 
@@ -71,19 +79,22 @@ let read_pixels (width : int) (height : int) (channel : in_channel) : image_mat 
   let p = padd width in
   let m = Array.make_matrix height width black in
   for j = 0 to height-1 do
+    print_endline ("j = "^(string_of_int j));
     for i = 0 to width-1 do
       let b = input_byte channel in
       let g = input_byte channel in
       let r = input_byte channel in
       m.(height-j-1).(i) <- rgb r g b
     done;
+    print_endline ("End of reading j = "^(string_of_int j));
     for i = 1 to p do
       let _ = input_byte channel in ()
-    done
+    done;
+    print_endline ("End of padding j = "^(string_of_int j));
   done;
   m;;
 
-(* Reads a BMP picture *)
+(* Reads a RGB BMP picture *)
 let read_bmp (filename : string) : image_mat =
   let channel = open_in_bin filename in
   let _ = skip_file_header channel in
@@ -91,6 +102,35 @@ let read_bmp (filename : string) : image_mat =
   let m = read_pixels width height channel in
   close_in channel;
   m;;
+
+(* Reads a monochromatic BMP picture *)
+(* In particular, the ones produced by Screen captures of FA-124 *)
+let read_mono_bmp (filename : string) : bool array array =
+  let channel = open_in_bin filename in
+  let _ = skip_file_header channel in
+  let (width, height) = skip_info_header channel in
+  let c = ref 0 in
+  let m = Array.make_matrix height width false in
+  let nbcol = width/8 in
+  let a = ref 0 in
+  try
+    for i=0 to 7 do
+      let _ = input_byte channel in ()
+    done;
+    for j = 0 to height-1 do
+      for i = 0 to nbcol-1 do
+        a := input_byte channel;
+        for k = 7 downto 0 do
+          m.(j).(8*i+k) <- (!a mod 2) = 1;
+          a := !a/2
+        done;
+      done;
+    done;
+    close_in channel;
+    m;
+  with
+    | End_of_file -> close_in channel; failwith "read_mono_bmp: Out of bounds"
+  ;;
 
 (** Display **)
 

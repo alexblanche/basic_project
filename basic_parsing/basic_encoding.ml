@@ -1,8 +1,21 @@
-(* Basic enconding *)
+(* Encoding of characters and commands and visual representation *)
+
+(** Encoding of characters and commands **)
+
+(* Main characters encodings:
+ 32 = SPACE
+ 48 ... 57 = 0 ... 9
+ 65 ... 90 = A ... Z
+ 97 ... 122 = a ... z
+ 44 = ,
+ 46 = .
+  *)
 
 (* Most commands *)
+(* Left in comments: the bytes that do not occur in the commands or the symbols *)
 let commands = [
   (* One-byte symbols *)
+  (* \000 *)
   ("\001", "FEMTO");    (* Lower-case f (femto) (Optn > Esym) *)
   ("\002", "PICO");    (* Lower-case p (pico) (Optn > Esym) *)
   ("\003", "NANO");    (* nu (nano) (Optn > Esym) *)
@@ -22,82 +35,101 @@ let commands = [
   ("\017", "DIFFERENT"); (* Different (not-equal) sign *)
   ("\018", "GEQ"); (* Greater or equal >= *)
   ("\019", "IMPL"); (* => *)
-  ("\032", "SPACE");  (* Space ' ' *)
+  (* \020 ... \031 *)
   ("\034", "QUOTE");  (* Double-quote *)
   ("\040", "LPAR");   (* ( *)
   ("\041", "RPAR");   (* ) *)
-  ("\044", "COMMA");   (* , *)
-  ("\046", "POINT");   (* . *)
-  ("\048", "0");      (* Int: 48 = 0, 49 = 1, ... *)
+  ("\048", "0");      (* Int: 48 = 0, 49 = 1, ..., 57 = 9 *)
   ("\058", "COLON");  (* : (equivalent to EOL) *)
   ("\060", "LESS");  (* < *)
   ("\061", "EQUAL");  (* = *)
   ("\062", "GREATER");  (* > *)
   ("\063", "QMARK");  (* ? (Question mark) *)
-  ("\065", "A");      (* Letters: 65 = A, 66 = B, ... *)
+  ("\065", "A");      (* Letters: 65 = A, 66 = B, ..., 90 = Z *)
   ("\091", "LSQBRACKET"); (* [ *)
   ("\093", "RSQBRACKET"); (* ] *)
   ("\123", "LBRACKET");   (* { *)
   ("\125", "RBRACKET");   (* } *)
+  (* \127: first byte of two-byte symbols *)
   ("\128", "POLPAR");   (* Pol( (Optn > Angl) *)
   ("\129", "SIN");   (* sin *)
   ("\130", "COS");   (* cos *)
   ("\131", "TAN");   (* tan *)
+  (* \132 *)
   ("\133", "LN");   (* ln *)
   ("\134", "SQRT");   (* Square root sign *)
   ("\135", "UMINUS");   (* Unary minus sign *)
   ("\136", "THICKP");  (* Thick P (Optn > Prob) *)
   ("\137", "PLUS");   (* Plus sign *)
+  (* \138 *)
   ("\139", "POWER2");   (* ^2 *)
   ("\140", "COORDSIGN");   (* Small white square (Optn > Angl) *)
   ("\141", "INTEGRALPAR");   (* Integral sign + left parenthesis (Optn > Calc) *)
+  (* \142 \143 \144 *)
   ("\145", "ARCSIN");   (* sin^-1 *)
   ("\146", "ARCCOS");   (* cos^-1 *)
   ("\147", "ARCTAN");   (* tan^-1 *)
+  (* \148 *)
   ("\149", "LOG");   (* log *)
   ("\150", "CURT");   (* Cubic root *)
   ("\151", "ABS");   (* Absolute value (Optn > Cplx) *)
   ("\152", "THICKC");  (* Thick C (Optn > Prob) *)
   ("\153", "MINUS");   (* Minus sign *)
+  (* \154 *)
   ("\155", "POWERMINUS1");   (* -1 (^-1 sign) *)
   ("\156", "DEGREESIGN");   (* o Degree sign *)
+  (* \157 \158 \159 *)
   ("\160", "RECPAR");   (* Rec( (Optn > Angl) *)
   ("\161", "SINH");   (* sinh (Optn > Hyp) *)
   ("\162", "COSH");   (* cosh (Optn > Hyp) *)
   ("\163", "TANH");   (* tanh (Optn > Hyp) *)
+  (* \164 *)
   ("\165", "EPOWER");   (* e^ *)
   ("\166", "INT");   (* Int (Optn > Num) *)
+  (* \167 *)
   ("\168", "POWER");   (* ^ *)
   ("\169", "TIMES");  (* Multiplication sign *)
+  (* \170 *)
   ("\171", "EXCLAMATIONMARK");  (* ! (Optn > Prob) *)
   ("\172", "RADIANSIGN");   (* r Radian sign *)
+  (* \173 \174 \175 \176 *)
   ("\177", "ARCSINH");  (* sinh^-1 (Optn > Hyp) *)
   ("\178", "ARCCOSH");  (* cosh^-1 (Optn > Hyp) *)
   ("\179", "ARCTANH");  (* tanh^-1 (Optn > Hyp) *)
+  (* \180 *)
   ("\181", "TENPOWER");   (* 10 (10^ sign) *)
   ("\182", "FRAC");   (* Frac (Optn > Num) *)
+  (* \183 *)
   ("\184", "NSQRT");   (* N-th square root sign *)
   ("\185", "DIVIDED");   (* Division sign *)
+  (* \186 *)
   ("\187", "FRACSIGN");   (* Fraction sign *)
   ("\188", "GRADSIGN");   (* g Grad sign *)
+  (* \189 \190 \191 *)
   ("\192", "ANS");  (* Ans *)
   ("\193", "RAN");  (* Ran# (Optn > Prob) *)
+  (* \196 ... \202 *)
   ("\205", "SMALLR");  (* r (complex radius) *)
   ("\206", "THETA");  (* Theta (complex angle) *)
+  (* \207 *)
   ("\208", "PI");  (* Pi sign *)
   ("\209", "CLS");  (* Cls (Sketch) *)
+  (* \210 *)
   ("\211", "RND");   (* Rnd (Optn > Num) *)
+  (* \212 ... \216 *)
   ("\217", "NORM"); (* Norm (Set up > Disp) *)
   ("\218", "DEG"); (* Deg (Set up > Angl) *)
   ("\219", "RAD"); (* Rad (Set up > Angl) *)
   ("\220", "GRA"); (* Gra (Set up > Angl) *)
   ("\221", "ENG"); (* Eng (Set up > Disp > Eng) *)
   ("\222", "INTG");   (* Intg (Optn > Num) *)
+  (* \223 *)
   ("\224", "PLOT"); (* Plot (Sketch > Plot) *)
   ("\225", "LINE"); (* Line (Sketch > Line) *)
   ("\226", "LBL"); (* Lbl *)
   ("\227", "FIX"); (* Fix (Set up > Disp) *)
   ("\228", "SCI"); (* Sci (Set up > Disp) *)
+  (* \229 ... \231: first byte of two-byte symbols *)
   ("\232", "DSZ"); (* Dsz *)
   ("\233", "ISZ"); (* Isz *)
   ("\234", "FACTOR"); (* Factor (Zoom) *)
@@ -112,12 +144,14 @@ let commands = [
   ("\243", "GRAPHYLEQ"); (* Graph Y<= (Sketch > Grph) *)
   ("\244", "GRAPHREQ"); (* Graph r= (Sketch > Grph) *)
   ("\245", "GRAPHXYEQ"); (* Graph(X,Y)=( (Sketch > Grph) *)
+  (* \246 \248 \250 *)
+  (* \247, 249: first byte of two-byte symbols *)
   ("\251", "PPAR"); (* P( (Optn > Prob) *)
   ("\252", "QPAR"); (* Q( (Optn > Prob) *)
   ("\253", "RPAR"); (* R( (Optn > Prob) *)
   ("\254", "tPAR"); (* t( (Optn > Prob) *)
+  (* \255 *)
   
-
   (* Two-byte symbols *)
   ("\127\032", "MAX"); (* Max (Optn > List) *)
   ("\127\033", "DET"); (* Det (Optn > Mat) *)
@@ -409,3 +443,51 @@ let symbols = [ (* From the menu "Char" *)
   "\231\111"; "\231\112"; "\231\113"; "\231\114"; "\231\115"; "\231\116"; "\231\117"; "\231\118";
   "\231\119"; "\231\120"; "\231\121"; "\231\122"
 ];;
+
+
+(** Visual representation **)
+
+#use "picture_editor/bmp_reader.ml";;
+
+(* Main characters encodings:
+ 32 = SPACE
+ 48 ... 57 = 0 ... 9
+ 65 ... 90 = A ... Z
+ 97 ... 122 = a ... z
+ 44 = ,
+ 46 = .
+  *)
+
+(* Each character's visual representation is a 7*5 monochromatic image.
+  It is encoded as a sequence of 35 booleans, line by line, starting from the upper one *)
+
+(* Creation of the hash table that stores the visual representation of each symbol *)
+  let visual () =
+  (* let vischar1 = read_mono_bmp "data/char1.bmp" in *)
+  let vischar2 = read_mono_bmp "data/char2.bmp" in
+  (* let vischar3 = read_mono_bmp "data/char3.bmp" in
+  let vischar4 = read_mono_bmp "data/char4.bmp" in
+  let vischar5 = read_mono_bmp "data/char5.bmp" in
+  let vischar6 = read_mono_bmp "data/char6.bmp" in
+  let vischar7 = read_mono_bmp "data/char7.bmp" in *)
+  let new_vr () = Array.make 35 false in
+  let t = Hashtbl.create 500 in
+  (* Space *)
+  Hashtbl.add t "\032" (new_vr ()); 
+  (* Digits *)
+  for i = 48 to 57 do
+    let t = new_vr () in
+    for y = 0 to 6 do
+      for x = 0 to 4 do
+        t.(5*y+x) <- vischar2.(64-1-3*8-y).(x+1+(i-48)*6)
+      done;
+    done;
+    (* Test: visual check *)
+    print_int (i-48);
+    print_newline ();
+    for i = 0 to 34 do
+      print_int (if t.(i) then 1 else 0);
+      if (i mod 5) = 4 then print_newline()
+    done;
+  done;
+  t;;
