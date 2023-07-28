@@ -449,7 +449,71 @@ let symbols = [ (* From the menu "Char" *)
 
 #use "picture_editor/bmp_reader.ml";;
 
-(* Main characters encodings:
+(* Each character's visual representation is a 7*5 monochromatic image.
+  It is encoded as a sequence of 35 booleans, line by line, starting from the upper one *)
+
+(* Returns an empty representation array *)
+let new_vr () = Array.make 35 false;;
+
+(* Returns the representation array of the symbol at line j, column i of the calculator screen
+  in the image vischar *)
+(* i between 0 and 20, j between 0 and 6 *)
+let read_symbol (vischar : bool array array) (i : int) (j : int) =
+  let t = new_vr () in
+  for y = 0 to 6 do
+    for x = 0 to 4 do
+      t.(5*y+x) <- vischar.(64-1-j*8-y).(x+1+i*6)
+    done;
+  done;
+  t;;
+
+(* For testing purposes *)
+let print_repr (t : bool array) =
+  for j = 0 to 6 do
+    for i = 0 to 4 do
+      if t.(5*j+i)
+        then print_char '#'
+        else print_char ' '
+    done;
+    print_newline ();
+  done;
+  print_newline ();;
+
+(* Creation of the hash table that stores the visual representation of each symbol *)
+  let visual () =
+  let vischar1 = read_mono_bmp "data/char1.bmp" in
+  let vischar2 = read_mono_bmp "data/char2.bmp" in
+  let vischar3 = read_mono_bmp "data/char3.bmp" in
+  let vischar4 = read_mono_bmp "data/char4.bmp" in
+  let vischar5 = read_mono_bmp "data/char5.bmp" in
+  let vischar6 = read_mono_bmp "data/char6.bmp" in
+  let vischar7 = read_mono_bmp "data/char7.bmp" in
+  let t = Hashtbl.create 500 in
+  (* Space *)
+  Hashtbl.add t " " (new_vr ()); 
+  (* Digits *)
+  for i = 48 to 57 do
+    Hashtbl.add t (Char.escaped (Char.chr i)) (read_symbol vischar2 (i-48) 3);
+  done;
+  (* Upper-case letters *)
+  for i = 65 to 90 do
+    Hashtbl.add t (Char.escaped (Char.chr i)) (read_symbol vischar1 ((i-65) mod 21) (i/(65+21)));
+  done;
+  (* Lower-case letters *)
+  for i = 97 to 122 do
+    Hashtbl.add t (Char.escaped (Char.chr i)) (read_symbol vischar1 ((i-97) mod 21) (2+(i/(97+21))));
+  done;
+  (* Comma *)
+  Hashtbl.add t "," (read_symbol vischar1 0 4);
+  (* Point *)
+  Hashtbl.add t "." (read_symbol vischar1 1 4);
+  (* Disp *)
+  Hashtbl.add t "\012" (read_symbol vischar1 2 4);
+  (* EOL *)
+  Hashtbl.add t "\013" (read_symbol vischar1 0 5);
+  t;;
+
+(* Reminder: main characters encodings:
  32 = SPACE
  48 ... 57 = 0 ... 9
  65 ... 90 = A ... Z
@@ -457,37 +521,3 @@ let symbols = [ (* From the menu "Char" *)
  44 = ,
  46 = .
   *)
-
-(* Each character's visual representation is a 7*5 monochromatic image.
-  It is encoded as a sequence of 35 booleans, line by line, starting from the upper one *)
-
-(* Creation of the hash table that stores the visual representation of each symbol *)
-  let visual () =
-  (* let vischar1 = read_mono_bmp "data/char1.bmp" in *)
-  let vischar2 = read_mono_bmp "data/char2.bmp" in
-  (* let vischar3 = read_mono_bmp "data/char3.bmp" in
-  let vischar4 = read_mono_bmp "data/char4.bmp" in
-  let vischar5 = read_mono_bmp "data/char5.bmp" in
-  let vischar6 = read_mono_bmp "data/char6.bmp" in
-  let vischar7 = read_mono_bmp "data/char7.bmp" in *)
-  let new_vr () = Array.make 35 false in
-  let t = Hashtbl.create 500 in
-  (* Space *)
-  Hashtbl.add t "\032" (new_vr ()); 
-  (* Digits *)
-  for i = 48 to 57 do
-    let t = new_vr () in
-    for y = 0 to 6 do
-      for x = 0 to 4 do
-        t.(5*y+x) <- vischar2.(64-1-3*8-y).(x+1+(i-48)*6)
-      done;
-    done;
-    (* Test: visual check *)
-    print_int (i-48);
-    print_newline ();
-    for i = 0 to 34 do
-      print_int (if t.(i) then 1 else 0);
-      if (i mod 5) = 4 then print_newline()
-    done;
-  done;
-  t;;
