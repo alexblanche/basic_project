@@ -39,15 +39,16 @@ let commands = [
   ("\034", "QUOTE");  (* Double-quote *)
   ("\040", "LPAR");   (* ( *)
   ("\041", "RPAR");   (* ) *)
-  ("\048", "0");      (* Int: 48 = 0, 49 = 1, ..., 57 = 9 *)
+  (* Int: 48 = 0, 49 = 1, ..., 57 = 9 *)
   ("\058", "COLON");  (* : (equivalent to EOL) *)
   ("\060", "LESS");  (* < *)
   ("\061", "EQUAL");  (* = *)
   ("\062", "GREATER");  (* > *)
   ("\063", "QMARK");  (* ? (Question mark) *)
-  ("\065", "A");      (* Letters: 65 = A, 66 = B, ..., 90 = Z *)
+  (* Letters: 65 = A, 66 = B, ..., 90 = Z *)
   ("\091", "LSQBRACKET"); (* [ *)
   ("\093", "RSQBRACKET"); (* ] *)
+  (* Letters: 97 = a, 66 = B, ..., 122 = z *)
   ("\123", "LBRACKET");   (* { *)
   ("\125", "RBRACKET");   (* } *)
   (* \127: first byte of two-byte symbols *)
@@ -489,6 +490,14 @@ let print_repr (t : bool array) =
   let vischar6 = read_mono_bmp "data/char6.bmp" in
   let vischar7 = read_mono_bmp "data/char7.bmp" in
   let t = Hashtbl.create 500 in
+  (* Reminder: main characters encodings:
+    32 = SPACE
+    48 ... 57 = 0 ... 9
+    65 ... 90 = A ... Z
+    97 ... 122 = a ... z
+    44 = ,
+    46 = .
+  *)
   (* Space *)
   Hashtbl.add t " " (new_vr ()); 
   (* Digits *)
@@ -511,13 +520,32 @@ let print_repr (t : bool array) =
   Hashtbl.add t "\012" (read_symbol vischar1 2 4);
   (* EOL *)
   Hashtbl.add t "\013" (read_symbol vischar1 0 5);
+  let l = ref symbols in
+  (* Reads n representations in the image vischar
+    for the n first elements of list l *)
+  let read_all n vischar =
+    for i = 0 to n-1 do
+      Hashtbl.add t (List.hd !l) (read_symbol vischar (i mod 19) (i/19));
+      l := List.tl !l
+    done;
+  in
+  (* MATH: 115 symbols *)
+  read_all 114 vischar3;
+  (* Last one: "\230\222" *)
+  Hashtbl.add t (List.hd !l) (read_symbol vischar3 19 5);
+  l := List.tl !l;
+  (* SYBL: 83 symbols *)
+  read_all 83 vischar4;
+  (* Upper-case special: 110 symbols *)
+  read_all 110 vischar5;
+  (* Lower-case special: 112 symbols *)
+  read_all 112 vischar6;
+  (* Indices: 52 symbols *)
+  read_all 52 vischar7;
+  (* One-character commands *)
+  let onecharcomm = ["\001"; "\002"; "\003"; "\004"; "\005"; "\006"; "\007"; "\008"; "\009"; "\010"; "\011"; "\014";
+  "\136"; "\137"; "\139"; "\140"; "\152"; "\153"; "\155"; "\168"; "\171"; "\205"; "\206"; "\208"] in
+  (* Quick check *)
+  (* List.iter (fun s -> try Hashtbl.find t s; print_endline ("Element already exists: "^string_of_int(Char.code (s.[0]))); with Not_found -> ()) onecharcomm; *)
+  
   t;;
-
-(* Reminder: main characters encodings:
- 32 = SPACE
- 48 ... 57 = 0 ... 9
- 65 ... 90 = A ... Z
- 97 ... 122 = a ... z
- 44 = ,
- 46 = .
-  *)
