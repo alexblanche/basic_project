@@ -109,7 +109,6 @@ let read_mono_bmp (filename : string) : bool array array =
   let channel = open_in_bin filename in
   let _ = skip_file_header channel in
   let (width, height) = skip_info_header channel in
-  let c = ref 0 in
   let m = Array.make_matrix height width false in
   let nbcol = width/8 in
   let a = ref 0 in
