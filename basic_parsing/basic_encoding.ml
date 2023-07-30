@@ -1,5 +1,17 @@
 (* Encoding of characters and commands and visual representation *)
 
+(** Accessing the encodings **)
+(* /!\ The characters are encoded with a string like "\001".
+  Char.escaped (Char.chr 1) returns the string "\\001".
+  To obtain the right string from the integer i (during lexing), use this function *)
+let enco_of_int (i : int) : string = 
+  String.init 1 (fun _ -> Char.chr i);;
+
+(* For two-byte characters *)
+let enco_of_two_int (i1 : int) (i2 : int) : string =
+  String.init 2 (fun i -> Char.chr (if i=0 then i1 else i2));;
+
+
 (** Encoding of characters and commands **)
 
 (* Main characters encodings:
@@ -444,13 +456,63 @@ let symbols = [ (* From the menu "Char" *)
   "\231\119"; "\231\120"; "\231\121"; "\231\122"
 ];;
 
+(* One-character commands *)
+(* Subset of commands. Some are also present in symbols. *)
+let onecharcomm = ["\001"; "\002";"\003";"\004";"\005";"\006";"\007";"\008";"\009";"\010";"\011";
+  "\014"; "\015"; "\016"; "\017"; "\018"; "\019"; "\032"; "\034"; "\040"; "\041"; "\058"; "\060";
+  "\061"; "\062"; "\063"; "\091"; "\093"; "\123"; "\125"; "\135"; "\136"; "\137"; "\139"; "\140";
+  "\152"; "\153"; "\155"; "\156"; "\168"; "\169"; "\171"; "\172"; "\181"; "\185"; "\187"; "\188";
+  "\205"; "\206"; "\208"];;
+
+(* Symbols that have a visual representation in graphic mode (the others print a space) *)
+let symbols_graphic = [
+  (* MATH *)
+  "\043"; "\045"; "\169"; "\185"; "\094"; "\042"; "\047"; "\061"; "\017";
+  "\060"; "\062"; "\016"; "\018"; "\135";
+  "\229\190"; "\229\191";
+  "\127\080"; "\229\176"; "\015"; "\230\079"; "\127\083"; "\134";
+  "\229\081"; "\230\187";
+  "\229\192"; "\229\193"; "\229\194"; "\229\195"; "\229\196"; "\229\197";
+  "\229\198"; "\229\199"; "\229\200"; "\229\201"; "\229\202"; "\229\203";
+  "\229\204"; "\229\205"; "\229\206"; "\229\207"; "\229\208"; "\229\209";
+  "\229\210"; "\229\211"; "\229\212"; "\229\213"; "\229\214"; "\229\215";
+  "\229\216"; "\229\217"; "\229\218"; "\229\219"; "\229\220"; "\229\221"; 
+  "\229\222"; "\229\223"; "\194"; "\195"; "\203"; "\204"; "\127\199"; "\127\084";
+  "\140"; "\156"; "\172"; "\188";
+
+  (* SYBL *)
+  "\033"; "\035"; "\036"; "\037"; "\038"; "\039"; "\040"; "\041";
+  "\044"; "\046"; "\058"; "\059"; "\063"; "\064"; "\091"; "\092"; "\093";
+  "\095"; "\096"; "\123"; "\124"; "\125"; "\126"; "\019"; "\181"; "\187";
+  "\230\144"; "\230\145"; "\230\146"; 
+  "\230\147"; "\230\154";
+  "\230\155"; "\230\156"; "\230\157"; "\230\158"; "\230\165"; "\230\166";
+  
+  (* Upper-case special *)
+  "\229\067"; "\229\081";
+
+  (* Lower-case special *)
+  "\230\071";
+  "\230\075"; "\230\079";
+  "\230\081";
+
+  (* Indices *)
+  "\231\065"; "\231\066"; "\231\067"; "\231\068"; "\231\069"; "\231\070"; "\231\071"; "\231\072";
+  "\231\073"; "\231\074"; "\231\075"; "\231\076"; "\231\077"; "\231\078"; "\231\079"; "\231\080";
+  "\231\081"; "\231\082"; "\231\083"; "\231\084"; "\231\085"; "\231\086"; "\231\087"; "\231\088";
+  "\231\089"; "\231\090"; "\231\097"; "\231\098"; "\231\099"; "\231\100"; "\231\101"; "\231\102";
+  "\231\103"; "\231\104"; "\231\105"; "\231\106"; "\231\107"; "\231\108"; "\231\109"; "\231\110";
+  "\231\111"; "\231\112"; "\231\113"; "\231\114"; "\231\115"; "\231\116"; "\231\117"; "\231\118";
+  "\231\119"; "\231\120"; "\231\121"; "\231\122"
+];;
+
 
 (** Visual representation **)
 
 #use "picture_editor/bmp_reader.ml";;
 
-(* Each character's visual representation is a 7*5 monochromatic image.
-  It is encoded as a sequence of 35 booleans, line by line, starting from the upper one *)
+(* Each character's visual representation is a 7*5 monochromatic image in text mode.
+  It is encoded as an array of 35 booleans, line by line, starting from the upper one. *)
 
 (* Returns an empty representation array *)
 let new_vr () = Array.make 35 false;;
@@ -479,8 +541,9 @@ let print_repr (t : bool array) =
   done;
   print_newline ();;
 
-(* Creation of the hash table that stores the visual representation of each symbol *)
-  let visual () =
+(* Creation of the hash table that stores the visual representation of each symbol
+  in text mode (Standard print, Locate) *)
+let visual () =
   let vischar1 = read_mono_bmp "data/char1.bmp" in
   let vischar2 = read_mono_bmp "data/char2.bmp" in
   let vischar3 = read_mono_bmp "data/char3.bmp" in
@@ -543,11 +606,6 @@ let print_repr (t : bool array) =
   read_all 52 vischar7;
   (* One-character commands *)
   (* Some are already present in the list symbols; they are not re-added *)
-  let onecharcomm = ["\001"; "\002";"\003";"\004";"\005";"\006";"\007";"\008";"\009";"\010";"\011";
-  "\014"; "\015"; "\016"; "\017"; "\018"; "\019"; "\032"; "\034"; "\040"; "\041"; "\058"; "\060";
-  "\061"; "\062"; "\063"; "\091"; "\093"; "\123"; "\125"; "\135"; "\136"; "\137"; "\139"; "\140";
-  "\152"; "\153"; "\155"; "\156"; "\168"; "\169"; "\171"; "\172"; "\181"; "\185"; "\187"; "\188";
-  "\205"; "\206"; "\208"] in
   let add_elt i s =
     try
       let _ = Hashtbl.find t s in
@@ -557,4 +615,154 @@ let print_repr (t : bool array) =
       | Not_found -> Hashtbl.add t s (read_symbol vischar2 (i mod 21) (i/21))
   in
   List.iteri add_elt onecharcomm;
+  t;;
+
+(** Visual representation in graphic mode **)
+
+(* The size of the representation varies depending on the symbol.
+  All symbols are 5 pixels tall and between 1 and 5 pixels wide. *)
+(* Each representation is encoded as an array of 5*w booleans
+  if the character is w pixels wide; line by line, starting from the upper one.
+  The length can be retrieved with (List.length enc)/5. *)
+
+(** /!\ ONE EXCEPTION: the backslash (\092) has height 6.
+    For it we store an array of size 6*3.
+    It needs to be properly handled by the interpreter. **)
+
+let new_gvr (w : int) : bool array =
+  Array.make (5*w) false;;
+
+(* Detects if the vertical line of 5 pixels on line j (between 0 and 9) and
+  abscissa i (between 0 and 126) of image gphvischar is blank *)
+let is_white (gphvischar : bool array array) (j : int) (i : int) : bool =
+  not (List.exists (fun y -> gphvischar.(62-6*j-y).(i)) [0;1;2;3;4]);;
+
+(* Returns the length of the representation of the character starting at
+  abscissa i (between 0 and 126) of line j (between 0 and 8) of image gphvischar *)
+(* k (between 1 and 3) is the number of the image gphvischar (ex: 2 for gphvischar2) *)
+let repr_length (gphvischar : bool array array) (k : int) (j : int) (i : int) : int =
+  (* Characters who have white vertical lines in their representations are hard-coded. *)
+  try
+    List.assoc (k,j,i)
+      [ ((1,2,5)(* 1 *),          3);
+        ((1,4,4)(* . *),          3);
+        ((1,6,1)(* uminus *),     3);
+        ((1,6,31)(* ^-1 *),       4);
+        ((1,6,54)(* small 10 *),  5);
+        ((2,0,56)(* uminus *),    3);
+        ((2,1,21)(* ^-1 *),       4);
+        ((2,1,82)(* _-1 *),       4);
+        ((2,3,37)(* . *),         3);
+        ((2,3,94)(* small 10 *),  5)]
+  with
+    | Not_found ->
+      (* Abscissa i is now assumed to contain at least one black pixel *)
+      let next_white = List.find (is_white gphvischar j) [i; i+1; i+2; i+3; i+4; i+5] in
+      next_white - i;;
+
+(* Returns the representation array of the symbol at line j, abscissa i of image gphvischar,
+  if it has length l.
+  j between 0 and 8, i between 0 and 126, l between 1 and 5 *)
+let read_graphic_symbol (gphvischar : bool array array) (j : int) (i : int)  (l : int) =
+  let t = new_gvr l in
+  for y = 0 to 4 do
+    for x = 0 to l-1 do
+      t.(l*y+x) <- gphvischar.(62-6*j-y).(i+x)
+    done;
+  done;
+  t;;
+
+(* For testing purposes *)
+let print_g_repr (t : bool array) =
+  let l = (Array.length t)/5 in
+  for j = 0 to 4 do
+    for i = 0 to l-1 do
+      if t.(l*j+i)
+        then print_char '#'
+        else print_char ' '
+    done;
+    print_newline ();
+  done;
+  print_newline ();;
+
+(* Creation of the hash table that stores the visual representation of each symbol
+  in graphic mode (Graphic "Text" function) *)
+let visualgraph () =
+  let gphvischar1 = read_mono_bmp "data/gphchar1.bmp" in
+  let gphvischar2 = read_mono_bmp "data/gphchar2.bmp" in
+  let t = Hashtbl.create 280 in
+  (* Space *)
+  Hashtbl.add t " " (new_gvr 3);
+  (* Double-quote *)
+  Hashtbl.add t "\034" (new_gvr 3);
+  (* Digits *)
+  let x = ref 1 in
+  for i = 48 to 57 do
+    let rlen = repr_length gphvischar1 1 2 !x in
+    Hashtbl.add t (Char.escaped (Char.chr i)) (read_graphic_symbol gphvischar1 2 !x rlen);
+    x := !x + rlen + 1;
+  done;
+  (* Upper-case letters *)
+  x := 1;
+  for i = 65 to 90 do
+    let rlen = repr_length gphvischar1 1 0 !x in
+    Hashtbl.add t (Char.escaped (Char.chr i)) (read_graphic_symbol gphvischar1 0 !x rlen);
+    x := !x + rlen + 1;
+  done;
+  (* Lower-case letters *)
+  x := 1;
+  for i = 97 to 122 do
+    let rlen = repr_length gphvischar1 1 1 !x in
+    Hashtbl.add t (Char.escaped (Char.chr i)) (read_graphic_symbol gphvischar1 1 !x rlen);
+    x := !x + rlen + 1;
+  done;
+  (* Comma *)
+  Hashtbl.add t "," (read_graphic_symbol gphvischar1 4 1 2);
+  (* Point *)
+  Hashtbl.add t "." (read_graphic_symbol gphvischar1 4 4 3);
+  (* Disp *)
+  Hashtbl.add t "\012" (read_graphic_symbol gphvischar1 4 8 3);
+  (* One-character commands *)
+  (* Some are already present in the list symbols; they are not re-added *)
+  let x = ref 1 in
+  let c = ref 0 in
+  let add_gelt s =
+    try
+      let _ = Hashtbl.find t s in
+      ()
+    with
+      | Not_found ->
+        (let rlen = repr_length gphvischar1 1 (5+(!c/28)) !x in
+        Hashtbl.add t s (read_graphic_symbol gphvischar1 (5+(!c/28)) !x rlen);
+        x := !x + rlen + 1;
+        incr c;
+        if !c=28 then
+          x := 1)
+  in
+  List.iter add_gelt onecharcomm;
+  let l = ref symbols_graphic in
+  (* Reads n representations in line j of the image gphvischar
+    for the n first elements of list l *)
+  let read_all_graph j n =
+    let x = ref 1 in
+    for i = 0 to n-1 do
+      let rlen = repr_length gphvischar2 2 j !x in
+      (try
+        let _ = Hashtbl.find t (List.hd !l) in
+        ()
+      with
+        | Not_found ->
+          Hashtbl.add t (List.hd !l) (read_graphic_symbol gphvischar2 j !x rlen));
+      x := !x + rlen + 1;
+      l := List.tl !l
+    done;
+  in
+  (* 9 lines *)
+  List.iteri read_all_graph [29;31;6;30;7;2;4;26;26];
+  (* Final step: the one exception, the backslash (\092),
+    which is the only symbol that has a representation of
+    height 6 (seriously?). *)
+  let vbackslash = Hashtbl.find t "\092" in
+  Hashtbl.remove t "\092";
+  Hashtbl.add t "\092" (Array.append vbackslash [|false;false;true|]);
   t;;
