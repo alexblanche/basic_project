@@ -1,39 +1,40 @@
 (* Parsing of arithmetical expressions *)
 
+(** Types **)
+
+(* Type for functions, of arity 1 to 4 *)
+(* Greater arity is not needed for Casio Basic *)
 type funct =
   | AR1 of (int -> int)
   | AR2 of (int -> int -> int)
   | AR3 of (int -> int -> int -> int)
   | AR4 of (int -> int -> int -> int -> int)
 
+(* Type for arithmetic expressions lexemes *)
 type lexeme = Int of int | LPAR | RPAR |
   Op of string |
   Function of string |
   COMMA
 
-(* List of handled operators and their index of precedence (1 = greatest *)
-let op_list = [("+",3); ("-",3); ("*",2); ("/",2); ("^",1);
-  ("<=", 4); ("<", 4); (">=", 4); (">", 4); ("=", 4); ("!=", 4);
-  ("And",5); ("Or",6); ("Xor",7)];;
-
-(* Returns true if the operator is associative or left-associative *)
-let left_assoc (s : string) : bool =
-  (s <> "^");;
-
 (* To come:
   prefix unary operators: Not, Uminus, ...
   suffix unary operators: !, ^2, ... *)
 
-(* Problems to consider:
+(* Subtleties to consider:
   - In Casio Basic, functions (like Abs, sin...) do not need parentheses.
-    They are considered prefix unary operators.
+    They are considered prefix unary operators here.
   - Some functions have a built-in "(". They are parsed as FUNC LPAR and the RPAR is present somewhere in the program.
   - For functions with variable arity (Solve...), we can add several versions with the same name, and choose
     according to the number of commas on the operator queue.
   - The parentheses are not always closed.
 *)
 
+
+
+(** Definitions **)
+
 (* Some functions *)
+
 (* Factorial *)
 let fact n =
   let rec aux a i =
@@ -55,6 +56,8 @@ let rec exp x n =
 (* Table of handled functions *)
 (* Each function is stored as a pair (a,f),
   where a is the arity of the function (number of arguments) *)
+
+(* Example. The actual exhaustive table will be defined in another file. *)
 let func_table =
   let t = Hashtbl.create 10 in
   let func_list = [
@@ -67,6 +70,14 @@ let func_table =
   List.iter (fun (fname, fdef) -> Hashtbl.add t fname fdef) func_list;
   t;;
 
+(* List of handled operators and their index of precedence (1 = greatest *)
+let op_list = [("+", 3); ("-", 3); ("*", 2); ("/", 2); ("^", 1);
+  ("<=", 4); ("<", 4); (">=", 4); (">", 4); ("=", 4); ("!=", 4);
+  ("And", 5); ("Or", 6); ("Xor", 7)];;
+
+
+(** Useful functions for functions and operators  **)
+
 (* Returns the arity (number of arguments) of the function with name fname *)
 let arity (fname : string) =
   try
@@ -78,6 +89,10 @@ let arity (fname : string) =
     )
   with
     | Not_found -> failwith ("apply_func: Function "^fname^" undefined");;
+
+(* Returns true if the operator is associative or left-associative *)
+let left_assoc (s : string) : bool =
+  (s <> "^");;
 
 (* Relation of precedence of operators *)
 (* 1 if o1 has greater precedence than o2
@@ -97,6 +112,18 @@ let rec precedence (o1 : string) (o2 : string) : int =
       | Not_found -> failwith ("precedence: unkown operator "^o2))
   with
     | Not_found -> failwith ("precedence: unkown operator "^o1);;
+
+(* Checks if the string starting at index i of string s is an operator *)
+  let is_operator (s : string) (i : int) : bool =
+    let remaining_char = String.length s - i in
+    let is_op sop =
+      let n = String.length sop in
+      (n <= remaining_char) && (String.sub s i n) = sop
+    in
+    List.exists (fun (sop, _) -> is_op sop) op_list;;
+
+
+(** Application functions **)
 
 (* Application of the functions *)
 let apply_func (fname : string) (il : int list) =
@@ -145,17 +172,12 @@ let rec calculate outq opq =
     | [i], [] -> i
     | _ -> failwith "calculate: Syntax error"
 
-(* Checks if the string starting at index i of string s is an operator *)
-let is_operator (s : string) (i : int) : bool =
-  let remaining_char = String.length s - i in
-  let is_op sop =
-    let n = String.length sop in
-    (n <= remaining_char) && (String.sub s i n) = sop
-  in
-  List.exists (fun (sop, _) -> is_op sop) op_list;;
 
 
 (** Main lexing function **)
+
+(* Used for custom Basic interpretation *)
+(* For actual Casio Basic, the lexing is done straight from the binary. *)
 
 (* Reads an int at position i of string s
   Returns the int and the new reading position *)
@@ -206,6 +228,8 @@ let lexer (s : string) : lexeme list =
                   aux ni ((Function fname)::acc)
   in
   aux 0 [];;
+
+
     
 (** Evaluation **)
 
@@ -226,9 +250,15 @@ let rec right_reduce output_q op_q =
 (* Shunting_yard algorithm: returns the value of the expression *)
 let rec shunting_yard (lexlist : lexeme list) (output_q : int list) (op_q : lexeme list) =
   match (lexlist,op_q) with
-    | [],_ -> (*calculate output_q op_q*) output_q, op_q
+    (* End case *)
+    | [], _ -> calculate output_q op_q
+
+    (* Add to a queue *)
     | (Int i)::t, _ -> shunting_yard t (i::output_q) op_q
     | (Function fname)::t, _ -> shunting_yard t output_q ((Function fname)::op_q)
+    | LPAR::t, _ -> shunting_yard t output_q (LPAR::op_q)
+
+    (* COMMA *)
     | COMMA::t, (Op o)::opqt ->
       if left_assoc o
         then (* Associative or left-associative *)
@@ -238,7 +268,7 @@ let rec shunting_yard (lexlist : lexeme list) (output_q : int list) (op_q : lexe
         else (* Right-associative *)
           let noutq, nopq = right_reduce output_q op_q in
           shunting_yard t noutq (COMMA::nopq)
-    | COMMA::t, _::opqt -> shunting_yard t output_q (COMMA::opqt)
+    | COMMA::t, _ -> shunting_yard t output_q (COMMA::op_q)
 
     (* Op *)
     | (Op o1)::t, (Op o2)::opqt ->
@@ -253,13 +283,11 @@ let rec shunting_yard (lexlist : lexeme list) (output_q : int list) (op_q : lexe
             shunting_yard t noutq ((Op o1)::nopq)
         else shunting_yard t output_q ((Op o1)::op_q)
     | (Op o)::t, _ -> shunting_yard t output_q ((Op o)::op_q)
-
-    (* LPAR *)
-    | LPAR::t, _ -> shunting_yard t output_q (LPAR::op_q)
     
     (* RPAR *)
     | RPAR::t, _::_ ->
       (match output_q, op_q with
+          (* Function evaluation *)
           | i1::outq, LPAR::(Function fname)::opqt ->
             let af = arity fname in
             if af = 1
@@ -280,18 +308,19 @@ let rec shunting_yard (lexlist : lexeme list) (output_q : int list) (op_q : lexe
             if af = 4
               then shunting_yard t ((apply_func fname [i1;i2;i3;i4])::outq) opqt
               else failwith ("Function "^fname^"has arity "^(string_of_int af)^", but receives 4 arguments")
+          
+          (* LPAR without a function behind *)
           | _, LPAR::opqt -> shunting_yard t output_q opqt
+
+          (* Operator evaluation *)
           | i2::i1::outq, (Op o)::opqt -> shunting_yard (RPAR::t) ((apply_op o i1 i2)::outq) opqt
           | _, (Op o)::opqt -> failwith ("Not enough operands for operator "^o)
+
+          (* Errors *)
           | _, [] -> failwith "Mismatched parentheses"
-          | _,COMMA::_ -> failwith "Too many commas (maximum arity is 4)"
+          | _,COMMA::_ -> failwith "Unexpected comma (maximum arity is 4)"
           | _ -> failwith "Something's wrong")    
     | _,_ -> failwith "Syntax error";;
 
 let eval (s : string) =
   shunting_yard (lexer s) [] [];;
-
-
-(* Problems remaining:
-  - Clash between left-associative (-) and right-associative (^) operators
-  - Functions do not work yet *)
