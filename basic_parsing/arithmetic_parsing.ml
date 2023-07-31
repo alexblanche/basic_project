@@ -17,6 +17,7 @@ type lexeme = Int of int | LPAR | RPAR |
   COMMA
 
 (* To come:
+  floats
   prefix unary operators: Not, Uminus, ...
   suffix unary operators: !, ^2, ... *)
 
