@@ -21,7 +21,9 @@ type lexeme = Int of int | LPAR (* ( *) | RPAR (* ) *) |
 
 (* To come:
   - convert everything to floats
-  - Unify the lexing between ops and {lops, rops, functions}? *)
+  - Unify the lexing between ops and {lops, rops, functions}?
+  - Treat variables (-> read_name has to read a string,
+    and the classification (variable, op, lop, rop, function) is done afterward) *)
 
 (* Subtleties to consider:
   - In Casio Basic, functions (like Abs, sin...) do not need parentheses.
@@ -221,11 +223,11 @@ let read_name (s : string) (i : int) =
       if j = n ||
         s.[j] = ',' ||
         s.[j] = ')' ||
-        (is_operator s j)
-        then failwith ("Function "^(String.sub s i (j-i))^" has no argument")
-        else if s.[j] = '('
-          then (String.sub s i (j-i), j)
-          else aux_read_name (j+1)
+        s.[j] = '(' ||
+        s.[j] = ' ' ||
+        is_operator s j
+        then (String.sub s i (j-i), j)
+        else aux_read_name (j+1)
     in
     aux_read_name (i+1);;
 
@@ -237,25 +239,25 @@ let lexer (s : string) : lexeme list =
       then List.rev acc
       else if s.[i] = ' '
         then aux (i+1) acc
-        else if is_operator s i
-          then aux (i+1) ((Op (String.init 1 (fun _ -> s.[i])))::acc)
-          else if s.[i] = '('
-            then aux (i+1) (LPAR::acc)
-            else if s.[i] = ')'
-              then aux (i+1) (RPAR::acc)
-              else if s.[i] = ','
-                then aux (i+1) (COMMA::acc)
-                else if s.[i] >= '0' && s.[i] <= '9'
-                  then (* Int *)
-                    let (res,ni) = read_int s i in
-                    aux ni ((Int res)::acc)
-                  else (* Function or Unary operators *)
-                    let (fname,ni) = read_name s i in
-                    if List.mem fname lop_list
-                      then aux ni ((Lunop fname)::acc)
-                      else if List.mem fname rop_list
-                        then aux ni ((Runop fname)::acc)
-                        else aux ni ((Function fname)::acc)
+        else if s.[i] = '('
+          then aux (i+1) (LPAR::acc)
+          else if s.[i] = ')'
+            then aux (i+1) (RPAR::acc)
+            else if s.[i] = ','
+              then aux (i+1) (COMMA::acc)
+              else if s.[i] >= '0' && s.[i] <= '9'
+                then (* Int *)
+                  let (res,ni) = read_int s i in
+                  aux ni ((Int res)::acc)
+                else (* Function or operators *)
+                  let (name,ni) = read_name s i in
+                  if List.exists (fun (s,_) -> s=name) op_list
+                    then aux ni ((Op name)::acc)
+                    else if List.mem name lop_list
+                      then aux ni ((Lunop name)::acc)
+                      else if List.mem name rop_list
+                        then aux ni ((Runop name)::acc)
+                        else aux ni ((Function name)::acc)
   in
   aux 0 [];;
 
