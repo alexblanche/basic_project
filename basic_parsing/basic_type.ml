@@ -27,8 +27,7 @@ type variable =
 (** TO BE UNIFIED WITH THE TYPES OF arithmetic_parsing.ml **)
 (* Type for Basic numbers *)
 type basic_number =
-  | Nint of int
-  | Nfl of float
+  | Float of float
   | Var of variable
 
 (* Type for Basic numerical and boolean expressions *)

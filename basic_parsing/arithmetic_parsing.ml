@@ -5,21 +5,23 @@
 (* Type for functions, of arity 1 to 4 *)
 (* Greater arity is not needed for Casio Basic *)
 type funct =
+  | LOP of (int -> int)
   | AR1 of (int -> int)
   | AR2 of (int -> int -> int)
   | AR3 of (int -> int -> int -> int)
   | AR4 of (int -> int -> int -> int -> int)
 
 (* Type for arithmetic expressions lexemes *)
-type lexeme = Int of int | LPAR | RPAR |
-  Op of string |
+type lexeme = Int of int | LPAR (* ( *) | RPAR (* ) *) |
+  Op of string | (* Binary operator *)
+  Runop of string | (* Left unary operator *)
+  Lunop of string | (* Right unary operator *)
   Function of string |
   COMMA
 
 (* To come:
-  floats
-  prefix unary operators: Not, Uminus, ...
-  suffix unary operators: !, ^2, ... *)
+  - convert everything to floats
+  - Unify the lexing between ops and {lops, rops, functions}? *)
 
 (* Subtleties to consider:
   - In Casio Basic, functions (like Abs, sin...) do not need parentheses.
@@ -65,11 +67,18 @@ let func_table =
     ("max", AR2 (fun a b -> max a b));
     ("f", AR1 (fun x -> x*x+2));
     ("max3", AR3 (fun a b c -> max (max a b) c));
-    ("fact", AR1 fact)
+    ("fact", AR1 fact);
+    ("Abs", LOP abs)
     ]
   in
   List.iter (fun (fname, fdef) -> Hashtbl.add t fname fdef) func_list;
   t;;
+
+(* List of handled left unary operators *)
+let lop_list = ["Abs"];;
+
+(* List of handled right unary operators *)
+let rop_list = ["!"];;
 
 (* List of handled operators and their index of precedence (1 = greatest *)
 let op_list = [("+", 3); ("-", 3); ("*", 2); ("/", 2); ("^", 1);
@@ -83,6 +92,7 @@ let op_list = [("+", 3); ("-", 3); ("*", 2); ("/", 2); ("^", 1);
 let arity (fname : string) =
   try
     (match Hashtbl.find func_table fname with
+      | LOP _ -> 1
       | AR1 _ -> 1
       | AR2 _ -> 2
       | AR3 _ -> 3
@@ -115,13 +125,13 @@ let rec precedence (o1 : string) (o2 : string) : int =
     | Not_found -> failwith ("precedence: unkown operator "^o1);;
 
 (* Checks if the string starting at index i of string s is an operator *)
-  let is_operator (s : string) (i : int) : bool =
-    let remaining_char = String.length s - i in
-    let is_op sop =
-      let n = String.length sop in
-      (n <= remaining_char) && (String.sub s i n) = sop
-    in
-    List.exists (fun (sop, _) -> is_op sop) op_list;;
+let is_operator (s : string) (i : int) : bool =
+  let remaining_char = String.length s - i in
+  let is_op sop =
+    let n = String.length sop in
+    (n <= remaining_char) && (String.sub s i n) = sop
+  in
+  List.exists (fun (sop, _) -> is_op sop) op_list;;
 
 
 (** Application functions **)
@@ -130,6 +140,8 @@ let rec precedence (o1 : string) (o2 : string) : int =
 let apply_func (fname : string) (il : int list) =
   try
     (match (Hashtbl.find func_table fname, il) with
+      | LOP f, [i1] -> f i1
+      | LOP _, _ -> failwith ("apply_func: Operator "^fname^" has a wrong number of arguments")
       | AR1 f, [i1] -> f i1
       | AR2 f, [i1;i2] -> f i1 i2
       | AR3 f, [i1;i2;i3] -> f i1 i2 i3
@@ -163,6 +175,17 @@ let apply_op (o : string) (i1 : int) (i2 : int) : int =
   else if o = "Xor" then
     int_of_bool ((i1 <> 0) && (i2 = 0) || (i1 = 0) && (i2 <> 0))
   else failwith ("apply_op: Unkown operator "^o);;
+
+(* Application of the right unary operators *)
+(* Since there are only a few, we hard-code them like the operators. *)
+let apply_rop (ro : string) (i : int) : int =
+  if ro = "!" then fact i
+  else failwith ("apply_rop: Unkown operator "^ro);;
+
+(* Application of the left unary operators *)
+let apply_lop (lo : string) (i : int) : int =
+  apply_func lo [i];;
+
 
 (* Final evaluation of the arithmetic formula *)
 let rec calculate outq opq =
@@ -212,21 +235,27 @@ let lexer (s : string) : lexeme list =
   let rec aux i acc =
     if i = n
       then List.rev acc
-      else if is_operator s i
-        then aux (i+1) ((Op (String.init 1 (fun _ -> s.[i])))::acc)
-        else if s.[i] = '('
-          then aux (i+1) (LPAR::acc)
-          else if s.[i] = ')'
-            then aux (i+1) (RPAR::acc)
-            else if s.[i] = ','
-              then aux (i+1) (COMMA::acc)
-              else if s.[i] >= '0' && s.[i] <= '9'
-                then (* Int *)
-                  let (res,ni) = read_int s i in
-                  aux ni ((Int res)::acc)
-                else (* Function *)
-                  let (fname,ni) = read_name s i in
-                  aux ni ((Function fname)::acc)
+      else if s.[i] = ' '
+        then aux (i+1) acc
+        else if is_operator s i
+          then aux (i+1) ((Op (String.init 1 (fun _ -> s.[i])))::acc)
+          else if s.[i] = '('
+            then aux (i+1) (LPAR::acc)
+            else if s.[i] = ')'
+              then aux (i+1) (RPAR::acc)
+              else if s.[i] = ','
+                then aux (i+1) (COMMA::acc)
+                else if s.[i] >= '0' && s.[i] <= '9'
+                  then (* Int *)
+                    let (res,ni) = read_int s i in
+                    aux ni ((Int res)::acc)
+                  else (* Function or Unary operators *)
+                    let (fname,ni) = read_name s i in
+                    if List.mem fname lop_list
+                      then aux ni ((Lunop fname)::acc)
+                      else if List.mem fname rop_list
+                        then aux ni ((Runop fname)::acc)
+                        else aux ni ((Function fname)::acc)
   in
   aux 0 [];;
 
@@ -246,6 +275,8 @@ let rec right_reduce output_q op_q =
         then (output_q, op_q)
         else right_reduce ((apply_op o i1 i2)::outq) opqt
     | _, (Op o)::_ -> failwith ("reduce: Not enough operands for operator"^o)
+    | i::outq, (Lunop lo)::opqt ->
+        right_reduce ((apply_lop lo i)::outq) opqt
     | _ -> failwith "reduce: Syntax error";;
 
 (* Shunting_yard algorithm: returns the value of the expression *)
@@ -258,7 +289,13 @@ let rec shunting_yard (lexlist : lexeme list) (output_q : int list) (op_q : lexe
     | (Int i)::t, _ -> shunting_yard t (i::output_q) op_q
     | (Function fname)::t, _ -> shunting_yard t output_q ((Function fname)::op_q)
     | LPAR::t, _ -> shunting_yard t output_q (LPAR::op_q)
+    | (Lunop lo)::t, _ -> shunting_yard t output_q ((Lunop lo)::op_q)
 
+    (* Runop *)
+    | (Runop ro)::t, _ ->
+      (match output_q with
+        | i::outq -> shunting_yard t ((apply_rop ro i)::outq) op_q
+        | _ -> failwith ("No operand for operator"^ro))
     (* COMMA *)
     | COMMA::t, (Op o)::opqt ->
       if left_assoc o
@@ -269,6 +306,9 @@ let rec shunting_yard (lexlist : lexeme list) (output_q : int list) (op_q : lexe
         else (* Right-associative *)
           let noutq, nopq = right_reduce output_q op_q in
           shunting_yard t noutq (COMMA::nopq)
+    | COMMA::t, (Lunop lo)::opqt ->
+      let noutq, nopq = right_reduce output_q op_q in
+      shunting_yard t noutq (COMMA::nopq)
     | COMMA::t, _ -> shunting_yard t output_q (COMMA::op_q)
 
     (* Op *)
@@ -283,6 +323,9 @@ let rec shunting_yard (lexlist : lexeme list) (output_q : int list) (op_q : lexe
             let noutq, nopq = right_reduce output_q op_q in
             shunting_yard t noutq ((Op o1)::nopq)
         else shunting_yard t output_q ((Op o1)::op_q)
+    | (Op o)::t, (Lunop lo)::opqt ->
+      let noutq, nopq = right_reduce output_q op_q in
+      shunting_yard t noutq ((Op o)::nopq)
     | (Op o)::t, _ -> shunting_yard t output_q ((Op o)::op_q)
     
     (* RPAR *)
