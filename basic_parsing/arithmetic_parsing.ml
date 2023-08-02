@@ -20,7 +20,6 @@ type lexeme = Float of float | Lpar (* ( *) | Rpar (* ) *) |
   Comma (* , *)
 
 (* To come:
-  - convert everything to floats
   - Unify the lexing between ops and {lops, rops, functions}?
   - Treat variables (-> read_name has to read a string,
     and the classification (variable, op, lop, rop, function) is done afterward) *)
