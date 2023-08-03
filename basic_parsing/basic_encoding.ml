@@ -379,6 +379,7 @@ let commands = [
   ("\249\059", "STRINV"); (* StrInv( *)
   ("\249\060", "STRSHIFT"); (* StrShift( *)
   ("\249\061", "STRROTATE"); (* StrRotate( *)
+  ("\249\063", "STR") (* Str *)
 ];;
 
 let symbols = [ (* From the menu "Char" *)
