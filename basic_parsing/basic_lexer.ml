@@ -122,16 +122,69 @@ let lex (file_name : string) : string list =
 
 
 (*********************************************************)
-(* Splitting a G1M file into Basic programs *)
+(* Splitting a G1M file into elements (program, list, matrix, picture, capture, string) *)
 
-(* Returns the name and (alleged) size of the first Basic program in string s
-  after index iprog, when i prog is the index at the beginning of the "PROGRAM" part *)
-let get_prog_name_size (s : string) (iprog : int) : string * int =
-  let index_name = iprog+7+12+1+8 in
-  let prog_name = String.sub s index_name 8 in
+(* Info: (name, size, index)
+  Given a G1M file in string form:
+  name: name of the program, the list, etc. (max 8 characters)
+  size: size in the string
+  index: index of the beginning of the data in the string *)
+type info = string * int * int
 
-  if s.[index_name+8] <> '\001'
-    then failwith "get_prog_name_size: not a Basic program";
+type content =
+  {
+    mutable prog : info list;
+    mutable list : info list;
+    mutable mat : info list;
+    mutable pict : info list;
+    mutable capt : info list;
+    mutable str : info list
+  }
+
+(* Returns an object of type content with empty fields *)
+let empty_content () : content =
+  {prog = []; list = []; mat = []; pict = []; capt = []; str = []};;
+
+(* Reverses the lists in all the fields in content c *)
+let reverse_all_fields (c : content) : unit =
+  c.prog <- List.rev c.prog;
+  c.list <- List.rev c.list;
+  c.mat <- List.rev c.mat;
+  c.pict <- List.rev c.pict;
+  c.capt <- List.rev c.capt;
+  c.str <- List.rev c.str;;
+
+(* Add the info to right field of content c *)
+let add_info (c : content) (data_type : string) (inf : info) : unit =
+  if data_type = "PROGRAM" then c.prog <- inf::c.prog
+  else if data_type = "LISTFILE" then c.list <- inf::c.list
+  else if data_type = "MAT" then c.mat <- inf::c.mat
+  else if data_type = "PICTURE" then c.pict <- inf::c.pict
+  else if data_type = "CAPT" then c.capt <- inf::c.capt
+  else if data_type = "STRING" then c.str <- inf::c.str (* To do: check if this type exists *)
+  else failwith ("add_info: unknown data type "^data_type);;
+  
+
+(* Returns the data type ("PROGRAM", "PICTURE", ...) in string form, and the info in string s
+  after index ihead, when ihead is the index at the beginning of the data type part *)
+let get_info (s : string) (ihead : int) : string * info =
+  let index_data_type_end_1 = String.index_from_opt s ihead '\000' in
+  let index_data_type_end_2 = String.index_from_opt s ihead ' ' in
+  let index_data_type_end =
+    match index_data_type_end_1, index_data_type_end_2 with
+      | Some d1, Some d2 -> min d1 d2
+      | Some d1, None -> d1
+      | None, _ -> failwith "get_info: file has no '\000' character"
+  in
+  let data_type = String.sub s ihead (index_data_type_end-ihead) in
+
+  let index_name = ihead+19+1+8 in
+  let index_name_end =
+    match String.index_from_opt s index_name '\000' with
+      | None -> 8
+      | Some i -> i
+  in
+  let name = String.sub s index_name (index_name_end - index_name) in
 
   let index_size = index_name+8+1 in
   let size =
@@ -146,31 +199,50 @@ let get_prog_name_size (s : string) (iprog : int) : string * int =
           )
       ) in
 
-  (prog_name, size);;
+  (data_type, (name, size, index_size+4+13));;
 
 
-(* When the G1M represented by string s is made up of basic programs
-  (and no pictures, List, ...),
-  Returns the list of (name, size, istart) of each program in the G1M file
-  represented by the string s, if this file is made up of basic programs
-  (and no pictures, List, ...).
-
-  name: name of the program (max 8 characters)
-  size: size value of the program (as present in the header)
-  istart: index of the start of the program
-  The program is actually (size-10) bytes long. *)
-let basic_split (s : string) : (string * int * int) list =
+(* Given a string s representing a G1M/G2M file,
+  returns the content of the file, i.e. the info of each object.
+  A program is actually (size-10) bytes long. *)
+let get_content (s : string) : content =
   let n = String.length s in
-  (* Initial header (first "PROGRAM" part) *)
+  (* Initial header (first data type ("PROGRAM", "PICTURE") part) *)
   let initial_header_size = 21+9+2 in
-  (* Program header *)
-  let prog_header_size = 7+12+1+8+8+1+4+13 in
-  let rec aux acc i =
+  let cont = empty_content () in
+  let rec aux i =
     if i >= n
-      then List.rev acc
+      then reverse_all_fields cont
       else
-        let (name, size) = get_prog_name_size s i in
-        let istart = i + prog_header_size in
-        aux ((name, size, istart)::acc) (istart+size-10)
+        (let (data_type, (name, size, istart)) = get_info s i in
+        add_info cont data_type (name, size, istart);
+        aux (istart+size-10))
   in
-  aux [] initial_header_size;;
+  aux initial_header_size;
+  cont;;
+
+(*********************************************************)
+(* Reading picture files *)
+
+(* Reads the content of the picture at index istart of string s
+  (representing a G1M/G2M file) and returns a boolean matrix
+  representing the picture *)
+let read_pict (s : string) (istart : int) : bool array array =
+  let m = Array.make_matrix 64 128 false in
+  let byte = ref 0 in
+  for i = 0 to 1023 do
+    byte := Char.code s.[istart+6+i];
+    for j = 7 downto 0 do
+      m.(63-i/16).(8*(i mod 16)+j) <- (!byte mod 2) = 1;
+      byte := !byte/2
+    done;
+  done;
+  m;;
+
+
+(* Tests *)
+#use "picture_editor/picture_drawer.ml"
+
+let read_all_pict (s : string) : unit =
+  let c = get_content s in
+  List.iter (fun (_,_,i) -> let m = read_pict s i in view_matrix m) c.pict;;
