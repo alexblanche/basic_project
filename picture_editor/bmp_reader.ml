@@ -79,18 +79,15 @@ let read_pixels (width : int) (height : int) (channel : in_channel) : image_mat 
   let p = padd width in
   let m = Array.make_matrix height width black in
   for j = 0 to height-1 do
-    print_endline ("j = "^(string_of_int j));
     for i = 0 to width-1 do
       let b = input_byte channel in
       let g = input_byte channel in
       let r = input_byte channel in
       m.(height-j-1).(i) <- rgb r g b
     done;
-    print_endline ("End of reading j = "^(string_of_int j));
     for i = 1 to p do
       let _ = input_byte channel in ()
     done;
-    print_endline ("End of padding j = "^(string_of_int j));
   done;
   m;;
 

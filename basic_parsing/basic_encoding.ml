@@ -23,6 +23,8 @@ let enco_of_two_int (i1 : int) (i2 : int) : string =
  46 = .
   *)
 
+(* Bug spotted: the character \001 seems to also designate the character "à" in strings... *)
+
 (* Most commands *)
 (* Left in comments: the bytes that do not occur in the commands or the symbols *)
 let commands = [

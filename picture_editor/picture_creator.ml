@@ -2,8 +2,8 @@
   through the Floyd-Steinberg dithering algorithm
   and the Threshold algorithm applied on existing BMP images *)
 
-#use "bmp_reader.ml"
-#use "picture_drawer.ml"
+#use "picture_editor/bmp_reader.ml"
+#use "picture_editor/picture_drawer.ml"
 
 (** Warning **)
 (* The convention of Graphics function draw_image is (0,0) = upper-left corner
