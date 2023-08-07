@@ -8,9 +8,7 @@
 
 (* G1M/G2M file format *)
 (* 
-  - 21 bytes of header
-  - 9 bytes \000
-  - 2 bytes: \255\25*
+  - 32 bytes of initial header (for its structure, see g1m_writer.ml)
   - 19 bytes: Data type ("PROGRAM", "LISTFILE", "MAT", "PICTURE", "CAPT", (STR for string?))
     + padding with \000
   - 1 byte: \001 (different for list/mat?)
@@ -27,8 +25,18 @@
     - a capture: beginning of the image data
     - a picture: 12 bytes \000, then beginning of the image data)
   - Padding: some bytes \000
-  Size of each object: size - 4 (starting from Default starting point (regardless of data type))
  *)
+(* Size of each object: size - 4 (starting from Default starting point (regardless of data type))
+   size = 4 + iend - idep + 6(for a prog file) *)
+
+(* Number of padding bytes
+
+  Empirical formula, for a program:
+  when l is the length of the data describing the object (in bytes),
+  there there are 4-(n+10) mod 4 bytes \000 of padding,
+  i.e. as many bytes as it takes to make n+4+6 = 0 mod 4
+  (+4 because the actual size is size-4, 6 is the specific offset for programs)
+*)
 
 (*********************************************************************************************)
 
@@ -132,7 +140,7 @@ let get_info (s : string) (ihead : int) : string * info =
 let get_content (s : string) : content =
   let n = String.length s in
   (* Initial header (first data type ("PROGRAM", "PICTURE") part) *)
-  let initial_header_size = 21+9+2 in
+  let initial_header_size = 32 in
   let cont = empty_content () in
   let rec aux i =
     if i >= n
