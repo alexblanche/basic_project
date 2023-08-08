@@ -9,14 +9,15 @@
 (* G1M/G2M file format *)
 (* 
   - 32 bytes of initial header (for its structure, see g1m_writer.ml)
-  - 19 bytes: Data type ("PROGRAM", "LISTFILE", "MAT", "PICTURE", "CAPT", (STR for string?))
+  - 19 bytes: Data type ("PROGRAM", "LIST 1", "MAT A", "PICTURE 1", "CAPT 1", "STRING 1")
     + padding with \000
-  - 1 byte: \001 (different for list/mat?)
-  - 8 bytes: ("system" + 2 \000) for programs, ("main" + 4 \000) for alpha-mem types
-  - 8 bytes: the name of the object (name of the program, PICT1, MAT_M, ...)
-    (if the title is shorter, padding with \000)
+  - 1 byte: \001
+  - 8 bytes: "system" for programs, "@REV2" for captures, "main" for alpha-mem types
+    + padding with \000
+  - 8 bytes: the name of the object (name of the program, 1LIST1 (1LIST2...), MAT_M, PICT1, CAPT1, STR1)
+    + padding with \000
   - 1 byte: type of file
-    (\001 Basic program, \005 list files, \007 picture, \010 capture...)
+    (\001 Basic program, \004 string, \005 list, \006 matrix, \007 picture, \010 capture)
   - 4 bytes: size of the program
   - 7 bytes \000
   [Default starting point]
@@ -77,7 +78,7 @@ let reverse_all_fields (c : content) : unit =
 (* Add the info to right field of content c *)
 let add_info (c : content) (data_type : string) (inf : info) : unit =
   if data_type = "PROGRAM" then c.prog <- inf::c.prog
-  else if data_type = "LISTFILE" then c.list <- inf::c.list
+  else if data_type = "LIST" then c.list <- inf::c.list
   else if data_type = "MAT" then c.mat <- inf::c.mat
   else if data_type = "PICTURE" then c.pict <- inf::c.pict
   else if data_type = "CAPT" then c.capt <- inf::c.capt
