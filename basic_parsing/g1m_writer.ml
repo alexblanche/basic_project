@@ -70,7 +70,7 @@ let init_header (file_type : string) (length : int) (nb_obj : int) : string =
 (* obj_type belongs to {"PROGRAM", "LIST", "MAT", "PICTURE", "CAPT", "STRING"}
   name is "1" for List, Picture, Capt, String numero 1,
   "A" for Mat A, or the name of the program (max 8 characters) *)
-let obj_subheader (obj_type : string) (name : int) (length : int) : string =
+let obj_subheader (obj_type : string) (name : string) (length : int) : string =
   (* Checking obj_type *)
   if (obj_type <> "PROGRAM" &&
     obj_type <> "LIST" &&
@@ -107,7 +107,7 @@ let obj_subheader (obj_type : string) (name : int) (length : int) : string =
     if obj_type = "PROGRAM"
       then name^(String.make (8-String.length name) '\000')
       else if obj_type = "CAPT" || obj_type = "PICTURE"
-        then (String.sub obj_type 4)^name^(String.make (4-String.length name) '\000')
+        then (String.sub obj_type 0 4)^name^(String.make (4-String.length name) '\000')
         else if obj_type = "MAT"
           then "MAT_"^name^(String.make 3 '\000')
           else if obj_type = "LIST"
@@ -172,7 +172,7 @@ let bool_mat_to_bin (m : bool array array) : string =
   let aux i =
     let res = ref 0 in
     for j = 7 downto 0 do
-      res := !res + m.(63-i/16).(8*(i mod 16)+j)
+      res := 2 * !res + (if m.(63-i/16).(8*(i mod 16)+j) then 1 else 0)
     done;
     char_of_int (!res)
   in
