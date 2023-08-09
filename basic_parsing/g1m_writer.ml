@@ -224,3 +224,22 @@ let write_pict (m : bool array array) (file_name : string) =
 (* Both functions successfully write pictures/captures that are
   correctly recognized by the calculator, and they can display pixels
   on the normally inaccessible left and top lines *)
+
+(* Test: generates a g1m file with name file_name, containing
+  all the strings in the list str_list (called STR1, STR2, ...) *)
+  let write_str (str_list : string list) (file_name : string) =
+    let bin i str =
+      let len = String.length str in
+      let padding_size = 4 - (len mod 4) in
+      let subh = obj_subheader "STRING" (string_of_int (i+1)) (len + padding_size) in
+      (String.sub subh 0 (String.length subh - 4))^str^(String.make padding_size '\000')
+    in
+    let data_l = List.mapi bin str_list in
+    (* length = sum of the lengths of the strings representing each object
+        + 32 (size of the initial header) *)
+    let length =
+      (List.fold_left (fun sum s -> sum + String.length s) 0 data_l) + 32 in
+    let head = init_header "g1m" length (List.length str_list) in
+    let file_content = head^(String.concat "" data_l) in
+    write_file file_name file_content;;
+(* Successful *)

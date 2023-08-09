@@ -26,6 +26,7 @@
     - a program: 6 bytes \000, then beginning of the program)
     - a capture: beginning of the image data
     - a picture: 12 bytes \000, then beginning of the image data)
+    - a string: starts 4 bytes ago (but I need to change a lot of things to integrate it... :'( )
   - Padding: some bytes \000
  *)
 (* Size of each object: size - 4 (starting from Default starting point (regardless of data type))
@@ -127,6 +128,7 @@ let get_info (s : string) (ihead : int) : string * info =
     if data_type = "PROGRAM" then default_istart + 6
     else if data_type = "PICTURE" then default_istart + 12
     else if data_type = "CAPT" then default_istart
+    else if data_type = "STRING" then default_istart - 4
     (* to do: add more types *)
     else index_size + 4 + 13 (* default *)
   in
@@ -229,6 +231,7 @@ let read_pict (s : string) (istart : int) : bool array array =
   done;
   m;;
 
+
 (* Reading capture files *)
 
 (* Reads the content of the capture at index istart of string s
@@ -248,7 +251,6 @@ let read_capt (s : string) (istart : int) : bool array array =
   done;
   m;;
 
-
 (* (* Tests *)
 #use "picture_editor/picture_drawer.ml"
 
@@ -260,6 +262,25 @@ let read_all_capt (s : string) : unit =
   let c = get_content s in
   List.iter (fun (_,_,i,_) -> let m = read_pict s i in view_matrix m) c.capt;; *)
 
+
+(* Reading strings *)
+
+(* Reads the content of the string at index istart of string s
+  (representing a G1M/G2M file) with length length, and returns
+  the string *)
+(* I assume that the padding at the end contains only '\000' bytes. *)
+let read_str (s : string) (istart : int) (length : int) : string =
+  (* The stored string can contain \000 bytes, so we count the number of
+    padding bytes and consider that the rest is the string. *)
+  let rec aux i =
+    if s.[i] <> '\000'
+      then i
+      else aux (i-1)
+  in
+  let length = (aux (istart + length - 1) - istart + 1) in
+  String.sub s istart length;;
+
+
 (*********************************************************************************************)
 
-(* To do: read other objects (lists, mat, str) *)
+(* To do: read other objects (lists, mat) *)
