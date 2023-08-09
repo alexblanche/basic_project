@@ -19,7 +19,8 @@
   - 1 byte: type of file
     (\001 Basic program, \004 string, \005 list, \006 matrix, \007 picture, \010 capture)
   - 4 bytes: size of the program
-  - 7 bytes \000
+  - 4 bytes \000
+  - 3 bytes: "\128\000\064" for captures, "\000\000\000" otherwise
   [Default starting point]
   (if the object is:
     - a program: 6 bytes \000, then beginning of the program)
@@ -210,9 +211,9 @@ let prog_to_lexlist (s : string) (istart : int) : string list =
 (*********************************************************************************************)
 (* Reading picture files *)
 
-(* Reads the content of the picture/capture at index istart
-  of string s (representing a G1M/G2M file) and returns a boolean
-  matrix representing the picture *)
+(* Reads the content of the picture at index istart of string s
+  (representing a G1M/G2M file) and returns a boolean matrix
+  representing the picture *)
 (* The calculator prints the bottom line as the top one
   (normally inaccessible). This function takes this into account
   (with the (64+62-i/16) mod 64) argument). *)
@@ -223,6 +224,25 @@ let read_pict (s : string) (istart : int) : bool array array =
     byte := Char.code s.[istart+i];
     for j = 7 downto 0 do
       m.((64+62-i/16) mod 64).(8*(i mod 16)+j) <- (!byte mod 2) = 1;
+      byte := !byte/2
+    done;
+  done;
+  m;;
+
+(* Reading capture files *)
+
+(* Reads the content of the capture at index istart of string s
+  (representing a G1M/G2M file) and returns a boolean matrix
+  representing the capture *)
+(* The encoding of captures is straightforward: line by line,
+  starting from the top one. *)
+let read_capt (s : string) (istart : int) : bool array array =
+  let m = Array.make_matrix 64 128 false in
+  let byte = ref 0 in
+  for i = 0 to 1023 do
+    byte := Char.code s.[istart+i];
+    for j = 7 downto 0 do
+      m.(63-i/16).(8*(i mod 16)+j) <- (!byte mod 2) = 1;
       byte := !byte/2
     done;
   done;

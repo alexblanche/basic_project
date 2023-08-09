@@ -133,9 +133,11 @@ let obj_subheader (obj_type : string) (name : string) (length : int) : string =
     String.init 4 (fun i -> char_of_int (t.(3-i)))
   in
 
-  (* Default: 7 bytes (sometimes more) *)
+  (* Default: 7 bytes *)
   let padding =
-    String.make 7 '\000'
+    if obj_type = "CAPT"
+      then ((String.make 4 '\000')^"\128\000\064")
+      else String.make 7 '\000'
   in
 
   (* Subheader string *)
@@ -153,7 +155,8 @@ let obj_subheader (obj_type : string) (name : string) (length : int) : string =
   - 1 byte: type of file
     (\001 Basic program, \004 string, \005 list, \006 matrix, \007 picture, \010 capture)
   - 4 bytes: size of the program
-  - 7 bytes \000
+  - 4 bytes \000
+  - 3 bytes: "\128\000\064" for captures, "\000\000\000" otherwise
   [Default starting point]
   (if the object is:
     - a program: 6 bytes \000, then beginning of the program)
@@ -166,16 +169,28 @@ let obj_subheader (obj_type : string) (name : string) (length : int) : string =
 
 (** Conversions to binary **)
 
-(* Conversion from boolean matrix to binary *)
+(* Conversion from boolean matrix to binary encoding of a picture *)
 (* The matrix is assumed to have size 64*128. *)
 (* The calculator prints the bottom line as the top one
   (normally inaccessible). This function takes this into account
   (with the (64+62-i/16) mod 64) argument). *)
-let bool_mat_to_bin (m : bool array array) : string =
+let bool_mat_to_pict_bin (m : bool array array) : string =
   let aux i =
     let res = ref 0 in
     for j = 0 to 7 do
       res := 2 * !res + (if m.((64+62-i/16) mod 64).(8*(i mod 16)+j) then 1 else 0)
+    done;
+    char_of_int (!res)
+  in
+  String.init 1024 aux;;
+
+(* Conversion from boolean matrix to binary encoding a capture *)
+(* The matrix is assumed to have size 64*128. *)
+let bool_mat_to_capt_bin (m : bool array array) : string =
+  let aux i =
+    let res = ref 0 in
+    for j = 0 to 7 do
+      res := 2 * !res + (if m.(63-i/16).(8*(i mod 16)+j) then 1 else 0)
     done;
     char_of_int (!res)
   in
@@ -188,10 +203,24 @@ let bool_mat_to_bin (m : bool array array) : string =
 (* Test: generates a g1m file with name file_name, containing
   one picture (called PICT1) based on boolean matrix m *)
 let write_pict (m : bool array array) (file_name : string) =
-  let data = bool_mat_to_bin m in
+  let data = bool_mat_to_pict_bin m in
   let subh = obj_subheader "PICTURE" "1" 2048 in
   let length = (String.length subh) + 12 + 2032 + 32 in
   let head = init_header "g1m" length 1 in
   let padding = String.make 1008 '\000' in
   let file_content = head^subh^(String.make 12 '\000')^data^padding in
   write_file file_name file_content;;
+
+(* Test: generates a g1m file with name file_name, containing
+  one capture (called CAPT1) based on boolean matrix m *)
+  let write_capt (m : bool array array) (file_name : string) =
+    let data = bool_mat_to_capt_bin m in
+    let subh = obj_subheader "CAPT" "1" 1028 in
+    let length = (String.length subh) + 1024 + 32 in
+    let head = init_header "g1m" length 1 in
+    let file_content = head^subh^data in
+    write_file file_name file_content;;
+
+(* Both functions successfully write pictures/captures that are
+  correctly recognized by the calculator, and they can display pixels
+  on the normally inaccessible left and top lines *)
