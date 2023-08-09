@@ -1,6 +1,6 @@
 (* G1M/G2M file writer *)
 
-(* TO DO: Subheader and bool_mat_to_bin need testing *)
+(* TO DO: Subheader needs testing *)
 
 (* Creates the file file_name and writes the string s in it *)
 let write_file (file_name : string) (s : string) : unit =
@@ -168,12 +168,30 @@ let obj_subheader (obj_type : string) (name : string) (length : int) : string =
 
 (* Conversion from boolean matrix to binary *)
 (* The matrix is assumed to have size 64*128. *)
+(* The calculator prints the bottom line as the top one
+  (normally inaccessible). This function takes this into account
+  (with the (64+62-i/16) mod 64) argument). *)
 let bool_mat_to_bin (m : bool array array) : string =
   let aux i =
     let res = ref 0 in
-    for j = 7 downto 0 do
-      res := 2 * !res + (if m.(63-i/16).(8*(i mod 16)+j) then 1 else 0)
+    for j = 0 to 7 do
+      res := 2 * !res + (if m.((64+62-i/16) mod 64).(8*(i mod 16)+j) then 1 else 0)
     done;
     char_of_int (!res)
   in
   String.init 1024 aux;;
+
+(*******************************************************************)
+
+(** File generation **)
+
+(* Test: generates a g1m file with name file_name, containing
+  one picture (called PICT1) based on boolean matrix m *)
+let write_pict (m : bool array array) (file_name : string) =
+  let data = bool_mat_to_bin m in
+  let subh = obj_subheader "PICTURE" "1" 2048 in
+  let length = (String.length subh) + 12 + 2032 + 32 in
+  let head = init_header "g1m" length 1 in
+  let padding = String.make 1008 '\000' in
+  let file_content = head^subh^(String.make 12 '\000')^data^padding in
+  write_file file_name file_content;;

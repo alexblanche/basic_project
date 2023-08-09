@@ -213,13 +213,16 @@ let prog_to_lexlist (s : string) (istart : int) : string list =
 (* Reads the content of the picture/capture at index istart
   of string s (representing a G1M/G2M file) and returns a boolean
   matrix representing the picture *)
+(* The calculator prints the bottom line as the top one
+  (normally inaccessible). This function takes this into account
+  (with the (64+62-i/16) mod 64) argument). *)
 let read_pict (s : string) (istart : int) : bool array array =
   let m = Array.make_matrix 64 128 false in
   let byte = ref 0 in
   for i = 0 to 1023 do
     byte := Char.code s.[istart+i];
     for j = 7 downto 0 do
-      m.(63-i/16).(8*(i mod 16)+j) <- (!byte mod 2) = 1;
+      m.((64+62-i/16) mod 64).(8*(i mod 16)+j) <- (!byte mod 2) = 1;
       byte := !byte/2
     done;
   done;
@@ -239,5 +242,4 @@ let read_all_capt (s : string) : unit =
 
 (*********************************************************************************************)
 
-(* To do: read other objects (lists, mat, str)
-  Search if other objects can be put into G1M/G2M files *)
+(* To do: read other objects (lists, mat, str) *)
