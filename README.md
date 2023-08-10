@@ -15,13 +15,15 @@ I refer to "text mode" as opposed to code written on a calculator or on FA-124, 
 
 ## Files
 
-The repository contains the following files:
+The repository contains the following files.
 In basic_parsing:
 - basic_encoding.ml: contains lists of the encoding (in one or two bytes) of most of the commands and all the characters that exist on Casio calculator (Graph 35+), and the functions that generate two hash tables, containing the visual representation of the characters in text mode and graphic mode respectively
 - basic_type.ml: contains the types for the abstract representation of Casio Basic code used for the emulator
 - file_reader.ml: various file reading functions
 - g1m_reader.ml: reading functions for extraction of the content of a G1M/G2M file and binary interpretation functions
 - g1m_writer.ml: generation of G1M/G2M files
+- arithmetic_parsing.ml: lexing and evaluation of arithmetic expressions (involving left and right-associative binary operators, left and right unary operators, functions)
+- float_repr.ml: conversions from OCaml floats to Casio Basic numbers
 
 In data:
 - char1 ... char7.bmp, gphchar1.bmp, gphchar2.bmp: files that represent all the characters in text mode and graphic mode, whose representations are extracted and stored in the two hash tables (see basic_encoding.ml)
@@ -34,14 +36,10 @@ In picture_editor:
 
 ## To do next
 Compilers and decompilers:
-- Code a lexer and a parser to convert G1M files to an intermediate abstract "Basic tree" type
-- Code a converter from Basic tree to readable Basic code (custom format ".cb")
-- Code a converter from readable Basic code to Basic tree type
-- Code a converter from Basic tree type to binary, and writes it into a G1M file
-
-Picture conversions:
-- Code a converter from boolean matrix to G1M picture file
-- Code a converter from G1M picture file to boolean matrix
+- Code a lexer and a parser to convert G1M files to an intermediate abstract "Basic code" type
+- Code a converter from Basic tree to readable "Custom Basic" code
+- Code a lexer from Custom Basic code to list of lexemes (which can then be handled by the compiler
+- Code a converter from Basic code type to binary, to write it into a G1M file
 
 Emulation:
 - Code all operators and functions
