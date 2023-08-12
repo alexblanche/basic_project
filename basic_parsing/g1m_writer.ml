@@ -135,58 +135,22 @@ let obj_subheader (obj_type : string) (name : string) (length : int) : string =
 
   (* Default: 7 bytes *)
   let padding =
-    if obj_type = "CAPT"
-      then ((String.make 4 '\000')^"\128\000\064")
-      else String.make 7 '\000'
+    String.make 3 '\000'
   in
 
   (* Subheader string *)
   data_type ^ "\001" ^ folder ^ name_part ^ file_type ^ size ^ padding;;
 
 
-  (*
-  - 19 bytes: Data type ("PROGRAM", "LIST 1", "MAT A", "PICTURE 1", "CAPT 1", "STRING 1")
-    + padding with \000
-  - 1 byte: \001
-  - 8 bytes: "system" for programs, "@REV2" for captures, "main" for alpha-mem types
-    + padding with \000
-  - 8 bytes: the name of the object (name of the program, 1LIST1 (1LIST2...), MAT_M, PICT1, CAPT1, STR1)
-    + padding with \000
-  - 1 byte: type of file
-    (\001 Basic program, \004 string, \005 list, \006 matrix, \007 picture, \010 capture)
-  - 4 bytes: size of the program
-  - 4 bytes \000
-  - 3 bytes: "\128\000\064" for captures, "\000\000\000" otherwise
-  [Default starting point]
-  (if the object is:
-    - a program: 6 bytes \000, then beginning of the program)
-    - a capture: beginning of the image data
-    - a picture: 12 bytes \000, then beginning of the image data)
-  - Padding: some bytes \000
-  *)
-
 (*******************************************************************)
 
 (** Conversions to binary **)
 
 (* Conversion from boolean matrix to binary encoding of a picture *)
-(* The matrix is assumed to have size 64*128. *)
-(* The calculator prints the bottom line as the top one
-  (normally inaccessible). This function takes this into account
-  (with the (64+62-i/16) mod 64) argument). *)
-let bool_mat_to_pict_bin (m : bool array array) : string =
-  let aux i =
-    let res = ref 0 in
-    for j = 0 to 7 do
-      res := 2 * !res + (if m.((64+62-i/16) mod 64).(8*(i mod 16)+j) then 1 else 0)
-    done;
-    char_of_int (!res)
-  in
-  String.init 1024 aux;;
-
-(* Conversion from boolean matrix to binary encoding a capture *)
-(* The matrix is assumed to have size 64*128. *)
-let bool_mat_to_capt_bin (m : bool array array) : string =
+(* The matrix is assumed to have size 64*128.
+  Only the first nb_bytes/16 lines are read
+  (if nb_bytes < 16, only the first 8*nb_bytes pixels are read) *)
+let bool_mat_to_pict_bin (m : bool array array) (nb_bytes : int) : string =
   let aux i =
     let res = ref 0 in
     for j = 0 to 7 do
@@ -194,7 +158,12 @@ let bool_mat_to_capt_bin (m : bool array array) : string =
     done;
     char_of_int (!res)
   in
-  String.init 1024 aux;;
+  String.init nb_bytes aux;;
+
+(* Conversion from boolean matrix to binary encoding a capture *)
+(* The matrix is assumed to have size 64*128. *)
+let bool_mat_to_capt_bin (m : bool array array) : string =
+  bool_mat_to_pict_bin m 1024;;
 
 (*******************************************************************)
 
@@ -202,23 +171,49 @@ let bool_mat_to_capt_bin (m : bool array array) : string =
 
 (* Test: generates a g1m file with name file_name, containing
   one picture (called PICT1) based on boolean matrix m *)
+  (* The picture is uncompressed. *)
 let write_pict (m : bool array array) (file_name : string) =
-  let data = bool_mat_to_pict_bin m in
+  let data = bool_mat_to_pict_bin m 1024 in
   let subh = obj_subheader "PICTURE" "1" 2048 in
-  let length = (String.length subh) + 12 + 2032 + 32 in
+  let length = (String.length subh) + 2048 + 32 in
   let head = init_header "g1m" length 1 in
-  let padding = String.make 1008 '\000' in
-  let file_content = head^subh^(String.make 12 '\000')^data^padding in
+  let padding = String.make 1024 '\000' in
+  let file_content = head^subh^data^padding in
+  write_file file_name file_content;;
+
+(* Test: generates a g1m file with name file_name, containing
+  all the pictures in m_list (called PICT1,2,...)
+  Each element of m_list is a pair (m,nb_bytes), where m is a
+  boolean matrix and nb_bytes is the number of bytes read
+  (for compressed pictures that have nb_bytes < 1024)
+  For uncompressed pictures: nb_bytes = 2048 *)
+let write_picts (m_list : (bool array array * int) list) (file_name : string) : unit =
+  let indices = [|1;10;11;12;13;14;15;16;17;18;19;2;20;3;4;5;6;7;8;9|] in
+  let bin i (m,nb_bytes) =
+    let subh = obj_subheader "PICTURE" (string_of_int indices.(i)) (min nb_bytes 2048) in
+    let padding =
+      String.make (if nb_bytes = 2048 then 1024 else (4-(nb_bytes mod 4)) mod 4) '\000'
+    in
+    subh^(bool_mat_to_pict_bin m (min nb_bytes 1024))^padding
+  in
+  let data_l = List.mapi bin m_list in
+  (* length = sum of the lengths of the strings representing each object
+      + 32 (size of the initial header) *)
+  let length =
+    (List.fold_left (fun sum s -> sum + String.length s) 0 data_l) + 32
+  in
+  let head = init_header "g1m" length (List.length m_list) in
+  let file_content = head^(String.concat "" data_l) in
   write_file file_name file_content;;
 
 (* Test: generates a g1m file with name file_name, containing
   one capture (called CAPT1) based on boolean matrix m *)
   let write_capt (m : bool array array) (file_name : string) =
     let data = bool_mat_to_capt_bin m in
-    let subh = obj_subheader "CAPT" "1" 1028 in
-    let length = (String.length subh) + 1024 + 32 in
+    let subh = obj_subheader "CAPT" "1" (4 + 1024) in
+    let length = (String.length subh) + 4 + 1024 + 32 in
     let head = init_header "g1m" length 1 in
-    let file_content = head^subh^data in
+    let file_content = head^subh^"\000\128\000\064"^data in
     write_file file_name file_content;;
 
 (* Both functions successfully write pictures/captures that are
@@ -232,7 +227,7 @@ let write_pict (m : bool array array) (file_name : string) =
       let len = String.length str in
       let padding_size = 4 - (len mod 4) in
       let subh = obj_subheader "STRING" (string_of_int (i+1)) (len + padding_size) in
-      (String.sub subh 0 (String.length subh - 4))^str^(String.make padding_size '\000')
+      subh^str^(String.make padding_size '\000')
     in
     let data_l = List.mapi bin str_list in
     (* length = sum of the lengths of the strings representing each object
@@ -242,4 +237,3 @@ let write_pict (m : bool array array) (file_name : string) =
     let head = init_header "g1m" length (List.length str_list) in
     let file_content = head^(String.concat "" data_l) in
     write_file file_name file_content;;
-(* Successful *)

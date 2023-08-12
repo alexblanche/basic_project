@@ -18,28 +18,25 @@
     + padding with \000
   - 1 byte: type of file
     (\001 Basic program, \004 string, \005 list, \006 matrix, \007 picture, \010 capture)
-  - 4 bytes: size of the program
-  - 4 bytes \000
-  - 3 bytes: "\128\000\064" for captures, "\000\000\000" otherwise
+  - 4 bytes: size of the data (starting from Default starting point)
+  - 3 bytes: \000
   [Default starting point]
-  (if the object is:
-    - a program: 6 bytes \000, then beginning of the program)
-    - a capture: beginning of the image data
-    - a picture: 12 bytes \000, then beginning of the image data)
-    - a string: starts 4 bytes ago (but I need to change a lot of things to integrate it... :'( )
-  - Padding: some bytes \000
+  - Data:
+    If the object is:
+    - a program: 10 bytes \000, then program data
+    - a capture: 4 bytes \000\128\000\064, then capture data
+    - a picture: picture data
+    - a string: string data
+  - Padding: (some bytes \000)
+    If the object is:
+    - a capture: none
+    - a string (of length l): 4-(l mod 4) padding bytes
+    - a picture:
+      * for uncompressed pictures, there are always 2048 bytes after the Default starting point,
+        so 1024 of data, 1024 of padding
+      * for compressed pictures of l bytes: (4-(l mod 4)) mod 4 padding bytes
+    - a program (of length l): 4 - (l mod 4)
  *)
-(* Size of each object: size - 4 (starting from Default starting point (regardless of data type))
-   size = 4 + iend - idep + 6(for a prog file) *)
-
-(* Number of padding bytes
-
-  Empirical formula, for a program:
-  when l is the length of the data describing the object (in bytes),
-  there there are 4-(n+10) mod 4 bytes \000 of padding,
-  i.e. as many bytes as it takes to make n+4+6 = 0 mod 4
-  (+4 because the actual size is size-4, 6 is the specific offset for programs)
-*)
 
 (*********************************************************************************************)
 
@@ -123,17 +120,17 @@ let get_info (s : string) (ihead : int) : string * info =
       ) in
   
   (* The starting index differs depending on the data type *)
-  let default_istart = index_size + 4 + 7 in
+  let default_istart = index_size + 4 + 3 in
   let index_start =
-    if data_type = "PROGRAM" then default_istart + 6
-    else if data_type = "PICTURE" then default_istart + 12
-    else if data_type = "CAPT" then default_istart
-    else if data_type = "STRING" then default_istart - 4
-    (* to do: add more types *)
-    else index_size + 4 + 13 (* default *)
+    default_istart +
+      (if data_type = "PROGRAM" then 10
+      else if data_type = "PICTURE" || data_type = "STRING" then 0
+      else if data_type = "CAPT" then 4
+      (* to do: add lists, matrices *)
+      else (* default *) 0)
   in
 
-  let index_end = default_istart + size - 4 in
+  let index_end = default_istart + size in
 
   (data_type, (name, size, index_start, index_end));;
 
@@ -216,10 +213,9 @@ let prog_to_lexlist (s : string) (istart : int) : string list =
 (* Reads the content of the picture at index istart of string s
   (representing a G1M/G2M file) and returns a boolean matrix
   representing the picture *)
-(* The calculator prints the bottom line as the top one
-  (normally inaccessible). This function takes this into account
-  (with the (64+62-i/16) mod 64) argument). *)
-let read_pict (s : string) (istart : int) : bool array array =
+
+(* Original function *)
+(* let read_pict (s : string) (istart : int) : bool array array =
   let m = Array.make_matrix 64 128 false in
   let byte = ref 0 in
   for i = 0 to 1023 do
@@ -229,20 +225,17 @@ let read_pict (s : string) (istart : int) : bool array array =
       byte := !byte/2
     done;
   done;
-  m;;
+  m;; *)
 
-
-(* Reading capture files *)
-
-(* Reads the content of the capture at index istart of string s
-  (representing a G1M/G2M file) and returns a boolean matrix
-  representing the capture *)
-(* The encoding of captures is straightforward: line by line,
-  starting from the top one. *)
-let read_capt (s : string) (istart : int) : bool array array =
+(* Purobaz compressed pictures ("Picture 1024")
+  https://www.planet-casio.com/Fr/programmes/programme1883-1-picture-1024-purobaz-utilitaires-add-ins.html *)
+(* Reads the first nb_bytes bytes of the picture,
+  returns a 64*128 matrix
+  (16 bytes per line, 1024 = normal picture, < 16 = less than one line) *)
+let read_compr_pict (s : string) (istart : int) (nb_bytes : int) : bool array array =
   let m = Array.make_matrix 64 128 false in
   let byte = ref 0 in
-  for i = 0 to 1023 do
+  for i = 0 to nb_bytes - 1 do
     byte := Char.code s.[istart+i];
     for j = 7 downto 0 do
       m.(63-i/16).(8*(i mod 16)+j) <- (!byte mod 2) = 1;
@@ -251,16 +244,10 @@ let read_capt (s : string) (istart : int) : bool array array =
   done;
   m;;
 
-(* (* Tests *)
-#use "picture_editor/picture_drawer.ml"
+(* Reads pPictures/captures *)
+let read_pict (s : string) (istart : int) : bool array array =
+  read_compr_pict s istart 1024;;
 
-let read_all_pict (s : string) : unit =
-  let c = get_content s in
-  List.iter (fun (_,_,i,_) -> let m = read_pict s i in view_matrix m) c.pict;;
-
-let read_all_capt (s : string) : unit =
-  let c = get_content s in
-  List.iter (fun (_,_,i,_) -> let m = read_pict s i in view_matrix m) c.capt;; *)
 
 
 (* Reading strings *)
@@ -283,4 +270,4 @@ let read_str (s : string) (istart : int) (length : int) : string =
 
 (*********************************************************************************************)
 
-(* To do: read other objects (lists, mat) *)
+(* To do: read lists, matrices *)
