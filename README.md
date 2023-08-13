@@ -38,7 +38,7 @@ In picture_editor:
 Compilers and decompilers:
 - Code a lexer and a parser to convert G1M files to an intermediate abstract "Basic code" type
 - Code a converter from Basic tree to readable "Custom Basic" code
-- Code a lexer from Custom Basic code to list of lexemes (which can then be handled by the compiler
+- Code a lexer from Custom Basic code to list of lexemes (which can then be handled by the compiler)
 - Code a converter from Basic code type to binary, to write it into a G1M file
 
 Emulation:

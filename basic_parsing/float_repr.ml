@@ -1,5 +1,8 @@
 (* Floating point numbers representation *)
 
+(* The Casio floats are 15 digits long, but are printed in a shorter form.
+  OCaml floats are 18 digits long. *)
+
 (* Comments:
   - All numbers are floating numbers, with digits of precision.
   When in the range [-(10^10-1);10^10-1], the number is printed as an int if it has no decimals. *)

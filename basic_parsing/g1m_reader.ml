@@ -270,4 +270,71 @@ let read_str (s : string) (istart : int) (length : int) : string =
 
 (*********************************************************************************************)
 
-(* To do: read lists, matrices *)
+(* Attempt at interpreting the content of lists, matrices (testing needed) *)
+
+(* Converts a string of bytes (numbers between 0 and 255) into an
+  array of half_bytes (numbers between 0 and 15) in int array form,
+  from index istart and for length bytes *)
+let bytes_to_half_bytes (s : string) (istart : int) (length : int) : int array =
+	let res = Array.init (2*length)
+		(fun i ->
+			if i mod 2 = 0
+				then (Char.code s.[istart+(i/2)]) / 16
+				else (Char.code s.[istart+(i/2)]) mod 16)
+	in res;;
+
+(* For testing purposes (digits in lists/matrices are encoded in half-bytes) *)
+let display_half_bytes (file_name : string) (istart : int) (length : int) : unit =
+	let s = file_to_string file_name in
+	let t = bytes_to_half_bytes s istart length in
+	let n = Array.length t in
+	let i = ref 0 in
+	while !i <= n-24 do
+		for j = 0 to 23 do
+			print_int (t.(!i+j));
+			print_char ' '
+		done;
+		print_newline ();
+		i := !i + 24
+	done;;
+
+(** Number encoding **)
+(*
+  12 bytes = 24 half-bytes:
+  - 1 half-byte: info
+    * 1st bit:
+        0 = real or imaginary part,
+        1 = real part of a complex
+    * 2nd bit: 0 = val >= 0, 1 = val < 0
+    * 3rd bit: val < 0 and pow >=  0 (useless for reading)
+    * 4th bit:
+        0 = val, pow have opposite signs
+        1 = val, pow have the same sign
+  - 2 half-bytes: power (two digits)
+    * if pow >= 0: power
+    * if pow < 0: pow + 100
+  - 15 half-bytes: digits
+  - 3 bytes = 6 half-bytes: padding with \000
+*)
+
+(* Reads the content of the list at index istart of string s
+  (representing a G1M/G2M file) with length numbers, and returns
+  it as an array of floats *)
+let read_list (s : string) (istart : int) (length : int) : float array =
+  let t = bytes_to_half_bytes s istart (12*length) in
+  let extract_numer i =
+    (* let real = t.(24*i) < 8 in *)
+    let valpos = (t.(24*i) mod 8) < 5 in
+    let samesign = t.(24*i) mod 2 = 1 in
+    let pow =
+      10*t.(24*i+1) + t.(24*i+2) - (if valpos = samesign then 0 else 100)
+    in
+    let x =
+      ((if valpos then "" else "-")
+      ^(String.init 15 (fun j -> char_of_int (48+t.(24*i+3+j))))
+      ^"e"
+      ^string_of_int (pow-14))
+    in
+    float_of_string x
+  in
+  Array.init length extract_numer;;
