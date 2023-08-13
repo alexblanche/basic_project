@@ -208,7 +208,7 @@ let prog_to_lexlist (s : string) (istart : int) : string list =
 
 
 (*********************************************************************************************)
-(* Reading picture files *)
+(* Reading picture/captures files *)
 
 (* Reads the content of the picture at index istart of string s
   (representing a G1M/G2M file) and returns a boolean matrix
@@ -235,7 +235,7 @@ let read_compr_pict (s : string) (istart : int) (nb_bytes : int) : bool array ar
 let read_pict (s : string) (istart : int) : bool array array =
   read_compr_pict s istart 1024;;
 
-
+(*********************************************************************************************)
 
 (* Reading strings *)
 
@@ -346,4 +346,7 @@ let read_matrix (s : string) (istart : int) (row : int) (col : int) : float arra
   m;;
 
 (* For the moment, for lists and matrices, the actual index to read from is istart+16, as
-  given by get_content. *)
+  given by get_content.
+  I may change the istart from get_content for lists and matrices in the future, but I also
+  need the size (or row,col) info. *)
+

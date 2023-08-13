@@ -208,13 +208,13 @@ let write_picts (m_list : (bool array array * int) list) (file_name : string) : 
 
 (* Test: generates a g1m file with name file_name, containing
   one capture (called CAPT1) based on boolean matrix m *)
-  let write_capt (m : bool array array) (file_name : string) =
-    let data = bool_mat_to_capt_bin m in
-    let subh = obj_subheader "CAPT" "1" (4 + 1024) in
-    let length = (String.length subh) + 4 + 1024 + 32 in
-    let head = init_header "g1m" length 1 in
-    let file_content = head^subh^"\000\128\000\064"^data in
-    write_file file_name file_content;;
+let write_capt (m : bool array array) (file_name : string) : unit =
+  let data = bool_mat_to_capt_bin m in
+  let subh = obj_subheader "CAPT" "1" (4 + 1024) in
+  let length = (String.length subh) + 4 + 1024 + 32 in
+  let head = init_header "g1m" length 1 in
+  let file_content = head^subh^"\000\128\000\064"^data in
+  write_file file_name file_content;;
 
 (* Both functions successfully write pictures/captures that are
   correctly recognized by the calculator, and they can display pixels
@@ -222,18 +222,90 @@ let write_picts (m_list : (bool array array * int) list) (file_name : string) : 
 
 (* Test: generates a g1m file with name file_name, containing
   all the strings in the list str_list (called STR1, STR2, ...) *)
-  let write_str (str_list : string list) (file_name : string) =
-    let bin i str =
-      let len = String.length str in
-      let padding_size = 4 - (len mod 4) in
-      let subh = obj_subheader "STRING" (string_of_int (i+1)) (len + padding_size) in
-      subh^str^(String.make padding_size '\000')
-    in
-    let data_l = List.mapi bin str_list in
-    (* length = sum of the lengths of the strings representing each object
-        + 32 (size of the initial header) *)
-    let length =
-      (List.fold_left (fun sum s -> sum + String.length s) 0 data_l) + 32 in
-    let head = init_header "g1m" length (List.length str_list) in
-    let file_content = head^(String.concat "" data_l) in
-    write_file file_name file_content;;
+let write_str (str_list : string list) (file_name : string) : unit =
+  let bin i str =
+    let len = String.length str in
+    let padding_size = 4 - (len mod 4) in
+    let subh = obj_subheader "STRING" (string_of_int (i+1)) (len + padding_size) in
+    subh^str^(String.make padding_size '\000')
+  in
+  let data_l = List.mapi bin str_list in
+  (* length = sum of the lengths of the strings representing each object
+      + 32 (size of the initial header) *)
+  let length =
+    (List.fold_left (fun sum s -> sum + String.length s) 0 data_l) + 32 in
+  let head = init_header "g1m" length (List.length str_list) in
+  let file_content = head^(String.concat "" data_l) in
+  write_file file_name file_content;;
+
+
+(*********************************************************************************************)
+
+(** First attempt at generating lists/matrices **)
+(* I struggle to understand the file structure of lists...
+  Are the unused bytes unimportant? Can we put anything in them, or are they all control bytes? *)
+
+(*
+  12 bytes = 24 half-bytes:
+  - 1 half-byte: info
+    * 1st bit:
+        0 = real or imaginary part,
+        1 = real part of a complex
+    * 2nd bit: 0 = val >= 0, 1 = val < 0
+    * 3rd bit: 1 = val < 0 and pow >=  0 (useless for reading)
+    * 4th bit:
+        0 = val, pow have opposite signs
+        1 = val, pow have the same sign
+  - 2 half-bytes: power (two digits)
+    * if pow >= 0: power
+    * if pow < 0: pow + 100
+  - 15 half-bytes: digits
+  - 3 bytes = 6 half-bytes: padding with \000
+*)
+let float_to_bin (x : float) : string =
+  let pow = Float.floor (Float.log10 (Float.abs x)) in
+  (* Info half-byte value *)
+  let info =
+    8*0
+    + 4*(if x >= 0. then 0 else 1)
+    + 2*(if x < 0. && pow >= 0. then 1 else 0)
+    + 1*(if x < 0. && pow < 0. || x >= 0. && pow >= 0. then 1 else 0)
+  in
+  (* Significant part of x *)
+  let y = ref (Float.to_int (x *. 10.**(-.pow+.14.))) in
+  (* Array of the digits of the signigicant part of x *)
+  let t = Array.init 15
+    (fun i -> let last_digit = !y mod 10 in y := !y / 10; Int.abs last_digit)
+  in
+  (* Power as written in the second and third half-bytes *)
+  let written_pow =
+    if pow >= 0.
+      then Float.to_int pow
+      else (Float.to_int pow)+100
+  in
+  (* Final string *)
+  (String.init 2
+    (fun i ->
+      if i=0
+        then (Char.chr (16*info+written_pow/10))
+        else (Char.chr (16*(written_pow mod 10)+t.(14)))))
+  ^(String.init 7 (fun i -> Char.chr (16*t.(14-(2*i+1))+t.(14-(2*i+2)))))
+  ^"\000\000\000"
+;;
+
+(* Test: generates a g1m file with name file_name, containing
+  the list t, named "LIST 1" *)
+let write_list (t : float array) (file_name : string) =
+  let length = Array.length t in
+  let subh = obj_subheader "LIST" "1" (16+12*length) in
+  let pre_data =
+    (String.make 8 '\000')
+    ^(String.init 1 (fun _ -> Char.chr (length/256)))
+    ^(String.init 1 (fun _ -> Char.chr (length mod 256)))
+    ^(String.make 6 '\000')
+  in
+  let data_l = List.init length (fun i -> float_to_bin t.(i)) in
+  let data = String.concat "" data_l in
+  let head = init_header "g1m" (32 + String.length subh + 16 + 12*length) 1 in
+  let file_content = head^subh^pre_data^data in
+  write_file file_name file_content;;
