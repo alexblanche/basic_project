@@ -214,19 +214,6 @@ let prog_to_lexlist (s : string) (istart : int) : string list =
   (representing a G1M/G2M file) and returns a boolean matrix
   representing the picture *)
 
-(* Original function *)
-(* let read_pict (s : string) (istart : int) : bool array array =
-  let m = Array.make_matrix 64 128 false in
-  let byte = ref 0 in
-  for i = 0 to 1023 do
-    byte := Char.code s.[istart+i];
-    for j = 7 downto 0 do
-      m.((64+62-i/16) mod 64).(8*(i mod 16)+j) <- (!byte mod 2) = 1;
-      byte := !byte/2
-    done;
-  done;
-  m;; *)
-
 (* Purobaz compressed pictures ("Picture 1024")
   https://www.planet-casio.com/Fr/programmes/programme1883-1-picture-1024-purobaz-utilitaires-add-ins.html *)
 (* Reads the first nb_bytes bytes of the picture,
@@ -270,7 +257,7 @@ let read_str (s : string) (istart : int) (length : int) : string =
 
 (*********************************************************************************************)
 
-(* Attempt at interpreting the content of lists, matrices (testing needed) *)
+(** Reading lists and matrices **)
 
 (* Converts a string of bytes (numbers between 0 and 255) into an
   array of half_bytes (numbers between 0 and 15) in int array form,
@@ -323,7 +310,6 @@ let display_half_bytes (file_name : string) (istart : int) (length : int) : unit
 let read_list (s : string) (istart : int) (length : int) : float array =
   let t = bytes_to_half_bytes s istart (12*length) in
   let extract_numer i =
-    (* let real = t.(24*i) < 8 in *)
     let valpos = (t.(24*i) mod 8) < 5 in
     let samesign = t.(24*i) mod 2 = 1 in
     let pow =
@@ -338,3 +324,26 @@ let read_list (s : string) (istart : int) (length : int) : float array =
     float_of_string x
   in
   Array.init length extract_numer;;
+
+(* Reads the content of the list containing complex numbers at index istart
+  of string s (representing a G1M/G2M file) with length numbers, and returns
+  it as an array of pairs of floats *)
+let read_complex_list (s : string) (istart : int) (length : int) : (float * float) array =
+  let t = read_list s istart (2*length) in
+  Array.init length (fun i -> (t.(i), t.(i+length)));;
+
+(* Reads the content of the matrix at index istart of string s
+  (representing a G1M/G2M file) with row rows and col columns,
+  and returns it as an matrix of floats *)
+let read_matrix (s : string) (istart : int) (row : int) (col : int) : float array array =
+  let t = read_list s istart (row*col) in
+  let m = Array.make_matrix row col 0. in
+  for j = 0 to row-1 do
+    for i = 0 to col-1 do
+      m.(j).(i) <- t.(j*col + i)
+    done;
+  done;
+  m;;
+
+(* For the moment, for lists and matrices, the actual index to read from is istart+16, as
+  given by get_content. *)
