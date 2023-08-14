@@ -231,7 +231,7 @@ let read_compr_pict (s : string) (istart : int) (nb_bytes : int) : bool array ar
   done;
   m;;
 
-(* Reads pPictures/captures *)
+(* Reads pictures/captures *)
 let read_pict (s : string) (istart : int) : bool array array =
   read_compr_pict s istart 1024;;
 
@@ -346,7 +346,127 @@ let read_matrix (s : string) (istart : int) (row : int) (col : int) : float arra
   m;;
 
 (* For the moment, for lists and matrices, the actual index to read from is istart+16, as
-  given by get_content.
-  I may change the istart from get_content for lists and matrices in the future, but I also
-  need the size (or row,col) info. *)
+  given by get_content. *)
 
+(*********************************************************************************************)
+
+(* General g1m reader function *)
+
+#use "basic_parsing/project_type.ml"
+
+(* Returns the content of each object of the G1m/G2M file *)
+let g1m_reader (s : string) : project_content =
+  let c = get_content s in
+  
+  let prog_list =
+    List.rev_map
+      (fun (name, _, istart, _) -> (name, prog_to_lexlist s istart))
+      c.prog
+  in
+  print_endline "prog_list: done";
+
+  (* List indices range from 1 to 26 *)
+  (* In case of a complex list of n complex numbers,
+    2n floats are stored, the n real parts first, then
+    the n imaginary parts *)
+  let list_array = Array.make 26 (true, [||]) in
+  List.iter
+    (fun (name, length, istart, _) ->
+      (* name = 1LISTX or 1LISTXX *)
+      let index_length = String.length name - 5 in
+      let casio_index =
+        int_of_string (String.sub name 5 index_length)
+      in
+      let list_length =
+        256*(Char.code s.[istart+8])
+        + (Char.code s.[istart+9])
+      in
+      let real = (length-16)/12 = list_length in
+      list_array.(casio_index-1) <-
+        (real,
+        read_list s (istart + 16) (if real then list_length else 2*list_length));
+    )
+    c.list;
+  print_endline "list_array: done";
+  
+  (* Matrix indices range from A to Z *)
+  (* In case of a complex matrix of row*col complex numbers,
+    2*row rows (of length col) are stored, the row real parts first,
+    then the row imaginary parts *)
+  let mat_array = Array.make 26 (true, [||]) in
+  List.iter
+    (fun (name, length, istart, _) ->
+      (* name = MAT_X *)
+      let casio_index =
+        Char.code name.[4] - 65
+      in
+      let row =
+        256*(Char.code s.[istart+8])
+        + (Char.code s.[istart+9])
+      in
+      let col =
+        256*(Char.code s.[istart+10])
+        + (Char.code s.[istart+11])
+      in
+      let real = (length-16)/12 = row*col in
+      mat_array.(casio_index) <-
+        (real,
+        read_matrix s (istart + 16) (if real then row else 2*row) col);
+    )
+    c.mat;
+  print_endline "mat_array: done";
+
+  (* Picture indices range from 1 to 20 *)
+  let pict_array = Array.make 20 (0, [||]) in
+  List.iter
+    (fun (name, length, istart, _) ->
+      (* name = PICTX or PICTXX *)
+      let index_length = String.length name - 4 in
+      let casio_index =
+        int_of_string (String.sub name 4 index_length)
+      in
+      pict_array.(casio_index-1) <-
+        (length,
+        read_compr_pict s istart length);
+    )
+    c.pict;
+  print_endline "pict_array: done";
+
+  (* Capture indices range from 1 to 20 *)
+  let capt_array = Array.make 20 [||] in
+  List.iter
+    (fun (name, length, istart, _) ->
+      (* name = CAPTX or CAPTXX *)
+      let index_length = String.length name - 4 in
+      let casio_index =
+        int_of_string (String.sub name 4 index_length)
+      in
+      capt_array.(casio_index-1) <- read_pict s istart;
+    )
+    c.capt;
+  print_endline "capt_array: done";
+
+  (* String indices range from 1 to 20 *)
+  let str_array = Array.make 20 "" in
+  List.iter
+    (fun (name, length, istart, _) ->
+      (* name = STRX or STRXX *)
+      let index_length = String.length name - 3 in
+      let casio_index =
+        int_of_string (String.sub name 3 index_length)
+      in
+      let str = read_str s istart length in
+      print_endline str;
+      str_array.(casio_index-1) <- str;
+    )
+    c.str;
+
+  {
+    prog = prog_list;
+    list = list_array;
+    mat = mat_array;
+    pict = pict_array;
+    capt = capt_array;
+    str = str_array
+  }
+;;
