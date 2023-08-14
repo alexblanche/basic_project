@@ -450,9 +450,7 @@ let g1m_reader (s : string) : project_content =
       let casio_index =
         int_of_string (String.sub name 3 index_length)
       in
-      let str = read_str s istart length in
-      print_endline str;
-      str_array.(casio_index-1) <- str;
+      str_array.(casio_index-1) <- read_str s istart length;
     )
     c.str;
 

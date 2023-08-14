@@ -32,3 +32,6 @@ type project_content =
     (* String indices range from 1 to 20 *)
     str : string array
   }
+
+let nb_elements (p : project_content) : int =
+  0;;

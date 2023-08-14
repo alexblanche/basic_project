@@ -1,7 +1,5 @@
 (* G1M/G2M file writer *)
 
-(* TO DO: Subheader needs testing *)
-
 (* Creates the file file_name and writes the string s in it *)
 let write_file (file_name : string) (s : string) : unit =
   let oc = open_out file_name in
@@ -9,6 +7,9 @@ let write_file (file_name : string) (s : string) : unit =
   close_out oc;;
 
 (*******************************************************************)
+
+
+#use "basic_parsing/project_type.ml"
 
 (** Headers **)
 
@@ -169,82 +170,101 @@ let bool_mat_to_capt_bin (m : bool array array) : string =
 
 (** File generation **)
 
+(* For testing purposes *)
 (* Test: generates a g1m file with name file_name, containing
-  one picture (called PICT1) based on boolean matrix m *)
-  (* The picture is uncompressed. *)
-let write_pict (m : bool array array) (file_name : string) =
-  let data = bool_mat_to_pict_bin m 1024 in
-  let subh = obj_subheader "PICTURE" "1" 2048 in
-  let length = (String.length subh) + 2048 + 32 in
+  one picture, with number number, based on boolean matrix m *)
+(* Only the first nb_bytes bytes are read.
+  - For uncompressed pictures: nb_bytes = 2048
+  - For compressed pictures: 4 <= nb_bytes <= 1024 (multiple of 4) *)
+let write_pict (number : int) (m : bool array array) (nb_bytes : int) (file_name : string) =
+  let data = bool_mat_to_pict_bin m (min nb_bytes 1024) in
+  let subh = obj_subheader "PICTURE" (string_of_int number)
+    (if nb_bytes = 2048 then 2048 else nb_bytes + (4-(nb_bytes mod 4)) mod 4) in
+  let length = (String.length subh) + nb_bytes
+    + (if nb_bytes = 2048 then 0 else (4-(nb_bytes mod 4)) mod 4) + 32 in
   let head = init_header "g1m" length 1 in
-  let padding = String.make 1024 '\000' in
+  let padding = String.make (if nb_bytes = 2048 then 1024 else (4-(nb_bytes mod 4)) mod 4) '\000' in
   let file_content = head^subh^data^padding in
   write_file file_name file_content;;
 
-(* Test: generates a g1m file with name file_name, containing
-  all the pictures in m_list (called PICT1,2,...)
-  Each element of m_list is a pair (m,nb_bytes), where m is a
+(* Returns the binary content of the pictures in pict_array.
+  Each element of pict_array is a pair (nb_bytes,m), where m is a
   boolean matrix and nb_bytes is the number of bytes read
-  (for compressed pictures that have nb_bytes < 1024)
-  For uncompressed pictures: nb_bytes = 2048 *)
-let write_picts (m_list : (bool array array * int) list) (file_name : string) : unit =
-  let indices = [|1;10;11;12;13;14;15;16;17;18;19;2;20;3;4;5;6;7;8;9|] in
-  let bin i (m,nb_bytes) =
-    let subh = obj_subheader "PICTURE" (string_of_int indices.(i)) (min nb_bytes 2048) in
-    let padding =
-      String.make (if nb_bytes = 2048 then 1024 else (4-(nb_bytes mod 4)) mod 4) '\000'
-    in
-    subh^(bool_mat_to_pict_bin m (min nb_bytes 1024))^padding
+    - For compressed pictures: 4 <= nb_bytes <= 1024 (multiple of 4),
+    - For uncompressed pictures: nb_bytes = 2048 *)
+let pict_bin (pict_array : (int * (bool array array)) array) : string =
+  let bin i (nb_bytes,m) =
+    if nb_bytes = 0
+      then ""
+      else
+        let subh = obj_subheader "PICTURE" (string_of_int (i+1)) nb_bytes in
+        let padding =
+          String.make (if nb_bytes = 2048 then 1024 else (4-(nb_bytes mod 4)) mod 4) '\000'
+        in
+        subh^(bool_mat_to_pict_bin m (min nb_bytes 1024))^padding
   in
-  let data_l = List.mapi bin m_list in
-  (* length = sum of the lengths of the strings representing each object
-      + 32 (size of the initial header) *)
-  let length =
-    (List.fold_left (fun sum s -> sum + String.length s) 0 data_l) + 32
+  let data_l = Array.to_list (Array.mapi bin pict_array) in
+  String.concat "" data_l;;
+
+(* Returns the binary content of the captures in capt_array.
+  Each element of capt_array is a 64*128 boolean matrix *)
+let capt_bin (capt_array : (bool array array) array) : string =
+  let bin i m =
+    if m = [||]
+      then ""
+      else
+        let subh = obj_subheader "CAPT" (string_of_int (i+1)) (4 + 1024) in
+        subh^"\000\128\000\064"^(bool_mat_to_capt_bin m)
   in
-  let head = init_header "g1m" length (List.length m_list) in
-  let file_content = head^(String.concat "" data_l) in
-  write_file file_name file_content;;
+  let data_l = Array.to_list (Array.mapi bin capt_array) in
+  String.concat "" data_l;;
 
-(* Test: generates a g1m file with name file_name, containing
-  one capture (called CAPT1) based on boolean matrix m *)
-let write_capt (m : bool array array) (file_name : string) : unit =
-  let data = bool_mat_to_capt_bin m in
-  let subh = obj_subheader "CAPT" "1" (4 + 1024) in
-  let length = (String.length subh) + 4 + 1024 + 32 in
-  let head = init_header "g1m" length 1 in
-  let file_content = head^subh^"\000\128\000\064"^data in
-  write_file file_name file_content;;
-
-(* Both functions successfully write pictures/captures that are
-  correctly recognized by the calculator, and they can display pixels
-  on the normally inaccessible left and top lines *)
-
-(* Test: generates a g1m file with name file_name, containing
-  all the strings in the list str_list (called STR1, STR2, ...) *)
-let write_str (str_list : string list) (file_name : string) : unit =
+(* Returns the binary content of the strings in str_array *)
+let str_bin (str_array : string array) : string =
   let bin i str =
-    let len = String.length str in
-    let padding_size = 4 - (len mod 4) in
-    let subh = obj_subheader "STRING" (string_of_int (i+1)) (len + padding_size) in
-    subh^str^(String.make padding_size '\000')
+    if str = "" (* How do I differentiate empty strings and non-existent ones? *)
+      then ""
+      else
+        let len = String.length str in
+        let padding_size = 4 - (len mod 4) in
+        let subh = obj_subheader "STRING" (string_of_int (i+1)) (len + padding_size) in
+        subh^str^(String.make padding_size '\000')
   in
-  let data_l = List.mapi bin str_list in
-  (* length = sum of the lengths of the strings representing each object
-      + 32 (size of the initial header) *)
-  let length =
-    (List.fold_left (fun sum s -> sum + String.length s) 0 data_l) + 32 in
-  let head = init_header "g1m" length (List.length str_list) in
-  let file_content = head^(String.concat "" data_l) in
-  write_file file_name file_content;;
+  let data_l = Array.to_list (Array.mapi bin str_array) in
+  (String.concat "" data_l);;
+
+(* Returns the binary content of the programs in prog_array.
+  Each program is a list of lexemes. *)
+let prog_bin (prog_list : program list) : string = "";;
+(* let prog_bin (prog_list : program list) : string =
+  let bin i (name, lexlist) =
+    if lexlist = []
+      then ""
+      else
+        let encolist = List.rev (List.rev_map (search_encoding....) lexlist) in
+        let data = String.append "" encolist in
+        let len = String.length data in
+        let padding_size = 4 - (len mod 4) in
+        let subh = obj_subheader "PROGRAM" name (10 + len + padding_size) in
+        subh^(String.make 10 '\000')^data^(String.make padding_size '\000')
+  in
+  let data_l = List.mapi bin prog_array in
+  (String.concat "" data_l);; *)
 
 
 (*********************************************************************************************)
 
-(** First attempt at generating lists/matrices **)
-(* I struggle to understand the file structure of lists...
-  Are the unused bytes unimportant? Can we put anything in them, or are they all control bytes? *)
+(** Lists/matrices generation **)
 
+(* List data structure
+  After the subheader:
+  - 8 bytes: random data (we write \000 bytes instead)
+  - 2 bytes: length of the list (in number of elements)
+  - 6 bytes: random data (we write \000 bytes instead)
+  - 12*length bytes of data (each number is encoded on 12 bytes) *)
+(* The "random" bytes seem empirically random and do not appear to be read by the calculator. *)
+
+(* Encoding of Casio numbers *)
 (*
   12 bytes = 24 half-bytes:
   - 1 half-byte: info
@@ -293,19 +313,85 @@ let float_to_bin (x : float) : string =
   ^"\000\000\000"
 ;;
 
-(* Test: generates a g1m file with name file_name, containing
-  the list t, named "LIST 1" *)
-let write_list (t : float array) (file_name : string) =
-  let length = Array.length t in
-  let subh = obj_subheader "LIST" "1" (16+12*length) in
-  let pre_data =
-    (String.make 8 '\000')
-    ^(String.init 1 (fun _ -> Char.chr (length/256)))
-    ^(String.init 1 (fun _ -> Char.chr (length mod 256)))
-    ^(String.make 6 '\000')
+(* Returns the binary content of the lists in list_array *)
+(* TO DO: treat lists containing complex numbers *)
+let list_bin (list_array : (bool * (float array)) array) : string =
+  let bin i (b,t) =
+    if t = [||]
+      then ""
+      else
+        let length = Array.length t in
+        let subh = obj_subheader "LIST" (string_of_int (i+1)) (16+12*length) in
+        let pre_data =
+          (String.make 8 '\000')
+          ^(String.init 1 (fun _ -> Char.chr (length/256)))
+          ^(String.init 1 (fun _ -> Char.chr (length mod 256)))
+          ^(String.make 6 '\000')
+        in
+        let data_l = List.init length (fun i -> float_to_bin t.(i)) in
+        subh^pre_data^(String.concat "" data_l)
   in
-  let data_l = List.init length (fun i -> float_to_bin t.(i)) in
-  let data = String.concat "" data_l in
-  let head = init_header "g1m" (32 + String.length subh + 16 + 12*length) 1 in
-  let file_content = head^subh^pre_data^data in
+  let data_l = Array.to_list (Array.mapi bin list_array) in
+  (String.concat "" data_l);;
+
+let matrix_to_array (m : 'a array array) : 'a array =
+  if m = [||]
+    then [||]
+    else 
+      (let row = Array.length m in
+      let col = Array.length m.(0) in
+      let t = Array.make (row*col) m.(0).(0) in
+      for j = 0 to row-1 do
+        for i = 0 to col-1 do
+          t.(j*col + i) <- m.(j).(i)
+        done;
+      done;
+      t)
+;;
+
+
+(* Returns the binary content of the matrices in mat_array *)
+(* TO DO: treat matrices containing complex numbers *)
+let mat_bin (mat_array : (bool * (float array array)) array) =
+  let bin i (b,m) =
+    if m = [||]
+      then ""
+      else
+        let row = Array.length m in
+        let col = Array.length m.(0) in
+        let t = matrix_to_array m in
+        let subh = obj_subheader "MAT" (String.init 1 (fun _ -> Char.chr (65+i))) (16+12*row*col) in
+        let pre_data =
+          (String.make 8 '\000')
+          ^(String.init 2 (fun j -> if j = 0 then Char.chr (row/256) else Char.chr (row mod 256)))
+          ^(String.init 2 (fun j -> if j = 0 then Char.chr (col/256) else Char.chr (col mod 256)))
+          ^(String.make 4 '\000')
+        in
+        let data_l = List.init (row*col) (fun i -> float_to_bin t.(i)) in
+        subh^pre_data^(String.concat "" data_l)
+  in
+  let data_l = Array.to_list (Array.mapi bin mat_array) in
+  (String.concat "" data_l);;
+
+
+
+
+(*********************************************************************************************)
+
+(* General g1m writer function *)
+
+(* Generates a G1M file named file_name, that contains all the objects
+  in the project_content p *)
+let g1m_writer (p : project_content) (file_name : string) : unit =
+  let prog_data = prog_bin p.prog in (* To do *)
+  let pict_data = pict_bin p.pict in
+  let capt_data = capt_bin p.capt in
+  let str_data = str_bin p.str in
+  let list_data = list_bin p.list in
+  let mat_data = mat_bin p.mat in
+  let all_data = [prog_data; pict_data; capt_data; str_data; list_data; mat_data] in
+  let data = String.concat "" all_data in
+  let total_length = String.length data in
+  let head = init_header "g1m" total_length (nb_elements p) in (* to do *)
+  let file_content = head^data in
   write_file file_name file_content;;
