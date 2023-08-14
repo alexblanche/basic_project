@@ -363,7 +363,6 @@ let g1m_reader (s : string) : project_content =
       (fun (name, _, istart, _) -> (name, prog_to_lexlist s istart))
       c.prog
   in
-  print_endline "prog_list: done";
 
   (* List indices range from 1 to 26 *)
   (* In case of a complex list of n complex numbers,
@@ -387,7 +386,6 @@ let g1m_reader (s : string) : project_content =
         read_list s (istart + 16) (if real then list_length else 2*list_length));
     )
     c.list;
-  print_endline "list_array: done";
   
   (* Matrix indices range from A to Z *)
   (* In case of a complex matrix of row*col complex numbers,
@@ -414,7 +412,6 @@ let g1m_reader (s : string) : project_content =
         read_matrix s (istart + 16) (if real then row else 2*row) col);
     )
     c.mat;
-  print_endline "mat_array: done";
 
   (* Picture indices range from 1 to 20 *)
   let pict_array = Array.make 20 (0, [||]) in
@@ -427,10 +424,9 @@ let g1m_reader (s : string) : project_content =
       in
       pict_array.(casio_index-1) <-
         (length,
-        read_compr_pict s istart length);
+        read_compr_pict s istart (min length 1024));
     )
     c.pict;
-  print_endline "pict_array: done";
 
   (* Capture indices range from 1 to 20 *)
   let capt_array = Array.make 20 [||] in
@@ -444,7 +440,6 @@ let g1m_reader (s : string) : project_content =
       capt_array.(casio_index-1) <- read_pict s istart;
     )
     c.capt;
-  print_endline "capt_array: done";
 
   (* String indices range from 1 to 20 *)
   let str_array = Array.make 20 "" in
