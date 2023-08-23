@@ -276,7 +276,7 @@ let prog_bin (prog_list : program list) : string =
     let encolist = lexlist_to_bin lexlist in
     let data = String.concat "" encolist in
     let len = String.length data in
-    let padding_size = 4 - (len mod 4) in
+    let padding_size = 4 - ((len + 10) mod 4) in
     let subh = obj_subheader "PROGRAM" name (10 + len + padding_size) in
     subh^(String.make 10 '\000')^data^(String.make padding_size '\000')
   in
@@ -422,7 +422,7 @@ let g1m_writer (p : project_content) (file_name : string) : unit =
   let mat_data = mat_bin p.mat in
   let all_data = [prog_data; pict_data; capt_data; str_data; list_data; mat_data] in
   let data = String.concat "" all_data in
-  let total_length = String.length data in
+  let total_length = 32 + String.length data in
   let head = init_header "g1m" total_length (number_of_elements p) in
   let file_content = head^data in
   write_file file_name file_content;;
