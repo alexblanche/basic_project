@@ -33,5 +33,29 @@ type project_content =
     str : string array
   }
 
-let nb_elements (p : project_content) : int =
-  0;;
+
+(* Computing the number of elements of a project *)
+
+(* Returns the number of elements of array t that satisfy predicate p *)
+let array_count (p : 'a -> bool) (t : 'a array) : int =
+  Array.fold_left (fun cpt a -> if p a then (cpt + 1) else cpt) 0 t;;
+
+let non_empty_str (t : string array) : int =
+  array_count (fun s -> s <> "") t;;
+  
+let non_empty_array (t : ('a array) array) : int =
+  array_count (fun x -> x <> [||]) t;;
+  
+let non_empty_pair_int (t : (int * 'a) array) : int =
+  array_count (fun (i,_) -> i <> 0) t;;
+  
+let non_empty_pair_array (t : ('a * ('b array)) array) : int =
+  array_count (fun (_,x) -> x <> [||]) t;;
+  
+let number_of_elements (p : project_content) : int =
+  (List.length p.prog)
+  + (non_empty_pair_int p.pict)
+  + (non_empty_array p.capt)
+  + (non_empty_pair_array p.list)
+  + (non_empty_pair_array p.mat)
+  + (non_empty_str p.str);;

@@ -10,6 +10,7 @@ let write_file (file_name : string) (s : string) : unit =
 
 
 #use "basic_parsing/project_type.ml"
+#use "basic_parsing/basic_encoding.ml"
 
 (** Headers **)
 
@@ -233,24 +234,54 @@ let str_bin (str_array : string array) : string =
   let data_l = Array.to_list (Array.mapi bin str_array) in
   (String.concat "" data_l);;
 
+
+(* Programs conversion to binary *)
+
+(* Unused *)
+(* (* Equivalent to List.mapi, but is tail-recursive *)
+let tr_list_mapi (f : int -> 'a -> 'b) (l : 'a list) : 'b list =
+  let rec aux acc i l =
+    match l with
+      | a::t -> aux ((f i a)::acc) (i+1) t
+      | [] -> acc
+  in
+  List.rev (aux [] 0 l);; *)
+
+(* Converts a list of lexemes into a list of encodings *)
+let lexlist_to_bin (lexlist : string list) : string list =
+  let rec bin lex =
+    try
+      let c = Char.code lex.[0] in
+      if (String.length lex = 1) &&
+        (c >= 65 && c <= 90
+        || c >= 48 && c <= 57
+        || c = 46 || c = 44
+        || c = 32)
+          then lex
+          else
+            let (enco, _) = List.find (fun (_, s) -> s = lex) commands in
+            enco
+    with
+      | Not_found ->
+        if List.mem lex symbols
+          then lex
+          else failwith ("lexlist_to_bin: Unknown lexeme "^lex)
+  in
+  List.rev (List.rev_map bin lexlist);;
+
 (* Returns the binary content of the programs in prog_array.
   Each program is a list of lexemes. *)
-let prog_bin (prog_list : program list) : string = "";;
-(* let prog_bin (prog_list : program list) : string =
-  let bin i (name, lexlist) =
-    if lexlist = []
-      then ""
-      else
-        let encolist = List.rev (List.rev_map (search_encoding....) lexlist) in
-        let data = String.append "" encolist in
-        let len = String.length data in
-        let padding_size = 4 - (len mod 4) in
-        let subh = obj_subheader "PROGRAM" name (10 + len + padding_size) in
-        subh^(String.make 10 '\000')^data^(String.make padding_size '\000')
+let prog_bin (prog_list : program list) : string =
+  let bin (name, lexlist) =
+    let encolist = lexlist_to_bin lexlist in
+    let data = String.concat "" encolist in
+    let len = String.length data in
+    let padding_size = 4 - (len mod 4) in
+    let subh = obj_subheader "PROGRAM" name (10 + len + padding_size) in
+    subh^(String.make 10 '\000')^data^(String.make padding_size '\000')
   in
-  let data_l = List.mapi bin prog_array in
-  (String.concat "" data_l);; *)
-
+  let data_l = List.map bin prog_list in
+  (String.concat "" data_l);;
 
 (*********************************************************************************************)
 
@@ -383,7 +414,7 @@ let mat_bin (mat_array : (bool * (float array array)) array) =
 (* Generates a G1M file named file_name, that contains all the objects
   in the project_content p *)
 let g1m_writer (p : project_content) (file_name : string) : unit =
-  let prog_data = prog_bin p.prog in (* To do *)
+  let prog_data = prog_bin p.prog in
   let pict_data = pict_bin p.pict in
   let capt_data = capt_bin p.capt in
   let str_data = str_bin p.str in
@@ -392,6 +423,6 @@ let g1m_writer (p : project_content) (file_name : string) : unit =
   let all_data = [prog_data; pict_data; capt_data; str_data; list_data; mat_data] in
   let data = String.concat "" all_data in
   let total_length = String.length data in
-  let head = init_header "g1m" total_length (nb_elements p) in (* to do *)
+  let head = init_header "g1m" total_length (number_of_elements p) in
   let file_content = head^data in
   write_file file_name file_content;;
