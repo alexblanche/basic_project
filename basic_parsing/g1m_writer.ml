@@ -313,11 +313,12 @@ let prog_bin (prog_list : program list) : string =
   - 15 half-bytes: digits
   - 3 bytes = 6 half-bytes: padding with \000
 *)
-let float_to_bin (x : float) : string =
+(* real_part = true if the number is the real part of a complex number *)
+let float_to_bin (x : float) (real_part : bool) : string =
   let pow = Float.floor (Float.log10 (Float.abs x)) in
   (* Info half-byte value *)
   let info =
-    8*0
+    8*(if real_part then 1 else 0)
     + 4*(if x >= 0. then 0 else 1)
     + 2*(if x < 0. && pow >= 0. then 1 else 0)
     + 1*(if x < 0. && pow < 0. || x >= 0. && pow >= 0. then 1 else 0)
@@ -345,26 +346,47 @@ let float_to_bin (x : float) : string =
 ;;
 
 (* Returns the binary content of the lists in list_array *)
-(* TO DO: treat lists containing complex numbers *)
+(* Each list is stored as (complex, t), where complex is a boolean
+  indicating if the list contains at least one complex number,
+  and t is an array containing the numbers of the list.
+  If the list contains only real numbers, the array t has the same
+  length as the list, otherwise, t has twice its length, and contains
+  the real parts first, then the imaginary parts. *)
+(* In a list that contains complex numbers, the first bit of a real number
+  is 0, and its imaginary part does not seem to be read (here we store
+  the real number 0). *)
 let list_bin (list_array : (bool * (float array)) array) : string =
-  let bin i (b,t) =
+  let bin i (complex,t) =
     if t = [||]
       then ""
       else
+        (* If complex, then there are length/2 complex numbers,
+          otherwise length real numbers *)
         let length = Array.length t in
+        let actual_length =
+          if complex
+            then length/2
+            else length
+        in
         let subh = obj_subheader "LIST" (string_of_int (i+1)) (16+12*length) in
         let pre_data =
           (String.make 8 '\000')
-          ^(String.init 1 (fun _ -> Char.chr (length/256)))
-          ^(String.init 1 (fun _ -> Char.chr (length mod 256)))
+          ^(String.init 1 (fun _ -> Char.chr (actual_length/256)))
+          ^(String.init 1 (fun _ -> Char.chr (actual_length mod 256)))
           ^(String.make 6 '\000')
         in
-        let data_l = List.init length (fun i -> float_to_bin t.(i)) in
+        let data_l =
+          List.init length
+            (fun i ->
+              float_to_bin t.(i)
+                (complex && i < actual_length && t.(i+actual_length) <> 0.))
+        in
         subh^pre_data^(String.concat "" data_l)
   in
   let data_l = Array.to_list (Array.mapi bin list_array) in
   (String.concat "" data_l);;
 
+(* Converts a matrix into an array (row by row) *)
 let matrix_to_array (m : 'a array array) : 'a array =
   if m = [||]
     then [||]
@@ -382,23 +404,42 @@ let matrix_to_array (m : 'a array array) : 'a array =
 
 
 (* Returns the binary content of the matrices in mat_array *)
-(* TO DO: treat matrices containing complex numbers *)
+(* Each matrix is stored as (complex, m), where complex is a boolean
+  indicating if the matrix contains at least one complex number,
+  and m is a matrix containing the numbers of the matrix.
+  If the matrix contains only real numbers, the matrix m has the same
+  number of rows as the represented matrix, otherwise, m has twice its
+  number of rows, and contains the rows of the real parts first, then
+  the rows of the imaginary parts. *)
+(* In a matrix that contains complex numbers, the first bit of a real number
+  is 0, and its imaginary part does not seem to be read (here we store
+  the real number 0). *)
 let mat_bin (mat_array : (bool * (float array array)) array) =
-  let bin i (b,m) =
+  let bin i (complex,m) =
     if m = [||]
       then ""
       else
+        (* If complex, then there are actually row/2 rows of complex numbers,
+          otherwise there are row rows of real numbers *)
         let row = Array.length m in
+        let actual_row =
+          if complex
+            then row/2
+            else row
+        in
         let col = Array.length m.(0) in
         let t = matrix_to_array m in
         let subh = obj_subheader "MAT" (String.init 1 (fun _ -> Char.chr (65+i))) (16+12*row*col) in
         let pre_data =
           (String.make 8 '\000')
-          ^(String.init 2 (fun j -> if j = 0 then Char.chr (row/256) else Char.chr (row mod 256)))
+          ^(String.init 2 (fun j -> if j = 0 then Char.chr (actual_row/256) else Char.chr (actual_row mod 256)))
           ^(String.init 2 (fun j -> if j = 0 then Char.chr (col/256) else Char.chr (col mod 256)))
           ^(String.make 4 '\000')
         in
-        let data_l = List.init (row*col) (fun i -> float_to_bin t.(i)) in
+        let data_l =
+          List.init (row*col)
+            (fun i -> float_to_bin t.(i)
+              (complex && i < actual_row*col && t.(i+actual_row*col) <> 0.)) in
         subh^pre_data^(String.concat "" data_l)
   in
   let data_l = Array.to_list (Array.mapi bin mat_array) in

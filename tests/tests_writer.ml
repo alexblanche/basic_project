@@ -83,10 +83,32 @@ let proj_prog =
     str = [||]
   };;
 
+let proj_cplm =
+  {
+    prog = [];
+    list =
+      (let list_array = Array.make 26 (true, [||]) in
+      list_array.(0) <-
+        (true, [| 1.; 2.; 3.; 4.; 5.; 6.; 7.; 0.; 0.; 0.; 8.; -.2.; 0.; 0. |]);
+      list_array
+      );
+    mat =
+      (let mat_array = Array.make 26 (true, [||]) in
+      mat_array.(0) <-
+        (true, [| [| 1.; 2. |]; [| 3.; 4. |]; [| 5.; 6. |]; [| 0.; 0. |]; [| 1.; 0. |]; [| 0.; 2. |] |]);
+      mat_array
+      );
+    pict = Array.make 20 (0, [||]);
+    capt = Array.make 20 [||];
+    str = [||]
+  };;
+
 (** File generation **)
 
-let gen_all () =
-  g1m_writer proj_all "/mnt/c/users/blanc/desktop/ocaml_tests/basic_project/data/genpall.g1m";;
+let folder = "/mnt/c/users/blanc/desktop/ocaml_tests/basic_project/data/";;
 
-let gen_prog () =
-  g1m_writer proj_prog "/mnt/c/users/blanc/desktop/ocaml_tests/basic_project/data/genpprog.g1m";;
+let gen_all () = g1m_writer proj_all (folder^"genpall.g1m");;
+
+let gen_prog () = g1m_writer proj_prog (folder^"genpprog.g1m");;
+
+let gen_cplm () = g1m_writer proj_cplm (folder^"genpcplm.g1m");;

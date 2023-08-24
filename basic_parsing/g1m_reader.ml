@@ -309,7 +309,7 @@ let display_half_bytes (file_name : string) (istart : int) (length : int) : unit
   it as an array of floats *)
 let read_list (s : string) (istart : int) (length : int) : float array =
   let t = bytes_to_half_bytes s istart (12*length) in
-  let extract_numer i =
+  let extract_number i =
     let valpos = (t.(24*i) mod 8) < 5 in
     let samesign = t.(24*i) mod 2 = 1 in
     let pow =
@@ -323,7 +323,7 @@ let read_list (s : string) (istart : int) (length : int) : float array =
     in
     float_of_string x
   in
-  Array.init length extract_numer;;
+  Array.init length extract_number;;
 
 (* Reads the content of the list containing complex numbers at index istart
   of string s (representing a G1M/G2M file) with length numbers, and returns
@@ -345,7 +345,7 @@ let read_matrix (s : string) (istart : int) (row : int) (col : int) : float arra
   done;
   m;;
 
-(* For the moment, for lists and matrices, the actual index to read from is istart+16, as
+(* For lists and matrices, the actual index to read from is istart+16, as
   given by get_content. *)
 
 (*********************************************************************************************)
@@ -354,7 +354,7 @@ let read_matrix (s : string) (istart : int) (row : int) (col : int) : float arra
 
 #use "basic_parsing/project_type.ml"
 
-(* Returns the content of each object of the G1m/G2M file *)
+(* Returns the content of each object of the G1M/G2M file *)
 let g1m_reader (s : string) : project_content =
   let c = get_content s in
   
