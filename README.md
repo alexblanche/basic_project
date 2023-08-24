@@ -16,15 +16,20 @@ I refer to "text mode" as opposed to code written on a calculator or on FA-124, 
 ## Files
 
 The repository contains the following files.
+
 In basic_parsing:
-- arithmetic_parsing.ml: lexing and evaluation of arithmetic expressions (involving left and right-associative binary operators, left and right unary operators, functions)
 - basic_encoding.ml: contains lists of the encoding (in one or two bytes) of most of the commands and all the characters that exist on Casio calculator (Graph 35+), and the functions that generate two hash tables, containing the visual representation of the characters in text mode and graphic mode respectively
 - basic_type.ml: contains the types for the abstract representation of Casio Basic code used for the emulator
 - file_reader.ml: various file reading functions
-- float_repr.ml: conversions from OCaml floats to Casio Basic numbers
 - g1m_reader.ml: reading functions for extraction of the content of a G1M/G2M file and binary interpretation functions
 - g1m_writer.ml: generation of G1M/G2M files
 - project_type.ml: contains the type project_content, in which the objects (programs, lists, pictures...) of G1M files are stored
+- basic_compilation.ml: contains the functions, that compile a list of lexemes into basic_code type
+
+In basic_running:
+- arithmetic_parsing.ml: lexing and evaluation of arithmetic expressions (involving left and right-associative binary operators, left and right unary operators, functions)
+- float_repr.ml: conversions from OCaml floats to Casio Basic numbers
+- basic_run.ml: contains functions that run Basic code (in basic_code type)
 
 In data:
 - char1 ... char7.bmp, gphchar1.bmp, gphchar2.bmp: files that represent all the characters in text mode and graphic mode, whose representations are extracted and stored in the two hash tables (see basic_encoding.ml)
@@ -49,7 +54,7 @@ In tests:
 - Float representation: gives string representations of OCaml floats as Casio Basic numbers
 - Visual representation of all the characters in text and graphic mode
 
-## To do next
+## To do next:
 Compilers and decompilers:
 - Code a parser to convert a program to an abstract "Basic code" type
 - Code a converter from Basic tree to readable "Custom Basic" code

@@ -1,13 +1,11 @@
 (* Abstract Basic program type *)
-(* To be completed *)
 
 (* Due to the presence of Lbl/Goto, a Casio Basic program cannot be represented as an
   abstract tree. *)
 (* Each command is represented with an abstract command type.
   The program is compiled into an array of commands.
   - Patterns "Lbl A ... Goto A" are replaced with "Goto(l)",
-  where l is the line where the Lbl A is (even if it is not
-  actually present in the array). The lines of each Lbl are stored in a table. 
+  where l is the line where the Lbl A is (even if it is not actually present in the array).
   - Conditionals (If) and loops (For, While, Do-LpWhile) are transformed with the Goto method. *)
 
 (* Lists, Matrices, Strings *)
@@ -31,10 +29,15 @@ type basic_number =
   | Float of float
   | Var of variable
 
+(* To be replaced by the actual lexemes (in arithmetic_parsing) *)
+type arithm_lexeme = Arithm_lex
+
 (* Type for Basic numerical and boolean expressions *)
+(* Conditions are expressions: 0 = false, <>0 = true *)
 type basic_expr =
   | QMark (* ? (asks the user for a value) *)
-  | Num of arithm_lexeme list
+  | Num of basic_number
+  | Expr of arithm_lexeme list
 
 (***************************************************************************)
 
@@ -54,10 +57,10 @@ type graphic =
   | Graphic_Function of string
 
 (* Type for Basic commands *)
-(* Conditions are expressions: 0 = false, <>0 = true *)
 type command =
+  | Empty (* Empty command, to complete the basic_code array *)
   | Expr of basic_expr (* Arithmetic expression *)
-  | String of string * bool (* Text *)
+  | String of string (* Text *)
   | Assign of basic_expr * variable (* expr -> X *)
   | AssignStruct of data_struct * variable (* [1,2,3] -> List A *)
   | Disp (* Displays the result of the line above *)
@@ -67,3 +70,6 @@ type command =
   | TextMode of textmode (* String, Locate, Disp... *)
   | Graphic of graphic (* Graphic screen functions *)
   | Function of string (* Any other function, stored in a hashtable *)
+
+(* Type for compiled Basic code *)
+type basic_code = command array;;
