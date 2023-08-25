@@ -51,6 +51,22 @@ let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
     | _::t -> extract_expr t
     | [] -> failwith "extract_expr: Empty list of lexemes";;
 
+(* After a double-quote was encountered, extracts the string that follows,
+  until another double-quote is encountered *)
+let extract_str (lexlist : string list) : string * (string list) =
+  (* Temporary *)
+  match lexlist with
+    | s::"QUOTE"::t -> s,t
+    | _ -> failwith "extract_str: This case is not treated yet";;
+
+(* Returns true if the string s contains exactly one character among A..Z, r, theta *)
+let is_var (s : string) : bool =
+  (String.length s = 1)
+  &&
+  (let c = Char.code s.[0] in
+  (c >= 65 && c <= 90)
+  || c = 205 || c = 206);; 
+
 (* Working memory type *)
 type working_mem =
   {
@@ -63,6 +79,10 @@ type working_mem =
     (* Authorized labels are A..Z, r, theta *)
     (* In Casio Basic, when there are several instances of Lbl A, only the first is taken into account. *)
     lblindex : int array;
+
+    (* gotoindex is a pile containing, for each Goto encountered, a pair (a,i), where a is the index of
+      the Lbl the Goto points to, and i is the index the Goto was encountered *)
+    mutable gotoindex : (int * int) list;
     
     mutable whileindex : int list;
     mutable forindex : int list;
@@ -74,13 +94,14 @@ let add_else (mem : working_mem) (i : int) : unit =
     | l::t -> mem.elseindex <- (i::l)::t
     | [] -> mem.elseindex <- [[i]];;
 
-(* Treats the next lexemes in the list of lexemes lexlist, by modifying the array code in place. *)
-let treat_commands (code : basic_code ref) (lexlist : string list) : unit =
+(* Compiles the next lexemes in the list of lexemes lexlist, by modifying the array code in place. *)
+let process_commands (code : basic_code ref) (lexlist : string list) : unit =
   let mem =
     {
       ifindex = [];
       elseindex = [];
       lblindex = [||];
+      gotoindex = [];
       whileindex = [];
       forindex = []
     }
@@ -90,11 +111,8 @@ let treat_commands (code : basic_code ref) (lexlist : string list) : unit =
   
   (* elseindex is a pile containing the index of the last else statements encountered not yet closed *)
   let rec aux (lexlist : string list) (i : int) : unit =
-    (* Debugging *)
-    if lexlist <> [] then print_endline (List.hd lexlist);
-    if mem.ifindex <> [] then (print_int (List.hd mem.ifindex); print_newline ()) else print_endline "empty ifindex";
     match lexlist with
-
+      
       | "EOL" :: t -> aux t i
       
       (* If, Then, Else, IfEnd *)
@@ -125,9 +143,6 @@ let treat_commands (code : basic_code ref) (lexlist : string list) : unit =
         let e, t' = extract_expr t in
         (set code i (If (e, -1));
         mem.ifindex <- i::mem.ifindex;
-        (* Debugging *)
-        print_int (List.hd mem.ifindex);
-        print_newline ();
         mem.elseindex <- []::mem.elseindex;
         aux t' (i+1))
 
@@ -150,8 +165,7 @@ let treat_commands (code : basic_code ref) (lexlist : string list) : unit =
           (match (!code).(jif) with
             | If (e,k) ->
               if k = -1
-                then
-                  set code jif (If (e,i+1))
+                then set code jif (If (e,i+1))
                 else failwith "Compilation error: Unexpected Else If"
             | _ -> failwith "Compilation error: Unexpected Else If")
         with
@@ -179,7 +193,9 @@ let treat_commands (code : basic_code ref) (lexlist : string list) : unit =
 
       | "IFEND" :: t ->
         (match mem.elseindex with
-          | eil::_ -> List.iter (fun j -> set code j (Goto i)) eil
+          | eil::eit ->
+            (mem.elseindex <- eit;
+            List.iter (fun j -> set code j (Goto i)) eil)
           | [] ->
             (try
               let jif = List.hd mem.ifindex in
@@ -193,13 +209,61 @@ let treat_commands (code : basic_code ref) (lexlist : string list) : unit =
                 | _ -> failwith "Compilation error: Unexpected IfEnd")
             with
               | Failure _ -> failwith "Compilation error: Unexpected IfEnd with no opened If statement"))
-
+      
+      (* Strings *)
+      | "QUOTE" :: t ->
+        let s, t' = extract_str t in
+        (set code i (String s);
+        aux t' (i+1))
+      | "DISP" :: t ->
+        (set code i (Disp);
+        aux t (i+1))
+      
+      (* Lbl, Goto *)
+      | "LBL"::a::eol::t ->
+        if not (is_var a)
+          then failwith "Compilation error: Wrong label"
+          else if eol <> "EOL"
+            then failwith "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
+            else
+              (* This absolutely needs to be merged with the "Goto" case below *)
+              let c = Char.code a.[0] in
+              let a_index =
+                if a = "SMALLR" then 26
+                else if a = "THETA" then 27
+                else c - 65
+              in
+              if mem.lblindex.(a_index) <> -1
+                then aux t i
+                else
+                  (mem.lblindex.(a_index) <- i;
+                  aux t i)
+      | "GOTO"::a::eol::t ->
+        if not (is_var a)
+          then failwith "Compilation error: Wrong goto"
+          else if eol <> "EOL"
+            then failwith "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
+            else
+              let c = Char.code a.[0] in
+              let a_index =
+                if a = "SMALLR" then 26
+                else if a = "THETA" then 27
+                else c - 65
+              in
+              if mem.lblindex.(a_index) <> -1
+                then
+                  (set code i (Goto (mem.lblindex.(a_index)));
+                  aux t (i+1))
+                else
+                  (mem.gotoindex <- (a_index,i)::mem.gotoindex;
+                  aux t (i+1))
 
       (* Errors *)
-      | lex :: _ -> failwith ("treat_commands: Unexpected command "^lex)
+      | lex :: _ -> failwith ("Compilation error: Unexpected command "^lex)
 
       (* End case *)
-      | [] -> ()
+      (* The Goto that were encountered before their labels are set. *)
+      | [] -> List.iter (fun (a_j,i) -> set code i (Goto (mem.lblindex.(a_j)))) mem.gotoindex
   in
 
   aux lexlist 0;;
@@ -209,7 +273,7 @@ let treat_commands (code : basic_code ref) (lexlist : string list) : unit =
 (* Compiles the list of lexemes lexlist into an object of type basic_code *)
 let compile (lexlist : string list) : basic_code =
   let code = ref (Array.make 50 Empty) in
-  treat_commands code lexlist;
+  process_commands code lexlist;
   extract !code;;
 
 (* Buggy, to be fixed *)

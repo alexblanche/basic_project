@@ -275,29 +275,20 @@ let read_name (s : string) (i : int) : (string * int) =
 let lexer (s : string) : lexeme list =
   let n = String.length s in
   let rec aux i acc =
-    if i = n
-      then List.rev acc
-      else if s.[i] = ' '
-        then aux (i+1) acc
-        else if s.[i] = '('
-          then aux (i+1) (Lpar::acc)
-          else if s.[i] = ')'
-            then aux (i+1) (Rpar::acc)
-            else if s.[i] = ','
-              then aux (i+1) (Comma::acc)
-              else if s.[i] >= '0' && s.[i] <= '9'
-                then (* Float *)
-                  let (res,ni) = read_float s i in
-                  aux ni ((Float res)::acc)
-                else (* Function or operators *)
-                  let (name,ni) = read_name s i in
-                  if List.exists (fun (s,_) -> s=name) op_list
-                    then aux ni ((Op name)::acc)
-                    else if List.mem name lop_list
-                      then aux ni ((Lunop name)::acc)
-                      else if List.mem name rop_list
-                        then aux ni ((Runop name)::acc)
-                        else aux ni ((Function name)::acc)
+    if i = n then List.rev acc
+    else if s.[i] = ' ' then aux (i+1) acc
+    else if s.[i] = '(' then aux (i+1) (Lpar::acc)
+    else if s.[i] = ')' then aux (i+1) (Rpar::acc)
+    else if s.[i] = ',' then aux (i+1) (Comma::acc)
+    else if s.[i] >= '0' && s.[i] <= '9' then (* Float *)
+      let (res,ni) = read_float s i in
+      aux ni ((Float res)::acc)
+    else (* Function or operators *)
+      let (name,ni) = read_name s i in
+      if List.exists (fun (s,_) -> s=name) op_list then aux ni ((Op name)::acc)
+      else if List.mem name lop_list then aux ni ((Lunop name)::acc)
+      else if List.mem name rop_list then aux ni ((Runop name)::acc)
+      else aux ni ((Function name)::acc)
   in
   aux 0 [];;
 
@@ -316,7 +307,7 @@ let rec right_reduce output_q op_q =
       if left_assoc o
         then (output_q, op_q)
         else right_reduce ((apply_op o x1 x2)::outq) opqt
-    | _, (Op o)::_ -> failwith ("reduce: Not enough operands for operator"^o)
+    | _, (Op o)::_ -> failwith ("reduce: Not enough operands for operator "^o)
     | x::outq, (Lunop lo)::opqt ->
         right_reduce ((apply_lop lo x)::outq) opqt
     | _ -> failwith "reduce: Syntax error";;
@@ -379,22 +370,22 @@ let rec shunting_yard (lexlist : lexeme list) (output_q : float list) (op_q : le
             let af = arity fname in
             if af = 1
               then shunting_yard t ((apply_func fname [x1])::outq) opqt
-              else failwith ("Function "^fname^"has arity "^(string_of_int af)^", but receives 1 argument")
+              else failwith ("Function "^fname^" has arity "^(string_of_int af)^", but receives 1 argument")
           | x2::x1::outq, Comma::Lpar::(Function fname)::opqt ->
             let af = arity fname in
             if af = 2
               then shunting_yard t ((apply_func fname [x1;x2])::outq) opqt
-              else failwith ("Function "^fname^"has arity "^(string_of_int af)^", but receives 2 arguments")
+              else failwith ("Function "^fname^" has arity "^(string_of_int af)^", but receives 2 arguments")
           | x3::x2::x1::outq, Comma::Comma::Lpar::(Function fname)::opqt ->
             let af = arity fname in
             if af = 3
               then shunting_yard t ((apply_func fname [x1;x2;x3])::outq) opqt
-              else failwith ("Function "^fname^"has arity "^(string_of_int af)^", but receives 3 arguments")
+              else failwith ("Function "^fname^" has arity "^(string_of_int af)^", but receives 3 arguments")
           | x4::x3::x2::x1::outq, Comma::Comma::Comma::Lpar::(Function fname)::opqt ->
             let af = arity fname in
             if af = 4
               then shunting_yard t ((apply_func fname [x1;x2;x3;x4])::outq) opqt
-              else failwith ("Function "^fname^"has arity "^(string_of_int af)^", but receives 4 arguments")
+              else failwith ("Function "^fname^" has arity "^(string_of_int af)^", but receives 4 arguments")
           | _, Comma::_ -> failwith "Unexpected comma (maximum arity is 4)"
           
           (* Lpar without a function behind *)
