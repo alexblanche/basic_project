@@ -371,8 +371,8 @@ let list_bin (list_array : (bool * (float array)) array) : string =
         let subh = obj_subheader "LIST" (string_of_int (i+1)) (16+12*length) in
         let pre_data =
           (String.make 8 '\000')
-          ^(String.init 1 (fun _ -> Char.chr (actual_length/256)))
-          ^(String.init 1 (fun _ -> Char.chr (actual_length mod 256)))
+          ^(String.make 1 (Char.chr (actual_length/256)))
+          ^(String.make 1 (Char.chr (actual_length mod 256)))
           ^(String.make 6 '\000')
         in
         let data_l =
@@ -429,7 +429,7 @@ let mat_bin (mat_array : (bool * (float array array)) array) =
         in
         let col = Array.length m.(0) in
         let t = matrix_to_array m in
-        let subh = obj_subheader "MAT" (String.init 1 (fun _ -> Char.chr (65+i))) (16+12*row*col) in
+        let subh = obj_subheader "MAT" (String.make 1 Char.chr (65+i)) (16+12*row*col) in
         let pre_data =
           (String.make 8 '\000')
           ^(String.init 2 (fun j -> if j = 0 then Char.chr (actual_row/256) else Char.chr (actual_row mod 256)))

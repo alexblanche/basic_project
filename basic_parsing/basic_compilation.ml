@@ -100,7 +100,7 @@ let process_commands (code : basic_code ref) (lexlist : string list) : unit =
     {
       ifindex = [];
       elseindex = [];
-      lblindex = [||];
+      lblindex = Array.make 28 (-1);
       gotoindex = [];
       whileindex = [];
       forindex = []
@@ -182,7 +182,7 @@ let process_commands (code : basic_code ref) (lexlist : string list) : unit =
               if k = -1
                 (* One cell is left empty to add a Goto when the IfEnd is encountered *)
                 then
-                  (set code jif (If (e,i));
+                  (set code jif (If (e,(i+1)));
                   add_else mem i;
                   aux t (i+1))
                 (* If was already treated *)
@@ -192,10 +192,12 @@ let process_commands (code : basic_code ref) (lexlist : string list) : unit =
           | Failure _ -> failwith "Compilation error: Unexpected Else with no opened If statement")
 
       | "IFEND" :: t ->
-        (match mem.elseindex with
+        ((match mem.elseindex with
+          (* Adding the Goto before each Else/Else If *)
           | eil::eit ->
             (mem.elseindex <- eit;
             List.iter (fun j -> set code j (Goto i)) eil)
+          (* If Then IfEnd (no Else): setting up the If *)
           | [] ->
             (try
               let jif = List.hd mem.ifindex in
@@ -208,7 +210,9 @@ let process_commands (code : basic_code ref) (lexlist : string list) : unit =
                     else failwith "Compilation error: Unexpected IfEnd"
                 | _ -> failwith "Compilation error: Unexpected IfEnd")
             with
-              | Failure _ -> failwith "Compilation error: Unexpected IfEnd with no opened If statement"))
+              | Failure _ -> failwith "Compilation error: Unexpected IfEnd with no opened If statement"));
+        aux t i)
+            
       
       (* Strings *)
       | "QUOTE" :: t ->
@@ -276,4 +280,9 @@ let compile (lexlist : string list) : basic_code =
   process_commands code lexlist;
   extract !code;;
 
-(* Buggy, to be fixed *)
+(* To do: turn this function lexlist -> unit
+  to proglist ((name, lexlist) list) -> unit,
+  that takes several programs as parameter,
+  and turns them all into one basic_code,
+  as one single program with Goto.
+  To do so, use progindex, like gotoindex *)

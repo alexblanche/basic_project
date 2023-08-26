@@ -1,0 +1,48 @@
+(* Unit tests for Basic compilation *)
+
+#use "basic_parsing/basic_compilation.ml"
+
+exception Test_failed of int
+
+let unit_tests_compil () =
+  let check i (lexlist, code) =
+    if (compile lexlist) <> code
+      then raise (Test_failed i)
+  in
+  try
+    List.iteri check [
+
+    ];
+    print_endline "Tests_compilation: all tests ran successfully"
+  with
+    | Test_failed i ->
+      print_endline ("Tests_compilation: test "^(string_of_int i)^" failed")
+    | Failure s ->
+      print_endline ("Tests_arithmetic_parsing, lexer: one test encountered an error \""^s^"\"");;
+
+(* unit_tests_compil ();; *)
+
+compile 
+  ["IF"; "1"; "EOL";
+  "THEN"; "QUOTE"; "A"; "QUOTE"; "DISP";
+  "ELSE"; "QUOTE"; "B"; "QUOTE"; "DISP";
+  "IFEND"; "EOL";
+  "QUOTE"; "C"; "QUOTE"; "DISP"];;
+
+compile 
+  ["GOTO"; "E"; "EOL";
+  "IF"; "1"; "EOL";
+  "THEN";
+    "LBL"; "E"; "EOL";
+    "QUOTE"; "A"; "QUOTE"; "DISP";
+  "ELSE";
+    "QUOTE"; "B"; "QUOTE"; "DISP";
+  "IFEND"; "EOL";
+  "QUOTE"; "C"; "QUOTE"; "DISP"];;
+
+(* Question:
+  When a Goto sends you inside a Then statement,
+  is the Else statement evaluated?
+  If not, raise an error when the Lbl is encountered if the IfEnd has not yet been reached (if a goto to this Lbl exists...)
+  If it is evaluated, then I need to have two types of Goto, the ones that are always executed and the ones that are
+  ignored if some condition is true... *)

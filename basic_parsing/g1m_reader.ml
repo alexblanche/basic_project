@@ -172,7 +172,7 @@ let prog_to_lexlist (s : string) (istart : int) : string list =
           if s.[i] = '\127' || s.[i] = '\247' || s.[i] = '\249' ||
             s.[i] = '\229' || s.[i] = '\230' || s.[i] = '\231'
             then String.init 2 (fun j -> s.[i+j])
-            else String.init 1 (fun _ -> s.[i])
+            else String.make 1 s.[i]
         in
         if s.[i] >= '0' && s.[i] <= '9' ||
           s.[i] >= 'A' && s.[i] <= 'Z' ||
