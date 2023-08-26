@@ -49,12 +49,12 @@ let dline (a : int) (b : int) (x : int) (y : int) =
 	moveto a b;
 	lineto x y;;
 
-(* Fills the pixel x,y of the screen with the current color *)
+(* Fills the pixel i,j of the screen with the current color *)
 let ploton (m : bool array array) (i : int) (j : int) =
 	fill_rect (margin+size*i) (margin+size*j) size size;
 	m.(j).(i) <- true;;
 
-(* Fills the pixel x,y of the screen with white and reforms the grid *)
+(* Fills the pixel i,j of the screen with white and reforms the grid *)
 let plotoff (m : bool array array) (grid : bool) (i : int) (j : int) =
 	if m.(j).(i) then
 		(set_color white;

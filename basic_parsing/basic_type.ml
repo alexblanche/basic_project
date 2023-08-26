@@ -62,7 +62,7 @@ type command =
   | End (* End of the program *)
   | Empty (* Empty command, to complete the basic_code array *)
   | Expr of basic_expr (* Arithmetic expression *)
-  | String of string (* Text *)
+  | String of string list (* Text, stored as list of lexemes (strings of 1 or 2 characters) *)
   | Assign of basic_expr * variable (* expr -> X *)
   | AssignStruct of data_struct * variable (* [1,2,3] -> List A *)
   | Disp (* Display the result of the line above *)

@@ -1,18 +1,21 @@
 (* Execution of Basic code *)
 
 #use "basic_parsing/basic_type.ml"
+#use "basic_parsing/basic_encoding.ml"
 #use "basic_running/arithmetic_parsing.ml"
 #use "basic_running/graphic.ml"
 
 let run ((code, proglist): basic_code) : unit =
+  (* Initialization *)
   (* Variables: array of size 29, storing the content of each variable A..Z, r, theta, Ans *)
   let var = Array.make 29 0 in
   (* prog_goback: pile of indices to return to when the end of a program is reached *)
   let prog_goback = ref [] in
-
-  open_graphic ();
   let n = Array.length code in
 
+  open_graphic ();
+  
+  (* Looping function *)
   let rec aux i =
     if i >= n
       then (disp (); close_graph ())
