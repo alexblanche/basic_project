@@ -58,13 +58,15 @@ type graphic =
 
 (* Type for Basic commands *)
 type command =
+  | End (* End of the program *)
   | Empty (* Empty command, to complete the basic_code array *)
   | Expr of basic_expr (* Arithmetic expression *)
   | String of string (* Text *)
   | Assign of basic_expr * variable (* expr -> X *)
   | AssignStruct of data_struct * variable (* [1,2,3] -> List A *)
-  | Disp (* Displays the result of the line above *)
+  | Disp (* Display the result of the line above *)
   | Goto of int (* Jump to line l on the array *)
+  | Prog of string (* Prog(name): jump to program name, then come back *)
   | If of basic_expr * int (* If(expr,l): If expr Then continue (else jump to line l) *)
   | JumpIf of basic_expr * int (* JumpIf(expr,l): If expr Then jump to line l *)
   | TextMode of textmode (* String, Locate, Disp... *)
@@ -72,4 +74,7 @@ type command =
   | Function of string (* Any other function, stored in a hashtable *)
 
 (* Type for compiled Basic code *)
-type basic_code = command array;;
+(* An object of type basic_code has the form (code, progindex),
+  where code is the compiled code of all the programs (separated by End)
+  and progindex is a list of the name and index (in the code) of each program *)
+type basic_code = (command array * (string * int) list);;

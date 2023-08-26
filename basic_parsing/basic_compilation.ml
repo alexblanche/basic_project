@@ -70,22 +70,31 @@ let is_var (s : string) : bool =
 (* Working memory type *)
 type working_mem =
   {
-    (* ifindex is a pile containing the indices of the last if statements encountered not yet closed *)
+    (* ifindex: a pile containing the indices of the last if statements encountered not yet closed *)
     mutable ifindex : int list;
-    (* elseindex is a pile containing the lists of indices of else statements
-      (several or no ElseIf statements, then one Else statement), each associated with an If statement *)
+
+    (* elseindex: a pile containing the lists of indices of else statements
+      (several or no ElseIf statements, then one or no Else statement), each associated with an If statement *)
+      (* If a list is empty, then the If was of the form If Then IfEnd *)
     mutable elseindex : int list list;
+    
+    (* whileindex: a pile containing the indices of the last while statements encountered, not yet closed *)
+    mutable whileindex : int list;
+
+    (* forindex: a pile containing the indices of the last for statements encountered, not yet closed *)
+    mutable forindex : int list;
+    
     (* Contains the indices pointed at by the labels *)
     (* Authorized labels are A..Z, r, theta *)
     (* In Casio Basic, when there are several instances of Lbl A, only the first is taken into account. *)
     lblindex : int array;
 
-    (* gotoindex is a pile containing, for each Goto encountered, a pair (a,i), where a is the index of
+    (* gotoindex: a pile containing, for each Goto encountered, a pair (a,i), where a is the index of
       the Lbl the Goto points to, and i is the index the Goto was encountered *)
     mutable gotoindex : (int * int) list;
-    
-    mutable whileindex : int list;
-    mutable forindex : int list;
+
+    (* proglist: a list containing the name and index in the code of each program in the project *)
+    mutable proglist : (string * int) list;
   };;
 
 (* Function to add an "Else" statement to the first list of the int list list elseindex *)
@@ -100,10 +109,11 @@ let process_commands (code : basic_code ref) (lexlist : string list) : unit =
     {
       ifindex = [];
       elseindex = [];
+      whileindex = [];
+      forindex = [];
       lblindex = Array.make 28 (-1);
       gotoindex = [];
-      whileindex = [];
-      forindex = []
+      proglist = []
     }
   in
 
@@ -219,8 +229,9 @@ let process_commands (code : basic_code ref) (lexlist : string list) : unit =
         let s, t' = extract_str t in
         (set code i (String s);
         aux t' (i+1))
+
       | "DISP" :: t ->
-        (set code i (Disp);
+        (set code i Disp;
         aux t (i+1))
       
       (* Lbl, Goto *)
@@ -242,6 +253,7 @@ let process_commands (code : basic_code ref) (lexlist : string list) : unit =
                 else
                   (mem.lblindex.(a_index) <- i;
                   aux t i)
+
       | "GOTO"::a::eol::t ->
         if not (is_var a)
           then failwith "Compilation error: Wrong goto"
@@ -261,6 +273,16 @@ let process_commands (code : basic_code ref) (lexlist : string list) : unit =
                 else
                   (mem.gotoindex <- (a_index,i)::mem.gotoindex;
                   aux t (i+1))
+      
+      | "PROG"::"QUOTE"::t ->
+        let s, t' = extract_str t in
+        (match t' with
+          | "EOL"::t'' ->
+            (set code i (Prog s);
+            aux t'' (i+1))
+          | _ -> failwith "Compilation error: Syntax error, a Prog is supposed to be followed by EOL"
+        )
+
 
       (* Errors *)
       | lex :: _ -> failwith ("Compilation error: Unexpected command "^lex)
@@ -286,3 +308,7 @@ let compile (lexlist : string list) : basic_code =
   and turns them all into one basic_code,
   as one single program with Goto.
   To do so, use progindex, like gotoindex *)
+
+(* To do:
+  create a process function for each keyword, to have
+  a shorter aux (process_commands) function *)
