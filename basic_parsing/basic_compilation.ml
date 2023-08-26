@@ -70,19 +70,16 @@ let is_var (s : string) : bool =
 (* Working memory type *)
 type working_mem =
   {
-    (* ifindex: a pile containing the indices of the last if statements encountered not yet closed *)
-    mutable ifindex : int list;
+    (* stack: a pile containing the type and index of the last if, while, for or do statements encountered
+       that are not yet closed
+      Each element is given as (name, i), where name = "if", "while", "for" or "do",
+      and i is the index where the statement was encountered *)
+    mutable stack : (string * int) list;
 
     (* elseindex: a pile containing the lists of indices of else statements
       (several or no ElseIf statements, then one or no Else statement), each associated with an If statement *)
       (* If a list is empty, then the If was of the form If Then IfEnd *)
     mutable elseindex : int list list;
-    
-    (* whileindex: a pile containing the indices of the last while statements encountered, not yet closed *)
-    mutable whileindex : int list;
-
-    (* forindex: a pile containing the indices of the last for statements encountered, not yet closed *)
-    mutable forindex : int list;
     
     (* Contains the indices pointed at by the labels *)
     (* Authorized labels are A..Z, r, theta *)
@@ -93,8 +90,8 @@ type working_mem =
       the Lbl the Goto points to, and i is the index the Goto was encountered *)
     mutable gotoindex : (int * int) list;
 
-    (* proglist: a list containing the name and index in the code of each program in the project *)
-    mutable proglist : (string * int) list;
+    (* progindex: a list containing the name and index in the code of each program in the project *)
+    mutable progindex : (string * int) list;
   };;
 
 (* Function to add an "Else" statement to the first list of the int list list elseindex *)
@@ -103,8 +100,211 @@ let add_else (mem : working_mem) (i : int) : unit =
     | l::t -> mem.elseindex <- (i::l)::t
     | [] -> mem.elseindex <- [[i]];;
 
-(* Compiles the next lexemes in the list of lexemes lexlist, by modifying the array code in place. *)
-let process_commands (code : basic_code ref) (lexlist : string list) : unit =
+(********************************************************************************)
+
+(** Processing function for each keyword **)
+(* Each function has type
+  (i : int) (t : string list) (code : string list) (mem : working_mem) : (int * (string list))
+  i is the reading position, t is the tail of the list of lexemes before processing,
+  code is the current list of lexemes, mem is the working memory.
+  Returns the new reading position and the tail of the list of lexemes. *)
+
+(* If, Then, Else, IfEnd *)
+(*  If expr1
+    Then prog1
+    Else If expr2
+    Then prog2
+    Else If expr3
+    Then prog3
+    Else prog4
+    IfEnd
+    prog5
+  ->
+    10      If (expr1, 23)
+    11..21  prog1
+    22      Goto(53)
+    23      If (expr2, 30)
+    24..28  prog2
+    29      Goto(53)
+    30      If (expr3, 44)
+    31..42  prog3
+    43      Goto(53)
+    44..52  prog4
+    53...   prog5
+*)
+(* New If (not ElseIf, treated below) *)
+
+(* If *)
+let process_if i t code mem = 
+  let e, t' = extract_expr t in
+  set code i (If (e, -1));
+  mem.stack <- ("if", i)::mem.stack;
+  mem.elseindex <- []::mem.elseindex;
+  ((i+1), t');;
+
+(* Then *)
+let process_then i t code mem =
+  try
+    if List.hd mem.stack = ("if", i-1)
+      then (i,t)
+      else failwith "Compilation error: Unexpected Then, does not follow an If statement"
+  with
+    | Failure _ -> failwith "Compilation error: Unexpected Then with no opened If statement";;
+
+(* Else If *)
+let process_else_if i t code mem =
+  let e, t' = extract_expr t in
+  (* One cell is left empty to add a Goto when the IfEnd is encountered *)
+  set code (i+1) (If (e, -1));
+  (try
+    let (s,jif) = List.hd mem.stack in
+    if s <> "if" then
+      failwith "Compilation error: Unexpected Else If with no opened If statement";
+    (match (!code).(jif) with
+      | If (e,k) ->
+        if k = -1
+          then set code jif (If (e,i+1))
+          else failwith "Compilation error: Unexpected Else If"
+      | _ -> failwith "Compilation error: Unexpected Else If")
+  with
+    | Failure _ -> failwith "Compilation error: Unexpected Else If with no opened If statement");
+  mem.stack <- ("if",(i+1))::(List.tl mem.stack);
+  add_else mem (i+1);
+  ((i+2),t');;
+
+(* Else *)
+let process_else i t code mem =
+  try
+    let (s,jif) = List.hd mem.stack in
+    if s <> "if" then
+      failwith "Compilation error: Unexpected Else with no opened If statement";
+    (match (!code).(jif) with
+      | If (e,k) ->
+        if k = -1
+          (* One cell is left empty to add a Goto when the IfEnd is encountered *)
+          then
+            (set code jif (If (e,(i+1)));
+            add_else mem i;
+            ((i+1),t))
+          (* The If was already treated *)
+          else failwith "Compilation error: Unexpected Else"
+      | _ -> failwith "Compilation error: Unexpected Else")
+  with
+    | Failure _ -> failwith "Compilation error: Unexpected Else with no opened If statement";;
+
+(* IfEnd *)
+let process_ifend i t code mem =
+  match mem.elseindex with
+  (* Adding the Goto before each Else/Else If *)
+    | eil::eit ->
+      (mem.elseindex <- eit;
+      List.iter (fun j -> set code j (Goto i)) eil;
+      (i,t))
+      (* If Then IfEnd (no Else): setting up the If *)
+    | [] ->
+      (try
+        let (s,jif) = List.hd mem.stack in
+        if s <> "if" then
+          failwith "Compilation error: Unexpected IfEnd";
+        mem.stack <- List.tl mem.stack;
+        (match (!code).(jif) with
+          | If (e,k) ->
+            if k = -1
+              then
+                (set code jif (If (e,i));
+                (i,t))
+              else failwith "Compilation error: Unexpected IfEnd"
+          | _ -> failwith "Compilation error: Unexpected IfEnd")
+      with
+        | Failure _ -> failwith "Compilation error: Unexpected IfEnd with no opened If statement");;
+
+(* While, WhileEnd *)
+(*  While expr
+    prog1
+    WhileEnd
+    prog2
+  ->
+    10      If (expr, 23)
+    11..21  prog1
+    22      Goto(10)
+    23..    prog2
+*)
+let process_while i t code mem =
+  let e, t' = extract_expr t in
+  set code i (If (e, -1));
+  mem.stack <- ("while", i)::mem.stack;
+  ((i+1), t');;
+
+let process_whileend i t code mem =
+  try
+    let (s,jwh) = List.hd mem.stack in
+    if s <> "while" then
+      failwith "Compilation error: Unexpected WhileEnd";
+    mem.stack <- List.tl mem.stack;
+    set code i (Goto jwh);
+    (match (!code).(jwh) with
+      | If (e,k) ->
+        if k = -1
+          then
+            (set code jwh (If (e,i));
+            ((i+1),t))
+          else failwith "Compilation error: Unexpected WhileEnd"
+      | _ -> failwith "Compilation error: Unexpected WhileEnd")
+  with
+    | Failure _ -> failwith "Compilation error: Unexpected WhileEnd with no opened While statement";;
+
+(* Lbl, Goto *)
+
+(* Lbl *)
+let process_lbl i t code mem =
+  if not (is_var a)
+    then failwith "Compilation error: Wrong label"
+    else if eol <> "EOL"
+      then failwith "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
+      else
+        (* This absolutely needs to be merged with the "Goto" case below *)
+        let c = Char.code a.[0] in
+        let a_index =
+          if a = "SMALLR" then 26
+          else if a = "THETA" then 27
+          else c - 65
+        in
+        if mem.lblindex.(a_index) <> -1
+          then (i,t)
+          else
+            (mem.lblindex.(a_index) <- i;
+            (i,t));;
+
+(* Goto *)
+let process_goto i t code mem =
+  if not (is_var a)
+    then failwith "Compilation error: Wrong goto"
+    else if eol <> "EOL"
+      then failwith "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
+      else
+        let c = Char.code a.[0] in
+        let a_index =
+          if a = "SMALLR" then 26
+          else if a = "THETA" then 27
+          else c - 65
+        in
+        (if mem.lblindex.(a_index) <> -1
+          then set code i (Goto (mem.lblindex.(a_index)))
+          else mem.gotoindex <- (a_index,i)::mem.gotoindex;
+        ((i+1),t))
+
+(* Prog *)
+let process_prog i t code mem =
+  let s, t' = extract_str t in
+  match t' with
+    | "EOL"::t'' ->
+      (set code i (Prog s);
+      ((i+1),t''))
+    | _ -> failwith "Compilation error: Syntax error, a Prog is supposed to be followed by EOL";;
+
+(* Compiles the list of lexemes lexlist by modifying the array code in place. *)
+(* Returns the proglist parameter of the working memory *)
+let process_commands (code : (command array) ref) (lexlist : string list) : (string * int) list =
   let mem =
     {
       ifindex = [];
@@ -113,117 +313,46 @@ let process_commands (code : basic_code ref) (lexlist : string list) : unit =
       forindex = [];
       lblindex = Array.make 28 (-1);
       gotoindex = [];
-      proglist = []
+      progindex = []
     }
   in
 
   (* Looping function *)
   
   (* elseindex is a pile containing the index of the last else statements encountered not yet closed *)
-  let rec aux (lexlist : string list) (i : int) : unit =
+  let rec aux (lexlist : string list) (i : int) : int =
     match lexlist with
       
       | "EOL" :: t -> aux t i
       
-      (* If, Then, Else, IfEnd *)
-      (*  If expr1
-          Then prog1
-          Else If expr2
-          Then prog2
-          Else If expr3
-          Then prog3
-          Else prog4
-          IfEnd
-          prog5
-        ->
-          10      If (expr1, 23)
-          11..21  prog1
-          22      Goto(53)
-          23      If (expr2, 30)
-          24..28  prog2
-          29      Goto(53)
-          30      If (expr3, 44)
-          31..42  prog3
-          43      Goto(53)
-          44..52  prog4
-          53...   prog5
-       *)
-      (* New If (not ElseIf, treated below) *)
       | "IF" :: t ->
-        let e, t' = extract_expr t in
-        (set code i (If (e, -1));
-        mem.ifindex <- i::mem.ifindex;
-        mem.elseindex <- []::mem.elseindex;
-        aux t' (i+1))
+        let (j,t') = process_if i t code mem in
+        aux t' j
 
       | "THEN" :: t ->
-        (try
-          if List.hd mem.ifindex = i-1
-            then aux t i
-            else failwith "Compilation error: Unexpected Then, does not follow an If statement"
-        with
-          | Failure _ -> failwith "Compilation error: Unexpected Then with no opened If statement")
+        let (j,t') = process_then i t code mem in
+        aux t' j
       
-      (* I treat "Else If" statements separately from Else because one IfEnd closes all the potential
-        "Else If" and the potential Else following an If *)
       | "ELSE" :: "IF" :: t ->
-        let e, t' = extract_expr t in
-        (* One cell is left empty to add a Goto when the IfEnd is encountered *)
-        (set code (i+1) (If (e, -1));
-        (try
-          let jif = List.hd mem.ifindex in
-          (match (!code).(jif) with
-            | If (e,k) ->
-              if k = -1
-                then set code jif (If (e,i+1))
-                else failwith "Compilation error: Unexpected Else If"
-            | _ -> failwith "Compilation error: Unexpected Else If")
-        with
-          | Failure _ -> failwith "Compilation error: Unexpected Else If with no opened If statement");
-        mem.ifindex <- (i+1)::mem.ifindex;
-        add_else mem (i+1);
-        aux t' (i+2))
+        let (j,t') = process_else_if i t code mem in
+        aux t' j
           
       | "ELSE" :: t ->
-        (try
-          let jif = List.hd mem.ifindex in
-          (match (!code).(jif) with
-            | If (e,k) ->
-              if k = -1
-                (* One cell is left empty to add a Goto when the IfEnd is encountered *)
-                then
-                  (set code jif (If (e,(i+1)));
-                  add_else mem i;
-                  aux t (i+1))
-                (* If was already treated *)
-                else failwith "Compilation error: Unexpected Else"
-            | _ -> failwith "Compilation error: Unexpected Else")
-        with
-          | Failure _ -> failwith "Compilation error: Unexpected Else with no opened If statement")
+        let (j,t') = process_else i t code mem in
+        aux t' j
 
       | "IFEND" :: t ->
-        ((match mem.elseindex with
-          (* Adding the Goto before each Else/Else If *)
-          | eil::eit ->
-            (mem.elseindex <- eit;
-            List.iter (fun j -> set code j (Goto i)) eil)
-          (* If Then IfEnd (no Else): setting up the If *)
-          | [] ->
-            (try
-              let jif = List.hd mem.ifindex in
-              (match (!code).(jif) with
-                | If (e,k) ->
-                  if k = -1
-                    then
-                      (set code jif (If (e,i));
-                      aux t i)
-                    else failwith "Compilation error: Unexpected IfEnd"
-                | _ -> failwith "Compilation error: Unexpected IfEnd")
-            with
-              | Failure _ -> failwith "Compilation error: Unexpected IfEnd with no opened If statement"));
-        aux t i)
-            
+        let (j,t') = process_ifend i t code mem in
+        aux t' j
       
+      | "WHILE" :: t ->
+        let (j,t') = process_while i t code mem in
+        aux t' j
+      
+      | "WHILEEND" :: t ->
+        let (j,t') = process_whileend i t code mem in
+        aux t' j
+
       (* Strings *)
       | "QUOTE" :: t ->
         let s, t' = extract_str t in
@@ -234,81 +363,39 @@ let process_commands (code : basic_code ref) (lexlist : string list) : unit =
         (set code i Disp;
         aux t (i+1))
       
-      (* Lbl, Goto *)
       | "LBL"::a::eol::t ->
-        if not (is_var a)
-          then failwith "Compilation error: Wrong label"
-          else if eol <> "EOL"
-            then failwith "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
-            else
-              (* This absolutely needs to be merged with the "Goto" case below *)
-              let c = Char.code a.[0] in
-              let a_index =
-                if a = "SMALLR" then 26
-                else if a = "THETA" then 27
-                else c - 65
-              in
-              if mem.lblindex.(a_index) <> -1
-                then aux t i
-                else
-                  (mem.lblindex.(a_index) <- i;
-                  aux t i)
-
+        let (j,t') = process_lbl i t code mem in
+        aux t' j
+      
       | "GOTO"::a::eol::t ->
-        if not (is_var a)
-          then failwith "Compilation error: Wrong goto"
-          else if eol <> "EOL"
-            then failwith "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
-            else
-              let c = Char.code a.[0] in
-              let a_index =
-                if a = "SMALLR" then 26
-                else if a = "THETA" then 27
-                else c - 65
-              in
-              if mem.lblindex.(a_index) <> -1
-                then
-                  (set code i (Goto (mem.lblindex.(a_index)));
-                  aux t (i+1))
-                else
-                  (mem.gotoindex <- (a_index,i)::mem.gotoindex;
-                  aux t (i+1))
+        let (j,t') = process_goto i t code mem in
+        aux t' j
       
       | "PROG"::"QUOTE"::t ->
-        let s, t' = extract_str t in
-        (match t' with
-          | "EOL"::t'' ->
-            (set code i (Prog s);
-            aux t'' (i+1))
-          | _ -> failwith "Compilation error: Syntax error, a Prog is supposed to be followed by EOL"
-        )
-
+        let (j,t') = process_prog i t code mem in
+        aux t' j
 
       (* Errors *)
       | lex :: _ -> failwith ("Compilation error: Unexpected command "^lex)
 
       (* End case *)
       (* The Goto that were encountered before their labels are set. *)
-      | [] -> List.iter (fun (a_j,i) -> set code i (Goto (mem.lblindex.(a_j)))) mem.gotoindex
+      | [] ->
+        (List.iter (fun (a_j,i) -> set code i (Goto (mem.lblindex.(a_j)))) mem.gotoindex;
+        set code i End;
+        (i+1) (* Return value *))
   in
 
-  aux lexlist 0;;
+  let _ = List.fold_left
+    (fun j (name,lexlist) ->
+      (mem.proglist <- (name,j)::mem.proglist;
+      aux lexlist j))
+      0 prog;;
 
 
 
 (* Compiles the list of lexemes lexlist into an object of type basic_code *)
-let compile (lexlist : string list) : basic_code =
+let compile (proglist : program list) : basic_code =
   let code = ref (Array.make 50 Empty) in
-  process_commands code lexlist;
-  extract !code;;
-
-(* To do: turn this function lexlist -> unit
-  to proglist ((name, lexlist) list) -> unit,
-  that takes several programs as parameter,
-  and turns them all into one basic_code,
-  as one single program with Goto.
-  To do so, use progindex, like gotoindex *)
-
-(* To do:
-  create a process function for each keyword, to have
-  a shorter aux (process_commands) function *)
+  let prog_index = process_commands code proglist in
+  (extract !code, prog_index);;

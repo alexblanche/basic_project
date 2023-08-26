@@ -21,6 +21,7 @@ type variable =
   | MatIndex of data_struct * int (* MatIndex (Mat(3),i,j) -> Mat 3[i][j] *)
   | StrIndex of data_struct * int
   | Getkey (* its value depends on the key currently pressed *)
+  | Random (* Ran# *)
 
 (***************************************************************************)
 (** TO BE UNIFIED WITH THE TYPES OF arithmetic_parsing.ml **)
