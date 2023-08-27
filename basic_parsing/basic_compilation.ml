@@ -263,13 +263,7 @@ let process_lbl i t code mem (a : string) (eol : string) =
     else if eol <> "EOL"
       then failwith "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
       else
-        (* This absolutely needs to be merged with the "Goto" case below *)
-        let c = Char.code a.[0] in
-        let a_index =
-          if a = "SMALLR" then 26
-          else if a = "THETA" then 27
-          else c - 65
-        in
+        let a_index = var_index a in
         if mem.lblindex.(a_index) <> -1
           then (i,t)
           else
@@ -283,12 +277,7 @@ let process_goto i t code mem (a : string) (eol : string) =
     else if eol <> "EOL"
       then failwith "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
       else
-        let c = Char.code a.[0] in
-        let a_index =
-          if a = "SMALLR" then 26
-          else if a = "THETA" then 27
-          else c - 65
-        in
+        let a_index = var_index a in
         (if mem.lblindex.(a_index) <> -1
           then set code i (Goto (mem.lblindex.(a_index)))
           else mem.gotoindex <- (a_index,i)::mem.gotoindex;

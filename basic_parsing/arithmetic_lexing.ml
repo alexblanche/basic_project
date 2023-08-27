@@ -38,14 +38,16 @@ let rec precedence (o1 : string) (o2 : string) : int =
   with
     | Not_found -> failwith ("precedence: Unkown operator "^o1);;
 
+(* Obsolete: will be reused to lex Custom Basic code *)
 (* Checks if the string starting at index i of string s is an operator *)
-let is_operator (s : string) (i : int) : bool =
+(* let is_operator (s : string) (i : int) : bool =
   let remaining_char = String.length s - i in
   let is_op sop =
     let n = String.length sop in
     (n <= remaining_char) && (String.sub s i n) = sop
   in
-  List.exists (fun (sop, _) -> is_op sop) op_list;;
+  List.exists (fun (sop, _) -> is_op sop) op_list;; *)
+
 
 (* Returns true if the string s contains exactly one character among A..Z, r, theta *)
 let is_var (s : string) : bool =
@@ -55,12 +57,20 @@ let is_var (s : string) : bool =
   (c >= 65 && c <= 90)
   || c = 205 || c = 206);;
 
-(* Returns true if the string s contains exactly one character among A..Z, r, theta *)
+(* Returns true if the string s contains exactly one character that is a digit *)
 let is_digit (s : string) : bool =
   (String.length s = 1)
   &&
   (s.[0] >= '0' && s.[0] <= '9');;
 
+(* Returns the index of the variables a (A..Z, r, theta, Ans)
+  the variable array used in basic_run.ml
+  A..Z = 0..25, r = 26, theta = 27, Ans = 28 *)
+let var_index (a : string) : int =
+  if a = "SMALLR" then 26
+  else if a = "THETA" then 27
+  else if a = "ANS" then 28
+  else (Char.code a.[0]) - 65;;
 
 (** Main lexing function **)
 
@@ -150,7 +160,34 @@ let read_name (s : string) (i : int) : (string * int) =
 
 (* Converts a list of lexemes containing an arithmetic expression into a list of arithmetic lexemes *)
 let lexer (lexlist : string list) : arithm list =
-  let n = String.length s in
+  let rec aux acc l =
+    match l with
+      | s::t ->
+        if is_digit s then
+          let (x, t') = read_float s false in
+          aux ((Number (Float x))::acc) t'
+        else if is_var s || s = "ANS" then
+          aux ((Variable (Var (var_index s)))::acc) t
+        else if s = "LPAR" then
+          aux (Lpar::acc) t
+        else if s = "RPAR" then
+          aux (Rpar::acc) t
+        else if s = "COMMA" then
+          aux (Comma::acc) t
+        else if List.exists (fun (op,_) -> s=op) op_list then
+          aux ((Op s)::acc) t
+        else if List.mem s lop_list then
+          aux ((Lunop name)::acc) t
+        else if List.mem s rop_list then
+          aux ((Runop name)::acc) t
+          (* To do: Functions, Lists, Mat *)
+        else failwith ("lexer: Unknown lexeme "^s)
+      | [] -> acc
+  in
+  List.rev (aux [] l);;
+
+
+  (* let n = String.length s in
   let rec aux i acc =
     if i = n then List.rev acc
     else if s.[i] = ' ' then aux (i+1) acc
@@ -167,4 +204,4 @@ let lexer (lexlist : string list) : arithm list =
       else if List.mem name rop_list then aux ni ((Runop name)::acc)
       else aux ni ((Function name)::acc)
   in
-  aux 0 [];;
+  aux 0 [];; *)

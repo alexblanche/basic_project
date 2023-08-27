@@ -14,22 +14,6 @@ type data_struct =
   | Mat of char
   | Str of int
 
-(* Type for Basic variables *)
-type variable =
-  | Var of char (* A ... Z, r, t = theta, @ = Ans *)
-  | ListIndex of data_struct * int (* ListIndex(List(1), 3) = List 1[3] *)
-  | MatIndex of data_struct * int (* MatIndex (Mat(3),i,j) -> Mat 3[i][j] *)
-  | StrIndex of data_struct * int
-  | Getkey (* its value depends on the key currently pressed *)
-  | Random (* Ran# *)
-
-(***************************************************************************)
-(** TO BE UNIFIED WITH THE TYPES OF arithmetic_parsing.ml **)
-(* Type for Basic numbers *)
-type basic_number =
-  | Float of float
-  | Var of variable
-
 (* Type for functions, of arity 1 to 4 *)
 (* Greater arity is not needed for Casio Basic *)
 type funct =
@@ -39,8 +23,27 @@ type funct =
   | AR3 of (float -> float -> float -> float)
   | AR4 of (float -> float -> float -> float -> float)
 
+(* variable, basic_number, arithm and basic_expr are circular recursive types *)
+
+(* Type for Basic variables *)
+type variable =
+  | Var of int (* index: 0..25 = A ... Z, 26 = r, 27 = theta, 28 = Ans *)
+  | ListIndex of data_struct * basic_expr (* ListIndex(List(x), e) = List x[e] *)
+  | MatIndex of data_struct * basic_expr * basic_expr (* MatIndex (Mat(x),e1,e2) -> Mat x[e1][e2] *)
+  | Getkey (* its value depends on the key currently pressed *)
+  | Random (* Ran# *)
+
+and
+
+(* Type for Basic numbers *)
+basic_number =
+  | Float of float
+  | Variable of variable
+
+and
+
 (* Type for arithmetic expressions lexemes *)
-type arithm =
+arithm =
   | Number of basic_number
   | Lpar (* ( *) | Rpar (* ) *)
   | Op of string (* Binary operator *)
@@ -49,14 +52,14 @@ type arithm =
   | Function of string
   | Comma (* , *)
 
+and
+
 (* Type for Basic numerical and boolean expressions *)
 (* Conditions are expressions: 0 = false, <>0 = true *)
-type basic_expr =
+basic_expr =
   | QMark (* ? (asks the user for a value) *)
   | Num of basic_number
   | Expr of arithm list
-
-(***************************************************************************)
 
 (* Text-mode displaying functions *)
 type textmode =
