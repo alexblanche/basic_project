@@ -28,8 +28,8 @@ type funct =
 (* Type for Basic variables *)
 type variable =
   | Var of int (* index: 0..25 = A ... Z, 26 = r, 27 = theta, 28 = Ans *)
-  | ListIndex of data_struct * basic_expr (* ListIndex(List(x), e) = List x[e] *)
-  | MatIndex of data_struct * basic_expr * basic_expr (* MatIndex (Mat(x),e1,e2) -> Mat x[e1][e2] *)
+  | ListIndex of int * basic_expr (* ListIndex(x, e) = List x[e] *)
+  | MatIndex of int * basic_expr * basic_expr (* MatIndex (x,e1,e2) -> Mat x[e1][e2] *)
   | Getkey (* its value depends on the key currently pressed *)
   | Random (* Ran# *)
 
@@ -58,7 +58,6 @@ and
 (* Conditions are expressions: 0 = false, <>0 = true *)
 basic_expr =
   | QMark (* ? (asks the user for a value) *)
-  | Num of basic_number
   | Expr of arithm list
 
 (* Text-mode displaying functions *)

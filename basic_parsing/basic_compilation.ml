@@ -29,7 +29,7 @@ let set (t : (command array) ref) (i : int) (comm : command) : unit =
       else failwith ("set: Incorrect index i = "^string_of_int i);;
 
 (* Extracts the non-empty part of the array t and returns it *)
-let extract (t : command array) : command array =
+let extract_non_empty (t : command array) : command array =
   let n = Array.length t in
   (* Searching for last index containing an object *)
   let i = ref (n-1) in
@@ -44,14 +44,6 @@ let extract (t : command array) : command array =
 (********************************************************************************)
 
 (** Compilation **)
-
-(* To be adapted from the lexing function of arithmetic_parsing.ml *)
-let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
-  match lexlist with
-    (* Temporary *)
-    | _::"EOL"::t -> ((Expr []), t)
-    | _::t -> extract_expr t
-    | [] -> failwith "extract_expr: Empty list of lexemes";;
 
 (* After a double-quote was encountered, extracts the string that follows,
   until another double-quote is encountered *)
@@ -389,4 +381,4 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 let compile (proglist : program list) : basic_code =
   let code = ref (Array.make 50 Empty) in
   let prog_index = process_commands code proglist in
-  (extract !code, prog_index);;
+  (extract_non_empty !code, prog_index);;

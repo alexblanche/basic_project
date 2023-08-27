@@ -19,12 +19,23 @@
     
 (** Evaluation **)
 
+(* All functions are going to be circular recursive *)
+
+(* Returns the value of the variable of index i in the array var *)
+(* let eval_number (var : float array) (proj : project_content) (n : basic_number) =
+  match n with
+    | Float x -> x
+    | Variable (Var i) -> var.(i)
+    | Variable (ListIndex (i,e)) -> ... *)
+(* Need specific functions to access the value of a list, a matrix, a variable *)
+
+
 (* Final evaluation of the arithmetic formula *)
-let rec calculate (outq : float list) (opq : lexeme list) : float =
+let rec calculate (outq : basic_number list) (opq : arithm list) : float =
   match outq, opq with
     (* Left parentheses left open are allowed in Casio Basic *)
     | _, Lpar::opqt -> calculate outq opqt
-    | x2::x1::t, (Op o)::opqt -> calculate ((apply_op o x1 x2)::t) opqt
+    | x2::x1::t, (Op o)::opqt -> calculate ((apply_op o (valux1 x2)::t) opqt
     | x::t, (Lunop lo)::opqt -> calculate ((apply_lop lo x)::t) opqt
     | [x], [] -> x
     | _ -> failwith "calculate: Syntax error"
@@ -46,7 +57,7 @@ let rec right_reduce output_q op_q =
     | _ -> failwith "reduce: Syntax error";;
 
 (* Shunting_yard algorithm: returns the value of the expression *)
-let rec shunting_yard (lexlist : lexeme list) (output_q : float list) (op_q : lexeme list) : float =
+let rec shunting_yard (lexlist : arithm list) (output_q : float list) (op_q : arithm list) : float =
   match (lexlist,op_q) with
     (* End case *)
     | [], _ -> calculate output_q op_q
@@ -135,5 +146,7 @@ let rec shunting_yard (lexlist : lexeme list) (output_q : float list) (op_q : le
           | _ -> failwith "Untreated case")    
     | _,_ -> failwith "Syntax error";;
 
-let eval (s : string) =
-  shunting_yard (lexer s) [] [];;
+let eval (e : basic_expr) : float =
+  match e with
+    | Expr al -> shunting_yard al [] []
+    | _ -> failwith "eval: error, QMark provided";;

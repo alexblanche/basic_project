@@ -159,7 +159,41 @@ let read_name (s : string) (i : int) : (string * int) =
       else aux_read_name (i+1);; *)
 
 (* Converts a list of lexemes containing an arithmetic expression into a list of arithmetic lexemes *)
-let lexer (lexlist : string list) : arithm list =
+(* Return the basic_expr and the tail of the list of lexemes after the expression *)
+let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
+  (* Specific case for List i[e] *)
+  let extract_list_index t =
+    let (i,t') = read_int t true in
+    match t' with
+      | "LSQBRACKET"::t'' ->
+        let (e,t''') = extract_expr t'' in
+        (match t''' with
+          | "RSQBRACKET"::_
+          | "EOL"::_
+          | "DISP"::_ -> ((Number (Variable (ListIndex (i, e)))),t''')
+          | _ -> failwith "extract_expr: Syntax error, List '[' not properly closed")
+      | _ -> failwith "extract_expr: Syntax error, List should be followed by '['"
+  in
+
+  (* Specific case for Mat i[e1][e2] *)
+  let extract_mat_index t =
+    let (i,t2) = read_int t true in
+    match t2 with
+      | "LSQBRACKET"::t2 ->
+        let (e1,t3) = extract_expr t2 in
+        (match t3 with
+          | "RSQBRACKET"::"LSQBRACKET"::t4 ->
+            let (e2,t5) = extract_expr t4 in
+            (match t5 with
+            | "RSQBRACKET"::_
+            | "EOL"::_
+            | "DISP"::_ -> ((Number (Variable (ListIndex (i, e)))),t''')
+            | _ -> failwith "extract_expr: Syntax error, Mat '[' not properly closed")
+          | _ -> failwith "extract_expr: Syntax error, Mat '[' not properly closed")
+      | _ -> failwith "extract_expr: Syntax error, Mat should be followed by '['"
+  in
+
+  (* Main loop *)
   let rec aux acc l =
     match l with
       | s::t ->
@@ -180,28 +214,25 @@ let lexer (lexlist : string list) : arithm list =
           aux ((Lunop name)::acc) t
         else if List.mem s rop_list then
           aux ((Runop name)::acc) t
-          (* To do: Functions, Lists, Mat *)
-        else failwith ("lexer: Unknown lexeme "^s)
-      | [] -> acc
+        else if s = "LIST" then
+          let (li,t') = extract_list_index t in
+          aux (li::acc) t'
+        else if s = "MAT" then
+          let (li,t') = extract_list_index t in
+          aux (li::acc) t'
+        else if Hashtbl.mem func_table s then
+          aux ((Function s)::acc) t
+        else (acc, t)
+      | [] -> (acc, [])
   in
-  List.rev (aux [] l);;
+  match lexlist with
+    | "QMARK"::t -> (QMark,t)
+    | _ ->
+      let (sl, t) = aux [] lexlist in
+      (Expr (List.rev sl), t)
+  ;;
 
-
-  (* let n = String.length s in
-  let rec aux i acc =
-    if i = n then List.rev acc
-    else if s.[i] = ' ' then aux (i+1) acc
-    else if s.[i] = '(' then aux (i+1) (Lpar::acc)
-    else if s.[i] = ')' then aux (i+1) (Rpar::acc)
-    else if s.[i] = ',' then aux (i+1) (Comma::acc)
-    else if s.[i] >= '0' && s.[i] <= '9' then (* Float *)
-      let (res,ni) = read_float s i in
-      aux ni ((Float res)::acc)
-    else (* Function or operators *)
-      let (name,ni) = read_name s i in
-      if List.exists (fun (s,_) -> s=name) op_list then aux ni ((Op name)::acc)
-      else if List.mem name lop_list then aux ni ((Lunop name)::acc)
-      else if List.mem name rop_list then aux ni ((Runop name)::acc)
-      else aux ni ((Function name)::acc)
-  in
-  aux 0 [];; *)
+(* Remark:
+  For List i[e] and Mat i[e1][e2], I call recursively extract_expr for each argument,
+  but for functions I pass them to the evaluator to parse and compute them.
+  Should it be unified? *)
