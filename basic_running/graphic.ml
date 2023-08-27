@@ -15,6 +15,8 @@ let repr_graph = visualgraph ();;
 
 (* tscreen: content of the text screen *)
 let tscreen = Array.make_matrix 7 21 " ";;
+(* writing_index: line index the write at *)
+let writing_index = ref 0;;
 
 (* gscreen: content of the graphic screen *)
 let gscreen = Array.make_matrix 64 128 false;;
@@ -42,10 +44,12 @@ let wipe (m : bool array array) : unit =
 
 (* Graphic display *)
 let gdraw () : unit =
-  print_mat gscreen false (fun () -> ());;
+  print_mat gscreen false (fun () -> rect margin margin width height);;
 
 (* Text display *)
 let tdraw () : unit =
+  clear_graph ();
+  rect margin margin width height;
   let m = Array.make_matrix 64 128 false in
   for j = 0 to 6 do
     for i = 0 to 20 do
@@ -67,16 +71,26 @@ let tdraw () : unit =
 let locate (slist : string list) (i : int) (j : int) : unit =
   List.iteri (fun k s -> if i + k <= 20 then tscreen.(j).(i+k) <- s) slist;;
 
+(* Prints the "- DISP -" on the tscreen at line j *)
+let print_disp (j : int) : unit =
+  locate ["-"; " "; "D"; "i"; "s"; "p"; " "; "-"] 13 j;;
+
+(* Clears line j of the tscreen *)
+let clear_line (j : int) : unit =
+  tscreen.(j) <- Array.make 21 " ";;
+
+(* Clears the whole tscreen *)
+let clear_text () : unit =
+  for j = 0 to 6 do
+    clear_line j
+  done;;
+
 (* Scrolls the tscreen by one line *)
 let scroll () : unit =
   for j = 0 to 5 do
     tscreen.(j) <- tscreen.(j+1)
   done;
-  tscreen.(6) <- Array.make 21 " ";;
-
-(* Prints the "- DISP -" on the tscreen at line j *)
-let print_disp () : unit =
-  locate ["-"; " "; "D"; "i"; "s"; "p"; " "; "-"] 13 j;;
+  clear_line 6;;
 
 (* Test *)
 (* open_graphic ();;

@@ -1,6 +1,7 @@
 (* Unit tests for Basic compilation *)
 
 #use "basic_parsing/basic_compilation.ml"
+#use "basic_parsing/basic_encoding.ml"
 
 exception Test_failed of int
 
@@ -22,23 +23,25 @@ let unit_tests_compil () =
 
 (* unit_tests_compil ();; *)
 
-compile 
-  ["IF"; "1"; "EOL";
+let prog1 = compile 
+  [("main",
+  ["IF"; "1"; "EOL";  
   "THEN"; "QUOTE"; "A"; "QUOTE"; "DISP";
   "ELSE"; "QUOTE"; "B"; "QUOTE"; "DISP";
   "IFEND"; "EOL";
-  "QUOTE"; "C"; "QUOTE"; "DISP"];;
+  "QUOTE"; "C"; "QUOTE"; "DISP"])];;
 
-compile 
+let prog2 = compile 
+  [("main",
   ["GOTO"; "E"; "EOL";
   "IF"; "1"; "EOL";
   "THEN";
     "LBL"; "E"; "EOL";
-    "QUOTE"; "A"; "QUOTE"; "DISP";
+    "QUOTE"; "H"; "e"; "l"; "l"; "o"; "QUOTE"; "DISP";
   "ELSE";
-    "QUOTE"; "B"; "QUOTE"; "DISP";
+    "QUOTE"; "B"; "y"; "e"; "QUOTE"; "DISP";
   "IFEND"; "EOL";
-  "QUOTE"; "C"; "QUOTE"; "DISP"];;
+  "QUOTE"; "S"; "e"; "e"; " "; "y"; "o"; "u"; "!"; "QUOTE"; "DISP"])];;
 
 (* Question:
   When a Goto sends you inside a Then statement,

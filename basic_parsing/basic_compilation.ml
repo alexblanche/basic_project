@@ -1,6 +1,7 @@
 (* Compilation of Basic code *)
 
 #use "basic_parsing/basic_type.ml"
+#use "basic_parsing/project_type.ml"
 
 (* Data structure:
   We store the code in an array, that doubles its size whenever it is full.
@@ -8,7 +9,7 @@
 
 (* If t is an array of length n, returns a new array of size 2n, with the elements of t copied as
   the first n elements of the new array *)
-let double_size (t : basic_code) : basic_code =
+let double_size (t : (command array)) : command array =
   let n = Array.length t in
   let new_t = Array.make (2*n) Empty in
   Array.iteri (fun i x -> new_t.(i) <- x) t;
@@ -16,7 +17,7 @@ let double_size (t : basic_code) : basic_code =
 
 (* Sets the cell of index i of the array referenced by t to command x *)
 (* When the array is full, the size is doubled and t references the new array *)
-let set (t : basic_code ref) (i : int) (comm : command) : unit =
+let set (t : (command array) ref) (i : int) (comm : command) : unit =
   let n = Array.length !t in
   if i < n
     then !t.(i) <- comm
@@ -27,7 +28,7 @@ let set (t : basic_code ref) (i : int) (comm : command) : unit =
       else failwith ("set: Incorrect index i = "^string_of_int i);;
 
 (* Extracts the non-empty part of the array t and returns it *)
-let extract (t : basic_code) : basic_code =
+let extract (t : command array) : command array =
   let n = Array.length t in
   (* Searching for last index containing an object *)
   let i = ref (n-1) in
@@ -53,11 +54,17 @@ let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
 
 (* After a double-quote was encountered, extracts the string that follows,
   until another double-quote is encountered *)
-let extract_str (lexlist : string list) : string * (string list) =
-  (* Temporary *)
-  match lexlist with
-    | s::"QUOTE"::t -> s,t
-    | _ -> failwith "extract_str: This case is not treated yet";;
+(* Returns (sl, t), where sl is the output string, as list of lexemes,
+   and t is the tail of lexlist after the second double-quote (excluded) *)
+let extract_str (lexlist : string list) : (string list) * (string list) =
+  let rec aux sl l =
+    match l with
+      | s::"QUOTE"::t -> (List.rev (s::sl), t)
+      | "EOL"::_ -> failwith "extract_str: string ends without closing \""
+      | s::t -> aux (s::sl) t
+      | [] -> failwith "extract_str: program ends without closing \""
+  in
+  aux [] lexlist;;
 
 (* Returns true if the string s contains exactly one character among A..Z, r, theta *)
 let is_var (s : string) : bool =
@@ -256,7 +263,8 @@ let process_whileend i t code mem =
 (* Lbl, Goto *)
 
 (* Lbl *)
-let process_lbl i t code mem =
+(* "LBL" is immediately followed by a, then eol in the original list of lexemes *)
+let process_lbl i t code mem (a : string) (eol : string) =
   if not (is_var a)
     then failwith "Compilation error: Wrong label"
     else if eol <> "EOL"
@@ -276,7 +284,7 @@ let process_lbl i t code mem =
             (i,t));;
 
 (* Goto *)
-let process_goto i t code mem =
+let process_goto i t code mem (a : string) (eol : string) =
   if not (is_var a)
     then failwith "Compilation error: Wrong goto"
     else if eol <> "EOL"
@@ -295,7 +303,8 @@ let process_goto i t code mem =
 
 (* Prog *)
 let process_prog i t code mem =
-  let s, t' = extract_str t in
+  let sl, t' = extract_str t in
+  let s = String.concat "" sl in
   match t' with
     | "EOL"::t'' ->
       (set code i (Prog s);
@@ -304,13 +313,11 @@ let process_prog i t code mem =
 
 (* Compiles the list of lexemes lexlist by modifying the array code in place. *)
 (* Returns the proglist parameter of the working memory *)
-let process_commands (code : (command array) ref) (lexlist : string list) : (string * int) list =
+let process_commands (code : (command array) ref) (prog : ((string * (string list)) list)) : (string * int) list =
   let mem =
     {
-      ifindex = [];
+      stack = [];
       elseindex = [];
-      whileindex = [];
-      forindex = [];
       lblindex = Array.make 28 (-1);
       gotoindex = [];
       progindex = []
@@ -355,8 +362,8 @@ let process_commands (code : (command array) ref) (lexlist : string list) : (str
 
       (* Strings *)
       | "QUOTE" :: t ->
-        let s, t' = extract_str t in
-        (set code i (String s);
+        let sl, t' = extract_str t in
+        (set code i (String sl);
         aux t' (i+1))
 
       | "DISP" :: t ->
@@ -364,11 +371,11 @@ let process_commands (code : (command array) ref) (lexlist : string list) : (str
         aux t (i+1))
       
       | "LBL"::a::eol::t ->
-        let (j,t') = process_lbl i t code mem in
+        let (j,t') = process_lbl i t code mem a eol in
         aux t' j
       
       | "GOTO"::a::eol::t ->
-        let (j,t') = process_goto i t code mem in
+        let (j,t') = process_goto i t code mem a eol in
         aux t' j
       
       | "PROG"::"QUOTE"::t ->
@@ -388,9 +395,11 @@ let process_commands (code : (command array) ref) (lexlist : string list) : (str
 
   let _ = List.fold_left
     (fun j (name,lexlist) ->
-      (mem.proglist <- (name,j)::mem.proglist;
+      (mem.progindex <- (name,j)::mem.progindex;
       aux lexlist j))
-      0 prog;;
+      0 prog
+  in
+  mem.progindex;;
 
 
 

@@ -1,7 +1,7 @@
 (* Execution of Basic code *)
 
-#use "basic_parsing/basic_type.ml"
-#use "basic_parsing/basic_encoding.ml"
+(* #use "basic_parsing/basic_type.ml"
+#use "basic_parsing/basic_encoding.ml" *)
 #use "basic_running/arithmetic_parsing.ml"
 #use "basic_running/graphic.ml"
 
@@ -13,8 +13,14 @@ let run ((code, proglist): basic_code) : unit =
   let prog_goback = ref [] in
   let n = Array.length code in
 
+  (* Initialization *)
   open_graphic ();
-  
+  set_color black;
+  clear_text ();
+  wipe gscreen;
+  wipe gscreen;
+  writing_index := 0;
+
   (* Looping function *)
   let rec aux i =
     if i >= n
@@ -30,11 +36,24 @@ let run ((code, proglist): basic_code) : unit =
               then aux j
               else aux (i+1)
           
-          | String s ->
-            (* Temporary: code the text display *)
-            (print_endline s;
+          | String sl ->
+            (if !writing_index = 7
+              then (scroll (); decr writing_index);
+            clear_line !writing_index;
+            locate sl 0 !writing_index;
+            incr writing_index;
+            tdraw ();
             if i<n-1 && code.(i+1) = Disp
-              then (disp (); aux (i+2))
+              then
+                (if !writing_index = 7
+                  then (scroll (); decr writing_index);
+                clear_line !writing_index;
+                print_disp !writing_index;
+                tdraw ();
+                disp ();
+                clear_line !writing_index;
+                tdraw ();
+                aux (i+2))
               else aux (i+1))
           
           | Prog name ->
@@ -50,7 +69,11 @@ let run ((code, proglist): basic_code) : unit =
               | [] ->
                   (disp (); close_graph ()))
 
-          
+          | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
   in
   
   aux 0;;
+
+(* Important: slow down execution
+  An empty for loop executes 798 rounds in 1s,
+  for specific functions (mainly display), measurements are needed *)
