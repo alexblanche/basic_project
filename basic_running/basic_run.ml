@@ -32,9 +32,9 @@ let run ((code, proglist): basic_code) : unit =
 
           | If (e,j) ->
             (* Temporary: adapt eval to basic_expr *)
-            if (eval "0.") = 0.
-              then aux j
-              else aux (i+1)
+            if (eval "0.") <> 0.
+              then aux (i+1)
+              else aux j
           
           | String sl ->
             (if !writing_index = 7

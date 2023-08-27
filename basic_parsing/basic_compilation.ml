@@ -2,6 +2,7 @@
 
 #use "basic_parsing/basic_type.ml"
 #use "basic_parsing/project_type.ml"
+#use "basic_running/arithmeric_parsing.ml"
 
 (* Data structure:
   We store the code in an array, that doubles its size whenever it is full.
@@ -65,14 +66,6 @@ let extract_str (lexlist : string list) : (string list) * (string list) =
       | [] -> failwith "extract_str: program ends without closing \""
   in
   aux [] lexlist;;
-
-(* Returns true if the string s contains exactly one character among A..Z, r, theta *)
-let is_var (s : string) : bool =
-  (String.length s = 1)
-  &&
-  (let c = Char.code s.[0] in
-  (c >= 65 && c <= 90)
-  || c = 205 || c = 206);; 
 
 (* Working memory type *)
 type working_mem =

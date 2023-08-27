@@ -5,7 +5,7 @@
 (* Each command is represented with an abstract command type.
   The program is compiled into an array of commands.
   - Patterns "Lbl A ... Goto A" are replaced with "Goto(l)",
-  where l is the line where the Lbl A is (even if it is not actually present in the array).
+  where l is the line where the Lbl A points to.
   - Conditionals (If) and loops (For, While, Do-LpWhile) are transformed with the Goto method. *)
 
 (* Lists, Matrices, Strings *)
@@ -30,15 +30,31 @@ type basic_number =
   | Float of float
   | Var of variable
 
-(* To be replaced by the actual lexemes (in arithmetic_parsing) *)
-type arithm_lexeme = Arithm_lex
+(* Type for functions, of arity 1 to 4 *)
+(* Greater arity is not needed for Casio Basic *)
+type funct =
+  | LOP of (float -> float)
+  | AR1 of (float -> float)
+  | AR2 of (float -> float -> float)
+  | AR3 of (float -> float -> float -> float)
+  | AR4 of (float -> float -> float -> float -> float)
+
+(* Type for arithmetic expressions lexemes *)
+type arithm =
+  | Number of basic_number
+  | Lpar (* ( *) | Rpar (* ) *)
+  | Op of string (* Binary operator *)
+  | Runop of string (* Right unary operator *)
+  | Lunop of string (* Left unary operator *)
+  | Function of string
+  | Comma (* , *)
 
 (* Type for Basic numerical and boolean expressions *)
 (* Conditions are expressions: 0 = false, <>0 = true *)
 type basic_expr =
   | QMark (* ? (asks the user for a value) *)
   | Num of basic_number
-  | Expr of arithm_lexeme list
+  | Expr of arithm list
 
 (***************************************************************************)
 
