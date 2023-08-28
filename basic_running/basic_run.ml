@@ -5,7 +5,7 @@
 #use "basic_running/arithmetic_parsing.ml"
 #use "basic_running/graphic.ml"
 
-let run ((code, proglist): basic_code) : unit =
+let run (p : project_content) ((code, proglist): basic_code) : unit =
   (* Initialization *)
   (* Variables: array of size 29, storing the content of each variable A..Z, r, theta, Ans *)
   let var = Array.make 29 0 in

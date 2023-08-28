@@ -109,7 +109,7 @@ let read_float (lexlist : string list) : float * (string list) =
         if dot = "."
           then read_int q true
           else (0, t)
-      | [] -> failwith "read_float: Missing '.' or 'e'"
+      | [] -> (0, [])
   in
   let (exp_part, t'') =
     match t' with
@@ -187,7 +187,7 @@ let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
             (match t5 with
             | "RSQBRACKET"::_
             | "EOL"::_
-            | "DISP"::_ -> ((Number (Variable (ListIndex (i, e)))),t''')
+            | "DISP"::_ -> ((Number (Variable (MatIndex (i, e1, e2)))), t5)
             | _ -> failwith "extract_expr: Syntax error, Mat '[' not properly closed")
           | _ -> failwith "extract_expr: Syntax error, Mat '[' not properly closed")
       | _ -> failwith "extract_expr: Syntax error, Mat should be followed by '['"
@@ -198,10 +198,10 @@ let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
     match l with
       | s::t ->
         if is_digit s then
-          let (x, t') = read_float s false in
+          let (x, t') = read_float l in
           aux ((Number (Float x))::acc) t'
         else if is_var s || s = "ANS" then
-          aux ((Variable (Var (var_index s)))::acc) t
+          aux ((Number (Variable (Var (var_index s))))::acc) t
         else if s = "LPAR" then
           aux (Lpar::acc) t
         else if s = "RPAR" then
@@ -211,14 +211,14 @@ let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
         else if List.exists (fun (op,_) -> s=op) op_list then
           aux ((Op s)::acc) t
         else if List.mem s lop_list then
-          aux ((Lunop name)::acc) t
+          aux ((Lunop s)::acc) t
         else if List.mem s rop_list then
-          aux ((Runop name)::acc) t
+          aux ((Runop s)::acc) t
         else if s = "LIST" then
           let (li,t') = extract_list_index t in
           aux (li::acc) t'
         else if s = "MAT" then
-          let (li,t') = extract_list_index t in
+          let (li,t') = extract_mat_index t in
           aux (li::acc) t'
         else if Hashtbl.mem func_table s then
           aux ((Function s)::acc) t
