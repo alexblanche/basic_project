@@ -22,11 +22,10 @@ where a is the arity of the function (number of arguments) *)
 let func_table =
   let t = Hashtbl.create 10 in
   let func_list = [
-    ("max", AR2 (fun a b -> max a b)); (* Works for complex numbers, as max of a pair in lexicographic order *)
+    ("MAX", AR2 (fun a b -> max a b)); (* Works for complex numbers, as max of a pair in lexicographic order *)
     ("f", AR1 (fun z -> Complex.add (Complex.mul z z) {re = 2.; im = 0.}));
-    ("max3", AR3 (fun a b c -> max (max a b) c));
     ("fact", AR1 (fun (z : Complex.t) -> complex_of_int (fact (int_of_float z.re))));
-    ("Abs", LOP (fun z -> complex_of_float (Complex.norm z)))
+    ("ABS", LOP (fun z -> complex_of_float (Complex.norm z)))
     ]
   in
   List.iter (fun (fname, fdef) -> Hashtbl.add t fname fdef) func_list;
@@ -51,11 +50,11 @@ let apply_func (fname : string) (zl : complex list) =
 
 (* List of handled left unary operators *)
 (* Temporary *)
-let lop_list = ["Abs"];;
+let lop_list = ["ABS"];;
 
 (* List of handled right unary operators *)
 (* Temporary *)
-let rop_list = ["!"];;
+let rop_list = ["EXCLAMATIONMARK"];;
 
 (* List of handled operators and their index of precedence (1 = greatest *)
 let op_list = [("PLUS", 3); ("MINUS", 3); ("TIMES", 2); ("DIVIDED", 2); ("POWER", 1);
@@ -89,7 +88,7 @@ let apply_op (o : string) (z1 : complex) (z2 : complex) : complex =
 (* Application of the right unary operators *)
 (* Since there are only a few, we hard-code them like the operators. *)
 let apply_rop (ro : string) (z : complex) : complex =
-  if ro = "!"
+  if ro = "EXCLAMATIONMARK"
     then complex_of_int (fact (int_of_float z.re))
     else failwith ("apply_rop: Unkown operator "^ro);;
 

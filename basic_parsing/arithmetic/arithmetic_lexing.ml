@@ -16,8 +16,11 @@ let arity (fname : string) =
     | Not_found -> failwith ("apply_func: Function "^fname^" undefined");;
 
 (* Returns true if the operator is associative or left-associative *)
+(* Remark: in Basic Casio, 2^2^2^2 = 256, so the exponentiation is left-associative,
+   unlike in traditional math *)
 let left_assoc (s : string) : bool =
-  (s <> "POWER");;
+  true;;
+  (* (s <> "POWER");; *)
 
 (* Relation of precedence of operators *)
 (* 1 if o1 has greater precedence than o2
@@ -232,7 +235,7 @@ let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
     | _ ->
       let (sl, t) = aux [] lexlist in
       (Arithm (List.rev sl), t)
-  ;;
+;;
 
 (* Remark:
   For List i[e] and Mat i[e1][e2], I call recursively extract_expr for each argument,

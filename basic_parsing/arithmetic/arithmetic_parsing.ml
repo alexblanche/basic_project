@@ -95,6 +95,9 @@ and shunting_yard (var : float array) (p : project_content)
     | [], _ -> calculate var p output_q op_q
 
     (* Add to a queue *)
+    (* Case of omitted multiplication operator *)
+    | (Number x1)::(Number x2)::t, _ -> shunting_yard var p ((Op "TIMES")::(Number x2)::t) (x1::output_q) op_q
+    (* Normal number case *)
     | (Number x)::t, _ -> shunting_yard var p t (x::output_q) op_q
     | (Function fname)::t, _ -> shunting_yard var p t output_q ((Function fname)::op_q)
     | Lpar::t, _ -> shunting_yard var p t output_q (Lpar::op_q)

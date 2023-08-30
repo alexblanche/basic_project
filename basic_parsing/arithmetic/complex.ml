@@ -33,7 +33,7 @@ let complex_of_bool (b : bool) : complex =
 (* Returns true if the float x is close enough to 0.
     This accounts for imprecision inherent to float calculations. *)
 let is_zero_float (x : float) : bool =
-  x < 1e-15 && -.x < 1e-15;;
+  x < 1e-13 && -.x < 1e-13;;
   
 (* Returns true if the complex z has a real part close enough to 0.
   and an imaginary part equal to 0.
@@ -50,3 +50,11 @@ let is_not_zero (z : complex) : bool =
 (* Returns true if the complex z represents an integer *)
 let is_int (z : complex) : bool =
   Float.is_integer z.re && z.im = 0.;;
+
+(** Recoding of the operations **)
+
+(* The exponentiation Complex.pow seems a lot less precise than the float one (**) on float numbers *)
+let pow (z1 : complex) (z2 : complex) : complex =
+  if z1.im = 0. && z2.im = 0.
+    then get_complex (z1.re ** z2.re) 0.
+    else Complex.pow z1 z2;;
