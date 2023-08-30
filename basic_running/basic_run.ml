@@ -32,8 +32,7 @@ let run (p : project_content) ((code, proglist): basic_code) : unit =
           | Goto j -> aux j
 
           | If (e,j) ->
-            (* Temporary: adapt eval to basic_expr *)
-            if (eval var p (Arithm [Number (Float 0.)])) <> 0.
+            if is_not_zero (eval var p e)
               then aux (i+1)
               else aux j
           

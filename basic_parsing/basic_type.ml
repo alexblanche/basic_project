@@ -17,11 +17,11 @@ type data_struct =
 (* Type for functions, of arity 1 to 4 *)
 (* Greater arity is not needed for Casio Basic *)
 type funct =
-  | LOP of (float -> float)
-  | AR1 of (float -> float)
-  | AR2 of (float -> float -> float)
-  | AR3 of (float -> float -> float -> float)
-  | AR4 of (float -> float -> float -> float -> float)
+  | LOP of (complex -> complex)
+  | AR1 of (complex -> complex)
+  | AR2 of (complex -> complex -> complex)
+  | AR3 of (complex -> complex -> complex -> complex)
+  | AR4 of (complex -> complex -> complex -> complex -> complex)
 
 (* variable, basic_number, arithm and basic_expr are circular recursive types *)
 
@@ -37,7 +37,7 @@ and
 
 (* Type for Basic numbers *)
 basic_number =
-  | Float of float
+  | Value of complex
   | Variable of variable
 
 and
@@ -67,12 +67,12 @@ type textmode =
 
 (* Graphic screen functions *)
 type graphic =
-  | ViewWindow of int * int * int * int * int * int
-  | PlotOn of int * int
-  | PlotOff of int * int
-  | Fline of int * int * int * int
-  | DrawStat of int list * int list
-  | GraphicText of int * int * string
+  | ViewWindow of float * float * float * float * float * float
+  | PlotOn of float * float
+  | PlotOff of float * float
+  | Fline of float * float * float * float
+  | DrawStat of float list * float list
+  | GraphicText of float * float * string
   | Graphic_Function of string
 
 (* Type for Basic commands *)

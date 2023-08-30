@@ -199,7 +199,9 @@ let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
       | s::t ->
         if is_digit s then
           let (x, t') = read_float l in
-          aux ((Number (Float x))::acc) t'
+          aux ((Number (Value (complex_of_float x)))::acc) t'
+        else if s = "CPLXI" then
+          aux ((Number (Value (Complex.i)))::acc) t
         else if is_var s || s = "ANS" then
           aux ((Number (Variable (Var (var_index s))))::acc) t
         else if s = "LPAR" then
