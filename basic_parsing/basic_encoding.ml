@@ -511,7 +511,7 @@ let symbols_graphic = [
 
 (** Visual representation **)
 
-#use "picture_editor/bmp_reader.ml"
+(* #use "picture_editor/bmp_reader.ml" *)
 
 (* Each character's visual representation is a 7*5 monochromatic image in text mode.
   It is encoded as an array of 35 booleans, line by line, starting from the upper one. *)

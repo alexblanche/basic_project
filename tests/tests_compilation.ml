@@ -12,7 +12,7 @@ let unit_tests_compil () =
   in
   try
     List.iteri check [
-
+      (* To be written *)
     ];
     print_endline "Tests_compilation: all tests ran successfully"
   with
@@ -44,8 +44,6 @@ let prog2 = compile
   "QUOTE"; "S"; "e"; "e"; " "; "y"; "o"; "u"; "!"; "QUOTE"; "DISP"])];;
 
 (* Question:
-  When a Goto sends you inside a Then statement,
-  is the Else statement evaluated?
-  If not, raise an error when the Lbl is encountered if the IfEnd has not yet been reached (if a goto to this Lbl exists...)
-  If it is evaluated, then I need to have two types of Goto, the ones that are always executed and the ones that are
-  ignored if some condition is true... *)
+  When a Goto sends you inside a Then statement, the Else is NOT evaluated.
+  The content of the Then is evaluated, then it jumps to after the IfEnd, no error is raised.
+ *)

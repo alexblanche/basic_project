@@ -40,6 +40,7 @@ let rec get_val (var : float array) (p : project_content) (n : basic_number) : f
   match n with
     | Float x -> x
     | Variable (Var i) -> get_var_val var i
+    | Variable Getkey -> 0. (* To do *)
     | Variable (ListIndex (a,e)) ->
       let x = eval var p e in
       (if not (Float.is_integer x)
@@ -51,6 +52,7 @@ let rec get_val (var : float array) (p : project_content) (n : basic_number) : f
       (if not ((Float.is_integer x1) && (Float.is_integer x2))
         then failwith "get_val: access to Mat from an index that is not an integer";
       get_mat_val p a (Float.to_int x1) (Float.to_int x2))
+    | Variable Random -> Random.float 1.
 
 (* Final evaluation of the arithmetic formula *)
 (* var, p are the variable content array and the project_content containing the lists and matrices *)
@@ -179,7 +181,7 @@ and shunting_yard (var : float array) (p : project_content)
 (* var, p are the variable content array and the project_content containing the lists and matrices *)
 and eval (var : float array) (p : project_content) (e : basic_expr) : float =
   match e with
-    | Expr al -> shunting_yard var p al [] []
+    | Arithm al -> shunting_yard var p al [] []
     | _ -> failwith "eval: error, QMark provided";;
 
 (* To do:

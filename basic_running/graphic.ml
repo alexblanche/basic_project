@@ -2,11 +2,11 @@
 (* Contains all functions that interact with the graphic window,
   i.e. text mode and graphic mode *)
 
-#use "topfind"
+(* #use "topfind"
 #require "graphics"
 
 #use "picture_editor/picture_drawer.ml"
-#use "basic_parsing/basic_encoding.ml"
+#use "basic_parsing/basic_encoding.ml" *)
 
 (* repr_text, repr_graph: hash tables of the visual representation of the characters in
   text mode and graphic mode respectively *)

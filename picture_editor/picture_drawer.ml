@@ -1,7 +1,7 @@
 (* Creation and manipulation of 64*128 monochrome pictures  *)
 
-#use "topfind"
-#require "graphics"
+(* #use "topfind"
+#require "graphics" *)
 open Graphics;;
 
 (* Note: in the Graphics library, (0,0) is in the lower-left corner of the graphics window *)

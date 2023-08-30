@@ -2,13 +2,14 @@
 
 (* #use "basic_parsing/basic_type.ml"
 #use "basic_parsing/basic_encoding.ml" *)
-#use "basic_running/arithmetic_parsing.ml"
-#use "basic_running/graphic.ml"
+(* #use "basic_running/arithmetic_parsing.ml"
+#use "basic_running/graphic.ml" *)
 
 let run (p : project_content) ((code, proglist): basic_code) : unit =
   (* Initialization *)
-  (* Variables: array of size 29, storing the content of each variable A..Z, r, theta, Ans *)
-  let var = Array.make 29 0 in
+  (* Variables: array of size 2*29, storing the content of each variable A..Z, r, theta, Ans
+    as real part in the 29 first cells, and imaginary part in the next 29 *)
+  let var = Array.make (2*29) 0. in
   (* prog_goback: pile of indices to return to when the end of a program is reached *)
   let prog_goback = ref [] in
   let n = Array.length code in
@@ -32,7 +33,7 @@ let run (p : project_content) ((code, proglist): basic_code) : unit =
 
           | If (e,j) ->
             (* Temporary: adapt eval to basic_expr *)
-            if (eval "0.") <> 0.
+            if (eval var p (Arithm [Number (Float 0.)])) <> 0.
               then aux (i+1)
               else aux j
           

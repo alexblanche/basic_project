@@ -3,8 +3,8 @@
   - Lexer of Basic code (into lexemes stored in basic_encoding.ml)
   - Converts Picture/Capture files into boolean matrices *)
 
-#use "basic_parsing/file_reader.ml"
-#use "basic_parsing/basic_encoding.ml"
+(* #use "basic_parsing/file_reader.ml"
+#use "basic_parsing/basic_encoding.ml" *)
 
 (* G1M/G2M file format *)
 (* 
@@ -352,7 +352,7 @@ let read_matrix (s : string) (istart : int) (row : int) (col : int) : float arra
 
 (* General g1m reader function *)
 
-#use "basic_parsing/project_type.ml"
+(* #use "basic_parsing/project_type.ml" *)
 
 (* Returns the content of each object of the G1M/G2M file *)
 let g1m_reader (s : string) : project_content =

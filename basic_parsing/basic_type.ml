@@ -58,7 +58,7 @@ and
 (* Conditions are expressions: 0 = false, <>0 = true *)
 basic_expr =
   | QMark (* ? (asks the user for a value) *)
-  | Expr of arithm list
+  | Arithm of arithm list
 
 (* Text-mode displaying functions *)
 type textmode =

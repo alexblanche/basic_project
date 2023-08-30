@@ -1,8 +1,8 @@
 (* Compilation of Basic code *)
 
-#use "basic_parsing/basic_type.ml"
+(* #use "basic_parsing/basic_type.ml"
 #use "basic_parsing/project_type.ml"
-#use "basic_running/arithmeric_parsing.ml"
+#use "basic_running/arithmeric_parsing.ml" *)
 
 (* Data structure:
   We store the code in an array, that doubles its size whenever it is full.

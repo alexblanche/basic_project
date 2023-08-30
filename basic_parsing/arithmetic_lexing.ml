@@ -229,7 +229,7 @@ let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
     | "QMARK"::t -> (QMark,t)
     | _ ->
       let (sl, t) = aux [] lexlist in
-      (Expr (List.rev sl), t)
+      (Arithm (List.rev sl), t)
   ;;
 
 (* Remark:
