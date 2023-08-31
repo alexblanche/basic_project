@@ -21,9 +21,9 @@
 #require "graphics"
 
 #use "picture_editor/picture_drawer.ml"
+#use "basic_running/float_repr.ml"
 #use "basic_running/graphic.ml"
 
-#use "basic_running/float_repr.ml"
 #use "basic_running/basic_run.ml"
 
 (* Picture generation *)

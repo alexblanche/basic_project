@@ -38,10 +38,10 @@ let count_ten_digits (s : string) : string =
   in
   let ns = String.sub s 0 (aux 0 0) in
   (* If the number is in scientific form, add the suffix "e+xx" *)
-  if s.[n-4] = 'e'
-    then ns^(String.sub s (n-4) 4)
-    else if s.[n-5] = 'e'
-      then ns^(String.sub s (n-5) 5)
+  if n >= 4 && s.[n-4] = 'e'
+    then ns^"\015"^(String.sub s (n-3) 3)
+    else if n >= 5 && s.[n-5] = 'e'
+      then ns^"\015"^(String.sub s (n-4) 4)
       else ns
 ;;
 
@@ -56,10 +56,20 @@ let rec sf_ge1 (s : string) : string =
     String.sub s 0 sign_index
   in
   let decimals =
-    String.sub s sign_index (min (n-sign_index) 9)
+    let s = String.sub s sign_index (min (n-sign_index) 9) in
+    (* Removal of the '0' at the end of the string *)
+    let len_s = String.length s in
+    if s.[len_s-1] = '0'
+      then
+        (let i = ref (len_s - 1) in
+        while !i > 0 && s.[!i-1] = '0' do
+          decr i
+        done;
+        String.sub s 0 !i)
+      else s
   in
   let esuffix =
-    "e+"^(string_of_int (n-sign_index-1))
+    "\015+"^(string_of_int (n-sign_index-1))
   in
   first_digit^"."^decimals^esuffix;;
 
@@ -87,7 +97,17 @@ let rec sf_le1 (s : string) : string =
     String.sub s index_first_nz 1
   in
   let decimals =
-    String.sub s (index_first_nz+1) (min (n-1-index_first_nz) 9)
+    let s = String.sub s (index_first_nz+1) (min (n-1-index_first_nz) 9) in
+    (* Removal of the '0' at the end of the string *)
+    let len_s = String.length s in
+    if s.[len_s-1] = '0'
+      then
+        (let i = ref (len_s - 1) in
+        while !i > 0 && s.[!i-1] = '0' do
+          decr i
+        done;
+        String.sub s 0 !i)
+      else s
   in
   let esuffix =
     let pow =
@@ -95,11 +115,11 @@ let rec sf_le1 (s : string) : string =
         then index_first_nz-2
         else index_first_nz-1
     in
-    "e-"^(if pow > -10 then "0" else "")^(string_of_int pow)
+    "\015-"^(if pow > -10 then "0" else "")^(string_of_int pow)
   in
   sign^first_digit^(if decimals = "" then "" else ".")^decimals^esuffix;;
 
-
+(* Returns the representation of the OCaml float n as a Casio number *)
 let float_to_casio (n : float) : string =
   let s = string_of_float n in
   if n >= 1e+10 || n <= -.1e+10 then
@@ -117,3 +137,29 @@ let float_to_casio (n : float) : string =
       then String.sub res 0 (nres-1)
       else res
   ;;
+
+
+(** Formatting complex numbers **)
+
+(* Converts the string s into a list of strings, each containing one character of s *)
+let string_to_lexlist (s : string) : string list =
+  let res = String.fold_left (fun acc c -> (String.make 1 c)::acc) [] s in
+  List.rev res;;
+
+(* Returns the representation of the complex z as a Casio complex number
+  under the form a+ib, as a list of strings: [(repr of a); [plus (\137)]; (repr of b); [i (\127\080)]] *)
+let complex_to_casio_aib (z : complex) : string list list =
+  [string_to_lexlist (float_to_casio z.re);
+  ["\137"];
+  string_to_lexlist (float_to_casio z.im);
+  ["\127\080"]];;
+
+(* Same with polar representation of a complex number:
+  [repr of r; repr of complex angle (\127\084); repr of theta] *)
+let complex_to_casio_polar (z : complex) : string list list =
+  [string_to_lexlist (float_to_casio (Complex.norm z));
+  ["\127\084"];
+  string_to_lexlist (float_to_casio (Complex.arg z))];;
+
+(* To do: when in sf, remove the last 0
+   Ex: 123456789012 -> 1.23456789e+11 (and not 1.234567890e+11) *)

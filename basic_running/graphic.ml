@@ -28,7 +28,7 @@ let open_graphic () : unit =
 	cache ();
 	sync ();;
 
-let disp () : unit =
+let wait_enter () : unit =
   (* '\013' = ENTER *)
   while not (read_key () = '\013') do
     ()
@@ -67,9 +67,49 @@ let tdraw () : unit =
 (* Is it useful to have a bool matrix for the text screen too?
   If tdraw is too slow, I will consider it. *)
 
+
 (* Prints the string s (stored as a list of lexemes) in the tscreen at position i,j *)
 let locate (slist : string list) (i : int) (j : int) : unit =
   List.iteri (fun k s -> if i + k <= 20 then tscreen.(j).(i+k) <- s) slist;;
+
+(* Prints the number z (of type complex) at the right of the writing line *)
+(* polar = true if the complex is to be printed in polar form, false in a+ib form *)
+let print_number (z : complex) (polar : bool) : unit =
+  if z.im = 0.
+    then
+      (let z_repr = float_to_casio z.re in
+      locate (string_to_lexlist z_repr) (21-String.length z_repr) !writing_index;
+      incr writing_index)
+    else
+      (* if the total length is too long, cut after the real part *)
+      let z_repr_l =
+        if polar
+          then complex_to_casio_polar z
+          else complex_to_casio_aib z
+      in
+      let total_length = List.fold_left (fun s l -> s+List.length l) 0 z_repr_l in
+      if total_length > 20
+        then
+          (match z_repr_l with
+            | a::t ->
+              (let len_a = List.length a in
+              locate a (21-len_a) !writing_index;
+              let pos = ref (21-total_length+len_a) in
+              List.iter
+                (fun sl ->
+                  locate sl !pos (!writing_index+1);
+                  pos := !pos + List.length sl)
+                t;
+              writing_index := !writing_index + 2)
+            | [] -> ())
+        else
+          (let pos = ref (21-total_length) in
+          List.iter
+            (fun sl ->
+              locate sl !pos !writing_index;
+              pos := !pos + List.length sl)
+            z_repr_l;
+          incr writing_index);;
 
 (* Prints the "- DISP -" on the tscreen at line j *)
 let print_disp (j : int) : unit =
@@ -91,28 +131,3 @@ let scroll () : unit =
     tscreen.(j) <- tscreen.(j+1)
   done;
   clear_line 6;;
-
-(* Test *)
-(* open_graphic ();;
-let ts =
-  [|[|"O"; "k"; ","; " "; "c"; "e"; "c"; "i"; " "; "e"; "s"; "t"; " "; "u";
-      "n"; " "; "t"; "e"; "s"; "t"; "."|];
-    [|" "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " ";
-      " "; " "; " "; " "; " "; " "; " "|];
-    [|" "; "A"; "L"; "E"; "X"; "_"; "1"; "1"; "8"; "6"; " "; " "; " "; " ";
-      " "; " "; " "; " "; " "; " "; " "|];
-    [|" "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " ";
-      " "; " "; " "; " "; " "; " "; " "|];
-    [|" "; " "; " "; " "; " "; " "; "2"; "0"; "2"; "3"; " "; " "; " "; " ";
-      " "; " "; " "; " "; " "; " "; " "|];
-    [|" "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " ";
-      " "; " "; " "; " "; " "; " "; " "|];
-    [|" "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " "; " ";
-      " "; " "; " "; " "; " "; " "; " "|]|]
-in
-for j = 0 to 6 do
-  for i = 0 to 20 do
-    tscreen.(j).(i) <- ts.(j).(i)
-  done;
-done;
-tdraw ();; *)
