@@ -28,8 +28,8 @@ type funct =
 (* Type for Basic variables *)
 type variable =
   | Var of int (* index: 0..25 = A ... Z, 26 = r, 27 = theta, 28 = Ans *)
-  | ListIndex of variable * basic_expr (* ListIndex(x, e) = List x[e] *)
-  | MatIndex of variable * basic_expr * basic_expr (* MatIndex (x,e1,e2) -> Mat x[e1][e2] *)
+  | ListIndex of basic_number * basic_expr (* ListIndex(x, e) = List x[e] *)
+  | MatIndex of basic_number * basic_expr * basic_expr (* MatIndex (x,e1,e2) -> Mat x[e1][e2] *)
   | Getkey (* its value depends on the key currently pressed *)
   | Random (* Ran# *)
 
@@ -60,35 +60,39 @@ basic_expr =
   | QMark (* ? (asks the user for a value) *)
   | Arithm of arithm list
 
-(* Text-mode displaying functions *)
-type textmode =
-  | Text of string
-  | Locate of int * int * string
-
 (* Graphic screen functions *)
 type graphic =
-  | ViewWindow of float * float * float * float * float * float
-  | PlotOn of float * float
-  | PlotOff of float * float
-  | Fline of float * float * float * float
-  | DrawStat of float list * float list
-  | GraphicText of float * float * string
-  | Graphic_Function of string
+  | ViewWindow of basic_expr * basic_expr * basic_expr * basic_expr * basic_expr * basic_expr
+  | PlotOn of basic_expr * basic_expr
+  | PlotOff of basic_expr * basic_expr
+  | Fline of basic_expr * basic_expr * basic_expr * basic_expr
+  | GraphicText of basic_expr * basic_expr * (string list)
+  | Graphic_Function of string (* Other graphic functions *)
 
 (* Type for Basic commands *)
 type command =
+
+  (* Delimitors *)
   | End (* End of the program *)
   | Empty (* Empty command, to complete the basic_code array *)
+
+  (* Expressions, strings and text display *)
   | Expr of basic_expr (* Arithmetic expression *)
   | String of string list (* Text, stored as list of lexemes (strings of 1 or 2 characters) *)
-  | Assign of basic_expr * variable (* expr -> X *)
-  | AssignStruct of data_struct * variable (* [1,2,3] -> List A *)
+  | Locate of basic_expr * basic_expr * (string list) (* Locate function, prints the string at the given coordinates *)
   | Disp (* Display the result of the line above *)
+  
+  (* -> *)
+  | Assign of basic_expr * variable (* expr -> X or expr -> List A[X] *)
+  | AssignStruct of basic_expr * data_struct (* 2+3*{1,2,3} -> List A or 5*[[1,2][3,4]] -> Mat A *)
+  
+  (* Jumps *)
   | Goto of int (* Jump to line l on the array *)
-  | Prog of string (* Prog(name): jump to program name, then come back *)
-  | If of basic_expr * int (* If(expr,l): If expr Then continue (else jump to line l) *)
-  | JumpIf of basic_expr * int (* JumpIf(expr,l): If expr Then jump to line l *)
-  | TextMode of textmode (* String, Locate, Disp... *)
+  | Prog of string (* Prog name: jump to program name, then come back *)
+  | If of basic_expr * int (* If (expr,l): If expr Then continue (else jump to line l) *)
+  | JumpIf of basic_expr * int (* JumpIf (expr,l): If expr Then jump to line l *)
+
+  (* Graphic functions and other functions *)
   | Graphic of graphic (* Graphic screen functions *)
   | Function of string (* Any other function, stored in a hashtable *)
 

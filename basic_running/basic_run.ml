@@ -5,20 +5,6 @@
 (* #use "basic_running/arithmetic_parsing.ml"
 #use "basic_running/graphic.ml" *)
 
-(* Type for the parameter container (defined below) *)
-type parameters = {
-  proj : project_content;
-  var : float array;
-  polar : bool;
-  xmin : float;
-  xmax : float;
-  xstep : float;
-  ymin : float;
-  ymax : float;
-  ystep : float;
-  axes : bool;
-}
-
 (* Executes the Disp (black triangle) operation *)
 let disp (writing_index : int ref) : unit =
   if !writing_index = 7
@@ -137,6 +123,25 @@ let run (p : project_content) ((code, proglist): basic_code) : unit =
               (disp writing_index;
               aux (i+2))
             else aux (i+1))
+          
+        | Locate (e1, e2, sl) ->
+          let z1 = eval p e1 in
+          let z2 = eval p e2 in
+          (if not
+            ((is_int z1)
+            && (is_int z2)
+            && (z1.re >= 1.)
+            && (z1.re <= 21.)
+            && (z2.re >= 1.)
+            && (z2.re <= 7.))
+            then failwith "Runtime error: wrong arguments for Locate";
+          locate sl (int_of_complex z1) (int_of_complex z2);
+          if i<n-1 && code.(i+1) = Disp
+            then
+              (disp writing_index;
+              aux (i+2))
+            else aux (i+1))
+
         
         | Prog name ->
           (prog_goback := (i+1)::!prog_goback;

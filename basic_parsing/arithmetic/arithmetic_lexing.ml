@@ -161,18 +161,22 @@ let read_name (s : string) (i : int) : (string * int) =
         (sop, i+String.length sop)
       else aux_read_name (i+1);; *)
 
+
+(* Expression extraction functions are mutually recursive *)
+    
 (* Extracts the content of List i[e] from the lexlist when lexlist is the tail
   of a list of lexemes starting with "LIST" *)
-let extract_list_index (t : string list) : basic_expr * (string list) =
+let rec extract_list_index (t : string list) : basic_expr * (string list) =
   (* Detection of the first variable *)
   let (a,t') =
     match t with
       | a::q ->
         if is_var a then
-          (Variable (var_index a), q)
+          (Variable (Var (var_index a)), q)
         else if is_digit a then
           let (i,q) = read_int t true in
-          (Value i, q)
+          (Value (complex_of_int i), q)
+        else failwith "extract_list_index: List should be followed by a number or a variable"
   in
   (* Detection of the index between square brackets *)
   match t' with
@@ -182,22 +186,22 @@ let extract_list_index (t : string list) : basic_expr * (string list) =
         | "RSQBRACKET"::_
         | "EOL"::_ (* Closing bracket may be omitted in Basic Casio *)
         | "DISP"::_ -> ((Number (Variable (ListIndex (a, e)))),t''')
-        | _ -> failwith "extract_expr: Syntax error, List '[' not properly closed")
-    | _ -> failwith "extract_expr: Syntax error, List should be followed by '['"
-in
+        | _ -> failwith "extract_list_index: Syntax error, List '[' not properly closed")
+    | _ -> failwith "extract_list_index: Syntax error, List should be followed by '['"
 
 (* Extracts the content of Mat i[e1][e2] from the lexlist when lexlist is the tail
   of a list of lexemes starting with "MAT" *)
-let extract_mat_index t =
+and extract_mat_index t =
   (* Detection of the first variable *)
   let (a,t2) =
     match t with
       | a::q ->
         if is_var a then
-          (Variable (var_index a), q)
+          (Variable (Var (var_index a)), q)
         else if is_digit a then
           let (i,q) = read_int t true in
           (Value i, q)
+        else failwith "extract_mat_index: Mat should be followed by a number or a variable"
   in
   (* Detection of the indices between square brackets *)
   match t2 with
@@ -210,14 +214,13 @@ let extract_mat_index t =
           | "RSQBRACKET"::_
           | "EOL"::_
           | "DISP"::_ -> ((Number (Variable (MatIndex (a, e1, e2)))), t5)
-          | _ -> failwith "extract_expr: Syntax error, Mat '[' not properly closed")
-        | _ -> failwith "extract_expr: Syntax error, Mat '[' not properly closed")
-    | _ -> failwith "extract_expr: Syntax error, Mat should be followed by '['"
-in
+          | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
+        | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
+    | _ -> failwith "extract_mat_index: Syntax error, Mat should be followed by '['"
 
 (* Converts a list of lexemes containing an arithmetic expression into a list of arithmetic lexemes *)
 (* Return the basic_expr and the tail of the list of lexemes after the expression *)
-let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
+and extract_expr (lexlist : string list) : basic_expr * (string list) =
 
   (* Main loop *)
   let rec aux acc l =
@@ -235,7 +238,7 @@ let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
         else if s = "RPAR" then
           aux (Rpar::acc) t
         else if s = "COMMA" then
-          aux (Comma::acc) t
+          aux (Comma::acc) t (* To be changed (see below and arithmetic_parsing) *)
         else if List.exists (fun (op,_) -> s=op) op_list then
           aux ((Op s)::acc) t
         else if List.mem s lop_list then
@@ -253,8 +256,9 @@ let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
         else (acc, t)
       | [] -> (acc, [])
   in
+
   match lexlist with
-    | "QMARK"::t -> (QMark,t)
+    | "QMARK"::t -> (QMark, t)
     | _ ->
       let (sl, t) = aux [] lexlist in
       (Arithm (List.rev sl), t)
@@ -264,3 +268,4 @@ let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
   For List i[e] and Mat i[e1][e2], I call recursively extract_expr for each argument,
   but for functions I pass them to the evaluator to parse and compute them.
   Should it be unified? *)
+(* See arithmetic_parsing for more comments on this. *)
