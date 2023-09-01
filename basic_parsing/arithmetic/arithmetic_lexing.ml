@@ -161,40 +161,63 @@ let read_name (s : string) (i : int) : (string * int) =
         (sop, i+String.length sop)
       else aux_read_name (i+1);; *)
 
+(* Extracts the content of List i[e] from the lexlist when lexlist is the tail
+  of a list of lexemes starting with "LIST" *)
+let extract_list_index (t : string list) : basic_expr * (string list) =
+  (* Detection of the first variable *)
+  let (a,t') =
+    match t with
+      | a::q ->
+        if is_var a then
+          (Variable (var_index a), q)
+        else if is_digit a then
+          let (i,q) = read_int t true in
+          (Value i, q)
+  in
+  (* Detection of the index between square brackets *)
+  match t' with
+    | "LSQBRACKET"::t'' ->
+      let (e,t''') = extract_expr t'' in
+      (match t''' with
+        | "RSQBRACKET"::_
+        | "EOL"::_ (* Closing bracket may be omitted in Basic Casio *)
+        | "DISP"::_ -> ((Number (Variable (ListIndex (a, e)))),t''')
+        | _ -> failwith "extract_expr: Syntax error, List '[' not properly closed")
+    | _ -> failwith "extract_expr: Syntax error, List should be followed by '['"
+in
+
+(* Extracts the content of Mat i[e1][e2] from the lexlist when lexlist is the tail
+  of a list of lexemes starting with "MAT" *)
+let extract_mat_index t =
+  (* Detection of the first variable *)
+  let (a,t2) =
+    match t with
+      | a::q ->
+        if is_var a then
+          (Variable (var_index a), q)
+        else if is_digit a then
+          let (i,q) = read_int t true in
+          (Value i, q)
+  in
+  (* Detection of the indices between square brackets *)
+  match t2 with
+    | "LSQBRACKET"::t2 ->
+      let (e1,t3) = extract_expr t2 in
+      (match t3 with
+        | "RSQBRACKET"::"LSQBRACKET"::t4 ->
+          let (e2,t5) = extract_expr t4 in
+          (match t5 with
+          | "RSQBRACKET"::_
+          | "EOL"::_
+          | "DISP"::_ -> ((Number (Variable (MatIndex (a, e1, e2)))), t5)
+          | _ -> failwith "extract_expr: Syntax error, Mat '[' not properly closed")
+        | _ -> failwith "extract_expr: Syntax error, Mat '[' not properly closed")
+    | _ -> failwith "extract_expr: Syntax error, Mat should be followed by '['"
+in
+
 (* Converts a list of lexemes containing an arithmetic expression into a list of arithmetic lexemes *)
 (* Return the basic_expr and the tail of the list of lexemes after the expression *)
 let rec extract_expr (lexlist : string list) : basic_expr * (string list) =
-  (* Specific case for List i[e] *)
-  let extract_list_index t =
-    let (i,t') = read_int t true in
-    match t' with
-      | "LSQBRACKET"::t'' ->
-        let (e,t''') = extract_expr t'' in
-        (match t''' with
-          | "RSQBRACKET"::_
-          | "EOL"::_
-          | "DISP"::_ -> ((Number (Variable (ListIndex (i, e)))),t''')
-          | _ -> failwith "extract_expr: Syntax error, List '[' not properly closed")
-      | _ -> failwith "extract_expr: Syntax error, List should be followed by '['"
-  in
-
-  (* Specific case for Mat i[e1][e2] *)
-  let extract_mat_index t =
-    let (i,t2) = read_int t true in
-    match t2 with
-      | "LSQBRACKET"::t2 ->
-        let (e1,t3) = extract_expr t2 in
-        (match t3 with
-          | "RSQBRACKET"::"LSQBRACKET"::t4 ->
-            let (e2,t5) = extract_expr t4 in
-            (match t5 with
-            | "RSQBRACKET"::_
-            | "EOL"::_
-            | "DISP"::_ -> ((Number (Variable (MatIndex (i, e1, e2)))), t5)
-            | _ -> failwith "extract_expr: Syntax error, Mat '[' not properly closed")
-          | _ -> failwith "extract_expr: Syntax error, Mat '[' not properly closed")
-      | _ -> failwith "extract_expr: Syntax error, Mat should be followed by '['"
-  in
 
   (* Main loop *)
   let rec aux acc l =

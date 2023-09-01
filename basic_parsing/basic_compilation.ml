@@ -302,6 +302,27 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
   
   (* elseindex is a pile containing the index of the last else statements encountered not yet closed *)
   let rec aux (lexlist : string list) (i : int) : int =
+    (* Test whether lexlist contains an expression *)
+    let (e,t) = extract_expr lexlist in
+    (match e,t with
+      | QMark, "ASSIGN"::v::eol::t' ->
+        if is_var v then
+          (set code i (Assign (QMark, Var (var_index v)))
+        else if v = "LIST" then
+          ()(* to do... *)
+        if eol = "EOL" then
+          aux t' (i+1)
+        else if eol = "DISP" then
+          (set code (i+1) (Disp);
+          aux t' (i+2)))
+      | QMark, _ -> failwith "Compilation error: Syntax error, ? should be followed by ->"
+      | Arithm [], _ ->
+        (* The beginning of lexlist is not an expression *)
+        ()
+      | _, "ASSIGN"::a::eol::t' ->
+        let z = 
+    );
+
     match lexlist with
       
       | "EOL" :: t -> aux t i
