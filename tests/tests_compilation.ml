@@ -1,7 +1,7 @@
 (* Unit tests for Basic compilation *)
 
-#use "basic_parsing/basic_compilation.ml"
-#use "basic_parsing/basic_encoding.ml"
+(* #use "basic_parsing/basic_compilation.ml"
+#use "basic_parsing/basic_encoding.ml" *)
 
 let prog1 = compile 
   [("main",

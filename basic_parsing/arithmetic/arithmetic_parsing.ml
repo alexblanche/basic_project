@@ -1,10 +1,6 @@
 (* Parsing and evaluation of arithmetical expressions, done at runtime *)
 (* #use "basic_parsing/basic_type.ml" *)
 
-(* To come:
-  - Unify the lexing between ops and {lops, rops, functions}?
-  - Treat variables (-> read_name has to read a string,
-    and the classification (variable, op, lop, rop, function) is done afterward) *)
 
 (* Subtleties to consider:
   - In Casio Basic, some functions (like Abs, sin...) do not need parentheses.

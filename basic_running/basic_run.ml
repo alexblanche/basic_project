@@ -27,8 +27,12 @@ let quit () : unit =
   close_graph ();;
 
 (* Prints the value of Ans, then quits *)
-let quit_ans (ans : complex) (polar : bool) : unit =
-  print_number ans polar;
+let quit_print (val_seen : bool) (value : complex) (polar : bool) : unit =
+  if val_seen
+    then print_number value polar
+    else
+      (clear_text ();
+      locate ["D"; "o"; "n"; "e"] 17 0);
   tdraw ();
   quit ();;
 
@@ -47,6 +51,9 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
     
     (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
     polar = false;
+    
+    (* Last value seen, is printed at the end of the execution *)
+    last_val = {re = 0.; im = 0.};
 
     (* Parameters of the V-Window *)
     xmin = 1.;
@@ -59,10 +66,12 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
     axes = false;
 
   } in
-  
+
+  let n = Array.length code in
   (* prog_goback: pile of indices to return to when the end of a program is reached *)
   let prog_goback = ref [] in
-  let n = Array.length code in
+  (* val_seen: to decide whether to print "Done" or p.last_val at the end of the execution *)
+  let val_seen = ref false in
 
   (* Initialization *)
   open_graphic ();
@@ -74,7 +83,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   (* Looping function *)
   let rec aux (i : int) : unit =
     if i >= n then (* End of the execution *)
-      quit_ans (get_var_val p.var 28) p.polar
+      quit_print !val_seen p.last_val p.polar
     else
 
     match code.(i) with
@@ -88,7 +97,11 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           
       | Expr (Arithm al) ->
         let z = eval p (Arithm al) in
-        (store_ans p.var z;
+        (print_endline (string_of_float z.re);
+        print_endline (string_of_float z.im);
+        store_ans p.var z;
+        p.last_val <- z;
+        val_seen := true;
         if i<n-1 && code.(i+1) = Disp
           then
             (print_number z p.polar;
@@ -98,10 +111,14 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           
       | Assign (e, v) ->
         let z = eval p e in
-        (match v with
+        (p.last_val <- z;
+        val_seen := true;
+        match v with
           | Var i ->
             (p.var.(i) <- z.re;
             p.var.(i+29) <- z.im;
+            (* Below: temporary, to be moved below the "match",
+              since it is applied to all assignments, not just variables *)
             if i<n-1 && code.(i+1) = Disp
               then
                 (print_number z p.polar;
@@ -153,6 +170,11 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             aux (i+2))
           else aux (i+1))
 
+      | Function "CLRTEXT" ->
+        (clear_text ();
+        writing_index := 0;
+        val_seen := false;
+        aux (i+1))
         
       | Prog name ->
         (prog_goback := (i+1)::!prog_goback;
@@ -164,7 +186,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           | i::t ->
             (prog_goback := t;
             aux i)
-          | [] -> quit_ans (get_var_val p.var 28) p.polar)
+          | [] -> quit_print !val_seen p.last_val p.polar)
 
       | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
   in

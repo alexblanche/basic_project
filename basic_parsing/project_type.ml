@@ -67,18 +67,24 @@ let number_of_elements (p : project_content) : int =
 type parameters = {
   (* proj: Contains the lists, matrices, pictures, captures and strings *)
   proj : project_content;
+
   (* Variables: array of size 2*29, storing the content of each variable A..Z, r, theta, Ans
     as real part in the 29 first cells, and imaginary part in the next 29 *)
   var : float array;
+
   (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
-  polar : bool;
+  mutable polar : bool;
+
+  (* Last value seen, is printed at the end of the execution *)
+  mutable last_val : complex;
+
   (* Parameters of the V-Window *)
-  xmin : float;
-  xmax : float;
-  xstep : float;
-  ymin : float;
-  ymax : float;
-  ystep : float;
+  mutable xmin : float;
+  mutable xmax : float;
+  mutable xstep : float;
+  mutable ymin : float;
+  mutable ymax : float;
+  mutable ystep : float;
   (* Display the axes if true *)
-  axes : bool;
+  mutable axes : bool;
 }

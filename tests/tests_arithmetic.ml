@@ -1,11 +1,11 @@
 (* Unit tests for arithmetic_parsing.ml *)
 
-#use "basic_parsing/arithmetic/complex.ml"
+(* #use "basic_parsing/arithmetic/complex.ml"
 #use "basic_parsing/basic_type.ml"
 #use "basic_parsing/project_type.ml"
 #use "basic_parsing/arithmetic/arithmetic_def.ml"
 #use "basic_parsing/arithmetic/arithmetic_lexing.ml"
-#use "basic_parsing/arithmetic/arithmetic_parsing.ml"
+#use "basic_parsing/arithmetic/arithmetic_parsing.ml" *)
 
 exception Test_failed of int
 
@@ -41,7 +41,7 @@ let unit_tests_lexer () =
       [Number (Value {re = 2.; im = 0.}); Number (Variable (Var 1)); Op "PLUS"; Number (Value {re = 3.; im = 0.});
       Number (Variable (Var 0)); Op "MINUS"; Number (Value {re = 4.; im = 0.}); Number (Value {re = 0.; im = 1.})])
     ];
-    print_endline "Tests_arithmetic_parsing, lexer: all tests ran successfully"
+    print_endline "Tests_arithmetic_parsing, lexer: all tests passed"
   with
     | Test_failed i ->
       print_endline ("Tests_arithmetic_parsing, lexer: test "^(string_of_int i)^" failed")
@@ -89,7 +89,7 @@ let unit_tests_eval () =
       (["2"; "TIMES"; "B"; "PLUS"; "A"], {re = 16.; im = 8.});
       (["2"; "B"; "PLUS"; "3"; "A"; "MINUS"; "4"; "CPLXI"], {re = 36.; im = 4.})
     ];
-    print_endline "Tests_arithmetic_parsing, eval: all tests ran successfully"
+    print_endline "Tests_arithmetic_parsing, eval: all tests passed"
   with
     | Test_failed i ->
       print_endline ("Tests_arithmetic_parsing, eval: test "^(string_of_int i)^" failed")

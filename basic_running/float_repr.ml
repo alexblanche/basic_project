@@ -100,7 +100,7 @@ let rec sf_le1 (s : string) : string =
     let s = String.sub s (index_first_nz+1) (min (n-1-index_first_nz) 9) in
     (* Removal of the '0' at the end of the string *)
     let len_s = String.length s in
-    if s.[len_s-1] = '0'
+    if len_s >= 1 && s.[len_s-1] = '0'
       then
         (let i = ref (len_s - 1) in
         while !i > 0 && s.[!i-1] = '0' do
@@ -122,21 +122,19 @@ let rec sf_le1 (s : string) : string =
 (* Returns the representation of the OCaml float n as a Casio number *)
 let float_to_casio (n : float) : string =
   let s = string_of_float n in
-  if n >= 1e+10 || n <= -.1e+10 then
-    if n >= 1e+12 || n <= -.1e+12
-      then count_ten_digits s (* Already in sf *)
-      else sf_ge1 s (* nf in OCaml, sf in Casio *)
-  else if n > -.0.01 && n < 0.01 then
-    if n > -.0.0001 && n < 0.0001
-      then count_ten_digits s (* Already in sf *)
-      else sf_le1 s (* nf in OCaml, sf in Casio *)
-  else
-    let res = count_ten_digits s in
-    let nres = String.length res in
-    if res.[nres-1] = '.'
-      then String.sub res 0 (nres-1)
-      else res
-  ;;
+  let res =
+    if (n >= 1e+10 || n <= -.1e+10) && not (n >= 1e+12 || n <= -.1e+12) then
+      sf_ge1 s (* nf in OCaml, sf in Casio *)
+    else if (n > -.0.01 && n < 0.01) && not (n > -.0.0001 && n < 0.0001) then
+      sf_le1 s (* nf in OCaml, sf in Casio *)
+    else
+      count_ten_digits s (* Already in sf *)
+  in
+  let nres = String.length res in
+  if res.[nres-1] = '.'
+    then String.sub res 0 (nres-1)
+    else res
+;;
 
 
 (** Formatting complex numbers **)

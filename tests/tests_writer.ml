@@ -1,7 +1,7 @@
 (* Tests for G1M file generation *)
 
-#use "basic_parsing/g1m_writer.ml"
-#use "picture_editor/picture_drawer.ml"
+(* #use "basic_parsing/g1m_writer.ml"
+#use "picture_editor/picture_drawer.ml" *)
 
 (** Examples of objects **)
 
