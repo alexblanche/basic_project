@@ -40,8 +40,8 @@ let run_prog1 () =
 let run_prog2 () =
   run p (
     [|
-      (* Assign (Arithm [Number (Value {re = 8.; im = 0.})], (Var 0)); *) (* 8 -> A DISP *)
-      (* Disp; *)
+      Assign (Arithm [Number (Value {re = 8.; im = 0.})], (Var 0)); (* 8 -> A DISP *)
+      Disp;
       Assign (Arithm [Number (Value {re = 10.; im = 0.})], (Var 1)); (* 10 -> B DISP *)
       Disp;
       Expr (Arithm [Number (Variable (Var 0)); Op "TIMES"; Number (Variable (Var 1))]); (* A*B DISP *)
@@ -50,10 +50,6 @@ let run_prog2 () =
     |]
     ,
     [("main", 0)]);;
-
-(* Reported bugs:
-  - Infinite loop when the first Assign A is displayed... (what?)
-  - 10 -> B, A*B prints "0." (with the dot) *)
 
 
 

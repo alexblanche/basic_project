@@ -75,9 +75,6 @@ type parameters = {
   (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
   mutable polar : bool;
 
-  (* Last value seen, is printed at the end of the execution *)
-  mutable last_val : complex;
-
   (* Parameters of the V-Window *)
   mutable xmin : float;
   mutable xmax : float;
