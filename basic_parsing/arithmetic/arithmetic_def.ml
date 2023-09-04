@@ -11,21 +11,59 @@ let fact n =
   aux 1 n;;
 
 (* Table of handled functions *)
-(* Each function is stored as a pair (a,f),
-where a is the arity of the function (number of arguments) *)
+(* All functions take a list of arguments as parameter.
+  This allows for functions of all arities and variable arity. *)
 
-(* All numbers are complex numbers, of type Complex.t *)
+(* Some functions have their real and complex cases treated separately
+  to reduce the rounding errors of complex operations *)
 
-
-
-(* Temporary example *)
+(* Hash table containing all the arithmetic functions *)
 let func_table =
   let t = Hashtbl.create 10 in
-  let func_list = [
-    ("MAX", AR2 (fun a b -> max a b)); (* Works for complex numbers, as max of a pair in lexicographic order *)
-    ("f", AR1 (fun z -> Complex.add (Complex.mul z z) {re = 2.; im = 0.}));
-    ("fact", AR1 (fun (z : Complex.t) -> complex_of_int (fact (int_of_float z.re))));
-    ("ABS", LOP (fun z -> complex_of_float (Complex.norm z)))
+  let (func_list : (string * (complex list -> complex)) list) = [
+    (* Max: Works for complex numbers, as max of a pair in lexicographic order *)
+    ("MAX",
+      (let f l =
+        let rec aux m l =
+          match l with
+            | x::t -> aux (max m x) t
+            | [] -> m
+        in
+        match l with
+          | a::t -> aux a t
+          | [] -> failwith "Function error: Max should have at least one argument"
+      in f)
+    );
+
+    ("ABS",
+      (let f l =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then {re = Float.abs z.re; im = 0.}
+              else complex_of_float (Complex.norm z)
+          | _ -> failwith "Function error: Abs has arity 1"
+      in f)
+    );
+
+    ("UMINUS",
+      (let f l =
+        match l with
+          | [z] -> {re = -z.re; im = -z.im}
+          | _ -> failwith "Function error: Unary minus has arity 1"
+      in f)
+    );
+
+    ("EPOWER",
+      (let f l =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then {re = Float.exp z.re; im = 0.}
+              else complex_of_float (Complex.exp z)
+          | _ -> failwith "Function error: Abs has arity 1"
+      in f)
+    );
     ]
   in
   List.iter (fun (fname, fdef) -> Hashtbl.add t fname fdef) func_list;
@@ -36,25 +74,17 @@ let func_table =
 (* Application of the functions *)
 let apply_func (fname : string) (zl : complex list) =
   try
-    (match (Hashtbl.find func_table fname, zl) with
-      | LOP f, [z1] -> f z1
-      | LOP _, _ -> failwith ("apply_func: Operator "^fname^" has a wrong number of arguments")
-      | AR1 f, [z1] -> f z1
-      | AR2 f, [z1;z2] -> f z1 z2
-      | AR3 f, [z1;z2;z3] -> f z1 z2 z3
-      | AR4 f, [z1;z2;z3;z4] -> f z1 z2 z3 z4
-      | _ -> failwith ("apply_func: Function "^fname^" has a wrong number of arguments")
-    )
+    (Hashtbl.find func_table fname) zl
   with
     | Not_found -> failwith ("apply_func: Function "^fname^" undefined");;
 
 (* List of handled left unary operators *)
 (* Temporary *)
-let lop_list = ["ABS"];;
+let lop_list = ["ABS"; "UMINUS"; "EPOWER"];;
 
 (* List of handled right unary operators *)
 (* Temporary *)
-let rop_list = ["EXCLAMATIONMARK"];;
+let rop_list = ["EXCLAMATIONMARK"; "POWER2"];;
 
 (* List of handled operators and their index of precedence (1 = greatest *)
 let op_list = [("PLUS", 3); ("MINUS", 3); ("TIMES", 2); ("DIVIDED", 2); ("POWER", 1);
@@ -88,9 +118,10 @@ let apply_op (o : string) (z1 : complex) (z2 : complex) : complex =
 (* Application of the right unary operators *)
 (* Since there are only a few, we hard-code them like the operators. *)
 let apply_rop (ro : string) (z : complex) : complex =
-  if ro = "EXCLAMATIONMARK"
-    then complex_of_int (fact (int_of_float z.re))
-    else failwith ("apply_rop: Unkown operator "^ro);;
+  match ro with
+    | "EXCLAMATIONMARK" -> complex_of_int (fact (int_of_float z.re))
+    | "POWER2" -> Complex.mul z z
+    | _ -> failwith ("apply_rop: Unkown operator "^ro);;
 
 (* Application of the left unary operators *)
 let apply_lop (lo : string) (z : complex) : complex =

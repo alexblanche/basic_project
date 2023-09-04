@@ -233,8 +233,12 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
           aux ((Number (Value (complex_of_float x)))::acc) t'
         else if s = "CPLXI" then
           aux ((Number (Value (Complex.i)))::acc) t
-        else if is_var s || s = "ANS" then
+        else if is_var s || s = "ANS" || s = "SMALLR" || s = "THETA" then
           aux ((Number (Variable (Var (var_index s))))::acc) t
+        else if s = "PI" then
+          aux ((Number (Value {re = Float.pi; im = 0.}))::acc) t
+        else if s = "GETKEY" then
+          aux ((Number (Variable Getkey))::acc) t
         else if s = "LPAR" then
           aux (Lpar::acc) t
         else if s = "RPAR" then
@@ -254,7 +258,7 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
           let (li,t') = extract_mat_index t in
           aux (li::acc) t'
         else if Hashtbl.mem func_table s then
-          aux ((Function s)::acc) t
+          aux ((Function (s, []))::acc) t (* To be changed (see below and arithmetic_parsing) *)
         else (acc, t)
       | [] -> (acc, [])
   in

@@ -43,8 +43,13 @@ To do next:
   - Code the execution of QMark (number entry)
   - Draw a calculator and code the execution of Getkey (by clicking or pressing keys)
     (Idea: key pressed on the keyboard highlight keys of the calculator interface)
-  - Code "Do LpWhile", ClrText
+  - Code "Do LpWhile", "For To Next"
   - Recode the operators for complex numbers (espacially '=')
 (At this point, the original Timeless might run.)
   - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
-*)
+
+In the distant future:
+  - Complete the list of encodings, with the Catalog
+  - Implement the fraction display (5 FRACSIGN 3 displays as a pair of int separated by FRACSIGN)
+  - Implement as many functions as possible (from the to do list)
+  *)

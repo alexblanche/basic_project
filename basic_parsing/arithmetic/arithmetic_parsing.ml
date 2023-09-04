@@ -91,6 +91,9 @@ and right_reduce p output_q op_q =
         right_reduce p ((Value (apply_lop lo (get_val p x)))::outq) opqt
     | _ -> failwith "reduce: Syntax error"
 
+
+(*** Functions will soon be adapted to the new format: Function of string * (basic_expr list) ***)
+
 (* Shunting_yard algorithm: returns the value of the expression *)
 (* p is the parameter container, containing the variables, lists and matrices *)
 and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_number list) (op_q : arithm list) : complex =
@@ -103,7 +106,7 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
     | (Number x1)::(Number x2)::t, _ -> shunting_yard p ((Op "TIMES")::(Number x2)::t) (x1::output_q) op_q
     (* Normal number case *)
     | (Number x)::t, _ -> shunting_yard p t (x::output_q) op_q
-    | (Function fname)::t, _ -> shunting_yard p t output_q ((Function fname)::op_q)
+    | (Function (fname, pl))::t, _ -> shunting_yard p t output_q ((Function fname)::op_q)
     | Lpar::t, _ -> shunting_yard p t output_q (Lpar::op_q)
     | (Lunop lo)::t, _ -> shunting_yard p t output_q ((Lunop lo)::op_q)
 

@@ -14,15 +14,6 @@ type data_struct =
   | Mat of char
   | Str of int
 
-(* Type for functions, of arity 1 to 4 *)
-(* Greater arity is not needed for Casio Basic *)
-type funct =
-  | LOP of (complex -> complex)
-  | AR1 of (complex -> complex)
-  | AR2 of (complex -> complex -> complex)
-  | AR3 of (complex -> complex -> complex -> complex)
-  | AR4 of (complex -> complex -> complex -> complex -> complex)
-
 (* variable, basic_number, arithm and basic_expr are circular recursive types *)
 
 (* Type for Basic variables *)
@@ -49,7 +40,7 @@ arithm =
   | Op of string (* Binary operator *)
   | Runop of string (* Right unary operator *)
   | Lunop of string (* Left unary operator *)
-  | Function of string
+  | Function of string * (basic_expr list) (* Function and list of arguments *)
   | Comma (* , *)
 
 and
