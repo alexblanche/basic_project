@@ -287,11 +287,11 @@ let process_prog i t code mem =
 
 (* Skip to the next EOL or DISP *)
 let rec skip_line (lexlist : string list) : string list =
-  match t with
-    | a::t' ->
+  match lexlist with
+    | a::t ->
       if a = "EOL" || a = "DISP"
-        then t'
-        else skip_line t'
+        then t
+        else skip_line t
     | [] -> [];;
 
 (* Compiles the list of lexemes lexlist by modifying the array code in place. *)
@@ -309,36 +309,43 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
   (* Looping function *)
   
-  (* elseindex is a pile containing the index of the last else statements encountered not yet closed *)
   let rec aux (lexlist : string list) (i : int) : int =
     (* Expression handling *)
     let (e,t) = extract_expr lexlist in
-    (match e,t with
-    
-      | Arithm [], _ ->
-        (* The beginning of lexlist is not an expression *)
-        ()
+    let (expr_found, j, next_t) =
+      (match e,t with
+      
+        | Arithm [], _ ->
+          (* The beginning of lexlist is not an expression *)
+          (false, -1, [])
 
-      | _, "ASSIGN"::v::eol::t' ->
-        (if is_var v then
-          set code i (Assign (e, Var (var_index v)))
-        (* else if v = "LIST" then
-          () *) (* to do: List 1[4] or List 1 *)
-        ;
+        | _, "ASSIGN"::v::eol::t' ->
+          (if is_var v then
+            set code i (Assign (e, Var (var_index v)))
+          (* else if v = "LIST" then
+            () *) (* to do: List 1[4] or List 1 *)
+          ;
+          
+          if eol = "EOL" || eol = "DISP" then
+            (true, i+1, eol::t')
+          else
+            failwith "Compilation error: Syntax error, -> should be followed by Eol of Disp")
         
-        if eol = "EOL" || eol = "DISP" then
-          aux (eol::t') (i+1)
-        else
-          failwith "Compilation error: Syntax error, -> should be followed by Eol of Disp")
-      
-      | QMark, _ -> failwith "Compilation error: Syntax error, ? should be followed by ->"
-      
-      | _, eol::t' ->
-        if eol = "EOL" || eol = "DISP" then
-          (set code i (Expr e); (* Simple expression *)
-          aux t (i+1))
-        else failwith ("Compilation error: Unexpected lexeme "^eol^" after an expression")
-    );
+        | QMark, _ -> failwith "Compilation error: Syntax error, ? should be followed by ->"
+        
+        | _, eol::t' ->
+          if eol = "EOL" || eol = "DISP" then
+            (set code i (Expr e); (* Simple expression *)
+            (true, i+1, t))
+          else failwith ("Compilation error: Unexpected lexeme "^eol^" after an expression")
+        
+        | _, [] ->
+          (set code i (Expr e); (* Simple expression at the end of the code (without eol) *)
+          (true, i+1, []))
+      )
+    in
+    if expr_found then aux next_t j
+    else
 
     (* Other lexemes *)
     match lexlist with

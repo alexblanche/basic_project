@@ -166,7 +166,7 @@ let read_name (s : string) (i : int) : (string * int) =
     
 (* Extracts the content of List i[e] from the lexlist when lexlist is the tail
   of a list of lexemes starting with "LIST" *)
-let rec extract_list_index (t : string list) : basic_expr * (string list) =
+let rec extract_list_index (t : string list) : arithm * (string list) =
   (* Detection of the first variable *)
   let (a,t') =
     match t with
@@ -177,6 +177,7 @@ let rec extract_list_index (t : string list) : basic_expr * (string list) =
           let (i,q) = read_int t true in
           (Value (complex_of_int i), q)
         else failwith "extract_list_index: List should be followed by a number or a variable"
+      | [] -> failwith "extract_list_index: Error, the list of lexemes is empty"
   in
   (* Detection of the index between square brackets *)
   match t' with
@@ -185,13 +186,13 @@ let rec extract_list_index (t : string list) : basic_expr * (string list) =
       (match t''' with
         | "RSQBRACKET"::_
         | "EOL"::_ (* Closing bracket may be omitted in Basic Casio *)
-        | "DISP"::_ -> ((Number (Variable (ListIndex (a, e)))),t''')
+        | "DISP"::_ -> (Number (Variable (ListIndex (a, e))),t''')
         | _ -> failwith "extract_list_index: Syntax error, List '[' not properly closed")
     | _ -> failwith "extract_list_index: Syntax error, List should be followed by '['"
 
 (* Extracts the content of Mat i[e1][e2] from the lexlist when lexlist is the tail
   of a list of lexemes starting with "MAT" *)
-and extract_mat_index t =
+and extract_mat_index (t : string list) : arithm * (string list) =
   (* Detection of the first variable *)
   let (a,t2) =
     match t with
@@ -200,8 +201,9 @@ and extract_mat_index t =
           (Variable (Var (var_index a)), q)
         else if is_digit a then
           let (i,q) = read_int t true in
-          (Value i, q)
+          (Value (complex_of_int i), q)
         else failwith "extract_mat_index: Mat should be followed by a number or a variable"
+      | [] -> failwith "extract_mat_index: Error, the list of lexemes is empty"
   in
   (* Detection of the indices between square brackets *)
   match t2 with

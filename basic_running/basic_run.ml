@@ -22,12 +22,12 @@ let store_ans (var : float array) (z : complex) : unit =
   var.(28+29) <- z.im;;
 
 (* General execution function *)
-let run (p : project_content) ((code, proglist): basic_code) : unit =
+let run (proj : project_content) ((code, proglist): basic_code) : unit =
   
   (* Initialization of all parameters *)
-  let (param : parameters) = {
+  let (p : parameters) = {
     (* proj: Contains the lists, matrices, pictures, captures and strings *)
-    proj = p;
+    proj = proj;
     
     (* Variables: array of size 2*29, storing the content of each variable A..Z, r, theta, Ans
       as real part in the 29 first cells, and imaginary part in the next 29 *)
@@ -61,102 +61,103 @@ let run (p : project_content) ((code, proglist): basic_code) : unit =
   writing_index := 0;
 
   (* Looping function *)
-  let rec aux i =
+  let rec aux (i : int) : unit =
     if i >= n then (wait_enter (); close_graph ())
     else
-      match code.(i) with
 
-        | Goto j -> aux j
+    match code.(i) with
 
-        | If (e,j) ->
-          if is_not_zero (eval param e)
-            then aux (i+1)
-            else aux j
+      | Goto j -> aux j
+
+      | If (e,j) ->
+        if is_not_zero (eval p e)
+          then aux (i+1)
+          else aux j
           
-        | Expr (Arithm al) ->
-          let z = eval param (Arithm al) in
-          (store_ans param.var z;
-          if i = n-2
-            && (code.(i+1) = End || code.(i+1) = Disp)
-            && !prog_goback = []
-            then (* End of the program *)
-              (if code.(i+1) = Disp then
-                (print_number z param.polar;
-                disp writing_index);
-              print_number z param.polar;
-              wait_enter ();
-              close_graph ())
-            else if i<n-1 && code.(i+1) = Disp
+      | Expr (Arithm al) ->
+        let z = eval p (Arithm al) in
+        (store_ans p.var z;
+        if i = n-2
+          && (code.(i+1) = End || code.(i+1) = Disp)
+          && !prog_goback = []
+          then (* End of the program *)
+            (if code.(i+1) = Disp then
+              (print_number z p.polar;
+              disp writing_index);
+            print_number z p.polar;
+            wait_enter ();
+            close_graph ())
+          else if i<n-1 && code.(i+1) = Disp
+            then
+              (print_number z p.polar;
+              disp writing_index;
+              aux (i+2))
+            else aux (i+1))
+          
+      | Assign (e, v) ->
+        let z = eval p e in
+        (match v with
+          | Var i ->
+            (p.var.(i) <- z.re;
+            p.var.(i+29) <- z.im;
+            if i<n-1 && code.(i+1) = Disp
               then
-                (print_number z param.polar;
-                disp writing_index;
+                (disp writing_index;
                 aux (i+2))
               else aux (i+1))
+          | _ -> aux (i+1)
+          (* | ListIndex (i,e)
+          | MatIndex (i,e1,e2)
+          | Getkey
+          | Random) *) (* to do *)
+        )
           
-        | Assign (e, v) ->
-          let z = eval param e in
-          (match v with
-            | Var i ->
-              (param.var.(i) <- z.re;
-              param.var.(i+29) <- z.im;
-              if i<n-1 && code.(i+1) = Disp
-                then
-                  (disp writing_index;
-                  aux (i+2))
-                else aux (i+1))
-            | _ -> aux (i+1)
-            (* | ListIndex (i,e)
-            | MatIndex (i,e1,e2)
-            | Getkey
-            | Random) *) (* to do *)
-          )
+      | String sl ->
+        (if !writing_index = 7
+          then (scroll (); decr writing_index);
+        clear_line !writing_index;
+        locate sl 0 !writing_index;
+        incr writing_index;
+        tdraw ();
+        if i<n-1 && code.(i+1) = Disp
+          then
+            (disp writing_index;
+            aux (i+2))
+          else aux (i+1))
           
-        | String sl ->
-          (if !writing_index = 7
-            then (scroll (); decr writing_index);
-          clear_line !writing_index;
-          locate sl 0 !writing_index;
-          incr writing_index;
-          tdraw ();
-          if i<n-1 && code.(i+1) = Disp
-            then
-              (disp writing_index;
-              aux (i+2))
-            else aux (i+1))
-          
-        | Locate (e1, e2, sl) ->
-          let z1 = eval p e1 in
-          let z2 = eval p e2 in
-          (if not
-            ((is_int z1)
-            && (is_int z2)
-            && (z1.re >= 1.)
-            && (z1.re <= 21.)
-            && (z2.re >= 1.)
-            && (z2.re <= 7.))
-            then failwith "Runtime error: wrong arguments for Locate";
-          locate sl (int_of_complex z1) (int_of_complex z2);
-          if i<n-1 && code.(i+1) = Disp
-            then
-              (disp writing_index;
-              aux (i+2))
-            else aux (i+1))
+      | Locate (e1, e2, sl) ->
+        let z1 = eval p e1 in
+        let z2 = eval p e2 in
+        (if not
+          ((is_int z1)
+          && (is_int z2)
+          && (z1.re >= 1.)
+          && (z1.re <= 21.)
+          && (z2.re >= 1.)
+          && (z2.re <= 7.))
+          then failwith "Runtime error: wrong arguments for Locate";
+        locate sl (int_of_complex z1) (int_of_complex z2);
+        if i<n-1 && code.(i+1) = Disp
+          then
+            (disp writing_index;
+            aux (i+2))
+          else aux (i+1))
 
         
-        | Prog name ->
-          (prog_goback := (i+1)::!prog_goback;
-          let j = List.assoc name proglist in
-          aux j)
+      | Prog name ->
+        (prog_goback := (i+1)::!prog_goback;
+        let j = List.assoc name proglist in
+        aux j)
 
-        | End ->
-          (match !prog_goback with
-            | i::t ->
-              (prog_goback := t;
-              aux i)
-            | [] ->
-              (wait_enter (); close_graph ()))
+      | End ->
+        (match !prog_goback with
+          | i::t ->
+            (prog_goback := t;
+            aux i)
+          | [] ->
+            (wait_enter (); close_graph ()))
 
-        | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
+      | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
   in
   
   aux 0;;

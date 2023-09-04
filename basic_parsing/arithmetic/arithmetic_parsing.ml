@@ -59,13 +59,13 @@ let rec get_val (p : parameters) (n : basic_number) : complex =
       let z = eval p e in
       (if not (is_int z)
         then failwith "get_val: access to List from an index that is not an integer";
-      get_list_val p.proj.list (get_val a) (int_of_complex z)) (* ERROR HERE, a is not correct (should be evaluated) *)
+      get_list_val p.proj.list (int_of_complex (get_val p a)) (int_of_complex z))
     | Variable (MatIndex (a,e1,e2)) ->
       let z1 = eval p e1 in
       let z2 = eval p e2 in
       (if not ((is_int z1) && (is_int z2))
         then failwith "get_val: access to Mat from an index that is not an integer";
-      get_mat_val p.proj.mat (get_val a) (int_of_complex z1) (int_of_complex z2)) (* ERROR HERE, a is not correct (should be evaluated) *)
+      get_mat_val p.proj.mat (int_of_complex (get_val p a)) (int_of_complex z1) (int_of_complex z2))
     | Variable Random -> complex_of_float (Random.float 1.)
 
 (* Final evaluation of the arithmetic formula *)
