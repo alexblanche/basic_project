@@ -32,7 +32,6 @@
 
 
 (* To do immediately:
-  - DEBUG arithmetic lexing/parsing
   - Recode function handling with lists of arguments
   - Recode the lexing of lists of arguments
   - Recode the parsing of functions

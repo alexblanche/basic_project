@@ -14,12 +14,24 @@ let disp (writing_index : int ref) : unit =
   tdraw ();
   wait_enter ();
   clear_line !writing_index;
-  tdraw ();;
+  tdraw ();; (* Can the last tdraw () be removed to speed up the execution? *)
 
 (* Stores the value z in the Ans variable *)
 let store_ans (var : float array) (z : complex) : unit =
   var.(28) <- z.re;
   var.(28+29) <- z.im;;
+
+(* Wait for Enter key to be pressed, then closes the graphic window *)
+let quit () : unit =
+  wait_enter ();
+  close_graph ();;
+
+(* Prints the value of Ans, then quits *)
+let quit_ans (ans : complex) (polar : bool) : unit =
+  print_number ans polar;
+  tdraw ();
+  quit ();;
+
 
 (* General execution function *)
 let run (proj : project_content) ((code, proglist): basic_code) : unit =
@@ -57,12 +69,12 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   set_color black;
   clear_text ();
   wipe gscreen;
-  wipe gscreen;
   writing_index := 0;
 
   (* Looping function *)
   let rec aux (i : int) : unit =
-    if i >= n then (wait_enter (); close_graph ())
+    if i >= n then (* End of the execution *)
+      quit_ans (get_var_val p.var 28) p.polar
     else
 
     match code.(i) with
@@ -77,22 +89,12 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
       | Expr (Arithm al) ->
         let z = eval p (Arithm al) in
         (store_ans p.var z;
-        if i = n-2
-          && (code.(i+1) = End || code.(i+1) = Disp)
-          && !prog_goback = []
-          then (* End of the program *)
-            (if code.(i+1) = Disp then
-              (print_number z p.polar;
-              disp writing_index);
-            print_number z p.polar;
-            wait_enter ();
-            close_graph ())
-          else if i<n-1 && code.(i+1) = Disp
-            then
-              (print_number z p.polar;
-              disp writing_index;
-              aux (i+2))
-            else aux (i+1))
+        if i<n-1 && code.(i+1) = Disp
+          then
+            (print_number z p.polar;
+            disp writing_index;
+            aux (i+2))
+          else aux (i+1))
           
       | Assign (e, v) ->
         let z = eval p e in
@@ -102,7 +104,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             p.var.(i+29) <- z.im;
             if i<n-1 && code.(i+1) = Disp
               then
-                (disp writing_index;
+                (print_number z p.polar;
+                disp writing_index;
                 aux (i+2))
               else aux (i+1))
           | _ -> aux (i+1)
@@ -111,7 +114,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           | Getkey
           | Random) *) (* to do *)
         )
-          
+      
       | String sl ->
         (if !writing_index = 7
           then (scroll (); decr writing_index);
@@ -119,11 +122,18 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         locate sl 0 !writing_index;
         incr writing_index;
         tdraw ();
-        if i<n-1 && code.(i+1) = Disp
-          then
-            (disp writing_index;
-            aux (i+2))
-          else aux (i+1))
+        if (i = n-2 && code.(i+1) = End
+          || i = n-3 && code.(i+1) = Disp && code.(i+2) = End)
+          && !prog_goback = []
+          then (* End of the program *)
+            (if code.(i+1) = Disp
+              then disp writing_index;
+            quit () (* Quit after the string *))
+          else if i<n-1 && code.(i+1) = Disp
+            then
+              (disp writing_index;
+              aux (i+2))
+            else aux (i+1))
           
       | Locate (e1, e2, sl) ->
         let z1 = eval p e1 in
@@ -154,8 +164,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           | i::t ->
             (prog_goback := t;
             aux i)
-          | [] ->
-            (wait_enter (); close_graph ()))
+          | [] -> quit_ans (get_var_val p.var 28) p.polar)
 
       | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
   in
@@ -165,7 +174,3 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
 (* Important: slow down execution
   An empty for loop executes 798 rounds in 1s,
   for specific functions (mainly display), measurements are needed *)
-
-(* To do:
-  When there is an expression at the end of the program, Ans is printed.
-  (tests needed to see in which cases exactly) *)
