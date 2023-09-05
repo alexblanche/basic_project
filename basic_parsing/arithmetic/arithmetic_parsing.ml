@@ -160,31 +160,6 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
     (* Rpar *)
     | Rpar::t, _::_ ->
       (match output_q, op_q with
-          (* Obsolete *)
-          (* Function evaluation *)
-          (* | x1::outq, Lpar::(Function fname)::opqt ->
-            let af = arity fname in
-            if af = 1
-              then shunting_yard p t ((Value (apply_func fname [get_val p x1]))::outq) opqt
-              else failwith ("Function "^fname^" has arity "^(string_of_int af)^", but receives 1 argument")
-          | x2::x1::outq, Comma::Lpar::(Function fname)::opqt ->
-            let af = arity fname in
-            if af = 2
-              then shunting_yard p t ((Value (apply_func fname (List.map (get_val p) [x1;x2])))::outq) opqt
-              else failwith ("Function "^fname^" has arity "^(string_of_int af)^", but receives 2 arguments")
-          | x3::x2::x1::outq, Comma::Comma::Lpar::(Function fname)::opqt ->
-            let af = arity fname in
-            if af = 3
-              then shunting_yard p t ((Value (apply_func fname (List.map (get_val p) [x1;x2;x3])))::outq) opqt
-              else failwith ("Function "^fname^" has arity "^(string_of_int af)^", but receives 3 arguments")
-          | x4::x3::x2::x1::outq, Comma::Comma::Comma::Lpar::(Function fname)::opqt ->
-            let af = arity fname in
-            if af = 4
-              then shunting_yard p t ((Value (apply_func fname (List.map (get_val p) [x1;x2;x3;x4])))::outq) opqt
-              else failwith ("Function "^fname^" has arity "^(string_of_int af)^", but receives 4 arguments")
-          | _, Comma::_ -> failwith "Unexpected comma (maximum arity is 4)" *)
-          
-          (* Lpar without a function behind *)
           | _, Lpar::opqt -> shunting_yard p t output_q opqt
 
           (* Operator evaluation *)

@@ -232,8 +232,10 @@ and extract_par_content (lexlist : string list) : basic_expr * (string list) =
   let (e,t) = extract_expr lexlist in
   match t with
     | s::t' ->
-      if s = "RPAR" || s = "EOL" || s = "DISP" || s = "ASSIGN" then
+      if s = "RPAR" then
         (e,t')
+      else if s = "EOL" || s = "DISP" || s = "ASSIGN" then
+        (e,t)
       else
         failwith "Arithmetic lexing: Syntax error, unclosed parenthesis"
     | [] -> (e,[])
@@ -287,7 +289,7 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
           aux ((Function (s, el))::acc) t'
         
         (* End of the expression *)
-        else (acc, t)
+        else (acc, l)
       | [] -> (acc, [])
   in
 
@@ -297,9 +299,3 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
       let (sl, t) = aux [] lexlist in
       (Arithm (List.rev sl), t)
 ;;
-
-(* Remark:
-  For List i[e] and Mat i[e1][e2], I call recursively extract_expr for each argument,
-  but for functions I pass them to the evaluator to parse and compute them.
-  Should it be unified? *)
-(* See arithmetic_parsing for more comments on this. *)

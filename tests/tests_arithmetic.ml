@@ -11,9 +11,11 @@ exception Test_failed of int
 
 let unit_tests_lexer () =
   let check i (slist, expected) =
+    (* print_string ("Test "^(string_of_int i)^"... "); *)
     let (Arithm alist), _ = extract_expr slist in
     if alist <> expected
       then raise (Test_failed i)
+      (* else print_endline "Done." *)
   in
   try
     List.iteri check [
@@ -39,7 +41,20 @@ let unit_tests_lexer () =
       [Number (Value {re = 2.; im = 0.}); Op "TIMES"; Number (Variable (Var 1)); Op "PLUS"; Number (Variable (Var 0))]);
     (["2"; "B"; "PLUS"; "3"; "A"; "MINUS"; "4"; "CPLXI"],
       [Number (Value {re = 2.; im = 0.}); Number (Variable (Var 1)); Op "PLUS"; Number (Value {re = 3.; im = 0.});
-      Number (Variable (Var 0)); Op "MINUS"; Number (Value {re = 4.; im = 0.}); Number (Value {re = 0.; im = 1.})])
+      Number (Variable (Var 0)); Op "MINUS"; Number (Value {re = 4.; im = 0.}); Number (Value {re = 0.; im = 1.})]);
+    (["1"; "PLUS"; "ABS"; "LPAR"; "UMINUS"; "8"; "RPAR"; "ASSIGN"; "A"],
+      [Number (Value {re = 1.; im = 0.}); Op "PLUS"; Lunop "ABS"; Lpar; Lunop "UMINUS"; Number (Value {re = 8.; im = 0.}); Rpar]);
+    (["1"; "PLUS"; "MAX"; "4"; "."; "5"; "COMMA"; "LPAR"; "7"; "TIMES"; "1"; "RPAR"; "COMMA"; "3"; "TIMES"; "2"; "RPAR";
+      "TIMES"; "2"; "EOL"],
+    [Number (Value {re = 1.; im = 0.}); Op "PLUS";
+      Function ("MAX",
+        [
+          Arithm [Number (Value {re = 4.5; im = 0.})];
+          Arithm [Lpar; Number (Value {re = 7.; im = 0.}); Op "TIMES"; Number (Value {re = 1.; im = 0.}); Rpar];
+          Arithm [Number (Value {re = 3.; im = 0.}); Op "TIMES"; Number (Value {re = 2.; im = 0.})]
+        ]);
+      Op "TIMES"; Number (Value {re = 2.; im = 0.})
+      ])
     ];
     print_endline "Tests_arithmetic_parsing, lexer: all tests passed"
   with
@@ -49,13 +64,7 @@ let unit_tests_lexer () =
       print_endline ("Tests_arithmetic_parsing, lexer: one test encountered an error \""^s^"\"");;
 
 let unit_tests_eval () =
-  let var = Array.make (2*29) 0. in
-  (* 10 -> A *)
-  var.(0) <- 10.;
-  (* 3+4i -> B *)
-  var.(1) <- 3.;
-  var.(1+29) <- 4.;
-
+  
   let (proj : project_content) =
     {
       prog = [];
@@ -90,6 +99,11 @@ let unit_tests_eval () =
 
   } in
 
+  (* 10 -> A *)
+  p.var.(0) <- 10.;
+  (* 3+4i -> B *)
+  p.var.(1) <- 3.;
+  p.var.(1+29) <- 4.;
 
   let check i (slist, expected) =
     let (expr, _) = extract_expr slist in
@@ -111,7 +125,10 @@ let unit_tests_eval () =
       (["LPAR"; "ABS"; "5"; "."; "RPAR"], {re = 5.; im = 0.});
       (["1"; "PLUS"; "2"; "TIMES"; "CPLXI"], {re = 1.; im = 2.});
       (["2"; "TIMES"; "B"; "PLUS"; "A"], {re = 16.; im = 8.});
-      (["2"; "B"; "PLUS"; "3"; "A"; "MINUS"; "4"; "CPLXI"], {re = 36.; im = 4.})
+      (["2"; "B"; "PLUS"; "3"; "A"; "MINUS"; "4"; "CPLXI"], {re = 36.; im = 4.});
+      (["1"; "PLUS"; "ABS"; "LPAR"; "UMINUS"; "8"; "RPAR"; "ASSIGN"; "A"], {re = 9.; im = 0.});
+      (["1"; "PLUS"; "MAX"; "4"; "."; "5"; "COMMA"; "LPAR"; "7"; "TIMES"; "1"; "RPAR"; "COMMA"; "3"; "TIMES"; "2"; "RPAR";
+      "TIMES"; "2"; "EOL"], {re = 15.; im = 0.})
     ];
     print_endline "Tests_arithmetic_parsing, eval: all tests passed"
   with
@@ -119,8 +136,6 @@ let unit_tests_eval () =
       print_endline ("Tests_arithmetic_parsing, eval: test "^(string_of_int i)^" failed")
     | Failure s ->
       print_endline ("Tests_arithmetic_parsing, eval: one test encountered an error \""^s^"\"");;
-
-
 
 unit_tests_lexer ();;
 unit_tests_eval ();;
