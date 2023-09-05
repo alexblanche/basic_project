@@ -56,7 +56,7 @@ let unit_tests_eval () =
   var.(1) <- 3.;
   var.(1+29) <- 4.;
 
-  let p =
+  let (proj : project_content) =
     {
       prog = [];
       list = Array.make 26 (true, [||]);
@@ -67,9 +67,33 @@ let unit_tests_eval () =
     }
   in
 
+  let (p : parameters) = {
+    (* proj: Contains the lists, matrices, pictures, captures and strings *)
+    proj = proj;
+    
+    (* Variables: array of size 2*29, storing the content of each variable A..Z, r, theta, Ans
+      as real part in the 29 first cells, and imaginary part in the next 29 *)
+    var = Array.make (2*29) 0.;
+    
+    (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
+    polar = false;
+
+    (* Parameters of the V-Window *)
+    xmin = 1.;
+    xmax = 127.;
+    xstep = 0.;
+    ymin = 1.;
+    ymax = 63.;
+    ystep = 0.;
+    (* Display the axes if true *)
+    axes = false;
+
+  } in
+
+
   let check i (slist, expected) =
     let (expr, _) = extract_expr slist in
-    let z = eval var p expr in
+    let z = eval p expr in
     if is_not_zero (Complex.sub z expected)
       then raise (Test_failed i)
       (* else print_endline ("Test "^(string_of_int i)^" passed") *)

@@ -193,6 +193,18 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   
   aux 0;;
 
-(* Important: slow down execution
-  An empty for loop executes 798 rounds in 1s,
-  for specific functions (mainly display), measurements are needed *)
+(* To do:
+  - Slow down execution
+    An empty for loop executes 798 rounds in 1s,
+    for specific functions (mainly display), measurements are needed
+  - How do we differentiate
+    
+    "ABC"EOL
+    ?->X
+
+    from
+    
+    "ABC"?->X
+    
+    ?
+    Both are compiled as [| String ["A"; "B"; "C"]; Assign (QMark, Var 23) |] for the moment. *)

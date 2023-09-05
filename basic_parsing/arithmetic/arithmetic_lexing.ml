@@ -2,19 +2,6 @@
 
 (** Useful functions for functions and operators  **)
 
-(* Returns the arity (number of arguments) of the function with name fname *)
-let arity (fname : string) =
-  try
-    (match Hashtbl.find func_table fname with
-      | LOP _
-      | AR1 _ -> 1
-      | AR2 _ -> 2
-      | AR3 _ -> 3
-      | AR4 _ -> 4
-    )
-  with
-    | Not_found -> failwith ("apply_func: Function "^fname^" undefined");;
-
 (* Returns true if the operator is associative or left-associative *)
 (* Remark: in Basic Casio, 2^2^2^2 = 256, so the exponentiation is left-associative,
    unlike in traditional math *)
@@ -220,45 +207,86 @@ and extract_mat_index (t : string list) : arithm * (string list) =
         | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
     | _ -> failwith "extract_mat_index: Syntax error, Mat should be followed by '['"
 
+(* Return the list of expressions separated by commas at the beginning of lexlist
+  and ending with RBRACKET, EOL, DISP or ASSIGN *)
+and extract_list_content (lexlist : string list) : (basic_expr list) * (string list) =
+  let rec aux acc l =
+    match l with
+    | s::t ->
+      if s = "COMMA" then
+        let (e,t') = extract_expr t in
+        aux (e::acc) t'
+      else if s = "RPAR" || s = "RBRACKET" then
+        (List.rev acc, t)
+      else if s = "EOL" || s = "DISP" || s = "ASSIGN" then
+        (List.rev acc, l)
+      else
+        let (e,t') = extract_expr l in
+        aux (e::acc) t'
+    | [] -> (List.rev acc, [])
+  in
+  aux [] lexlist
+
+(* Return the expression within LPAR RPAR *)
+and extract_par_content (lexlist : string list) : basic_expr * (string list) =
+  let (e,t) = extract_expr lexlist in
+  match t with
+    | s::t' ->
+      if s = "RPAR" || s = "EOL" || s = "DISP" || s = "ASSIGN" then
+        (e,t')
+      else
+        failwith "Arithmetic lexing: Syntax error, unclosed parenthesis"
+    | [] -> (e,[])
+
 (* Converts a list of lexemes containing an arithmetic expression into a list of arithmetic lexemes *)
 (* Return the basic_expr and the tail of the list of lexemes after the expression *)
 and extract_expr (lexlist : string list) : basic_expr * (string list) =
 
-  (* Main loop *)
   let rec aux acc l =
     match l with
       | s::t ->
+        (* Values and variables *)
         if is_digit s then
           let (x, t') = read_float l in
           aux ((Number (Value (complex_of_float x)))::acc) t'
-        else if s = "CPLXI" then
-          aux ((Number (Value (Complex.i)))::acc) t
         else if is_var s || s = "ANS" || s = "SMALLR" || s = "THETA" then
           aux ((Number (Variable (Var (var_index s))))::acc) t
+        else if s = "CPLXI" then
+          aux ((Number (Value (Complex.i)))::acc) t
         else if s = "PI" then
           aux ((Number (Value {re = Float.pi; im = 0.}))::acc) t
         else if s = "GETKEY" then
           aux ((Number (Variable Getkey))::acc) t
+
+        (* Parentheses *)
         else if s = "LPAR" then
-          aux (Lpar::acc) t
-        else if s = "RPAR" then
-          aux (Rpar::acc) t
-        else if s = "COMMA" then
-          aux (Comma::acc) t (* To be changed (see below and arithmetic_parsing) *)
+          let (e,t') = extract_par_content t in
+          (match e with
+            | Arithm al -> aux (Rpar::(List.rev_append (Lpar::al) acc)) t'
+            | QMark -> failwith "Arithmetic lexing: syntax error, ? in parentheses")
+
+        (* Unary and binary operators *)
         else if List.exists (fun (op,_) -> s=op) op_list then
           aux ((Op s)::acc) t
         else if List.mem s lop_list then
           aux ((Lunop s)::acc) t
         else if List.mem s rop_list then
           aux ((Runop s)::acc) t
+        
+        (* List a[e] and Mat a[e1][e2] *)
         else if s = "LIST" then
           let (li,t') = extract_list_index t in
           aux (li::acc) t'
         else if s = "MAT" then
           let (li,t') = extract_mat_index t in
           aux (li::acc) t'
+
+        (* Function *)
         else if Hashtbl.mem func_table s then
-          aux ((Function (s, []))::acc) t (* To be changed (see below and arithmetic_parsing) *)
+          let (el, t') = extract_list_content t in
+          aux ((Function (s, el))::acc) t'
+        
+        (* End of the expression *)
         else (acc, t)
       | [] -> (acc, [])
   in

@@ -52,7 +52,10 @@ let extract_non_empty (t : command array) : command array =
 let extract_str (lexlist : string list) : (string list) * (string list) =
   let rec aux sl l =
     match l with
-      | s::"QUOTE"::t -> (List.rev (s::sl), t)
+      | s::"QUOTE"::t ->
+        if s = "\092" (* anti-slash *)
+          then aux ("\034"::sl) t (* The quote is kept *)
+          else (List.rev (s::sl), t)
       | "EOL"::_ -> failwith "extract_str: string ends without closing \""
       | s::t -> aux (s::sl) t
       | [] -> failwith "extract_str: program ends without closing \""

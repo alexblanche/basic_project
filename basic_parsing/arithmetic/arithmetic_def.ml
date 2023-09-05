@@ -36,31 +36,31 @@ let func_table =
     );
 
     ("ABS",
-      (let f l =
+      (let f (l : complex list) =
         match l with
           | [z] ->
             if z.im = 0.
-              then {re = Float.abs z.re; im = 0.}
+              then complex_of_float (Float.abs z.re)
               else complex_of_float (Complex.norm z)
           | _ -> failwith "Function error: Abs has arity 1"
       in f)
     );
 
     ("UMINUS",
-      (let f l =
+      (let f (l : complex list) : complex =
         match l with
-          | [z] -> {re = -z.re; im = -z.im}
+          | [z] -> {re = -.z.re; im = -.z.im}
           | _ -> failwith "Function error: Unary minus has arity 1"
       in f)
     );
 
     ("EPOWER",
-      (let f l =
+      (let f (l : complex list) =
         match l with
           | [z] ->
             if z.im = 0.
-              then {re = Float.exp z.re; im = 0.}
-              else complex_of_float (Complex.exp z)
+              then complex_of_float (Float.exp z.re)
+              else Complex.exp z
           | _ -> failwith "Function error: Abs has arity 1"
       in f)
     );

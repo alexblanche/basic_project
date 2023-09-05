@@ -80,7 +80,6 @@ and calculate (p : parameters) (outq : basic_number list) (opq : arithm list) : 
 and right_reduce p output_q op_q =
   match (output_q,op_q) with
     | _, []
-    | _, Comma::_
     | _, Lpar::_ -> (output_q, op_q)
     | x2::x1::outq, (Op o)::opqt ->
       if left_assoc o
@@ -106,8 +105,15 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
     | (Number x1)::(Number x2)::t, _ -> shunting_yard p ((Op "TIMES")::(Number x2)::t) (x1::output_q) op_q
     (* Normal number case *)
     | (Number x)::t, _ -> shunting_yard p t (x::output_q) op_q
-    | (Function (fname, pl))::t, _ -> shunting_yard p t output_q ((Function fname)::op_q)
+
+    (* Function evaluation *)
+    | (Function (fname, el))::t, _ ->
+      let vl = List.map (eval p) el in
+      shunting_yard p t ((Value (apply_func fname vl))::output_q) op_q
+
     | Lpar::t, _ -> shunting_yard p t output_q (Lpar::op_q)
+    
+    (* Lunop *)
     | (Lunop lo)::t, _ -> shunting_yard p t output_q ((Lunop lo)::op_q)
 
     (* Runop *)
@@ -116,8 +122,9 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
         | x::outq -> shunting_yard p t ((Value (apply_rop ro (get_val p x)))::outq) op_q
         | _ -> failwith ("No operand for operator "^ro))
 
+    (* Obsolete *)
     (* Comma *)
-    | Comma::t, (Op o)::opqt ->
+    (* | Comma::t, (Op o)::opqt ->
       if left_assoc o
         then (* Associative or left-associative *)
           (match output_q with
@@ -130,7 +137,7 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
     | Comma::t, (Lunop lo)::opqt ->
       let noutq, nopq = right_reduce p output_q op_q in
       shunting_yard p t noutq (Comma::nopq)
-    | Comma::t, _ -> shunting_yard p t output_q (Comma::op_q)
+    | Comma::t, _ -> shunting_yard p t output_q (Comma::op_q) *)
 
     (* Op *)
     | (Op o1)::t, (Op o2)::opqt ->
@@ -153,8 +160,9 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
     (* Rpar *)
     | Rpar::t, _::_ ->
       (match output_q, op_q with
+          (* Obsolete *)
           (* Function evaluation *)
-          | x1::outq, Lpar::(Function fname)::opqt ->
+          (* | x1::outq, Lpar::(Function fname)::opqt ->
             let af = arity fname in
             if af = 1
               then shunting_yard p t ((Value (apply_func fname [get_val p x1]))::outq) opqt
@@ -174,7 +182,7 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
             if af = 4
               then shunting_yard p t ((Value (apply_func fname (List.map (get_val p) [x1;x2;x3;x4])))::outq) opqt
               else failwith ("Function "^fname^" has arity "^(string_of_int af)^", but receives 4 arguments")
-          | _, Comma::_ -> failwith "Unexpected comma (maximum arity is 4)"
+          | _, Comma::_ -> failwith "Unexpected comma (maximum arity is 4)" *)
           
           (* Lpar without a function behind *)
           | _, Lpar::opqt -> shunting_yard p t output_q opqt
