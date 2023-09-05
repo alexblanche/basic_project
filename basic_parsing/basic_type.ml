@@ -82,6 +82,10 @@ type command =
   | Prog of string (* Prog name: jump to program name, then come back *)
   | If of basic_expr * int (* If (expr,l): If expr Then continue (else jump to line l) *)
   | JumpIf of basic_expr * int (* JumpIf (expr,l): If expr Then jump to line l *)
+  | For of int * basic_expr * basic_expr * basic_expr * int
+    (* For (vi,e1,e2,e3,i): For e1->V To e2 Step e3 (if not, jump to line i)
+      Where V is the variable of index vi *)
+  | Next (* Closes a For loop *)
 
   (* Graphic functions and other functions *)
   | Graphic of graphic (* Graphic screen functions *)

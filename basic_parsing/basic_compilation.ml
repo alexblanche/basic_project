@@ -130,7 +130,7 @@ let add_else (mem : working_mem) (i : int) : unit =
 (* New If (not ElseIf, treated below) *)
 
 (* If *)
-let process_if i t code mem = 
+let process_if i t code mem =
   let e, t' = extract_expr t in
   set code i (If (e, -1));
   mem.stack <- ("if", i)::mem.stack;
@@ -248,6 +248,74 @@ let process_whileend i t code mem =
   with
     | Failure _ -> failwith "Compilation error: Unexpected WhileEnd with no opened While statement";;
 
+
+
+(* For To Step Next *)
+(* Subtlety:
+  - The "To" and "Step" values are evaluated once when the For is encountered
+  - If Step is negative, the loop condition is var >= expr2,
+    otherwise it is var <= expr2 *)
+(*  For expr1 -> var To expr2 Step expr 3
+    prog1
+    Next
+    prog2
+  ->
+    10      For (var, expr1, expr2, expr3, inext)
+    11..21  prog1
+    22      Next
+    23..    prog2
+*)
+
+let process_for i t code mem =
+  let (e1,t2) = extract_expr t in
+  if e1 = QMark
+    then failwith "Compilation error: ? cannot set the variable of a For";
+  match t2 with
+    | "ASSIGN"::v::"TO"::t3 ->
+      (if not (is_var v)
+        then failwith "Compilation error: wrong variable in a For loop";
+      let (e2,t4) = extract_expr t3 in
+      if e2 = QMark
+        then failwith "Compilation error: ? cannot set the bound of a For";
+      match t4 with
+        | "STEP"::t5 ->
+          (let (e3, t6) = extract_expr t5 in
+          if e3 = QMark
+            then failwith "Compilation error: ? cannot set the bound of a For";
+          match t6 with
+            | "EOL" :: t7 -> 
+              (set code i (For (var_index v, e1, e2, e3, -1));
+              (i+1, t7))
+            | _ -> failwith "Compilation error: Syntax error after For loop definition"
+          )
+        | _ -> (* No Step value, 1 by default *)
+          (set code i (For (var_index v, e1, e2, Arithm [Number (Value {re = 1.; im = 0.})], -1));
+          (i+1, t4))
+      )
+        
+    | _ -> failwith "Compilation error: Syntax error in a For loop definition";;
+
+
+let process_next i t code mem =
+  try
+    let (s,jfor) = List.hd mem.stack in
+    if s <> "for" then
+      failwith "Compilation error: Unexpected Next";
+    mem.stack <- List.tl mem.stack;
+    set code i Next;
+    (match (!code).(jfor) with
+      | For (v,e1,e2,e3,k) ->
+        if k = -1
+          then
+            (set code jfor (For (v,e1,e2,e3,i+1));
+            ((i+1),t))
+          else failwith "Compilation error: Unexpected Next"
+      | _ -> failwith "Compilation error: Unexpected Next")
+  with
+    | Failure _ -> failwith "Compilation error: Unexpected Next with no opened For statement";;
+
+
+
 (* Lbl, Goto *)
 
 (* Lbl *)
@@ -306,7 +374,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       elseindex = [];
       lblindex = Array.make 28 (-1);
       gotoindex = [];
-      progindex = []
+      progindex = [];
     }
   in
 
@@ -382,6 +450,15 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "WHILEEND" :: t ->
         let (j,t') = process_whileend i t code mem in
         aux t' j
+
+      | "FOR" :: t ->
+        let (j,t') = process_for i t code mem in
+        aux t' j
+
+      | "NEXT" :: t ->
+        let (j,t') = process_next i t code mem in
+        aux t' j
+        
 
       (* Strings *)
       | "QUOTE" :: t ->

@@ -20,18 +20,16 @@ let get_var_val (var : float array) (i : int) : complex =
   get_complex var.(i) var.(i+29);;
 
 (* Returns the value of List a[i] *)
-let get_list_val (tlist : (bool * (float array)) array) (a : int) (i : int) : complex =
-  let (b, l) = tlist.(a) in
-  if b
-    then get_complex l.(i) l.(i+(Array.length l)/2)
-    else complex_of_float l.(i);;
+let get_list_val (tlist : (float array array)) (a : int) (i : int) : complex =
+  let l = tlist.(a) in
+  let n = Array.length l in
+  get_complex l.(i) l.(i+n/2);;
 
 (* Returns the value of Mat a[i1][i2] *)
-let get_mat_val (tmat : (bool * (float array array)) array) (a : int) (i1 : int) (i2 : int) : complex =
-  let (b, m) = tmat.(a) in
-  if b
-    then get_complex m.(i1).(i2) m.(i1+(Array.length m)/2).(i2)
-    else complex_of_float m.(i1).(i2);;
+let get_mat_val (tmat : (float array array array)) (a : int) (i1 : int) (i2 : int) : complex =
+  let m = tmat.(a) in
+  let n = Array.length m in
+  get_complex m.(i1).(i2) m.(i1+n/2).(i2);;
 
 (* General value getter *)
 let get_val (p : parameters) (a : basic_number) : complex =
@@ -55,13 +53,13 @@ let rec get_val (p : parameters) (n : basic_number) : complex =
       let z = eval p e in
       (if not (is_int z)
         then failwith "get_val: access to List from an index that is not an integer";
-      get_list_val p.proj.list (int_of_complex (get_val p a)) (int_of_complex z))
+      get_list_val p.list (int_of_complex (get_val p a)) (int_of_complex z))
     | Variable (MatIndex (a,e1,e2)) ->
       let z1 = eval p e1 in
       let z2 = eval p e2 in
       (if not ((is_int z1) && (is_int z2))
         then failwith "get_val: access to Mat from an index that is not an integer";
-      get_mat_val p.proj.mat (int_of_complex (get_val p a)) (int_of_complex z1) (int_of_complex z2))
+      get_mat_val p.mat (int_of_complex (get_val p a)) (int_of_complex z1) (int_of_complex z2))
     | Variable Random -> complex_of_float (Random.float 1.)
 
 (* Final evaluation of the arithmetic formula *)

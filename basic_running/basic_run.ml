@@ -41,33 +41,20 @@ let quit_print (val_seen : bool) (value : complex) (polar : bool) : unit =
 let run (proj : project_content) ((code, proglist): basic_code) : unit =
   
   (** Initialization of all parameters **)
-  let (p : parameters) = {
-    (* proj: Contains the lists, matrices, pictures, captures and strings *)
-    proj = proj;
-    
-    (* Variables: array of size 2*29, storing the content of each variable A..Z, r, theta, Ans
-      as real part in the 29 first cells, and imaginary part in the next 29 *)
-    var = Array.make (2*29) 0.;
-    
-    (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
-    polar = false;
-
-    (* Parameters of the V-Window *)
-    xmin = 1.;
-    xmax = 127.;
-    xstep = 0.;
-    ymin = 1.;
-    ymax = 63.;
-    ystep = 0.;
-    (* Display the axes if true *)
-    axes = false;
-
-  } in
+  let (p : parameters) = new_param proj in
 
   let n = Array.length code in
   
   (* prog_goback: pile of indices to return to when the end of a program is reached *)
   let prog_goback = ref [] in
+
+  (* for_info: pile containing for each open For loop, the tuple (vari, iback, asc, vto, vstep)
+    where:
+    - vari: index of the variable involved in the For loop
+    - iback: the index where to go back after the Next if the loop is not finished
+    - asc: a boolean that indicates if the For loop is ascending (the step value is > 0) or descending (step < 0)
+    - vto, vstep (float): respectively the "To" value, compared to var in the loop condition, and the "Step" value *)
+  let for_info = ref [] in
 
   (* Last value seen, is printed at the end of the execution *)
   let last_val = ref ({re = 0.; im = 0.} : complex) in
@@ -80,7 +67,6 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   clear_text ();
   wipe gscreen;
   writing_index := 0;
-
 
   (** Looping function **)
   let rec aux (i : int) : unit =
@@ -113,24 +99,43 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         let z = eval p e in
         (last_val := z;
         val_seen := true;
-        match v with
+        (match v with
           | Var vi ->
             (p.var.(vi) <- z.re;
-            p.var.(vi+29) <- z.im;
-            (* Below: temporary, to be moved below the "match",
-              since it is applied to all assignments, not just variables *)
-            if i<n-1 && code.(i+1) = Disp
-              then
-                (print_number z p.polar;
-                disp writing_index;
-                aux (i+2))
-              else aux (i+1))
-          | _ -> aux (i+1)
-          (* | ListIndex (v,e)
-          | MatIndex (v,e1,e2)
+            p.var.(vi+29) <- z.im)
+
+          | ListIndex (a, iexp) ->
+            (let vala = get_val p a in
+            let ie = eval p iexp in
+            if not (is_int vala && is_int ie)
+              then failwith "Runtime error: wrong index for list";
+            let t = p.list.(int_of_complex vala) in
+            let iint = int_of_complex ie in
+            t.(iint) <- z.re;
+            t.(iint + (Array.length t)/2) <- z.im)
+
+          | MatIndex (a, iexp, jexp) ->
+            (let vala = get_val p a in
+            let ie = eval p iexp in
+            let je = eval p jexp in
+            if not (is_int vala && is_int ie && is_int je)
+              then failwith "Runtime error: wrong index for matrix";
+            let m = p.mat.(int_of_complex vala) in
+            let iint = int_of_complex ie in
+            let jint = int_of_complex je in
+            m.(iint).(jint) <- z.re;
+            m.(iint + (Array.length m)/2).(jint) <- z.im)
+          | _ -> aux (i+1) (* temporary *)
+        );
+        if i<n-1 && code.(i+1) = Disp
+          then
+            (print_number z p.polar;
+            disp writing_index;
+            aux (i+2))
+          else aux (i+1))
+          (* 
           | Getkey
           | Random) *) (* to do *)
-        )
       
       | String sl ->
         (if !writing_index = 7
@@ -175,7 +180,42 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         writing_index := 0;
         val_seen := false;
         aux (i+1))
-        
+      
+      | For (vi, e1, e2, e3, inext) ->
+        (let z1 = eval p e1 in
+        if z1.im <> 0.
+          then failwith "Runtime error: complex value given to a For loop";
+        p.var.(vi) <- z1.re;
+        p.var.(vi+29) <- 0.;
+        let z2 = eval p e2 in
+        let z3 = eval p e3 in
+        if z2.im <> 0. || z3.im <> 0.
+          then failwith "Runtime error: complex value given to a For loop"
+        else if z3.im = 0.
+          then failwith "Runtime error: the step value of a For loop is 0";
+          
+        let asc = z3.re > 0. in
+        for_info := (vi, i+1, asc, z2.re, z3.re)::!for_info;
+
+        (* First test of the loop condition *)
+        if (asc && p.var.(vi) <= z2.re) || ((not asc) && p.var.(vi) >= z2.re)
+          then aux (i+1)
+          else
+            (for_info := List.tl !for_info;
+            aux inext) (* The loop is finished before starting *)
+        )
+      
+      | Next ->
+        (match !for_info with
+          | (vari, iback, asc, vto, vstep)::_ ->
+            (p.var.(vari) <- p.var.(vari) +. vstep;
+            if (asc && p.var.(vari) <= vto) || ((not asc) && p.var.(vari) >= vto)
+              then aux iback
+              else (* Exitting the loop *)
+                (for_info := List.tl !for_info;
+                aux (i+1)))
+          | [] -> failwith "Runtime error: unexpected Next")
+      
       | Prog name ->
         (prog_goback := (i+1)::!prog_goback;
         let j = List.assoc name proglist in
