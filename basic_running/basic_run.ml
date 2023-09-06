@@ -5,19 +5,39 @@
 (* #use "basic_running/arithmetic_parsing.ml"
 #use "basic_running/graphic.ml" *)
 
-(* Executes the Disp (black triangle) operation *)
-let disp (writing_index : int ref) : unit =
-  if !writing_index = 7
-    then (scroll (); decr writing_index);
-  clear_line !writing_index;
-  print_disp !writing_index;
-  tdraw ();
-  wait_enter ();
-  clear_line !writing_index;
-  tdraw ();; (* Can the last tdraw () be removed to speed up the execution? *)
+
+(* Assigns the value x to the variable v *)
+let assign_var (p : parameters) (x : basic_number) (v : variable) : unit =
+  match x,v with
+    | Value z, Var vi -> 
+      (p.var.(vi) <- z.re;
+      p.var.(vi+29) <- z.im)
+
+    | Value z,
+      ListIndex (Value a, Arithm [Number (Value i)])
+      ->
+      (let t = p.list.(int_of_complex a) in
+      let iint = int_of_complex i in
+      t.(iint) <- z.re;
+      t.(iint + (Array.length t)/2) <- z.im)
+
+    | Value z,
+      MatIndex (Value a, Arithm [Number (Value i)], Arithm [Number (Value j)])
+      ->
+      (let m = p.mat.(int_of_complex a) in
+      let iint = int_of_complex i in
+      let jint = int_of_complex j in
+      m.(iint).(jint) <- z.re;
+      m.(iint + (Array.length m)/2).(jint) <- z.im)
+    
+    | _ -> failwith "Runtime error: wrong value in assignment"
+  (* to be completed (with lists, matrices) *)
+
+
 
 (* Stores the value z in the Ans variable *)
 let store_ans (var : float array) (z : complex) : unit =
+  (* assign_var p (Value z) (Var 28) *)
   var.(28) <- z.re;
   var.(28+29) <- z.im;;
 
@@ -35,6 +55,88 @@ let quit_print (val_seen : bool) (value : complex) (polar : bool) : unit =
       locate ["D"; "o"; "n"; "e"] 17 0);
   tdraw ();
   quit ();;
+
+
+(* Executes the Disp (black triangle) operation *)
+let disp (writing_index : int ref) : unit =
+  if !writing_index = 7
+    then (scroll (); decr writing_index);
+  clear_line !writing_index;
+  print_disp !writing_index;
+  tdraw ();
+  wait_enter ();
+  clear_line !writing_index;
+  tdraw ();; (* Can the last tdraw () be removed to speed up the execution? *)
+
+(* When the list l has length n > k, then the function returns two lists:
+  the first k elements of l, then the other n-k *)
+let split_k (l : 'a list) (k : int) =
+  let rec aux a b l i =
+    match l with
+      | h::t ->
+        if i<k
+          then aux (h::a) b t (i+1)
+          else aux a (h::b) t (i+1)
+      | [] -> (a,b)
+  in
+  aux [] [] l 0;; 
+
+(* Executes the ? (QMark) operation *)
+let qmark (p : parameters) (v : variable) : unit =
+  if !writing_index = 7
+    then (scroll (); decr writing_index);
+  clear_line !writing_index;
+  locate ["?"] 0 !writing_index;
+  tdraw ();
+  let exit = ref false in
+  let ns = ref [] in (* list of strings storing the number entered *)
+  let x = ref 0 in (* Index of writing in line !writing_index *)
+  while not !exit do
+    let {mouse_x; mouse_y; button; keypressed; key} =
+			wait_next_event [(* Button_down; *) Key_pressed]
+		in
+		exit := key = '\010'; (* Enter *)
+
+    if key >= '0' && key <= '9' then
+      (let cs = String.make 1 key in
+      (* to be changed when lexeme representations are treated
+        let cs = get_text_repr (...) in
+        let lexcs = string_to_lexlist cs in
+        ns := List.rev_append lexcs !ns in
+        ...
+        let len = List.length lexcs in
+        if !x + len >= 21 then
+          (let csk,csn = split_k lexcs in
+          locate csk !x !writing_index;
+          line_feed ();
+          locate csn 0 !writing_index)
+        else locate lexcs !x !writing_index;
+        x := (!x + len) mod 21;
+      *)
+      ns := cs::!ns;
+      incr x;
+      if !x = 21 then
+        (x := 0;
+        line_feed ());
+      locate [cs] !x !writing_index)
+    else if key = '\027' then (* Esc *)
+      (ns := [];
+      x := 0;
+      writing_index := 1;
+      clear_text ();
+      locate ["?"] 0 1;
+      tdraw ())
+  done;
+  let (e,t) = extract_expr (List.rev !ns) in
+  if t <> []
+    then failwith "Runtime error: wrong entry";
+  let z = eval p e in
+  assign_var p (Value z) v;;
+
+
+
+
+
 
 
 (* General execution function *)
@@ -82,6 +184,11 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         if is_not_zero (eval p e)
           then aux (i+1)
           else aux j
+
+      | JumpIf (e,j) ->
+        if is_not_zero (eval p e)
+          then aux j
+          else aux (i+1)
           
       | Expr (Arithm al) ->
         let z = eval p (Arithm al) in
@@ -95,24 +202,31 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             aux (i+2))
           else aux (i+1))
           
+      | Assign (QMark, v) ->
+        (qmark p v;
+        aux (i+1))
+
       | Assign (e, v) ->
         let z = eval p e in
         (last_val := z;
         val_seen := true;
         (match v with
           | Var vi ->
-            (p.var.(vi) <- z.re;
-            p.var.(vi+29) <- z.im)
+            (* (p.var.(vi) <- z.re;
+            p.var.(vi+29) <- z.im) *)
+            assign_var p (Value z) v
 
           | ListIndex (a, iexp) ->
             (let vala = get_val p a in
             let ie = eval p iexp in
             if not (is_int vala && is_int ie)
               then failwith "Runtime error: wrong index for list";
-            let t = p.list.(int_of_complex vala) in
+            (* let t = p.list.(int_of_complex vala) in
             let iint = int_of_complex ie in
             t.(iint) <- z.re;
-            t.(iint + (Array.length t)/2) <- z.im)
+            t.(iint + (Array.length t)/2) <- z.im) *)
+            assign_var p (Value z) (ListIndex (Value vala, Arithm [Number (Value ie)]))
+            )
 
           | MatIndex (a, iexp, jexp) ->
             (let vala = get_val p a in
@@ -120,11 +234,15 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             let je = eval p jexp in
             if not (is_int vala && is_int ie && is_int je)
               then failwith "Runtime error: wrong index for matrix";
-            let m = p.mat.(int_of_complex vala) in
+            (* let m = p.mat.(int_of_complex vala) in
             let iint = int_of_complex ie in
             let jint = int_of_complex je in
             m.(iint).(jint) <- z.re;
-            m.(iint + (Array.length m)/2).(jint) <- z.im)
+            m.(iint + (Array.length m)/2).(jint) <- z.im) *)
+            assign_var p (Value z)
+              (MatIndex (Value vala,
+                Arithm [Number (Value ie)], Arithm [Number (Value je)]))
+            )
           | _ -> aux (i+1) (* temporary *)
         );
         if i<n-1 && code.(i+1) = Disp
@@ -138,11 +256,9 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           | Random) *) (* to do *)
       
       | String sl ->
-        (if !writing_index = 7
-          then (scroll (); decr writing_index);
+        (line_feed ();
         clear_line !writing_index;
         locate sl 0 !writing_index;
-        incr writing_index;
         tdraw ();
         if (i = n-2 && code.(i+1) = End
           || i = n-3 && code.(i+1) = Disp && code.(i+2) = End)
@@ -236,15 +352,4 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
 (* To do:
   - Slow down execution
     An empty for loop executes 798 rounds in 1s,
-    for specific functions (mainly display), measurements are needed
-  - How do we differentiate
-    
-    "ABC"EOL
-    ?->X
-
-    from
-    
-    "ABC"?->X
-    
-    ?
-    Both are compiled as [| String ["A"; "B"; "C"]; Assign (QMark, Var 23) |] for the moment. *)
+    for specific functions (mainly display), measurements are needed *)

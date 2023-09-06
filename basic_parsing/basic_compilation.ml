@@ -295,7 +295,6 @@ let process_for i t code mem =
         
     | _ -> failwith "Compilation error: Syntax error in a For loop definition";;
 
-
 let process_next i t code mem =
   try
     let (s,jfor) = List.hd mem.stack in
@@ -314,7 +313,17 @@ let process_next i t code mem =
   with
     | Failure _ -> failwith "Compilation error: Unexpected Next with no opened For statement";;
 
-
+(* Do, LpWhile *)
+let process_lpwhile i t code mem =
+  let (e,t') = extract_expr t in
+  if e = QMark
+    then failwith "Compilation error: ? cannot be the condition of a Do-LpWhile";
+  match mem.stack with
+    | ("do", jdo)::q ->
+      (set code i (JumpIf (e, jdo));
+      mem.stack <- q;
+      (i+1, t'))
+    | _ -> failwith "Compilation error: Unexpected LpWhile with no opened Do statement";;
 
 (* Lbl, Goto *)
 
@@ -458,7 +467,14 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "NEXT" :: t ->
         let (j,t') = process_next i t code mem in
         aux t' j
-        
+
+      | "DO" :: t ->
+        (mem.stack <- ("do", i)::mem.stack;
+        aux t i)
+
+      | "LPWHILE" :: t ->
+        let (j,t') = process_lpwhile i t code mem in
+        aux t' j
 
       (* Strings *)
       | "QUOTE" :: t ->

@@ -40,13 +40,17 @@ To do next:
   - Code the execution of QMark (number entry)
   - Draw a calculator and code the execution of Getkey (by clicking or pressing keys)
     (Idea: key pressed on the keyboard highlight keys of the calculator interface)
-  - Code "Do LpWhile"
+  - Code "=>"
+  - Integrate ":" with "EOL" (via a function is_eol)
   - Recode the operators for complex numbers (espacially '=')
   (At this point, the original Timeless might run.)
   - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
 
 In the distant future:
+  - Treat the EOL/DISP in Strings vs Locate
+  - Code the "ABC"?->X without skipping a line
   - Complete the list of encodings, with the Catalog
+  - Encode the display form of all functions of basic_encoding (and their display in String, QMark, Locate, ...)
   - Implement the fraction display (5 FRACSIGN 3 displays as a pair of int separated by FRACSIGN)
   - Implement as many functions as possible (from the to do list)
   *)

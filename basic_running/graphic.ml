@@ -131,3 +131,11 @@ let scroll () : unit =
     tscreen.(j) <- tscreen.(j+1)
   done;
   clear_line 6;;
+
+(* Increases writing_index by 1
+  If it reaches 7, the tscreeen scrolls and writing_index is set back at 6. *)
+let line_feed () : unit =
+  incr writing_index;
+  if !writing_index = 7 then
+    (scroll ();
+    decr writing_index);;
