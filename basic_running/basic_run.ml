@@ -51,7 +51,8 @@ let quit_print (val_seen : bool) (value : complex) (polar : bool) : unit =
   if val_seen
     then
       (line_feed ();
-      print_number value polar)
+      print_number value polar;
+      tdraw ())
     else
       (clear_text ();
       locate ["D"; "o"; "n"; "e"] 17 0);
@@ -262,6 +263,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         clear_line !writing_index;
         locate sl 0 !writing_index;
         tdraw ();
+        val_seen := true;
         if (i = n-2 && code.(i+1) = End
           || i = n-3 && code.(i+1) = Disp && code.(i+2) = End)
           && !prog_goback = []
@@ -288,7 +290,16 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           then failwith "Runtime error: wrong arguments for Locate";
         (* The coordinates in Casio Basic are between 1 and 21 *)
         locate sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
-        if i<n-1 && code.(i+1) = Disp
+        tdraw ();
+        val_seen := true;
+        if (i = n-2 && code.(i+1) = End
+          || i = n-3 && code.(i+1) = Disp && code.(i+2) = End)
+          && !prog_goback = []
+          then (* End of the program *)
+            (if code.(i+1) = Disp
+              then disp writing_index;
+            quit () (* Quit after the string *))
+          else if i<n-1 && code.(i+1) = Disp
           then
             (disp writing_index;
             aux (i+2))

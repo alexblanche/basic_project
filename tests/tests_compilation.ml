@@ -3,7 +3,7 @@
 (* #use "basic_parsing/basic_compilation.ml"
 #use "basic_parsing/basic_encoding.ml" *)
 
-let prog1 = compile 
+let prog1 () = compile 
   [("main",
   ["IF"; "1"; "EOL";  
   "THEN"; "QUOTE"; "A"; "QUOTE"; "DISP";
@@ -11,7 +11,7 @@ let prog1 = compile
   "IFEND"; "EOL";
   "QUOTE"; "C"; "QUOTE"; "DISP"])];;
 
-let prog2 = compile 
+let prog2 () = compile 
   [("main",
   ["GOTO"; "E"; "EOL";
   "IF"; "1"; "EOL";
@@ -23,7 +23,45 @@ let prog2 = compile
   "IFEND"; "EOL";
   "QUOTE"; "S"; "e"; "e"; " "; "y"; "o"; "u"; "!"; "QUOTE"; "DISP"])];;
 
-(* Question:
+(* Remark:
   When a Goto sends you inside a Then statement, the Else is NOT evaluated.
   The content of the Then is evaluated, then it jumps to after the IfEnd, no error is raised.
  *)
+
+let prog3 () = compile
+  [("main",
+    ["FOR"; "3"; "MINUS"; "2"; "ASSIGN"; "A";
+      "TO"; "8"; "STEP"; "2"; "EOL";
+    "QMARK"; "ASSIGN"; "B"; "EOL";
+    "B"; "TIMES"; "2"; "DISP";
+    (* "LOCATE"; "1"; "0"; "COMMA"; "5"; "COMMA"; "QUOTE"; "A"; "B"; "C"; "QUOTE"; "DISP"; *)
+    "NEXT";
+    "QUOTE"; "T"; "H"; "E"; " "; "E"; "N"; "D"; "QUOTE"; "DISP"
+    ]
+  )];;
+
+let prog4 () = compile
+  [("MAIN",
+    [
+      "QUOTE"; "W"; "E"; "L"; "C"; "O"; "M"; "E"; " "; "T"; "O"; " "; "M"; "A"; "I"; "N"; "QUOTE"; "DISP";
+      "PROG"; "QUOTE"; "A"; "U"; "X"; "1"; "QUOTE"; "EOL";
+      "QUOTE"; "B"; "A"; "C"; "K"; " "; "T"; "O"; " "; "M"; "A"; "I"; "N"; "QUOTE"; "DISP";
+      "PROG"; "QUOTE"; "A"; "U"; "X"; "2"; "QUOTE"; "EOL";
+      "QUOTE"; "B"; "A"; "C"; "K"; " "; "T"; "O"; " "; "M"; "A"; "I"; "N"; "QUOTE"; "DISP";
+      "QUOTE"; "B"; "Y"; "E"; "!"; "QUOTE"; "DISP"
+    ]
+  );
+  
+  ("AUX1",
+    [
+      "QUOTE"; "W"; "E"; "L"; "C"; "O"; "M"; "E"; " "; "T"; "O"; " "; "A"; "U"; "X"; "1"; "QUOTE"; "DISP";
+      "QUOTE"; "S"; "E"; "E"; " "; "Y"; "O"; "U"; "!"; "QUOTE"; "DISP"
+    ]
+  );
+  
+  ("AUX2",
+    [
+      "QUOTE"; "W"; "E"; "L"; "C"; "O"; "M"; "E"; " "; "T"; "O"; " "; "A"; "U"; "X"; "2"; "QUOTE"; "DISP";
+      "QUOTE"; "G"; "E"; "T"; " "; "O"; "U"; "T"; "!"; "QUOTE"; "DISP"
+    ]
+  )];;

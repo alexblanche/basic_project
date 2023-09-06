@@ -1,5 +1,7 @@
 (* Tests for basic_run *)
 
+#use "tests/tests_compilation.ml"
+
 (* Empty project_content *)
 let (p : project_content) =
   {
@@ -75,8 +77,16 @@ let run_prog3 () =
     ,
     [("main", 0)]);;
 
+(* Subroutine calls *)
+let run_prog4 () =
+  run p (prog4 ());;
 
 
-(* To do:
-   - test subroutine calls
- *)
+run p ([|
+  Locate (Arithm [Number (Value {re = 10.; im = 0.})],
+    Arithm [Number (Value {re = 5.; im = 0.})],
+    ["A"; "B"; "C"]);
+    Disp;
+    End
+  |],
+  [("main", 0)]);;

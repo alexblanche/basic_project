@@ -270,6 +270,7 @@ let process_for i t code mem =
   let (e1,t2) = extract_expr t in
   if e1 = QMark
     then failwith "Compilation error: ? cannot set the variable of a For";
+  mem.stack <- ("for", i)::mem.stack;
   match t2 with
     | "ASSIGN"::v::"TO"::t3 ->
       (if not (is_var v)
