@@ -60,6 +60,11 @@ type graphic =
   | GraphicText of basic_expr * basic_expr * (string list)
   | Graphic_Function of string (* Other graphic functions *)
 
+(* Content of a Locate command *)
+type locate_content =
+  | Loc_text of string list
+  | Loc_expr of basic_expr
+
 (* Type for Basic commands *)
 type command =
 
@@ -70,8 +75,10 @@ type command =
   (* Expressions, strings and text display *)
   | Expr of basic_expr (* Arithmetic expression *)
   | String of string list (* Text, stored as list of lexemes (strings of 1 or 2 characters) *)
-  | Locate of basic_expr * basic_expr * (string list) (* Locate function, prints the string at the given coordinates *)
-  | Disp (* Display the result of the line above *)
+  | Locate of basic_expr * basic_expr * locate_content
+    (* Locate (e1, e2, c): Locate function, prints c (string or result of an expression)
+      at coordinates z1,z2 (where z1,z2 are the results of the evaluation of e1,e2) *)
+  | Disp (* Displays the result of the line above *)
   
   (* -> *)
   | Assign of basic_expr * variable (* expr -> X or expr -> List A[X] *)

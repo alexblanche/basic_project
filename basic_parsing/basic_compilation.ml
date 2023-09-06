@@ -366,6 +366,29 @@ let process_prog i t code mem =
       ((i+1),t''))
     | _ -> failwith "Compilation error: Syntax error, a Prog is supposed to be followed by EOL";;
 
+(* Locate *)
+let process_locate i t code mem =
+  let (e1, t2) = extract_expr t in
+  try
+    if List.hd t2 <> "COMMA"
+      then failwith "Compilation error: Syntax error in Locate command";
+    let (e2, t3) = extract_expr (List.tl t2) in
+    let t' =
+      match t3 with
+        | "COMMA"::"QUOTE"::t4 ->
+          (let (sl, t5) = extract_str t4 in
+          set code i (Locate (e1, e2, Loc_text sl));
+          t5)
+        | "COMMA"::t4 ->
+          (let (e3, t5) = extract_expr t4 in
+          set code i (Locate (e1, e2, Loc_expr e3));
+          t5)
+        | _ -> failwith "Compilation error: Syntax error in Locate command"
+      in
+    (i+1,t')
+  with
+    | Failure _ -> failwith "Compilation error: Syntax error in Locate command";;
+
 (* Skip to the next EOL or DISP *)
 let rec skip_line (lexlist : string list) : string list =
   match lexlist with
@@ -482,6 +505,10 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         let sl, t' = extract_str t in
         (set code i (String sl);
         aux t' (i+1))
+
+      | "LOCATE" :: t ->
+        let (j,t') = process_locate i t code mem in
+        aux t' j
 
       | "DISP" :: t ->
         (set code i Disp;

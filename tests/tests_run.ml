@@ -67,7 +67,7 @@ let run_prog3 () =
       Disp;
       Locate (Arithm [Number (Value {re = 10.; im = 0.})],
         Arithm [Number (Value {re = 5.; im = 0.})],
-        ["A"; "B"; "C"]);
+        Loc_text ["A"; "B"; "C"]);
       Disp;
       Next;
       String ["T"; "H"; "E"; " "; "E"; "N"; "D"];
@@ -81,12 +81,31 @@ let run_prog3 () =
 let run_prog4 () =
   run p (prog4 ());;
 
-
-run p ([|
+(* Test Locate *)
+(* run p ([|
   Locate (Arithm [Number (Value {re = 10.; im = 0.})],
     Arithm [Number (Value {re = 5.; im = 0.})],
     ["A"; "B"; "C"]);
     Disp;
     End
   |],
-  [("main", 0)]);;
+  [("main", 0)]);; *)
+
+(* Speed of a For loop *)
+let run_prog5 () =
+  let prog5 =
+    compile
+      [("main",
+        ["QUOTE"; "R"; "E"; "A"; "D"; "Y"; "?"; "QUOTE"; "DISP";
+        "FOR"; "1"; "ASSIGN"; "X"; "TO"; "1"; "TIMESTENPOWER"; "8"; "EOL";
+        "LOCATE"; "1"; "COMMA"; "2"; "COMMA"; "X"; "EOL";
+        "NEXT";
+        "QUOTE"; "D"; "O"; "N"; "E"; "QUOTE"; "DISP"
+        ]
+      )]
+  in
+  run p prog5;;
+
+(* Result: about 10^8 operations (empty For Next) in 6 to 10s *)
+(* I hope that when compiled, it will be faster... *)
+

@@ -108,6 +108,9 @@ type parameters = {
   mutable ystep : float;
   (* Display the axes if true *)
   mutable axes : bool;
+
+  (* Getkey *)
+  mutable getkey : int;
 }
 
 
@@ -143,6 +146,8 @@ let empty_param () : parameters =
     (* Display the axes if true *)
     axes = false;
 
+    (* Getkey *)
+    getkey = 0;
   };;
 
 (* Returns a new array with twice the size of t, with the elements of t as first elements

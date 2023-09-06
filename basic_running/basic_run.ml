@@ -124,13 +124,16 @@ let qmark (p : parameters) (v : variable) : unit =
       locate [cs] !x !writing_index;
       incr x;
       tdraw ())
-    else if key = '\027' then (* Esc *)
+    else if key = '\027' && !ns <> [] then (* Esc and something was entered: reset *)
       (ns := [];
       x := 0;
       clear_text ();
       locate ["?"] 0 0;
       writing_index := 1;
       tdraw ())
+    else if key = '\027' then (* Esc and nothing was entered: quit *)
+      (close_graph ();
+      failwith "Runtime interruption")
   done;
   let (e,t) = extract_expr (List.rev !ns) in
   if t <> []
@@ -138,6 +141,73 @@ let qmark (p : parameters) (v : variable) : unit =
   let z = eval p e in
   assign_var p (Value z) v;;
 
+(* Getkey values *)
+(* Returns the Getkey value of the given key, as observerd on a Casio calculator *)
+(* Value = 10*a + b
+b\a  7     6    5    4    3    2
+9    F1    F2   F3   F4   F5   F6
+8    SHIFT OPTN VARS MENU <    ^
+7    ALPHA x2   ^    EXIT v    >
+6    XthT  log  ln   sin  cos  tan
+5    FRAC  FD   (    )    ,    ->
+4    7     8    9    DEL
+3    4     5    6    x     /
+2    1     2    3    +     -
+1    0     .    E    (-)   EXE
+*)
+let get_getkey_val (key : char) : int =
+  List.assoc key
+  [ (* to be completed *)
+    ('0', 25);
+    ('0', 26);
+    ('0', 27);
+    ('0', 28);
+    ('0', 29);
+    ('\013', 31);
+    ('0', 32);
+    ('0', 33);
+    ('0', 35);
+    ('0', 36);
+    ('0', 37);
+    ('0', 38);
+    ('0', 39);
+    ('0', 41);
+    ('0', 42);
+    ('0', 43);
+    ('0', 44);
+    ('0', 45);
+    ('0', 46);
+    ('0', 47);
+    ('0', 48);
+    ('0', 49);
+    ('0', 51);
+    ('0', 52);
+    ('0', 53);
+    ('0', 54);
+    ('0', 55);
+    ('0', 56);
+    ('0', 57);
+    ('0', 58);
+    ('0', 59);
+    ('0', 61);
+    ('0', 62);
+    ('0', 63);
+    ('0', 64);
+    ('0', 65);
+    ('0', 66);
+    ('0', 67);
+    ('0', 68);
+    ('0', 69);
+    ('0', 71);
+    ('0', 72);
+    ('0', 73);
+    ('0', 74);
+    ('0', 75);
+    ('0', 76);
+    ('0', 77);
+    ('0', 78);
+    ('0', 79);
+  ];;
 
 
 (* General execution function *)
@@ -176,6 +246,15 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
     if i >= n then (* End of the execution *)
       quit_print !val_seen !last_val p.polar
     else
+    
+    (* Check of key pressed *)
+    let {mouse_x; mouse_y; button; keypressed; key} =
+			wait_next_event [Key_pressed; Poll]
+		in
+    if key = '\027'
+      then failwith "Runtime interruption"
+    else
+      p.getkey <- get_getkey_val key;
 
     match code.(i) with
 
@@ -227,8 +306,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             let iint = int_of_complex ie in
             t.(iint) <- z.re;
             t.(iint + (Array.length t)/2) <- z.im) *)
-            assign_var p (Value z) (ListIndex (Value vala, Arithm [Number (Value ie)]))
-            )
+            assign_var p (Value z) (ListIndex (Value vala, Arithm [Number (Value ie)])))
 
           | MatIndex (a, iexp, jexp) ->
             (let vala = get_val p a in
@@ -243,8 +321,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             m.(iint + (Array.length m)/2).(jint) <- z.im) *)
             assign_var p (Value z)
               (MatIndex (Value vala,
-                Arithm [Number (Value ie)], Arithm [Number (Value je)]))
-            )
+                Arithm [Number (Value ie)], Arithm [Number (Value je)])))
+
           | _ -> aux (i+1) (* temporary *)
         );
         if i<n-1 && code.(i+1) = Disp
@@ -277,7 +355,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
               aux (i+2))
             else aux (i+1))
           
-      | Locate (e1, e2, sl) ->
+      | Locate (e1, e2, c) ->
         let z1 = eval p e1 in
         let z2 = eval p e2 in
         (if not
@@ -289,6 +367,16 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           && (z2.re <= 7.))
           then failwith "Runtime error: wrong arguments for Locate";
         (* The coordinates in Casio Basic are between 1 and 21 *)
+        let sl =
+          match c with
+            | Loc_text s -> s
+            | Loc_expr e ->
+              (let z = eval p e in
+              if z.im <> 0. (* In Casio Basic, Locate does not handle complex numbers *)
+                then failwith "Runtime error: a number printed by Locate cannot be a complex number";
+              let z_repr = float_to_casio z.re in
+              string_to_lexlist z_repr)
+        in
         locate sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
         tdraw ();
         val_seen := true;

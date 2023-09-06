@@ -36,6 +36,7 @@ let get_val (p : parameters) (a : basic_number) : complex =
   match a with
     | Value z -> z
     | Variable (Var a) -> get_var_val p.var a
+    | Variable Getkey -> complex_of_int p.getkey
     | _ -> {re = 0.; im = 0.}
     (* Temporary: to be completed *)
 ;;

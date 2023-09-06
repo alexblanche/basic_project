@@ -36,8 +36,9 @@
   - Integrate list/matrix arithmetic in arithmetic_lexing, parsing and basic_compilation
   
 To do next:
+  - Encode the display form of all functions of basic_encoding (and their display in String, QMark, Locate, ...)
+  - Complete the implementation of QMark (with functions, commands and operators)
   - Slow down the execution with Unix.sleepf (tests needed for text and graphic display)
-  - Code the execution of QMark (number entry)
   - Draw a calculator and code the execution of Getkey (by clicking or pressing keys)
     (Idea: key pressed on the keyboard highlight keys of the calculator interface)
   - Code "=>"
@@ -50,7 +51,9 @@ In the distant future:
   - Treat the EOL/DISP in Strings vs Locate
   - Code the "ABC"?->X without skipping a line
   - Complete the list of encodings, with the Catalog
-  - Encode the display form of all functions of basic_encoding (and their display in String, QMark, Locate, ...)
   - Implement the fraction display (5 FRACSIGN 3 displays as a pair of int separated by FRACSIGN)
   - Implement as many functions as possible (from the to do list)
+
+Problem:
+  - How do we recognize when the user presses a key? It is apparently very difficult.
   *)
