@@ -49,7 +49,9 @@ let quit () : unit =
 (* Prints the value of Ans, then quits *)
 let quit_print (val_seen : bool) (value : complex) (polar : bool) : unit =
   if val_seen
-    then print_number value polar
+    then
+      (line_feed ();
+      print_number value polar)
     else
       (clear_text ();
       locate ["D"; "o"; "n"; "e"] 17 0);
@@ -59,13 +61,13 @@ let quit_print (val_seen : bool) (value : complex) (polar : bool) : unit =
 
 (* Executes the Disp (black triangle) operation *)
 let disp (writing_index : int ref) : unit =
-  if !writing_index = 7
-    then (scroll (); decr writing_index);
+  line_feed ();
   clear_line !writing_index;
   print_disp !writing_index;
   tdraw ();
   wait_enter ();
   clear_line !writing_index;
+  decr writing_index;
   tdraw ();; (* Can the last tdraw () be removed to speed up the execution? *)
 
 (* When the list l has length n > k, then the function returns two lists:
@@ -83,11 +85,12 @@ let split_k (l : 'a list) (k : int) =
 
 (* Executes the ? (QMark) operation *)
 let qmark (p : parameters) (v : variable) : unit =
-  if !writing_index = 7
-    then (scroll (); decr writing_index);
+  line_feed ();
   clear_line !writing_index;
   locate ["?"] 0 !writing_index;
+  line_feed ();
   tdraw ();
+  clear_line !writing_index;
   let exit = ref false in
   let ns = ref [] in (* list of strings storing the number entered *)
   let x = ref 0 in (* Index of writing in line !writing_index *)
@@ -95,9 +98,9 @@ let qmark (p : parameters) (v : variable) : unit =
     let {mouse_x; mouse_y; button; keypressed; key} =
 			wait_next_event [(* Button_down; *) Key_pressed]
 		in
-		exit := key = '\010'; (* Enter *)
+		exit := (key = '\013' && !ns <> []); (* Enter *)
 
-    if key >= '0' && key <= '9' then
+    if key >= '0' && key <= '9' || key = '.' then
       (let cs = String.make 1 key in
       (* to be changed when lexeme representations are treated
         let cs = get_text_repr (...) in
@@ -114,17 +117,18 @@ let qmark (p : parameters) (v : variable) : unit =
         x := (!x + len) mod 21;
       *)
       ns := cs::!ns;
-      incr x;
       if !x = 21 then
         (x := 0;
         line_feed ());
-      locate [cs] !x !writing_index)
+      locate [cs] !x !writing_index;
+      incr x;
+      tdraw ())
     else if key = '\027' then (* Esc *)
       (ns := [];
       x := 0;
-      writing_index := 1;
       clear_text ();
-      locate ["?"] 0 1;
+      locate ["?"] 0 0;
+      writing_index := 1;
       tdraw ())
   done;
   let (e,t) = extract_expr (List.rev !ns) in
@@ -132,10 +136,6 @@ let qmark (p : parameters) (v : variable) : unit =
     then failwith "Runtime error: wrong entry";
   let z = eval p e in
   assign_var p (Value z) v;;
-
-
-
-
 
 
 
@@ -168,7 +168,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   set_color black;
   clear_text ();
   wipe gscreen;
-  writing_index := 0;
+  writing_index := -1;
 
   (** Looping function **)
   let rec aux (i : int) : unit =
@@ -197,7 +197,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         val_seen := true;
         if i<n-1 && code.(i+1) = Disp
           then
-            (print_number z p.polar;
+            (line_feed ();
+            print_number z p.polar;
             disp writing_index;
             aux (i+2))
           else aux (i+1))
@@ -247,7 +248,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         );
         if i<n-1 && code.(i+1) = Disp
           then
-            (print_number z p.polar;
+            (line_feed ();
+            print_number z p.polar;
             disp writing_index;
             aux (i+2))
           else aux (i+1))
@@ -284,7 +286,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           && (z2.re >= 1.)
           && (z2.re <= 7.))
           then failwith "Runtime error: wrong arguments for Locate";
-        locate sl (int_of_complex z1) (int_of_complex z2);
+        (* The coordinates in Casio Basic are between 1 and 21 *)
+        locate sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
         if i<n-1 && code.(i+1) = Disp
           then
             (disp writing_index;
@@ -293,7 +296,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
 
       | Function "CLRTEXT" ->
         (clear_text ();
-        writing_index := 0;
+        writing_index := -1;
         val_seen := false;
         aux (i+1))
       
@@ -307,7 +310,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         let z3 = eval p e3 in
         if z2.im <> 0. || z3.im <> 0.
           then failwith "Runtime error: complex value given to a For loop"
-        else if z3.im = 0.
+        else if is_zero z3
           then failwith "Runtime error: the step value of a For loop is 0";
           
         let asc = z3.re > 0. in

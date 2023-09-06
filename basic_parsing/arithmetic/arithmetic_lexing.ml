@@ -240,6 +240,9 @@ and extract_par_content (lexlist : string list) : basic_expr * (string list) =
         failwith "Arithmetic lexing: Syntax error, unclosed parenthesis"
     | [] -> (e,[])
 
+
+(** General arithmetic lexing function **)
+
 (* Converts a list of lexemes containing an arithmetic expression into a list of arithmetic lexemes *)
 (* Return the basic_expr and the tail of the list of lexemes after the expression *)
 and extract_expr (lexlist : string list) : basic_expr * (string list) =
@@ -248,7 +251,7 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
     match l with
       | s::t ->
         (* Values and variables *)
-        if is_digit s then
+        if is_digit s || s = "." then
           let (x, t') = read_float l in
           aux ((Number (Value (complex_of_float x)))::acc) t'
         else if is_var s || s = "ANS" || s = "SMALLR" || s = "THETA" then

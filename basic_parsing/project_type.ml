@@ -167,10 +167,13 @@ let new_param (proj : project_content) : parameters =
   (* Copy of the matrices (converted to complex matrices) *)
   Array.iteri
     (fun i (real, m) ->
-      let col = Array.length m.(0) in
-      if real
-        then p.mat.(i) <- double_array m (fun () -> Array.make col 0.) (* Bug here *)
-        else p.mat.(i) <- m)
+      if m = [||]
+        then p.mat.(i) <- [||]
+        else
+          let col = Array.length m.(0) in
+          if real
+            then p.mat.(i) <- double_array m (fun () -> Array.make col 0.)
+            else p.mat.(i) <- m)
     proj.mat;
   
   (* Copy of the pictures, captures and strings *)

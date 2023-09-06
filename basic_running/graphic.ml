@@ -15,8 +15,8 @@ let repr_graph = visualgraph ();;
 
 (* tscreen: content of the text screen *)
 let tscreen = Array.make_matrix 7 21 " ";;
-(* writing_index: line index the write at *)
-let writing_index = ref 0;;
+(* writing_index: line index where the last character was written (-1 by default) *)
+let writing_index = ref (-1);;
 
 (* gscreen: content of the graphic screen *)
 let gscreen = Array.make_matrix 64 128 false;;
@@ -67,63 +67,9 @@ let tdraw () : unit =
 (* Is it useful to have a bool matrix for the text screen too?
   If tdraw is too slow, I will consider it. *)
 
-
-(* Prints the string s (stored as a list of lexemes) in the tscreen at position i,j *)
-let locate (slist : string list) (i : int) (j : int) : unit =
-  List.iteri (fun k s -> if i + k <= 20 then tscreen.(j).(i+k) <- s) slist;;
-
-(* Prints the number z (of type complex) at the right of the writing line *)
-(* polar = true if the complex is to be printed in polar form, false in a+ib form *)
-let print_number (z : complex) (polar : bool) : unit =
-  if z.im = 0.
-    then
-      (let z_repr = float_to_casio z.re in
-      locate (string_to_lexlist z_repr) (21-String.length z_repr) !writing_index;
-      incr writing_index)
-    else
-      (* if the total length is too long, cut after the real part *)
-      let z_repr_l =
-        if polar
-          then complex_to_casio_polar z
-          else complex_to_casio_aib z
-      in
-      let total_length = List.fold_left (fun s l -> s+List.length l) 0 z_repr_l in
-      if total_length > 20
-        then
-          (match z_repr_l with
-            | a::t ->
-              (let len_a = List.length a in
-              locate a (21-len_a) !writing_index;
-              let pos = ref (21-total_length+len_a) in
-              List.iter
-                (fun sl ->
-                  locate sl !pos (!writing_index+1);
-                  pos := !pos + List.length sl)
-                t;
-              writing_index := !writing_index + 2)
-            | [] -> ())
-        else
-          (let pos = ref (21-total_length) in
-          List.iter
-            (fun sl ->
-              locate sl !pos !writing_index;
-              pos := !pos + List.length sl)
-            z_repr_l;
-          incr writing_index);;
-
-(* Prints the "- DISP -" on the tscreen at line j *)
-let print_disp (j : int) : unit =
-  locate ["-"; " "; "D"; "i"; "s"; "p"; " "; "-"] 13 j;;
-
 (* Clears line j of the tscreen *)
 let clear_line (j : int) : unit =
   tscreen.(j) <- Array.make 21 " ";;
-
-(* Clears the whole tscreen *)
-let clear_text () : unit =
-  for j = 0 to 6 do
-    clear_line j
-  done;;
 
 (* Scrolls the tscreen by one line *)
 let scroll () : unit =
@@ -139,3 +85,55 @@ let line_feed () : unit =
   if !writing_index = 7 then
     (scroll ();
     decr writing_index);;
+
+(* Prints the string s (stored as a list of lexemes) in the tscreen at position i,j *)
+let locate (slist : string list) (i : int) (j : int) : unit =
+  List.iteri (fun k s -> if i + k <= 20 then tscreen.(j).(i+k) <- s) slist;;
+
+(* Prints the number z (of type complex) at the right of the writing line *)
+(* polar = true if the complex is to be printed in polar form, false in a+ib form *)
+let print_number (z : complex) (polar : bool) : unit =
+  if z.im = 0.
+    then
+      (let z_repr = float_to_casio z.re in
+      locate (string_to_lexlist z_repr) (21-String.length z_repr) !writing_index)
+    else
+      (* if the total length is too long, cut after the real part *)
+      let z_repr_l =
+        if polar
+          then complex_to_casio_polar z
+          else complex_to_casio_aib z
+      in
+      let total_length = List.fold_left (fun s l -> s+List.length l) 0 z_repr_l in
+      if total_length > 20
+        then
+          (match z_repr_l with
+            | a::t ->
+              (let len_a = List.length a in
+              locate a (21-len_a) !writing_index;
+              let pos = ref (21-total_length+len_a) in
+              line_feed ();
+              List.iter
+                (fun sl ->
+                  locate sl !pos !writing_index;
+                  pos := !pos + List.length sl)
+                t)
+            | [] -> ())
+        else
+          (let pos = ref (21-total_length) in
+          List.iter
+            (fun sl ->
+              locate sl !pos !writing_index;
+              pos := !pos + List.length sl)
+            z_repr_l;
+          );;
+
+(* Prints the "- DISP -" on the tscreen at line j *)
+let print_disp (j : int) : unit =
+  locate ["-"; " "; "D"; "i"; "s"; "p"; " "; "-"] 13 j;;
+
+(* Clears the whole tscreen *)
+let clear_text () : unit =
+  for j = 0 to 6 do
+    clear_line j
+  done;;
