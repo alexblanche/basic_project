@@ -109,3 +109,6 @@ let run_prog5 () =
 (* Result: about 10^8 operations (empty For Next) in 6 to 10s *)
 (* I hope that when compiled, it will be faster... *)
 
+(* Getkey *)
+let run_prog_getkey () =
+  run p (prog_getkey ());;

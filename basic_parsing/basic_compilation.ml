@@ -180,6 +180,7 @@ let process_else i t code mem =
           then
             (set code jif (If (e,(i+1)));
             add_else mem i;
+            mem.stack <- List.tl mem.stack;
             ((i+1),t))
           (* The If was already treated *)
           else failwith "Compilation error: Unexpected Else"
@@ -190,13 +191,8 @@ let process_else i t code mem =
 (* IfEnd *)
 let process_ifend i t code mem =
   match mem.elseindex with
-  (* Adding the Goto before each Else/Else If *)
-    | eil::eit ->
-      (mem.elseindex <- eit;
-      List.iter (fun j -> set code j (Goto i)) eil;
-      (i,t))
-      (* If Then IfEnd (no Else): setting up the If *)
-    | [] ->
+    (* If Then IfEnd (no Else): setting up the If *)
+    | []::eit ->
       (try
         let (s,jif) = List.hd mem.stack in
         if s <> "if" then
@@ -211,7 +207,14 @@ let process_ifend i t code mem =
               else failwith "Compilation error: Unexpected IfEnd"
           | _ -> failwith "Compilation error: Unexpected IfEnd")
       with
-        | Failure _ -> failwith "Compilation error: Unexpected IfEnd with no opened If statement");;
+        | Failure _ -> failwith "Compilation error: Unexpected IfEnd with no opened If statement")
+    (* If Then (Else If)* Else IfEnd: Adding the Goto before each Else/Else If *)
+    | eil::eit ->
+      (mem.elseindex <- eit;
+      List.iter (fun j -> set code j (Goto i)) eil;
+      (i,t))
+      
+    | [] -> failwith "Compilation error: Unexpected IfEnd with no opened If statement";;
 
 (* While, WhileEnd *)
 (*  While expr
@@ -241,7 +244,7 @@ let process_whileend i t code mem =
       | If (e,k) ->
         if k = -1
           then
-            (set code jwh (If (e,i));
+            (set code jwh (If (e,i+1));
             ((i+1),t))
           else failwith "Compilation error: Unexpected WhileEnd"
       | _ -> failwith "Compilation error: Unexpected WhileEnd")

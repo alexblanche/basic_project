@@ -31,16 +31,6 @@ let get_mat_val (tmat : (float array array array)) (a : int) (i1 : int) (i2 : in
   let n = Array.length m in
   get_complex m.(i1).(i2) m.(i1+n/2).(i2);;
 
-(* General value getter *)
-let get_val (p : parameters) (a : basic_number) : complex =
-  match a with
-    | Value z -> z
-    | Variable (Var a) -> get_var_val p.var a
-    | Variable Getkey -> complex_of_int p.getkey
-    | _ -> {re = 0.; im = 0.}
-    (* Temporary: to be completed *)
-;;
-
 
 (* All evaluation functions are mutually recursive *)
 
@@ -49,7 +39,7 @@ let rec get_val (p : parameters) (n : basic_number) : complex =
   match n with
     | Value z -> z
     | Variable (Var i) -> get_var_val p.var i
-    | Variable Getkey -> complex_of_float 0. (* To do *)
+    | Variable Getkey -> complex_of_int p.getkey
     | Variable (ListIndex (a,e)) ->
       let z = eval p e in
       (if not (is_int z)

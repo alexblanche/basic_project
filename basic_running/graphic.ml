@@ -14,7 +14,7 @@ let repr_text = visual ();;
 let repr_graph = visualgraph ();;
 
 (* tscreen: content of the text screen *)
-let tscreen = Array.make_matrix 7 21 " ";;
+let tscreen = Array.make_matrix 7 21 "\000";;
 (* writing_index: line index where the last character was written (-1 by default) *)
 let writing_index = ref (-1);;
 
@@ -53,15 +53,16 @@ let tdraw () : unit =
   let m = Array.make_matrix 64 128 false in
   for j = 0 to 6 do
     for i = 0 to 20 do
-      let t = Hashtbl.find repr_text tscreen.(j).(i) in
-      (* The visual representation of the character has dimensions 7*5. *)
-      for y = 0 to 6 do
-        for x = 0 to 4 do
-          if t.(5*y+x)
-            then ploton m (1+6*i+x) (63-8*j-y)
-        done;
-      done;
-    done;
+      if tscreen.(j).(i) <> "\000" then
+        let t = Hashtbl.find repr_text tscreen.(j).(i) in
+        (* The visual representation of the character has dimensions 7*5. *)
+        for y = 0 to 6 do
+          for x = 0 to 4 do
+            if t.(5*y+x)
+              then ploton m (1+6*i+x) (63-8*j-y)
+          done
+        done
+    done
   done;
   sync ();;
 (* Is it useful to have a bool matrix for the text screen too?
@@ -69,7 +70,7 @@ let tdraw () : unit =
 
 (* Clears line j of the tscreen *)
 let clear_line (j : int) : unit =
-  tscreen.(j) <- Array.make 21 " ";;
+  tscreen.(j) <- Array.make 21 "\000";;
 
 (* Scrolls the tscreen by one line *)
 let scroll () : unit =

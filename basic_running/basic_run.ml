@@ -5,6 +5,8 @@
 (* #use "basic_running/arithmetic_parsing.ml"
 #use "basic_running/graphic.ml" *)
 
+(* Raised when exiting the program with Esc *)
+exception Runtime_interruption;;
 
 (* Assigns the value x to the variable v *)
 let assign_var (p : parameters) (x : basic_number) (v : variable) : unit =
@@ -133,7 +135,7 @@ let qmark (p : parameters) (v : variable) : unit =
       tdraw ())
     else if key = '\027' then (* Esc and nothing was entered: quit *)
       (close_graph ();
-      failwith "Runtime interruption")
+      raise Runtime_interruption)
   done;
   let (e,t) = extract_expr (List.rev !ns) in
   if t <> []
@@ -156,58 +158,39 @@ b\a  7     6    5    4    3    2
 1    0     .    E    (-)   EXE
 *)
 let get_getkey_val (key : char) : int =
-  List.assoc key
-  [ (* to be completed *)
-    ('0', 25);
-    ('0', 26);
-    ('0', 27);
-    ('0', 28);
-    ('0', 29);
-    ('\013', 31);
-    ('0', 32);
-    ('0', 33);
-    ('0', 35);
-    ('0', 36);
-    ('0', 37);
-    ('0', 38);
-    ('0', 39);
-    ('0', 41);
-    ('0', 42);
-    ('0', 43);
-    ('0', 44);
-    ('0', 45);
-    ('0', 46);
-    ('0', 47);
-    ('0', 48);
-    ('0', 49);
-    ('0', 51);
-    ('0', 52);
-    ('0', 53);
-    ('0', 54);
-    ('0', 55);
-    ('0', 56);
-    ('0', 57);
-    ('0', 58);
-    ('0', 59);
-    ('0', 61);
-    ('0', 62);
-    ('0', 63);
-    ('0', 64);
-    ('0', 65);
-    ('0', 66);
-    ('0', 67);
-    ('0', 68);
-    ('0', 69);
-    ('0', 71);
-    ('0', 72);
-    ('0', 73);
-    ('0', 74);
-    ('0', 75);
-    ('0', 76);
-    ('0', 77);
-    ('0', 78);
-    ('0', 79);
-  ];;
+  try
+    List.assoc key
+    (* (in Azerty)
+      EXE = Enter
+      Arrows = Z Q S D
+      + - x div . , = + - * / . ,
+      0-9 : 0-9
+      F1-F6 = & é quote ' ( -  (i.e. 1-6)
+      SHIFT, ALPHA = ^2 tab
+      DEL = Backspace
+      (AC/on = Delete, stops the program, not available in Getkey)
+    *)
+    (* To do: toggle Qwerty mode *)
+    [
+      (* No key *)
+      ('\000', 0);
+
+      ('\028', 79); ('\233', 69);   ('\034', 59);   ('\039', 49);   ('\040', 39); ('\045', 29);
+      ('\178', 78); (* ('\000', 68); ('\000', 58);  ('\000', 48); *) ('q', 38);   ('z', 28);
+      ('\009', 77); (* ('\000', 67); ('\000', 57); *) ('\127', 47); ('s', 37);    ('d', 27);
+      (* ('\000', 76); ('\000', 66);   ('\000', 56);   ('\000', 46);   ('\000', 36); ('\000', 26); *)
+      (* ('\000', 75); ('\000', 65);   ('\000', 55);   ('\000', 45); *)  (',', 35);  (* ('\000', 25); *)
+      ('7', 74);    ('8', 64);      ('9', 54);      ('\008', 44);
+      ('4', 73);    ('5', 63);      ('6', 53);      ('*', 43);      ('/', 33);
+      ('1', 72);    ('2', 62);      ('3', 52);      ('+', 42);      ('-', 32);
+      ('0', 71);    ('.', 61);    (*  ('\000', 51);   ('\000', 41); *)  ('\013', 31);
+
+      (* Caps-lock alternatives *)
+      ('Q', 38); ('Z', 28); ('S', 37); ('D', 27);
+      ('\201', 69) (* Uppercase é = 2 *)
+    ]
+  with
+    | Not_found -> 0;;
 
 
 (* General execution function *)
@@ -243,18 +226,24 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
 
   (** Looping function **)
   let rec aux (i : int) : unit =
+    
     if i >= n then (* End of the execution *)
       quit_print !val_seen !last_val p.polar
     else
-    
+
     (* Check of key pressed *)
-    let {mouse_x; mouse_y; button; keypressed; key} =
-			wait_next_event [Key_pressed; Poll]
-		in
-    if key = '\027'
-      then failwith "Runtime interruption"
-    else
-      p.getkey <- get_getkey_val key;
+    (* wait_next_event with Poll does not work,
+      because the key presses are queued and take forever to dequeue.
+      The current method is satisfyingly responsive. *)
+    (if Graphics.key_pressed ()
+      then
+        let k = Graphics.read_key () in
+        if k = '\027' (* Esc *)
+          then (close_graph (); raise Runtime_interruption)
+        else
+          p.getkey <- get_getkey_val k
+      (* else p.getkey <- 0*));
+    (* Big problem: impossible to know when a key is released! :( *)
 
     match code.(i) with
 

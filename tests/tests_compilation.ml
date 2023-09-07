@@ -65,3 +65,16 @@ let prog4 () = compile
       "QUOTE"; "G"; "E"; "T"; " "; "O"; "U"; "T"; "!"; "QUOTE"; "DISP"
     ]
   )];;
+
+let prog_getkey () = compile
+  [("main",
+    [
+    "WHILE"; "1"; "EOL";
+    "GETKEY"; "ASSIGN"; "K"; "EOL";
+    "IF"; "K"; "LEQ"; "9"; "EOL";
+    "THEN"; "LOCATE"; "4"; "COMMA"; "3"; "COMMA"; "QUOTE"; "A"; "QUOTE"; "EOL";
+    "IFEND"; "EOL";
+    "LOCATE"; "3"; "COMMA"; "3"; "COMMA"; "K"; "EOL";
+    "WHILEEND"
+    ]
+  )];;
