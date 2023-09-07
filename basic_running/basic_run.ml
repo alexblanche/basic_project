@@ -244,6 +244,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           p.getkey <- get_getkey_val k
       (* else p.getkey <- 0*));
     (* Big problem: impossible to know when a key is released! :( *)
+    (* To do: use SDL2 with OCamlSDL2 *) 
 
     match code.(i) with
 

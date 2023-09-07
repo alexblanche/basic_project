@@ -46,6 +46,7 @@ To do next:
   - Recode the operators for complex numbers (espacially '=')
   (At this point, the original Timeless might run.)
   - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
+  - Use SDL2 with OCamlSDL2 to have more control over keyboard, windows, etc.
 
 In the distant future:
   - Treat the EOL/DISP in Strings vs Locate
