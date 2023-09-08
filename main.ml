@@ -49,12 +49,9 @@ To do next:
   - Use SDL2 with OCamlSDL2 to have more control over keyboard, windows, etc.
 
 In the distant future:
-  - Treat the EOL/DISP in Strings vs Locate
+  - Treat the EOL/DISP in Strings vs Locate (EOL shows in Strings, syntax error in Locate. Disp shows in the Locate display, syntax error in String.)
   - Code the "ABC"?->X without skipping a line
   - Complete the list of encodings, with the Catalog
   - Implement the fraction display (5 FRACSIGN 3 displays as a pair of int separated by FRACSIGN)
   - Implement as many functions as possible (from the to do list)
-
-Problem:
-  - How do we recognize when the user presses a key? It is apparently very difficult.
-  *)
+*)
