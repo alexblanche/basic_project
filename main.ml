@@ -54,4 +54,5 @@ In the distant future:
   - Complete the list of encodings, with the Catalog
   - Implement the fraction display (5 FRACSIGN 3 displays as a pair of int separated by FRACSIGN)
   - Implement as many functions as possible (from the to do list)
+  - Implement the menu in the QMark entry menu, to access all functions
 *)
