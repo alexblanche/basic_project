@@ -325,16 +325,3 @@ let text_display = [
 	("STR", "Str ")
 ];;
 
-(* When s is a string containing special characters,
-	returns the list of symbols (in string form) *)
-let str_to_rev_symblist (s : string) =
-	let n = String.length s in
-	let rec aux acc i =
-		if i >= n
-			then acc
-		else if List.mem (Char.code s.[i]) [127;247;249;229;230;231]
-			then aux ((String.init 2 (function 0 -> s.[i] | _ -> s.[i+1]))::acc) (i+2)
-		else aux ((String.make 1 s.[i])::acc) (i+1)
-	in
-	aux [] 0;;
-	

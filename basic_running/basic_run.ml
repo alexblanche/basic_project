@@ -103,22 +103,24 @@ let qmark (p : parameters) (v : variable) : unit =
 		in
 		exit := (key = '\013' && !ns <> []); (* Enter *)
 
-    if key >= '0' && key <= '9' || key = '.' then
+    if key >= '0' && key <= '9' || key = '.' (* || function... *) then
       (let cs = String.make 1 key in
-      (* to be changed when lexeme representations are treated
-        let cs = get_text_repr (...) in
-        let lexcs = string_to_lexlist cs in
-        ns := List.rev_append lexcs !ns in
-        ...
-        let len = List.length lexcs in
-        if !x + len >= 21 then
-          (let csk,csn = split_k lexcs in
-          locate csk !x !writing_index;
-          line_feed ();
-          locate csn 0 !writing_index)
-        else locate lexcs !x !writing_index;
-        x := (!x + len) mod 21;
+      
+      (* (* To do *)
+      let cs = List.assoc (String.make 1 key) in
+      let lexcs = str_to_rev_symblist_full cs in
+      ns := List.rev_append lexcs !ns in
+      (*...*)
+      let len = List.length lexcs in
+      if !x + len >= 21 then
+        (let (csk,csn) = split_k lexcs in
+        locate csk !x !writing_index;
+        line_feed ();
+        locate csn 0 !writing_index)
+      else locate lexcs !x !writing_index;
+      x := (!x + len) mod 21;
       *)
+
       ns := cs::!ns;
       if !x = 21 then
         (x := 0;
@@ -365,7 +367,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
               if z.im <> 0. (* In Casio Basic, Locate does not handle complex numbers *)
                 then failwith "Runtime error: a number printed by Locate cannot be a complex number";
               let z_repr = float_to_casio z.re in
-              string_to_lexlist z_repr)
+              str_to_rev_symblist_simple z_repr)
         in
         locate sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
         tdraw ();

@@ -87,9 +87,10 @@ let line_feed () : unit =
     (scroll ();
     decr writing_index);;
 
-(* Prints the string s (stored as a list of lexemes) in the tscreen at position i,j *)
+(* Prints the string s (stored as a list of lexemes in reverse order) in the tscreen at position i,j *)
 let locate (slist : string list) (i : int) (j : int) : unit =
-  List.iteri (fun k s -> if i + k <= 20 then tscreen.(j).(i+k) <- s) slist;;
+  let n = List.length slist in
+  List.iteri (fun k s -> if i+n <= 21+k then tscreen.(j).(i+n-1-k) <- s) slist;;
 
 (* Prints the number z (of type complex) at the right of the writing line *)
 (* polar = true if the complex is to be printed in polar form, false in a+ib form *)
@@ -97,7 +98,7 @@ let print_number (z : complex) (polar : bool) : unit =
   if z.im = 0.
     then
       (let z_repr = float_to_casio z.re in
-      locate (string_to_lexlist z_repr) (21-String.length z_repr) !writing_index)
+      locate (str_to_rev_symblist_simple z_repr) (21-String.length z_repr) !writing_index)
     else
       (* if the total length is too long, cut after the real part *)
       let z_repr_l =

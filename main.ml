@@ -10,6 +10,7 @@
 #use "basic_parsing/basic_type.ml"
 #use "basic_parsing/project_type.ml"
 #use "basic_parsing/basic_encoding.ml"
+#use "basic_parsing/command_display"
 #use "basic_parsing/g1m_reader.ml"
 
 #use "basic_parsing/arithmetic/arithmetic_def.ml"
@@ -22,6 +23,7 @@
 
 #use "picture_editor/picture_drawer.ml"
 #use "basic_running/float_repr.ml"
+#use "basic_running/locate_format.ml"
 #use "basic_running/graphic.ml"
 
 #use "basic_running/basic_run.ml"

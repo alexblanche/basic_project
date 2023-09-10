@@ -136,28 +136,3 @@ let float_to_casio (n : float) : string =
     else res
 ;;
 
-
-(** Formatting complex numbers **)
-
-(* Converts the string s into a list of strings, each containing one character of s *)
-let string_to_lexlist (s : string) : string list =
-  let res = String.fold_left (fun acc c -> (String.make 1 c)::acc) [] s in
-  List.rev res;;
-
-(* Returns the representation of the complex z as a Casio complex number
-  under the form a+ib, as a list of strings: [(repr of a); [plus (\137)]; (repr of b); [i (\127\080)]] *)
-let complex_to_casio_aib (z : complex) : string list list =
-  [string_to_lexlist (float_to_casio z.re);
-  ["\137"];
-  string_to_lexlist (float_to_casio z.im);
-  ["\127\080"]];;
-
-(* Same with polar representation of a complex number:
-  [repr of r; repr of complex angle (\127\084); repr of theta] *)
-let complex_to_casio_polar (z : complex) : string list list =
-  [string_to_lexlist (float_to_casio (Complex.norm z));
-  ["\127\084"];
-  string_to_lexlist (float_to_casio (Complex.arg z))];;
-
-(* To do: when in sf, remove the last 0
-   Ex: 123456789012 -> 1.23456789e+11 (and not 1.234567890e+11) *)
