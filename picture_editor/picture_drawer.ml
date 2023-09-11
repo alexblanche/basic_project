@@ -2,95 +2,85 @@
 
 (* #use "topfind"
 #require "graphics" *)
-open Graphics;;
+(* open Graphics;; *)
 
-(* Note: in the Graphics library, (0,0) is in the lower-left corner of the graphics window *)
 
-(* Constants *)
-let margin = 40;; (* Margin between the graphics window and the screen *)
-let size = 7;; (* Size of a pixel of the screen *)
-let width = 128*size;;
-let height = 64*size;;
+(* Closes the window win *)
+let close_graph (win : Sdlwindow.t) (ren : Sdlrender.t) : unit =
+	Sdl.destroy win;;
 
-let gray = rgb 120 120 148;;
+(* Refresh function *)
+let refresh (renderer : Sdlrender.t) : unit =
+	Sdlrender.render_present renderer;;
 
-(* Cell of the screen:
-	 (i,j)
-	 i belongs to 0..127
-	 j belongs to 0..63 *)
-type cell = int * int;;
+(* Sets drawing color *)
+let set_color (ren : Sdlrender.t) (color : int * int * int) : unit =
+	Sdlrender.set_draw_color renderer ~rgb:color ~a:255;
 
-exception Out_of_screen
+(* Clears the window *)
+let clear_graph (ren : Sdlrender.t) : unit =
+	set_color ren white;
+  Sdlrender.clear ren;
+	set_color ren black;;
 
-(* Returns the cell that contains the vector (x,y) *)
-let coord_to_cell (x : int) (y : int) : cell =
-	if x<=margin || x>=margin+width || y<=margin || y>=margin+height
-		then raise Out_of_screen
-		else ((x-margin)/size, ((y-margin)/size));;
-
-(* Setup functions *)
-let cache () =
-	display_mode false;
-	remember_mode true;;
-
-let sync () = synchronize();;
+(* Draws the string s at position x,y in the given renderer *)
+let draw_string (ren : Sdlrender.t) (x : int) (y : int) (s: string) : unit =
+	();; (* to do *)
 
 (* Traces a rectangle of width w and height h, with lower-left point (a,b) *)
-let rect (a : int) (b : int) (w : int) (h : int) =
-	let (c,d) = (a+w, b+h) in
-	moveto a b;
-	lineto c b;
-	lineto c d;
-	lineto a d;
-	lineto a b;;
+let rect (ren : Sdlrender.t) (a : int) (b : int) (w : int) (h : int) =
+	Sdlrender.draw_rect ren (Sdlrect.make (a,b) (w,h));;
 
 (* Traces a line from (a,b) to (x,y) on the graphics window *)
-let dline (a : int) (b : int) (x : int) (y : int) =
-	moveto a b;
-	lineto x y;;
+let dline (ren : Sdlrender.t) (a : int) (b : int) (x : int) (y : int) =
+	Sdlrender.draw_line (a,b) (x,y);;
+
+(* Fills a rectangle of width w and height h, with lower-left point (a,b) *)
+let fill_rect (ren : Sdlrender.t) (a : int) (b : int) (w : int) (h : int) =
+	Sdlrender.fill_rect ren (Sdlrect.make (a,b) (w,h));;
 
 (* Fills the pixel i,j of the screen with the current color *)
-let ploton (m : bool array array) (i : int) (j : int) =
-	fill_rect (margin+size*i) (margin+size*j) size size;
+let ploton (ren : Sdlrender.t) (m : bool array array) (i : int) (j : int) =
+	fill_rect ren (!margin_h + !size*i) (!margin_v + !size*j) !size !size;
 	m.(j).(i) <- true;;
 
 (* Fills the pixel i,j of the screen with white and reforms the grid *)
-let plotoff (m : bool array array) (grid : bool) (i : int) (j : int) =
+let plotoff (ren : Sdlrender.t) (m : bool array array) (grid : bool) (i : int) (j : int) =
 	if m.(j).(i) then
-		(set_color white;
-		fill_rect (margin+size*i) (margin+size*j) size size;
+		(set_color ren white;
+		fill_rect ren (!margin_h + !size*i) (!margin_v + !size*j) !size !size;
 		m.(j).(i) <- false;
 		if grid then
 			(* reform the grid around the deleted pixel *)
-			(set_color gray;
-			rect (margin+size*i) (margin+size*j) size size;
-			set_color black));;
+			(set_color ren gray;
+			rect ren (!margin_h + !size*i) (!margin_v + !size*j) !size !size;
+			set_color ren black));;
 
 
 (* Traces an horizontal line between pixel (i1,j) and (i2,j) (i1 is the leftmost pixel) *)
-let horitzontal_line (m : bool array array) (i1 : int) (i2 : int) (j : int) =
-	fill_rect (margin+size*i1) (margin+size*j) ((i2-i1+1)*size) size;
+let horitzontal_line (ren : Sdlrender.t) (m : bool array array) (i1 : int) (i2 : int) (j : int) =
+	fill_rect ren (!margin_h + !size*i1) (!margin_v + !size*j) ((i2-i1+1) * !size) !size;
 	for i = i1 to i2 do
 		m.(j).(i) <- true
 	done;;
 
 (* Traces a vertical line between pixel (i,j1) and (i,j2) (j1 is the lowest pixel) *)
-let vertical_line (m : bool array array) (i : int) (j1 : int) (j2 : int) =
-	fill_rect (margin+size*i) (margin+size*j1) size ((j2-j1+1)*size);
+let vertical_line (ren : Sdlrender.t) (m : bool array array) (i : int) (j1 : int) (j2 : int) =
+	fill_rect ren (!margin_h + !size*i) (!margin_v + !size*j1) !size ((j2-j1+1) * !size);
 	for j = j1 to j2 do
 		m.(j).(i) <- true
 	done;;
 
 (* Traces a rectangle with lower-left cell (i1,j1) and upper-right cell (i2,j2) *)
-let rec rectangle_no_writing (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let rec rectangle_no_writing (ren : Sdlrender.t) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
 	if i1 > i2 || j1 > j2
-		then rectangle_no_writing (min i1 i2) (min j1 j2) (max i1 i2) (max j1 j2)
-		else fill_rect (margin+size*i1) (margin+size*j1) ((i2-i1+1)*size) ((j2-j1+1)*size);;
+		then rectangle_no_writing ren (min i1 i2) (min j1 j2) (max i1 i2) (max j1 j2)
+		else fill_rect ren (margin+size*i1) (margin+size*j1) ((i2-i1+1)*size) ((j2-j1+1)*size);;
 
 (* Traces a rectangle with lower-left cell (i1,j1) and upper-right cell (i2,j2)
 	and writes the pixel down in the matrix m *)
-let rectangle (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
-	rectangle_no_writing i1 j1 i2 j2;
+let rectangle (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+	rectangle_no_writing ren i1 j1 i2 j2;
 	let i0 = min i1 i2 in
 	let il = max i1 i2 in
 	let j0 = min j1 j2 in
@@ -104,7 +94,7 @@ let rectangle (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int)
 (* Bresenham algorithm *)
 
 (* 1st and 8th octants *)
-let bresenham_loop_18 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let bresenham_loop_18 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
 	let di = i2 - i1 in
 	let e = ref di in (* e>0 *)
 	let ddi = 2*di in
@@ -130,15 +120,15 @@ let bresenham_loop_18 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j
 			e := !e - sdj*ddj;
 			incr i
 		done;
-		horitzontal_line m !ibeg !i !j;
+		horitzontal_line ren m !ibeg !i !j;
 		j := !j + sdj;
 		e:= !e + ddi;
 		incr i
 	done;
-	ploton m i2 j2;;
+	ploton ren m i2 j2;;
 
 (* 4th and 5th octants *)
-let bresenham_loop_45 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let bresenham_loop_45 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
 	let di = i2 - i1 in
 	let e = ref di in (* e<0 *)
 	let ddi = 2*di in
@@ -163,15 +153,15 @@ let bresenham_loop_45 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j
 			e := !e + sdj*ddj;
 			decr i
 		done;
-		horitzontal_line m !i !ibeg !j;
+		horitzontal_line ren m !i !ibeg !j;
 		j := !j + sdj;
 		e:= !e + ddi;
 		decr i
 	done;
-	ploton m i2 j2;;
+	ploton ren m i2 j2;;
 
 (* 2nd and 3rd octants *)
-let bresenham_loop_23 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let bresenham_loop_23 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
 	let dj = j2 - j1 in
 	let e = ref dj in (* e>0 *)
 	let ddi = 2*(i2-i1) in
@@ -189,15 +179,15 @@ let bresenham_loop_23 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j
 			e := !e - sdi*ddi;
 			incr j
 		done;
-		vertical_line m !i !jbeg !j;
+		vertical_line ren m !i !jbeg !j;
 		i := !i + sdi;
 		e:= !e + ddj;
 		incr j
 	done;
-	ploton m i2 j2;;
+	ploton ren m i2 j2;;
 
 (* 6th and 7th octants *)
-let bresenham_loop_67 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let bresenham_loop_67 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
 	let dj = j2 - j1 in
 	let e = ref dj in (* e<0 *)
 	let ddi = 2*(i2-i1) in
@@ -215,71 +205,85 @@ let bresenham_loop_67 (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j
 			e := !e + sdi*ddi;
 			decr j
 		done;
-		vertical_line m !i !j !jbeg;
+		vertical_line ren m !i !j !jbeg;
 		i := !i + sdi;
 		e:= !e + ddj;
 		decr j
 	done;
-	ploton m i2 j2;;
+	ploton ren m i2 j2;;
 
-let bresenham (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let bresenham (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
 	let di = i2 - i1 in
 	let dj = j2 - j1 in
 	(match (di=0),(di>0),(dj=0),(dj>0),(di>=dj),(di>=(-dj)),(-di>dj),(di<=dj) with
-		| true,_,true,_,_,_,_,_ -> ploton m i1 j1 (* single point *)
-		| true,_,_,true,_,_,_,_ -> vertical_line m i1 j1 j2 (* vertical ascending *)
-		| true,_,_,_,_,_,_,_ -> vertical_line m i1 j2 j1 (* vertical descending *)
-		| _,true,true,_,_,_,_,_ -> horitzontal_line m i1 i2 j1 (* horizontal right *)
-		| _,true,_,true,true,_,_,_ -> bresenham_loop_18 m i1 j1 i2 j2 (* 1st octant *)
-		| _,true,_,true,_,_,_,_ -> bresenham_loop_23 m i1 j1 i2 j2 (* 2nd octant *)
-		| _,true,_,_,_,true,_,_ -> bresenham_loop_18 m i1 j1 i2 j2 (* 8th octant *)
-		| _,true,_,_,_,_,_,_ -> bresenham_loop_67 m i1 j1 i2 j2 (* 7th octant *)
-		| _,_,true,_,_,_,_,_ -> horitzontal_line m i2 i1 j1 (* horitzontal left *)
-		| _,_,_,true,_,_,true,_ -> bresenham_loop_45 m i1 j1 i2 j2 (* 4th octant *)
-		| _,_,_,true,_,_,_,_ -> bresenham_loop_23 m i1 j1 i2 j2 (* 3rd octant *)
-		| _,_,_,_,_,_,_,true -> bresenham_loop_45 m i1 j1 i2 j2 (* 5th octant *)
-		| _ -> bresenham_loop_67 m i1 j1 i2 j2 (* 6th octant *));;
+		| true,_,true,_,_,_,_,_ -> ploton ren m i1 j1 (* single point *)
+		| true,_,_,true,_,_,_,_ -> vertical_line ren m i1 j1 j2 (* vertical ascending *)
+		| true,_,_,_,_,_,_,_ -> vertical_line ren m i1 j2 j1 (* vertical descending *)
+		| _,true,true,_,_,_,_,_ -> horitzontal_line ren m i1 i2 j1 (* horizontal right *)
+		| _,true,_,true,true,_,_,_ -> bresenham_loop_18 ren m i1 j1 i2 j2 (* 1st octant *)
+		| _,true,_,true,_,_,_,_ -> bresenham_loop_23 ren m i1 j1 i2 j2 (* 2nd octant *)
+		| _,true,_,_,_,true,_,_ -> bresenham_loop_18 ren m i1 j1 i2 j2 (* 8th octant *)
+		| _,true,_,_,_,_,_,_ -> bresenham_loop_67 ren m i1 j1 i2 j2 (* 7th octant *)
+		| _,_,true,_,_,_,_,_ -> horitzontal_line ren m i2 i1 j1 (* horitzontal left *)
+		| _,_,_,true,_,_,true,_ -> bresenham_loop_45 ren m i1 j1 i2 j2 (* 4th octant *)
+		| _,_,_,true,_,_,_,_ -> bresenham_loop_23 ren m i1 j1 i2 j2 (* 3rd octant *)
+		| _,_,_,_,_,_,_,true -> bresenham_loop_45 ren m i1 j1 i2 j2 (* 5th octant *)
+		| _ -> bresenham_loop_67 ren m i1 j1 i2 j2 (* 6th octant *));;
 
 
 (** Graphical interface **)
 
 (* Prints the background and the grid *)
-let print_bg (grid : bool) (bg : unit -> unit) : unit =
+let print_bg (ren : Sdlrender.t) (grid : bool) (bg : Sdlrender.t -> unit) : unit =
 	(* frame *)
-	set_color black;
-	rect margin margin width height;
+	set_color ren black;
+	rect ren !margin_h !margin_v !width !height;
 	
 	(* grid *)
 	if grid
 		then
-			(set_color gray;
+			(set_color ren gray;
+			let y0, yh = !margin_v, !margin_v + !height in
 			for i=1 to 127 do
-				dline (margin+size*i) margin (margin+size*i) (margin+height)
+				let x = !margin_h + !size*i in
+				dline ren x y0 x yh
 			done;
+			let x0, xw = !margin_h, !margin_h + !width in
 			for j=1 to 63 do
-				dline margin (margin+size*j) (margin+width) (margin+size*j)
+				let y = !margin_v + !size*j in
+				dline ren x0 y xw y
 			done;
-			set_color black);
+			set_color ren black);
 	
 	(* Additional background *)
-	bg ();;
+	bg ren;;
 
 (* Opens and configure the graphical window *)
 (* grid = true the display the grid in the background
 	 bg: function that prints additional things in the background *)
-let config (grid : bool) (bg : unit -> unit) : unit =
-	open_graph "";
-	resize_window (2*margin + width) (2*margin + height);
-	set_window_title "Basic Project Inferface";
-	cache ();
-	print_bg grid bg;
-	sync();;
+(* Returns the window and the renderer *)
+let config (grid : bool) (bg : Sdlrender.t -> unit) : Sdlwindow.t * Sdlrender.t =
+	Sdl.init [`VIDEO];
+	let window =
+		Sdlwindow.create
+			~title:"Basic Project Inferface"
+			~pos:(`pos 400, `pos 200)
+			~dims:(2 * !margin_h + !width, 2 * !margin_v + !height)
+			~flags:[]
+	in
+	let renderer =
+		Sdlrender.create_renderer ~win:window ~index:0 ~flags:[]
+	in
+	Sdlrender.set_draw_blend_mode renderer SdlblendMode.BNone;
+	print_bg renderer grid bg;
+	refresh renderer;
+	(window, renderer);;
 
 (* Displays the matrix m on the screen with the grid (if grid = true) and the background bg *)
 (* Does not open a window, nor refresh it *)
-let print_mat (m : bool array array) (grid : bool) (bg : unit -> unit) : unit =
-	clear_graph ();
-	print_bg grid bg;
+let print_mat (ren : Sdlrender.t) (m : bool array array) (grid : bool) (bg : Sdlrender.t -> unit) : unit =
+	clear_graph ren;
+	print_bg ren grid bg;
 	let ibeg = ref 0 in
 	let i = ref 0 in
 	for j = 0 to 63 do
@@ -296,20 +300,37 @@ let print_mat (m : bool array array) (grid : bool) (bg : unit -> unit) : unit =
 			while !i<>128 && m.(j).(!i) do
 				incr i
 			done;
-			fill_rect (margin+size * !ibeg) (margin+size*j) ((!i - !ibeg)*size) size;
+			fill_rect ren (!margin_h + !size * !ibeg) (!margin + !size * j) ((!i - !ibeg) * !size) !size;
 			incr i
 		done;
 	done;;
 	
 (* Opens a new graphic window and displays the matrix m *)
-let view_matrix (m : bool array array) =
-	config false (fun () -> ());
-	set_color black;
-	cache();
-	print_mat m false (fun () -> ());
-	sync();
+let view_matrix (m : bool array array) : unit =
+	let (win, ren) = config false (fun _ -> ());
+	set_color ren black;
+	print_mat ren m false (fun _ -> ());
+	refresh ren;
 	let _ = wait_next_event [Button_down; Key_pressed] in
-	close_graph ();;
+	close_graph win;
+	Sdl.quit ();;
+
+
+(** Interface **)
+
+(* Cell of the screen:
+	 (i,j)
+	 i belongs to 0..127
+	 j belongs to 0..63 *)
+type cell = int * int;;
+
+exception Out_of_screen
+
+(* Returns the cell that contains the vector (x,y) *)
+let coord_to_cell (x : int) (y : int) : cell =
+	if x <= !margin_h || x >= !margin_h + !width || y <= !margin_v || y >= !margin_v + !height
+		then raise Out_of_screen
+		else ((x - !margin_h) / !size, ((y - !margin_v) / !size));;
 
 (* Interface that lets the user add pixels, lines, rectangles
 	 and delete pixels on a 64*128 monochormatic matrix *)
@@ -317,8 +338,7 @@ let view_matrix (m : bool array array) =
 let edit (grid : bool) (m : bool array array) : unit =
 	
 	let instr () =
-		(moveto 0 0;
-		draw_string "[Left-mouse] to add pixels, hold to draw a line/rectangle, [a] to toggle line/rectangle, [d] to delete pixels, [Esc] to quit")
+		draw_string 0 0 "[Left-mouse] to add pixels, hold to draw a line/rectangle, [a] to toggle line/rectangle, [d] to delete pixels, [Esc] to quit"
 	in
 
 	config grid instr;
@@ -333,7 +353,7 @@ let edit (grid : bool) (m : bool array array) : unit =
 	let line = ref true in
 	
 	print_mat m grid instr;
-	sync ();
+	refresh ();
 
 	while not !exit do
 	
@@ -349,7 +369,7 @@ let edit (grid : bool) (m : bool array array) : unit =
 						(* display of the point on which we clicked *)
 						let (i,j) = coord_to_cell mouse_x mouse_y in
 						ploton m i j;
-						sync ();
+						refresh ();
 						i0 := i;
 						j0 := j;
 						(* loop that displays the previsualized line *)

@@ -19,7 +19,8 @@
 #use "basic_parsing/basic_compilation.ml"
 
 #use "topfind"
-#require "graphics"
+#require "sdl2"
+#require "sdl2_ttf"
 
 #use "picture_editor/picture_drawer.ml"
 #use "basic_running/float_repr.ml"
