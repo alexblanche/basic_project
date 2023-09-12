@@ -20,11 +20,11 @@ let coord_to_cell (x : int) (y : int) : cell =
 let edit (grid : bool) (m : bool array array) : unit =
 	
 	let instr ren =
-		draw_string ren 0 0
-			"[Left-mouse] to add pixels, hold to draw a line/rectangle,"
+		draw_string ren 0 (!margin_v + !height + 5)
+			"[Left-mouse] to add pixels, hold to draw a line/rectangle, [Right-mouse] to delete pixels"
 			(0,0,0);
-		draw_string ren 0 15
-		"[a] to toggle line/rectangle, [Right-mouse] to delete pixels, [Esc] to quit"
+		draw_string ren 0 (!margin_v + !height + 20)
+		"[a] to toggle line/rectangle, [Esc] to quit"
 			(0,0,0)
 	in
 	
@@ -50,6 +50,7 @@ let edit (grid : bool) (m : bool array array) : unit =
 		let click = ref true in
 
 		while !click do
+			(* Required for Sdlmouse.get_state to return a non-zero value *)
 			let _ = update_loop () in
 			let ((x,y), bl) = Sdlmouse.get_state () in
 			click :=
@@ -57,15 +58,18 @@ let edit (grid : bool) (m : bool array array) : unit =
 					then (List.mem Sdlmouse.Button_Left bl)
 					else if mbb = 3 then (List.mem Sdlmouse.Button_Right bl)
 					else true);
-			let (i,j) = coord_to_cell x y in
-			if (i,j) <> !current_pixel
-				then
-					(print_mat ren m grid instr;
-					if !line
-						then bresenham ren mblank i0 j0 i j
-						else rectangle_no_writing ren i0 j0 i j;
-					refresh ren;
-					current_pixel := (i,j))
+			try
+				let (i,j) = coord_to_cell x y in
+				if (i,j) <> !current_pixel
+					then
+						(print_mat ren m grid instr;
+						if !line
+							then bresenham ren mblank i0 j0 i j
+							else rectangle_no_writing ren i0 j0 i j;
+						refresh ren;
+						current_pixel := (i,j))
+			with
+				| Out_of_screen -> ()
 		done
 	in
 

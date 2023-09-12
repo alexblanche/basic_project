@@ -3,8 +3,9 @@
 (** Parameters **)
 
 (* Window parameters *)
-let margin_h = ref 40;; (* Horizontal margin between the graphics window and the calculator screen *)
-let margin_v = ref 40;; (* Vertical margin between the graphics window and the calculator screen *)
+let margin_h = ref (-1);; (* Horizontal margin between the graphics window and the calculator screen *)
+let margin_v = ref (-1);; (* Vertical margin between the graphics window and the calculator screen *)
+(* The margins will be updated with update_parameters below. *)
 let size = ref 7;; (* Size of a pixel of the screen *)
 let width = ref (128 * !size);; (* Width of the calculator screen (without the margin) *)
 let height = ref (64 * !size);; (* Height of the calculator screen (without the margin) *)
@@ -24,7 +25,7 @@ let sdl_init () : unit =
 sdl_init ();;
 
 (* Font used for draw_string *)
-let font = Sdlttf.open_font ~file:"data/UbuntuMono-R.ttf" ~ptsize:20;;
+let font = Sdlttf.open_font ~file:"data/UbuntuMono-R.ttf" ~ptsize:16;;
 
 
 
@@ -39,7 +40,12 @@ let update_parameters (new_width : int) (new_height : int) : unit =
   width := 128 * !size;
   height := 64 * !size;
   margin_h := (new_width - !width)/2;
-  margin_v := (new_height - !height)/2;;
+  margin_v := (new_height - !height)/2;
+  List.iter (fun x -> print_int !x; print_char ' ') [width; height; margin_h; margin_v];
+  print_newline ()
+  ;;
+
+update_parameters (!width+2*40) (!height+2*40);;
 
 (* Loop that is required to make Sdlmouse.get_state work *)
 let rec update_loop () =

@@ -26,7 +26,8 @@
 #use "basic_running/locate_format.ml"
 #use "basic_running/graphic.ml"
 
-#use "basic_running/basic_run.ml"
+(* Not yet adapted to SDL2 *)
+(* #use "basic_running/basic_run.ml" *)
 #use "picture_editor/picture_edit.ml"
 
 (* Picture generation *)

@@ -31,6 +31,23 @@ let draw_string (ren : Sdlrender.t) (x : int) (y : int) (s: string) (rgb : int *
 	Sdlrender.copy ren ~texture ~dst_rect ();
 	Sdltexture.destroy texture;;
 
+(* Copies the screen into a texture *)
+(* Returns the texture and the destination rectangle *)
+let make_texture (win : Sdlwindow.t) (ren : Sdlrender.t) : Sdltexture.t * Sdlrect.t =
+	let surf = Sdlwindow.get_surface win in
+	let () = Sdlrender.read_pixels ren surf in
+	let texture = Sdltexture.create_from_surface ren surf in
+	let dims = Sdlsurface.get_dims surf in
+	let rect = Sdlrect.make2 ~pos:(0,0) ~dims in
+	(texture, rect)
+;;
+
+(* Displays the texture in the renderer ren *)
+let draw_texture (ren : Sdlrender.t) (texture : Sdltexture.t) (dst_rect : Sdlrect.t) : unit =
+	Sdlrender.copy ren ~texture ~dst_rect ();
+	Sdlrender.render_present ren
+;;
+
 (* Traces a rectangle of width w and height h, with lower-left point (a,b) *)
 let rect (ren : Sdlrender.t) (a : int) (b : int) (w : int) (h : int) =
 	Sdlrender.draw_rect ren (Sdlrect.make ~pos:(a,b) ~dims:(w,h));;
@@ -57,7 +74,7 @@ let plotoff (ren : Sdlrender.t) (m : bool array array) (grid : bool) (i : int) (
 		if grid then
 			(* reform the grid around the deleted pixel *)
 			(set_color ren gray;
-			rect ren (!margin_h + !size*i) (!margin_v + !size*j) !size !size;
+			rect ren (!margin_h + !size*i) (!margin_v + !size*j) (!size+1) (!size+1);
 			set_color ren black));;
 
 
@@ -239,10 +256,6 @@ let bresenham (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (
 
 (* Prints the background and the grid *)
 let print_bg (ren : Sdlrender.t) (grid : bool) (bg : Sdlrender.t -> unit) : unit =
-	(* frame *)
-	set_color ren black;
-	rect ren !margin_h !margin_v !width !height;
-	
 	(* grid *)
 	if grid
 		then
@@ -258,6 +271,10 @@ let print_bg (ren : Sdlrender.t) (grid : bool) (bg : Sdlrender.t -> unit) : unit
 				dline ren x0 y xw y
 			done;
 			set_color ren black);
+	
+	(* frame *)
+	set_color ren black;
+	rect ren !margin_h !margin_v (!width+1) (!height+1);
 	
 	(* Additional background *)
 	bg ren;;

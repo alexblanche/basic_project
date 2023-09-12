@@ -1,8 +1,8 @@
 (* Simplified 24 bits BMP image reader *)
 
-#use "topfind"
+(* #use "topfind"
 #require "graphics"
-open Graphics;;
+open Graphics;; *)
 
 (** Types **)
 
@@ -11,7 +11,8 @@ type word  = int;;
 type dword = int;;
 
 (* Types for color matrices *)
-type image_mat = color array array;;
+(* Each cell contains a RGB value with integers between 0 and 255 *)
+type image_mat = (int * int * int) array array;;
 
 (** Reading functions **)
 
@@ -29,6 +30,7 @@ let read_word channel =
   let b = input_byte channel in
   a + (256*b);;
 
+(* Returns an array of booleans representing the binary form of integer n *)
 let byte_repr (n : int) : bool array =
   let t = Array.make 8 false in
   let a = ref n in
@@ -77,13 +79,13 @@ let padd w =
 
 let read_pixels (width : int) (height : int) (channel : in_channel) : image_mat =
   let p = padd width in
-  let m = Array.make_matrix height width black in
+  let m = Array.make_matrix height width (0,0,0) in
   for j = 0 to height-1 do
     for i = 0 to width-1 do
       let b = input_byte channel in
       let g = input_byte channel in
       let r = input_byte channel in
-      m.(height-j-1).(i) <- rgb r g b
+      m.(height-j-1).(i) <- (r,g,b)
     done;
     for i = 1 to p do
       let _ = input_byte channel in ()
@@ -110,7 +112,7 @@ let read_mono_bmp (filename : string) : bool array array =
   let nbcol = width/8 in
   let a = ref 0 in
   try
-    for i=0 to 7 do
+    for i = 0 to 7 do
       let _ = input_byte channel in ()
     done;
     for j = 0 to height-1 do
@@ -130,8 +132,9 @@ let read_mono_bmp (filename : string) : bool array array =
 
 (** Display **)
 
-(* Displays the image on the screen as a picture *)
-let view_image (m : image_mat) : unit =
+(* Obsolete: Graphics library *)
+(* Displays the image on the screen *)
+(* let view_image (m : image_mat) : unit =
   let height = Array.length m in
   let width = Array.length m.(0) in
   let margin = 40 in
@@ -142,6 +145,43 @@ let view_image (m : image_mat) : unit =
   set_window_title "Image viewer";
   auto_synchronize false;
   draw_image pict_m margin margin;
-  synchronize();
+  synchronize ();
   let _ = read_key() in
-  close_graph();;
+  close_graph();; *)
+
+(* SDL2 adaptation *)
+(* Displays the image on the screen *)
+let view_image (m : image_mat) : unit =
+  let height = Array.length m in
+  let width = Array.length m.(0) in
+  let margin = 40 in
+  let win =
+		Sdlwindow.create
+			~title:"Image viewer"
+			~pos:(`pos 10, `pos 10)
+			~dims:(2*margin + width, 2*margin + height)
+			~flags:[]
+	in
+	let ren =
+		Sdlrender.create_renderer ~win ~index:0 ~flags:[]
+	in
+	Sdlrender.set_draw_blend_mode ren SdlblendMode.BNone;
+
+  for j = 0 to height - 1 do
+    for i = 0 to width - 1 do
+      Sdlrender.set_draw_color ren ~rgb:m.(j).(i) ~a:255;
+      Sdlrender.draw_point ren (margin+i, margin+j)
+    done
+  done;
+  Sdlrender.render_present ren;
+
+  let rec loop () =
+    match Sdlevent.poll_event () with
+      | Some (Window_Event {kind = WindowEvent_Close})
+			| Some (KeyDown _) -> ()
+      | _ -> loop ()
+  in
+  loop ();
+
+  Sdlwindow.destroy win;
+  Sdl.quit ();;
