@@ -220,19 +220,19 @@ let bresenham (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (
 	let di = i2 - i1 in
 	let dj = j2 - j1 in
 	(match (di=0),(di>0),(dj=0),(dj>0),(di>=dj),(di>=(-dj)),(-di>dj),(di<=dj) with
-		| true,_,true,_,_,_,_,_ -> ploton ren m i1 j1 (* single point *)
-		| true,_,_,true,_,_,_,_ -> vertical_line ren m i1 j1 j2 (* vertical ascending *)
-		| true,_,_,_,_,_,_,_ -> vertical_line ren m i1 j2 j1 (* vertical descending *)
-		| _,true,true,_,_,_,_,_ -> horitzontal_line ren m i1 i2 j1 (* horizontal right *)
+		| true,_,true,_,_,_,_,_ 	-> ploton ren m i1 j1 (* single point *)
+		| true,_,_,true,_,_,_,_ 	-> vertical_line ren m i1 j1 j2 (* vertical ascending *)
+		| true,_,_,_,_,_,_,_ 			-> vertical_line ren m i1 j2 j1 (* vertical descending *)
+		| _,true,true,_,_,_,_,_ 	-> horitzontal_line ren m i1 i2 j1 (* horizontal right *)
 		| _,true,_,true,true,_,_,_ -> bresenham_loop_18 ren m i1 j1 i2 j2 (* 1st octant *)
-		| _,true,_,true,_,_,_,_ -> bresenham_loop_23 ren m i1 j1 i2 j2 (* 2nd octant *)
-		| _,true,_,_,_,true,_,_ -> bresenham_loop_18 ren m i1 j1 i2 j2 (* 8th octant *)
-		| _,true,_,_,_,_,_,_ -> bresenham_loop_67 ren m i1 j1 i2 j2 (* 7th octant *)
-		| _,_,true,_,_,_,_,_ -> horitzontal_line ren m i2 i1 j1 (* horitzontal left *)
-		| _,_,_,true,_,_,true,_ -> bresenham_loop_45 ren m i1 j1 i2 j2 (* 4th octant *)
-		| _,_,_,true,_,_,_,_ -> bresenham_loop_23 ren m i1 j1 i2 j2 (* 3rd octant *)
-		| _,_,_,_,_,_,_,true -> bresenham_loop_45 ren m i1 j1 i2 j2 (* 5th octant *)
-		| _ -> bresenham_loop_67 ren m i1 j1 i2 j2 (* 6th octant *));;
+		| _,true,_,true,_,_,_,_ 	-> bresenham_loop_23 ren m i1 j1 i2 j2 (* 2nd octant *)
+		| _,true,_,_,_,true,_,_ 	-> bresenham_loop_18 ren m i1 j1 i2 j2 (* 8th octant *)
+		| _,true,_,_,_,_,_,_ 			-> bresenham_loop_67 ren m i1 j1 i2 j2 (* 7th octant *)
+		| _,_,true,_,_,_,_,_ 			-> horitzontal_line ren m i2 i1 j1 (* horitzontal left *)
+		| _,_,_,true,_,_,true,_ 	-> bresenham_loop_45 ren m i1 j1 i2 j2 (* 4th octant *)
+		| _,_,_,true,_,_,_,_ 			-> bresenham_loop_23 ren m i1 j1 i2 j2 (* 3rd octant *)
+		| _,_,_,_,_,_,_,true 			-> bresenham_loop_45 ren m i1 j1 i2 j2 (* 5th octant *)
+		| _ 											-> bresenham_loop_67 ren m i1 j1 i2 j2 (* 6th octant *));;
 
 
 (** Graphical interface **)
@@ -315,6 +315,7 @@ let view_matrix (m : bool array array) : unit =
 	set_color ren black;
 	print_mat ren m false (fun _ -> ());
 	refresh ren;
+	(* Wait for a key to be pressed, or the window to be closed *)
 	let rec loop () =
 		match Sdlevent.poll_event () with
 			| Some (Window_Event {kind = WindowEvent_Close})

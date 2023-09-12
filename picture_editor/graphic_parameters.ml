@@ -41,6 +41,11 @@ let update_parameters (new_width : int) (new_height : int) : unit =
   margin_h := (new_width - !width)/2;
   margin_v := (new_height - !height)/2;;
 
+(* Loop that is required to make Sdlmouse.get_state work *)
+let rec update_loop () =
+  match Sdlevent.poll_event () with
+    | None -> ()
+    | _ -> update_loop ();;
 
 
 
