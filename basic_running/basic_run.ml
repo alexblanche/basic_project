@@ -44,34 +44,34 @@ let store_ans (var : float array) (z : complex) : unit =
   var.(28+29) <- z.im;;
 
 (* Wait for Enter key to be pressed, then closes the graphic window *)
-let quit () : unit =
+let quit (win : Sdlwindow.t) : unit =
   wait_enter ();
-  close_graph ();;
+  close_graph win;
+  Sdl.quit ();;
 
-(* Prints the value of Ans, then quits *)
-let quit_print (val_seen : bool) (value : complex) (polar : bool) : unit =
+(* Prints the value of Ans if val_seen, "Done" otherwise, then quits *)
+let quit_print (win : Sdlwindow.t) (ren : Sdlrender.t) (val_seen : bool) (value : complex) (polar : bool) : unit =
   if val_seen
     then
       (line_feed ();
-      print_number value polar;
-      tdraw ())
+      print_number value polar)
     else
       (clear_text ();
       locate ["D"; "o"; "n"; "e"] 17 0);
-  tdraw ();
-  quit ();;
+  tdraw ren;
+  quit win;;
 
 
 (* Executes the Disp (black triangle) operation *)
-let disp (writing_index : int ref) : unit =
+let disp (ren : Sdlrender.t) (writing_index : int ref) : unit =
   line_feed ();
   clear_line !writing_index;
   print_disp !writing_index;
-  tdraw ();
+  tdraw ren;
   wait_enter ();
   clear_line !writing_index;
   decr writing_index;
-  tdraw ();; (* Can the last tdraw () be removed to speed up the execution? *)
+  tdraw ren;; (* Can the last tdraw be removed to speed up the execution? *)
 
 (* When the list l has length n > k, then the function returns two lists:
   the first k elements of l, then the other n-k *)
@@ -87,12 +87,12 @@ let split_k (l : 'a list) (k : int) =
   aux [] [] l 0;; 
 
 (* Executes the ? (QMark) operation *)
-let qmark (p : parameters) (v : variable) : unit =
+let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) (p : parameters) (v : variable) : unit =
   line_feed ();
   clear_line !writing_index;
   locate ["?"] 0 !writing_index;
   line_feed ();
-  tdraw ();
+  tdraw ren;
   clear_line !writing_index;
   let exit = ref false in
   let ns = ref [] in (* list of strings storing the number entered *)
@@ -127,16 +127,17 @@ let qmark (p : parameters) (v : variable) : unit =
         line_feed ());
       locate [cs] !x !writing_index;
       incr x;
-      tdraw ())
+      tdraw ren)
     else if key = '\027' && !ns <> [] then (* Esc and something was entered: reset *)
       (ns := [];
       x := 0;
       clear_text ();
       locate ["?"] 0 0;
       writing_index := 1;
-      tdraw ())
+      tdraw ren)
     else if key = '\027' then (* Esc and nothing was entered: quit *)
-      (close_graph ();
+      (close_graph win;
+      Sdl.quit ();
       raise Runtime_interruption)
   done;
   let (e,t) = extract_expr (List.rev !ns) in
@@ -220,8 +221,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   let val_seen = ref false in
 
   (* Initialization of the graphic window and graphic parameters *)
-  open_graphic ();
-  set_color black;
+  let (win, ren) = open_graphic () in
+  set_color ren black;
   clear_text ();
   wipe gscreen;
   writing_index := -1;
@@ -230,7 +231,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   let rec aux (i : int) : unit =
     
     if i >= n then (* End of the execution *)
-      quit_print !val_seen !last_val p.polar
+      quit_print win ren !val_seen !last_val p.polar
     else
 
     (* Check of key pressed *)
@@ -241,7 +242,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
       then
         let k = Graphics.read_key () in
         if k = '\027' (* Esc *)
-          then (close_graph (); raise Runtime_interruption)
+          then (close_graph win; raise Runtime_interruption)
         else
           p.getkey <- get_getkey_val k
       (* else p.getkey <- 0*));
@@ -271,12 +272,12 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           then
             (line_feed ();
             print_number z p.polar;
-            disp writing_index;
+            disp ren writing_index;
             aux (i+2))
           else aux (i+1))
           
       | Assign (QMark, v) ->
-        (qmark p v;
+        (qmark win ren p v;
         aux (i+1))
 
       | Assign (e, v) ->
@@ -321,7 +322,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           then
             (line_feed ();
             print_number z p.polar;
-            disp writing_index;
+            disp ren writing_index;
             aux (i+2))
           else aux (i+1))
           (* 
@@ -332,18 +333,18 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         (line_feed ();
         clear_line !writing_index;
         locate sl 0 !writing_index;
-        tdraw ();
+        tdraw ren;
         val_seen := true;
         if (i = n-2 && code.(i+1) = End
           || i = n-3 && code.(i+1) = Disp && code.(i+2) = End)
           && !prog_goback = []
           then (* End of the program *)
             (if code.(i+1) = Disp
-              then disp writing_index;
-            quit () (* Quit after the string *))
+              then disp ren writing_index;
+            quit win (* Quit after the string *))
           else if i<n-1 && code.(i+1) = Disp
             then
-              (disp writing_index;
+              (disp ren writing_index;
               aux (i+2))
             else aux (i+1))
           
@@ -370,18 +371,18 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
               str_to_rev_symblist_simple z_repr)
         in
         locate sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
-        tdraw ();
+        tdraw ren;
         val_seen := true;
         if (i = n-2 && code.(i+1) = End
           || i = n-3 && code.(i+1) = Disp && code.(i+2) = End)
           && !prog_goback = []
           then (* End of the program *)
             (if code.(i+1) = Disp
-              then disp writing_index;
-            quit () (* Quit after the string *))
+              then disp ren writing_index;
+            quit win (* Quit after the string *))
           else if i<n-1 && code.(i+1) = Disp
           then
-            (disp writing_index;
+            (disp ren writing_index;
             aux (i+2))
           else aux (i+1))
 
@@ -436,7 +437,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           | i::t ->
             (prog_goback := t;
             aux i)
-          | [] -> quit_print !val_seen !last_val p.polar)
+          | [] -> quit_print win ren !val_seen !last_val p.polar)
 
       | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
   in

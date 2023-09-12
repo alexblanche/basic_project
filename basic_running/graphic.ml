@@ -21,18 +21,30 @@ let writing_index = ref (-1);;
 (* gscreen: content of the graphic screen *)
 let gscreen = Array.make_matrix 64 128 false;;
 
-let open_graphic () : unit =
-  open_graph "";
-	resize_window (2*margin + width) (2*margin + height);
-	set_window_title "Basic Emulator";
-	cache ();
-	sync ();;
+(* Opens the graphic window and returns it along with its render *)
+let open_graphic () : Sdlwindow.t * Sdlrender.t =
+  let (win, ren) = config false (fun _ -> ()) in
+  Sdlwindow.set_title ~window:win ~title:"Basic Emulator";
+  refresh ren;
+  (win, ren);;
+
+exception Quit;;
 
 let wait_enter () : unit =
-  (* '\013' = ENTER *)
-  while not (read_key () = '\013') do
-    ()
-  done;;
+  let rec aux () =
+		match Sdlevent.poll_event () with
+			| Some (Window_Event {kind = WindowEvent_Close}) -> raise Quit
+			| Some (KeyDown {keycode = k}) ->
+        if k = KP_Enter then ()
+        else if k = Escape then raise Quit
+        else aux ()
+			| _ -> aux ()
+	in
+	aux ();;
+
+(** Graphic display **)
+let gdraw (ren : Sdlrender.t) : unit =
+  print_mat ren gscreen false (fun ren -> rect ren !margin_h !margin_v !width !height);;
 
 (* Erases the pixels of the matrix m *)
 let wipe (m : bool array array) : unit =
@@ -42,14 +54,10 @@ let wipe (m : bool array array) : unit =
     done;
   done;;
 
-(* Graphic display *)
-let gdraw () : unit =
-  print_mat gscreen false (fun () -> rect margin margin width height);;
-
-(* Text display *)
-let tdraw () : unit =
-  clear_graph ();
-  rect margin margin width height;
+(** Text display **)
+let tdraw (ren : Sdlrender.t) : unit =
+  clear_graph ren;
+  rect ren !margin_h !margin_v !width !height;
   let m = Array.make_matrix 64 128 false in
   for j = 0 to 6 do
     for i = 0 to 20 do
@@ -59,12 +67,12 @@ let tdraw () : unit =
         for y = 0 to 6 do
           for x = 0 to 4 do
             if t.(5*y+x)
-              then ploton m (1+6*i+x) (63-8*j-y)
+              then ploton ren m (1+6*i+x) (63-8*j-y)
           done
         done
     done
   done;
-  sync ();;
+  refresh ren;;
 (* Is it useful to have a bool matrix for the text screen too?
   If tdraw is too slow, I will consider it. *)
 

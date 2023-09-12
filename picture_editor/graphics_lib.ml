@@ -1,21 +1,18 @@
-(* Creation and manipulation of 64*128 monochrome pictures  *)
-
-(* #use "topfind"
-#require "graphics" *)
-(* open Graphics;; *)
+(* Creation and manipulation of 64*128 monochrome pictures *)
+(* Uses SDL2 and SDL2_TTF libraries *)
 
 
 (* Closes the window win *)
-let close_graph (win : Sdlwindow.t) (ren : Sdlrender.t) : unit =
-	Sdl.destroy win;;
+let close_graph (win : Sdlwindow.t) : unit =
+	Sdlwindow.destroy win;;
 
 (* Refresh function *)
-let refresh (renderer : Sdlrender.t) : unit =
-	Sdlrender.render_present renderer;;
+let refresh (ren : Sdlrender.t) : unit =
+	Sdlrender.render_present ren;;
 
 (* Sets drawing color *)
 let set_color (ren : Sdlrender.t) (color : int * int * int) : unit =
-	Sdlrender.set_draw_color renderer ~rgb:color ~a:255;
+	Sdlrender.set_draw_color ren ~rgb:color ~a:255;;
 
 (* Clears the window *)
 let clear_graph (ren : Sdlrender.t) : unit =
@@ -23,21 +20,28 @@ let clear_graph (ren : Sdlrender.t) : unit =
   Sdlrender.clear ren;
 	set_color ren black;;
 
-(* Draws the string s at position x,y in the given renderer *)
-let draw_string (ren : Sdlrender.t) (x : int) (y : int) (s: string) : unit =
-	();; (* to do *)
+(* Draws the string s at position x,y with color rgb in the given renderer *)
+let draw_string (ren : Sdlrender.t) (x : int) (y : int) (s: string) (rgb : int * int * int) : unit =
+	let (r,g,b) = rgb in
+	let surface = Sdlttf.render_text_solid font ~text:s ~color:{Sdlttf.r = r; g = g; b = b; a = 255} in
+	let textw, texth = Sdlsurface.get_dims surface in
+	let texture =	Sdltexture.create_from_surface ren surface in
+	Sdlsurface.free surface;
+	let dst_rect = Sdlrect.make ~pos:(x, y) ~dims:(textw, texth) in
+	Sdlrender.copy ren ~texture ~dst_rect ();
+	Sdltexture.destroy texture;;
 
 (* Traces a rectangle of width w and height h, with lower-left point (a,b) *)
 let rect (ren : Sdlrender.t) (a : int) (b : int) (w : int) (h : int) =
-	Sdlrender.draw_rect ren (Sdlrect.make (a,b) (w,h));;
+	Sdlrender.draw_rect ren (Sdlrect.make ~pos:(a,b) ~dims:(w,h));;
 
 (* Traces a line from (a,b) to (x,y) on the graphics window *)
 let dline (ren : Sdlrender.t) (a : int) (b : int) (x : int) (y : int) =
-	Sdlrender.draw_line (a,b) (x,y);;
+	Sdlrender.draw_line ren ((a,b),(x,y));;
 
 (* Fills a rectangle of width w and height h, with lower-left point (a,b) *)
 let fill_rect (ren : Sdlrender.t) (a : int) (b : int) (w : int) (h : int) =
-	Sdlrender.fill_rect ren (Sdlrect.make (a,b) (w,h));;
+	Sdlrender.fill_rect ren (Sdlrect.make ~pos:(a,b) ~dims:(w,h));;
 
 (* Fills the pixel i,j of the screen with the current color *)
 let ploton (ren : Sdlrender.t) (m : bool array array) (i : int) (j : int) =
@@ -75,7 +79,7 @@ let vertical_line (ren : Sdlrender.t) (m : bool array array) (i : int) (j1 : int
 let rec rectangle_no_writing (ren : Sdlrender.t) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
 	if i1 > i2 || j1 > j2
 		then rectangle_no_writing ren (min i1 i2) (min j1 j2) (max i1 i2) (max j1 j2)
-		else fill_rect ren (margin+size*i1) (margin+size*j1) ((i2-i1+1)*size) ((j2-j1+1)*size);;
+		else fill_rect ren (!margin_h + !size*i1) (!margin_v + !size*j1) ((i2-i1+1) * !size) ((j2-j1+1) * !size);;
 
 (* Traces a rectangle with lower-left cell (i1,j1) and upper-right cell (i2,j2)
 	and writes the pixel down in the matrix m *)
@@ -263,7 +267,6 @@ let print_bg (ren : Sdlrender.t) (grid : bool) (bg : Sdlrender.t -> unit) : unit
 	 bg: function that prints additional things in the background *)
 (* Returns the window and the renderer *)
 let config (grid : bool) (bg : Sdlrender.t -> unit) : Sdlwindow.t * Sdlrender.t =
-	Sdl.init [`VIDEO];
 	let window =
 		Sdlwindow.create
 			~title:"Basic Project Inferface"
@@ -275,6 +278,7 @@ let config (grid : bool) (bg : Sdlrender.t -> unit) : Sdlwindow.t * Sdlrender.t 
 		Sdlrender.create_renderer ~win:window ~index:0 ~flags:[]
 	in
 	Sdlrender.set_draw_blend_mode renderer SdlblendMode.BNone;
+	
 	print_bg renderer grid bg;
 	refresh renderer;
 	(window, renderer);;
@@ -300,128 +304,23 @@ let print_mat (ren : Sdlrender.t) (m : bool array array) (grid : bool) (bg : Sdl
 			while !i<>128 && m.(j).(!i) do
 				incr i
 			done;
-			fill_rect ren (!margin_h + !size * !ibeg) (!margin + !size * j) ((!i - !ibeg) * !size) !size;
+			fill_rect ren (!margin_h + !size * !ibeg) (!margin_v + !size * j) ((!i - !ibeg) * !size) !size;
 			incr i
 		done;
 	done;;
 	
 (* Opens a new graphic window and displays the matrix m *)
 let view_matrix (m : bool array array) : unit =
-	let (win, ren) = config false (fun _ -> ());
+	let (win, ren) = config false (fun _ -> ()) in
 	set_color ren black;
 	print_mat ren m false (fun _ -> ());
 	refresh ren;
-	let _ = wait_next_event [Button_down; Key_pressed] in
+	let rec loop () =
+		match Sdlevent.poll_event () with
+			| Some (Window_Event {kind = WindowEvent_Close})
+			| Some KeyDown _ -> ()
+			| _ -> loop ()
+	in
+	loop ();
 	close_graph win;
 	Sdl.quit ();;
-
-
-(** Interface **)
-
-(* Cell of the screen:
-	 (i,j)
-	 i belongs to 0..127
-	 j belongs to 0..63 *)
-type cell = int * int;;
-
-exception Out_of_screen
-
-(* Returns the cell that contains the vector (x,y) *)
-let coord_to_cell (x : int) (y : int) : cell =
-	if x <= !margin_h || x >= !margin_h + !width || y <= !margin_v || y >= !margin_v + !height
-		then raise Out_of_screen
-		else ((x - !margin_h) / !size, ((y - !margin_v) / !size));;
-
-(* Interface that lets the user add pixels, lines, rectangles
-	 and delete pixels on a 64*128 monochormatic matrix *)
-(* Modifies the matrix in place *)
-let edit (grid : bool) (m : bool array array) : unit =
-	
-	let instr () =
-		draw_string 0 0 "[Left-mouse] to add pixels, hold to draw a line/rectangle, [a] to toggle line/rectangle, [d] to delete pixels, [Esc] to quit"
-	in
-
-	config grid instr;
-	let exit = ref false in
-	let click = ref false in
-	let i0 = ref 0 in
-	let j0 = ref 0 in
-	let ifi = ref 0 in
-	let jfi = ref 0 in
-	let mblank = Array.make_matrix 64 128 false in
-	(* line = true if we draw a line, false if we draw a rectangle *)
-	let line = ref true in
-	
-	print_mat m grid instr;
-	refresh ();
-
-	while not !exit do
-	
-		let {mouse_x; mouse_y; button; keypressed; key} =
-			wait_next_event [Button_down; Key_pressed]
-		in
-		exit := key = '\027'; (* Esc *)
-		
-		if button then
-			begin
-				try
-					begin
-						(* display of the point on which we clicked *)
-						let (i,j) = coord_to_cell mouse_x mouse_y in
-						ploton m i j;
-						refresh ();
-						i0 := i;
-						j0 := j;
-						(* loop that displays the previsualized line *)
-						click := true;
-						while !click do
-							let {mouse_x; mouse_y; button; keypressed; key} =
-								wait_next_event [Button_down; Poll]
-							in
-							click := button;
-							(try
-								let (i,j) = coord_to_cell mouse_x mouse_y in
-								ifi := i;
-								jfi := j
-							with
-								| Out_of_screen -> ());
-							print_mat m grid instr;
-							(if !line
-								then bresenham mblank !i0 !j0 !ifi !jfi
-								else rectangle_no_writing !i0 !j0 !ifi !jfi);
-							sync ()
-						done;
-						(* display of the final line/rectangle *)
-						print_mat m grid instr;
-						(if !line
-							then bresenham m !i0 !j0 !ifi !jfi
-							else rectangle m !i0 !j0 !ifi !jfi);
-						sync ();
-						i0 := 0; j0 := 0;
-						ifi := 0; jfi := 0;
-					end
-				with
-					| Out_of_screen -> ()
-			end;
-		
-		if keypressed then
-			if key = 'd' then
-				try
-					let (i,j) = coord_to_cell mouse_x mouse_y in
-					plotoff m grid i j;
-					sync ()
-				with
-					| Out_of_screen -> ()
-			else if key = 'a' then
-				(line := not !line;
-				while key_pressed () do
-					()
-				done)
-	done;
-	close_graph ();;
-
-(* Interface that lets the user draw from scratch *)
-let interface (grid : bool) : bool array array =
-	let m = Array.make_matrix 64 128 false in
-	edit grid m;
-	m;;

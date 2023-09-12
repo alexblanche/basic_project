@@ -2,7 +2,7 @@
 
 (** Parameters **)
 
-(* Constants *)
+(* Window parameters *)
 let margin_h = ref 40;; (* Horizontal margin between the graphics window and the calculator screen *)
 let margin_v = ref 40;; (* Vertical margin between the graphics window and the calculator screen *)
 let size = ref 7;; (* Size of a pixel of the screen *)
@@ -13,6 +13,20 @@ let height = ref (64 * !size);; (* Height of the calculator screen (without the 
 let white = (255, 255, 255);;
 let gray = (120, 120, 148);;
 let black = (0, 0, 0);;
+
+(* Number of window resizings after which the screen is redrawn *)
+let resize_threshold = 15;;
+
+(* SDL2 initialization *)
+let sdl_init () : unit =
+  Sdl.init [`VIDEO];
+  Sdlttf.init () in
+sdl_init ();;
+
+(* Font used for draw_string *)
+let font = Sdlttf.open_font ~file:"data/UbuntuMono-R.ttf" ~ptsize:20;;
+
+
 
 
 (** Updating functions **)
@@ -31,7 +45,7 @@ let update_parameters (new_width : int) (new_height : int) : unit =
 
 
 (* Test function: draws a red rectangle in place of the calculator screen, and adapts to window resizing *)
-let test () =
+(* let test () =
   Sdl.init [`VIDEO];
 	let window = Sdlwindow.create ~title:"Display test" ~pos:(`pos 300, `pos 100) ~dims:(1000, 800) ~flags:[] in
 	
@@ -78,4 +92,4 @@ let test () =
     print_rect ();
 		aux ()
 	with
-		| Failure _ -> Sdl.quit ();;
+		| Failure _ -> Sdl.quit ();; *)

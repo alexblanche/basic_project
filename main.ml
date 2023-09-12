@@ -1,8 +1,6 @@
 (* Temporary main function *)
 (* Used to launch all the programs in order *)
 
-(* To do: redo the file placement *)
-
 (* Emulation *)
 #use "basic_parsing/file_reader.ml"
 #use "picture_editor/bmp_reader.ml"
@@ -22,16 +20,21 @@
 #require "sdl2"
 #require "sdl2_ttf"
 
-#use "picture_editor/picture_drawer.ml"
+#use "picture_editor/graphic_parameters.ml"
+#use "picture_editor/graphics_lib.ml"
 #use "basic_running/float_repr.ml"
 #use "basic_running/locate_format.ml"
 #use "basic_running/graphic.ml"
 
 #use "basic_running/basic_run.ml"
+#use "picture_editor/picture_edit.ml"
 
 (* Picture generation *)
-(* #use "picture_editor/picture_creator.ml"
-#use "basic_parsing/g1m_writer.ml" *)
+(*
+#use "picture_editor/picture_edit.ml"
+#use "picture_editor/picture_creator.ml"
+#use "basic_parsing/g1m_writer.ml"
+*)
 
 
 (* To do immediately:
@@ -39,7 +42,6 @@
   - Integrate list/matrix arithmetic in arithmetic_lexing, parsing and basic_compilation
   
 To do next:
-  - Encode the display form of all functions of basic_encoding (and their display in String, QMark, Locate, ...)
   - Complete the implementation of QMark (with functions, commands and operators)
   - Slow down the execution with Unix.sleepf (tests needed for text and graphic display)
   - Draw a calculator and code the execution of Getkey (by clicking or pressing keys)
