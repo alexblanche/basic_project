@@ -31,22 +31,45 @@ let draw_string (ren : Sdlrender.t) (x : int) (y : int) (s: string) (rgb : int *
 	Sdlrender.copy ren ~texture ~dst_rect ();
 	Sdltexture.destroy texture;;
 
+(* Inefficient version, going through a surface *)
 (* Copies the screen into a texture *)
 (* Returns the texture and the destination rectangle *)
-let make_texture (win : Sdlwindow.t) (ren : Sdlrender.t) : Sdltexture.t * Sdlrect.t =
+(* let make_texture (win : Sdlwindow.t) (ren : Sdlrender.t) : Sdltexture.t * Sdlrect.t =
 	let surf = Sdlwindow.get_surface win in
 	let () = Sdlrender.read_pixels ren surf in
 	let texture = Sdltexture.create_from_surface ren surf in
 	let dims = Sdlsurface.get_dims surf in
 	let rect = Sdlrect.make2 ~pos:(0,0) ~dims in
-	(texture, rect)
-;;
+	(texture, rect);; *)
+
+(* Creates a texture representing the image img *)
+(* Returns the texture and the destination rectangle *)
+let make_texture (ren : Sdlrender.t) (img : image_mat) : Sdltexture.t * Sdlrect.t =
+	let height_img = Array.length img in
+	let width_img = Array.length img.(0) in
+	let texture =
+		Sdltexture.create ren SdlpixelFormat.RGB888
+			SdltextureAccess.Target width_img height_img
+	in
+	(* Setting the rendering target to the texture *)
+	Sdlrender.set_render_target ren (Some texture);
+	(* Rendering the image in the texture *) 
+	for j = 0 to height_img - 1 do
+		for i = 0 to width_img - 1 do
+			Sdlrender.set_draw_color ren ~rgb:img.(j).(i) ~a:255;
+			Sdlrender.draw_point ren (i,j)
+		done
+	done;
+	(* Resetting the rendering target to the window *)
+	Sdlrender.set_render_target ren None;
+	let dst_rect = Sdlrect.make2 ~pos:(0,0) ~dims:(width_img, height_img) in
+	(texture, dst_rect);;
 
 (* Displays the texture in the renderer ren *)
-let draw_texture (ren : Sdlrender.t) (texture : Sdltexture.t) (dst_rect : Sdlrect.t) : unit =
-	Sdlrender.copy ren ~texture ~dst_rect ();
-	Sdlrender.render_present ren
-;;
+let draw_texture (ren : Sdlrender.t) (texture : Sdltexture.t) (dst_rect : Sdlrect.t) (x : int) (y : int) : unit =
+	Sdlrender.copy ren ~texture ~dst_rect:(Sdlrect.move dst_rect ~x ~y) ();;
+
+
 
 (* Traces a rectangle of width w and height h, with lower-left point (a,b) *)
 let rect (ren : Sdlrender.t) (a : int) (b : int) (w : int) (h : int) =

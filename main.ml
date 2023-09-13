@@ -1,6 +1,10 @@
 (* Temporary main function *)
 (* Used to launch all the programs in order *)
 
+#use "topfind"
+#require "sdl2"
+#require "sdl2_ttf"
+
 (* Emulation *)
 #use "basic_parsing/file_reader.ml"
 #use "picture_editor/bmp_reader.ml"
@@ -16,10 +20,6 @@
 #use "basic_parsing/arithmetic/arithmetic_parsing.ml"
 #use "basic_parsing/basic_compilation.ml"
 
-#use "topfind"
-#require "sdl2"
-#require "sdl2_ttf"
-
 #use "picture_editor/graphic_parameters.ml"
 #use "picture_editor/graphics_lib.ml"
 #use "basic_running/float_repr.ml"
@@ -29,6 +29,7 @@
 (* Not yet adapted to SDL2 *)
 (* #use "basic_running/basic_run.ml" *)
 #use "picture_editor/picture_edit.ml"
+#use "picture_editor/picture_creator.ml"
 
 (* Picture generation *)
 (*

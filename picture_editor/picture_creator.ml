@@ -94,7 +94,7 @@ let reduce_img (img : image_mat) (target_height : int) (target_width : int) : im
       let rm = !rt / !cnt in 
       let gm = !gt / !cnt in
       let bm = !bt / !cnt in
-      reduced_img.(j).(i) <- rgb rm gm bm;
+      reduced_img.(j).(i) <- (rm, gm, bm);
       xb := !xb +. size_reduced
     done;
     xb := 0.;
@@ -122,7 +122,7 @@ let flip (m : 'a array array) : 'a array array =
 (* Recolors the (r,g,b) pixel (i,j) as (r+err_r*coef/16,...,...) *)
 let error_propagation (img : image_mat) (i : int) (j : int) (err_r : int) (err_g : int) (err_b : int) (coef : int) : unit =
   let (r,g,b) = img.(j).(i) in
-  img.(j).(i) <- rgb (r+err_r*coef/16) (g+err_g*coef/16) (b+err_b*coef/16);;
+  img.(j).(i) <- (r+err_r*coef/16, g+err_g*coef/16, b+err_b*coef/16);;
 
 (* Returns a 64*128 matrix of monochromatic pixels (of type bool array array)
   that approximates the image rimg through the Floyd-Steinberg algorithm *)
@@ -215,11 +215,11 @@ let img_to_mono_threshold (rimg : image_mat) (thresh : float) : bool array array
 let view_side_by_side (img : image_mat) : bool array array =
   let rimg = reduce_img img 64 128 in
   let mono_fs = floyd_steinberg rimg in
-  let height_img = Array.length img
-  and width_img = Array.length img.(0) in
+  let height_img = Array.length img in
+  let width_img = Array.length img.(0) in
   let margin = 35 in
-  let size = max (min (height/64) (width/128)) 5 in
-  let img_mono_fs = mono_to_image_mat mono_fs !size in
+  let size = max (min (height_img/64) (width_img/128)) 3 in
+  let img_mono_fs = mono_to_image_mat mono_fs size in
   let exit = ref false in
   let fs_mode = ref true in (* true if Floyd-Steinberg, false if Threshold mode *)
   let thresh = ref 0.5 in
@@ -229,56 +229,52 @@ let view_side_by_side (img : image_mat) : bool array array =
 		Sdlwindow.create
 			~title:"Monochromatic Conversion"
 			~pos:(`pos 10, `pos 10)
-			~dims:(3 * margin + !width + !size * 128, 2 * margin + max !height (!size*64))
+			~dims:(3 * margin + width_img + size * 128, 2 * margin + max height_img (size*64))
 			~flags:[]
 	in
 	let ren =
-		Sdlrender.create_renderer ~win:window ~index:0 ~flags:[]
+		Sdlrender.create_renderer ~win ~index:0 ~flags:[]
 	in
-	Sdlrender.set_draw_blend_mode renderer SdlblendMode.BNone;
+	Sdlrender.set_draw_blend_mode ren SdlblendMode.BNone;
 
   let bg () =
-    draw_string ren 0 (margin + !height + 5)
+    draw_string ren 0 (margin + height_img + 5)
       "[a] to toggle Floyd-Steinberg/Threshold mode, [Esc] to quit." (0,0,0);
-    draw_string ren 0 (margin + !height + 20)
+    draw_string ren 0 (margin + height_img + 20)
       "When in Threshold mode, [+]/[-] to increase/decrease the threshold." (0,0,0)
   in
+  (* Obsolete *)
   (* let pict_img = make_image img in
   let pict_mono_fs = make_image img_mono_fs in *)
 
-  for j = 0 to !height - 1 do
-    for i = 0 to !width - 1 do
-      Sdlrender.set_draw_color ren ~rgb:m.(j).(i) ~a:255;
-      Sdlrender.draw_point ren (margin+i, margin+j)
-    done
-  done;
-  Sdlrender.render_present ren;
-
-  (** to do **)
+  let (img_txt, img_dstr) = make_texture ren img in
+  let (monofs_txt, monofs_dstr) = make_texture ren img_mono_fs in
 
   while not !exit do
+    (* Display of the colorful image and the monochromatic version (FS or threshold) *)
     clear_graph ren;
-    bg ren;
-    draw_image pict_img margin margin;
+    bg ();
+    draw_texture ren img_txt img_dstr margin margin;
     (* Red frame around the converted part of the original image *)
     set_color ren (255,0,0);
-    (if width < height*2
+    (if width_img < height_img*2
       then (* Ratio < 2:1 (portrait, 16/9...) *)
-        rect ren !margin_h (!margin_v + !height - !width/2) (!width+1) ((!width/2)+1)
+        rect ren margin (margin + height_img - width_img/2) (width_img+1) ((width_img/2)+1)
       else (* Ratio >= 2:1 (flat landscape) *)
-        rect ren !margin_h !margin_v ((2 * !height)+1) (!height+1));
+        rect ren margin margin ((2 * height_img)+1) (height_img+1));
     (* Black frame around the monochromatic image *)
     set_color ren black;
-    rect ren (2 * !margin_h + !width) !margin_v (128 * !size + 1) (64 * !size + 1);
+    rect ren (2 * margin + width_img) margin (128*size+1) (64*size+1);
     (* Display of the monochromatic image *)
-    (if !fs_mode
-      then draw_image pict_mono_fs (2 * !margin_h + !width + 1) (!margin_v + 1)
-      else
-        let pict_mono_th = make_image (mono_to_image_mat !mono_th size) in
-        draw_image pict_mono_th (2 * !margin_h + !width + 1) (!margin_v + 1));
+    if !fs_mode
+      then draw_texture ren monofs_txt monofs_dstr (2*margin + width_img + 1) margin
+      else (); (* To redo *)
+        (* let pict_mono_th = make_image (mono_to_image_mat !mono_th size) in
+        draw_image pict_mono_th (2 * margin + width_img + 1) (margin + 1)); *)
     refresh ren;
 
-    let {mouse_x; mouse_y; button; keypressed; key} =
+    (* Input loop *) (* To redo *)
+    (* let {mouse_x; mouse_y; button; keypressed; key} =
 			wait_next_event [Button_down; Key_pressed]
 		in
 		exit := key = '\027'; (* Esc *)
@@ -291,9 +287,9 @@ let view_side_by_side (img : image_mat) : bool array array =
           mono_th := img_to_mono_threshold rimg !thresh)
         else if key = '-' && !thresh <> 0. then
           (thresh := max 0. (!thresh -. 0.05);
-          mono_th := img_to_mono_threshold rimg !thresh)
+          mono_th := img_to_mono_threshold rimg !thresh) *)
   done;
-  close_graph();
+  close_graph win;
   if !fs_mode
     then mono_fs
     else !mono_th;;
