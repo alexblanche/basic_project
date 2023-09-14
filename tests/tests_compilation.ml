@@ -72,7 +72,7 @@ let prog_getkey () = compile
     "WHILE"; "1"; "EOL";
     "GETKEY"; "ASSIGN"; "K"; "EOL";
     "IF"; "K"; "LEQ"; "9"; "EOL";
-    "THEN"; "LOCATE"; "4"; "COMMA"; "3"; "COMMA"; "QUOTE"; "A"; "QUOTE"; "EOL";
+    "THEN"; "LOCATE"; "4"; "COMMA"; "3"; "COMMA"; "QUOTE"; " "; "QUOTE"; "EOL";
     "IFEND"; "EOL";
     "LOCATE"; "3"; "COMMA"; "3"; "COMMA"; "K"; "EOL";
     "WHILEEND"

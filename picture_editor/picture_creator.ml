@@ -268,6 +268,7 @@ let view_side_by_side (img : image_mat) : bool array array =
           else !mono_th)
 
       (* Resizing *)
+      (* To redo: make the whole view_side_by_side program depend on the global programs *)
 			| Some (Window_Event {kind = WindowEvent_Resized wxy}) ->
         (incr cpt_resize;
         if !cpt_resize >= resize_threshold then
@@ -279,7 +280,7 @@ let view_side_by_side (img : image_mat) : bool array array =
       | Some (Window_Event {kind = WindowEvent_Exposed})
       | Some Keymap_Changed ->
         (cpt_resize := resize_threshold;
-				draw fs_mode;
+				draw fs_mode; (* <- Useful ? *)
         input_loop fs_mode thresh)
 
 			(* Input *)

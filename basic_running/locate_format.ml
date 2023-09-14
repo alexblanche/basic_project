@@ -18,6 +18,20 @@ let str_to_rev_symblist_full (s : string) : string list =
   in
   aux [] 0;;
 
+(* Splitting when Locate goes out of the screen *)
+(* When the list l has length n > k, then the function returns two lists:
+  the first k elements of l, then the other n-k *)
+let split_k (l : 'a list) (k : int) =
+  let rec aux a b l i =
+    match l with
+      | h::t ->
+        if i < k
+          then aux (h::a) b t (i+1)
+          else aux a (h::b) t (i+1)
+      | [] -> (a,b)
+  in
+  aux [] [] l 0;;
+
 
 (** Formatting complex numbers **)
 

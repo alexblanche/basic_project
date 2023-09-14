@@ -47,7 +47,7 @@ let extract_non_empty (t : command array) : command array =
 
 (* After a double-quote was encountered, extracts the string that follows,
   until another double-quote is encountered *)
-(* Returns (sl, t), where sl is the output string, as list of lexemes,
+(* Returns (sl, t), where sl is the output string, as list of lexemes, in reverse order,
    and t is the tail of lexlist after the second double-quote (excluded) *)
 let extract_str (lexlist : string list) : (string list) * (string list) =
   let rec aux sl l =
@@ -55,7 +55,7 @@ let extract_str (lexlist : string list) : (string list) * (string list) =
       | s::"QUOTE"::t ->
         if s = "\092" (* anti-slash *)
           then aux ("\034"::sl) t (* The quote is kept *)
-          else (List.rev (s::sl), t)
+          else (s::sl, t)
       | "EOL"::_ -> failwith "extract_str: string ends without closing \""
       | s::t -> aux (s::sl) t
       | [] -> failwith "extract_str: program ends without closing \""
@@ -362,7 +362,7 @@ let process_goto i t code mem (a : string) (eol : string) =
 (* Prog *)
 let process_prog i t code mem =
   let sl, t' = extract_str t in
-  let s = String.concat "" sl in
+  let s = String.concat "" (List.rev sl) in
   match t' with
     | "EOL"::t'' ->
       (set code i (Prog s);

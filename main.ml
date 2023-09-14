@@ -7,6 +7,7 @@
 
 (* Initialization *)
 #use "initialization/graphics/graphic_parameters.ml"
+#use "initialization/graphics/events.ml"
 #use "initialization/file_readers/file_reader.ml"
 #use "initialization/file_readers/bmp_reader.ml"
 #use "initialization/types/complex.ml"
@@ -31,7 +32,7 @@
 #use "basic_running/locate_format.ml"
 #use "basic_running/basic_graphics.ml"
 (* Not yet adapted to SDL2 *)
-(* #use "basic_running/basic_run.ml" *)
+#use "basic_running/basic_run.ml"
 
 
 (* Picture generation *)
@@ -59,6 +60,7 @@ To do next:
   - Use SDL2 with OCamlSDL2 to have more control over keyboard, windows, etc.
 
 In the distant future:
+  - Redo the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."
   - Treat the EOL/DISP in Strings vs Locate (EOL shows in Strings, syntax error in Locate. Disp shows in the Locate display, syntax error in String.)
   - Code the "ABC"?->X without skipping a line
   - Complete the list of encodings, with the Catalog

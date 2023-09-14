@@ -19,7 +19,7 @@ let run_prog1 () =
     [|
       Expr (Arithm [Number (Value {re = 1.; im = 0.})]);
       Disp;
-      String ["A"; "B"; "C"; "D"];
+      String ["D"; "C"; "B"; "A"];
       Disp;
       Expr (Arithm [Number (Value {re = 2.; im = 0.})]);
       Disp;
@@ -29,7 +29,7 @@ let run_prog1 () =
       Disp;
       Expr (Arithm [Number (Value {re = 123456789012.; im = 22222.})]);
       Disp;
-      String ["E"; "F"; "G"; "H"];
+      String ["H"; "G"; "F"; "E"];
       Disp; 
       Expr (Arithm [Number (Value {re = 5.; im = 0.})]);
       Disp;
@@ -67,10 +67,10 @@ let run_prog3 () =
       Disp;
       Locate (Arithm [Number (Value {re = 10.; im = 0.})],
         Arithm [Number (Value {re = 5.; im = 0.})],
-        Loc_text ["A"; "B"; "C"]);
+        Loc_text ["C"; "B"; "A"]);
       Disp;
       Next;
-      String ["T"; "H"; "E"; " "; "E"; "N"; "D"];
+      String ["D"; "N"; "E"; " "; "E"; "H"; "T"];
       Disp;
       End
     |]
@@ -107,6 +107,7 @@ let run_prog5 () =
   run p prog5;;
 
 (* Result: about 10^8 operations (empty For Next) in 6 to 10s *)
+(* With Locate, program runs 3 times faster than the calculator... *)
 (* I hope that when compiled, it will be faster... *)
 
 (* Getkey *)

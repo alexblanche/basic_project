@@ -1,9 +1,5 @@
 (* Execution of Basic code *)
 
-(* #use "basic_parsing/basic_type.ml"
-#use "basic_parsing/basic_encoding.ml" *)
-(* #use "basic_running/arithmetic_parsing.ml"
-#use "basic_running/graphic.ml" *)
 
 (* Raised when exiting the program with Esc *)
 exception Runtime_interruption;;
@@ -44,10 +40,13 @@ let store_ans (var : float array) (z : complex) : unit =
   var.(28+29) <- z.im;;
 
 (* Wait for Enter key to be pressed, then closes the graphic window *)
-let quit (win : Sdlwindow.t) : unit =
-  wait_enter ();
-  close_graph win;
-  Sdl.quit ();;
+(* text_graph is true iff the text screen is displayed (as opposed to the graphic screen) *)
+let quit (win : Sdlwindow.t) (ren : Sdlrender.t) (text_graph : bool) : unit =
+  (try
+    wait_enter ren text_graph
+  with
+    | Window_Closed -> ());
+  close_graph win;;
 
 (* Prints the value of Ans if val_seen, "Done" otherwise, then quits *)
 let quit_print (win : Sdlwindow.t) (ren : Sdlrender.t) (val_seen : bool) (value : complex) (polar : bool) : unit =
@@ -57,9 +56,9 @@ let quit_print (win : Sdlwindow.t) (ren : Sdlrender.t) (val_seen : bool) (value 
       print_number value polar)
     else
       (clear_text ();
-      locate ["D"; "o"; "n"; "e"] 17 0);
+      locate ["e"; "n"; "o"; "D"] 17 0); (* "Done" *)
   tdraw ren;
-  quit win;;
+  quit win ren true;;
 
 
 (* Executes the Disp (black triangle) operation *)
@@ -68,83 +67,114 @@ let disp (ren : Sdlrender.t) (writing_index : int ref) : unit =
   clear_line !writing_index;
   print_disp !writing_index;
   tdraw ren;
-  wait_enter ();
+  wait_enter ren true;
   clear_line !writing_index;
   decr writing_index;
   tdraw ren;; (* Can the last tdraw be removed to speed up the execution? *)
 
-(* When the list l has length n > k, then the function returns two lists:
-  the first k elements of l, then the other n-k *)
-let split_k (l : 'a list) (k : int) =
-  let rec aux a b l i =
-    match l with
-      | h::t ->
-        if i<k
-          then aux (h::a) b t (i+1)
-          else aux a (h::b) t (i+1)
-      | [] -> (a,b)
-  in
-  aux [] [] l 0;; 
-
 (* Executes the ? (QMark) operation *)
 let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) (p : parameters) (v : variable) : unit =
+  (* Same as wait_keydown but supports resizing *)
+  let rec wait_keydown_resize (cpt_resize : int) : Sdlkeycode.t =
+    match Sdlevent.poll_event () with
+      (* Quitting *)
+      | Some (Window_Event {kind = WindowEvent_Close}) -> raise Window_Closed
+      (* Resizing *)
+			| Some (Window_Event {kind = WindowEvent_Resized wxy}) ->
+        if cpt_resize >= resize_threshold then
+					(update_parameters wxy.win_x wxy.win_y;
+					tdraw ren;
+          wait_keydown_resize 0)
+        else wait_keydown_resize (cpt_resize + 1)
+      
+      | Some (KeyDown {keycode = keycode}) -> keycode
+      | _ -> wait_keydown_resize cpt_resize
+  in
+
+  (* Main loop *)
+  (* ns: list of strings storing the number entered
+    x: index of writing in line !writing_index *)
+  let rec loop (ns : string list) (x : int) : string list =
+    let key = wait_keydown_resize 0 in
+    flush_events ();
+    (* Enter or keypad Enter *)
+    if (key = Return || key = KP_Enter) && ns <> []
+      then List.rev ns
+    else if key = Escape
+      then
+        if ns <> []
+          then (* Something was typed: Reset *)
+            (clear_text ();
+            locate ["?"] 0 0;
+            writing_index := 1;
+            tdraw ren;
+            wait_keyup key;
+            loop [] 0)
+          else (* Nothing was typed: Exitting the program *)
+            raise Runtime_interruption
+    else if List.mem key (* 0..9, '.': the symbol is the lexeme *)
+        [KP_0; KP_1; KP_2; KP_3; KP_4; KP_5; KP_6; KP_7; KP_8; KP_9; KP_Period]
+      then
+        let cs = List.assoc key
+          [(KP_0, "0"); (KP_1, "1"); (KP_2, "2"); (KP_3, "3"); (KP_4, "4");
+          (KP_5, "5"); (KP_6, "6"); (KP_7, "7"); (KP_8, "8"); (KP_9, "9");
+          (KP_Period, ".")]
+        in
+        if x = 21 then
+          (line_feed ();
+          locate [cs] 0 !writing_index;
+          tdraw ren;
+          wait_keyup key;
+          loop (cs::ns) 1)
+        else
+          (locate [cs] x !writing_index;
+          tdraw ren;
+          wait_keyup key;
+          loop (cs::ns) (x+1))
+    else if List.mem key (* Other lexemes: their representation is different from the lexeme *)
+        [LeftParen; RightParen; KP_Plus; KP_Minus; KP_Multiply; KP_Divide]
+      then
+        let lex = List.assoc key
+          [(LeftParen, "LPAR"); (RightParen, "RPAR");
+          (KP_Plus, "PLUS"); (KP_Minus, "MINUS"); (KP_Multiply, "TIMES"); (KP_Divide, "DIVIDED")]
+        in
+        let repr = List.assoc lex text_display in (* String representing the function *)
+        let cs = str_to_rev_symblist_full repr in (* string list printed by the Locate *)
+        let len = List.length cs in
+        if x + len >= 21 then
+          (let (csk,csnk) = split_k cs (len-(21-x)) in
+          locate (List.rev csnk) x !writing_index;
+          line_feed ();
+          locate (List.rev csk) 0 !writing_index;
+          tdraw ren;
+          wait_keyup key;
+          loop (lex::ns) ((x + len) mod 21))
+        else
+          (locate cs x !writing_index;
+          tdraw ren;
+          wait_keyup key;
+          loop (lex::ns) (x+len))
+    else
+      loop ns x
+  in
+
   line_feed ();
   clear_line !writing_index;
   locate ["?"] 0 !writing_index;
   line_feed ();
   tdraw ren;
+  (* The writing line is not cleared on screen until a character is typed *)
   clear_line !writing_index;
-  let exit = ref false in
-  let ns = ref [] in (* list of strings storing the number entered *)
-  let x = ref 0 in (* Index of writing in line !writing_index *)
-  while not !exit do
-    let {mouse_x; mouse_y; button; keypressed; key} =
-			wait_next_event [(* Button_down; *) Key_pressed]
-		in
-		exit := (key = '\013' && !ns <> []); (* Enter *)
 
-    if key >= '0' && key <= '9' || key = '.' (* || function... *) then
-      (let cs = String.make 1 key in
-      
-      (* (* To do *)
-      let cs = List.assoc (String.make 1 key) in
-      let lexcs = str_to_rev_symblist_full cs in
-      ns := List.rev_append lexcs !ns in
-      (*...*)
-      let len = List.length lexcs in
-      if !x + len >= 21 then
-        (let (csk,csn) = split_k lexcs in
-        locate csk !x !writing_index;
-        line_feed ();
-        locate csn 0 !writing_index)
-      else locate lexcs !x !writing_index;
-      x := (!x + len) mod 21;
-      *)
-
-      ns := cs::!ns;
-      if !x = 21 then
-        (x := 0;
-        line_feed ());
-      locate [cs] !x !writing_index;
-      incr x;
-      tdraw ren)
-    else if key = '\027' && !ns <> [] then (* Esc and something was entered: reset *)
-      (ns := [];
-      x := 0;
-      clear_text ();
-      locate ["?"] 0 0;
-      writing_index := 1;
-      tdraw ren)
-    else if key = '\027' then (* Esc and nothing was entered: quit *)
-      (close_graph win;
-      Sdl.quit ();
-      raise Runtime_interruption)
-  done;
-  let (e,t) = extract_expr (List.rev !ns) in
+  let ns = loop [] 0 in
+  
+  let (e,t) = extract_expr (List.rev ns) in
   if t <> []
     then failwith "Runtime error: wrong entry";
   let z = eval p e in
   assign_var p (Value z) v;;
+
+
 
 (* Getkey values *)
 (* Returns the Getkey value of the given key, as observerd on a Casio calculator *)
@@ -160,37 +190,20 @@ b\a  7     6    5    4    3    2
 2    1     2    3    +     -
 1    0     .    E    (-)   EXE
 *)
-let get_getkey_val (key : char) : int =
+let get_getkey_val (key : Sdlkeycode.t) : int =
   try
     List.assoc key
-    (* (in Azerty)
-      EXE = Enter
-      Arrows = Z Q S D
-      + - x div . , = + - * / . ,
-      0-9 : 0-9
-      F1-F6 = & é quote ' ( -  (i.e. 1-6)
-      SHIFT, ALPHA = ^2 tab
-      DEL = Backspace
-      (AC/on = Delete, stops the program, not available in Getkey)
-    *)
     (* To do: toggle Qwerty mode *)
     [
-      (* No key *)
-      ('\000', 0);
-
-      ('\028', 79); ('\233', 69);   ('\034', 59);   ('\039', 49);   ('\040', 39); ('\045', 29);
-      ('\178', 78); (* ('\000', 68); ('\000', 58);  ('\000', 48); *) ('q', 38);   ('z', 28);
-      ('\009', 77); (* ('\000', 67); ('\000', 57); *) ('\127', 47); ('s', 37);    ('d', 27);
-      (* ('\000', 76); ('\000', 66);   ('\000', 56);   ('\000', 46);   ('\000', 36); ('\000', 26); *)
-      (* ('\000', 75); ('\000', 65);   ('\000', 55);   ('\000', 45); *)  (',', 35);  (* ('\000', 25); *)
-      ('7', 74);    ('8', 64);      ('9', 54);      ('\008', 44);
-      ('4', 73);    ('5', 63);      ('6', 53);      ('*', 43);      ('/', 33);
-      ('1', 72);    ('2', 62);      ('3', 52);      ('+', 42);      ('-', 32);
-      ('0', 71);    ('.', 61);    (*  ('\000', 51);   ('\000', 41); *)  ('\013', 31);
-
-      (* Caps-lock alternatives *)
-      ('Q', 38); ('Z', 28); ('S', 37); ('D', 27);
-      ('\201', 69) (* Uppercase é = 2 *)
+      (F1, 79); (F2, 69); (F3, 59); (F4, 49); (F5, 39); (F6, 29);
+      (LShift, 78); (* ('\000', 68); ('\000', 58); ('\000', 48); *) (Left, 38); (Up, 28);
+      (LCtrl, 77); (* ('\000', 67); *) (Power, 57); (Delete, 47); (Down, 37); (Right, 27);
+      (* ('\000', 76); ('\000', 66); ('\000', 56); ('\000', 46); ('\000', 36); ('\000', 26); *)
+      (* ('\000', 75); ('\000', 65); *) (LeftParen, 55); (RightParen, 45); (KP_Comma, 35); (* ('\000', 25); *)
+      (KP_7, 74); (KP_8, 64); (KP_9, 54); (Backspace, 44);
+      (KP_4, 73); (KP_5, 63); (KP_6, 53); (KP_Multiply, 43); (KP_Divide, 33);
+      (KP_1, 72); (KP_2, 62); (KP_3, 52); (KP_Plus, 42); (KP_Minus, 32);
+      (KP_0, 71); (KP_Period, 61); (* ('\000', 51); ('\000', 41); *) (KP_Enter, 31); (Return, 31)
     ]
   with
     | Not_found -> 0;;
@@ -227,27 +240,42 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   wipe gscreen;
   writing_index := -1;
 
+  (* To be renamed read_getkey_input and moved out of the main function *)
+  (* Process events until None is encountered *)
+  let rec input_loop (none_counter : int) : unit =
+    match Sdlevent.poll_event () with
+      (* Quitting *)
+			| Some (Window_Event {kind = WindowEvent_Close})
+			| Some (KeyDown {keycode = Escape}) -> raise Runtime_interruption
+
+			(* Resizing *)
+			| Some (Window_Event {kind = WindowEvent_Resized wxy}) ->
+        (update_parameters wxy.win_x wxy.win_y;
+        input_loop none_counter)
+      
+      (* Input *)
+      | Some (KeyDown {keycode = key}) ->
+        (flush_events ();
+        p.getkey <- get_getkey_val key)
+
+      | None ->
+        (* Experimentally, there are about 8000 "None" events when holding a key *)
+        if none_counter >= 10000 (* MAKES THE PROGRAM UNBELIEVABLY SLOW *) (* To be called only when Getkey is called *)
+          then p.getkey <- 0
+          else input_loop (none_counter + 1)
+
+      | _ -> input_loop none_counter
+  in
+
   (** Looping function **)
   let rec aux (i : int) : unit =
     
     if i >= n then (* End of the execution *)
       quit_print win ren !val_seen !last_val p.polar
     else
-
-    (* Check of key pressed *)
-    (* wait_next_event with Poll does not work,
-      because the key presses are queued and take forever to dequeue.
-      The current method is satisfyingly responsive. *)
-    (if Graphics.key_pressed ()
-      then
-        let k = Graphics.read_key () in
-        if k = '\027' (* Esc *)
-          then (close_graph win; raise Runtime_interruption)
-        else
-          p.getkey <- get_getkey_val k
-      (* else p.getkey <- 0*));
-    (* Big problem: impossible to know when a key is released! :( *)
-    (* To do: use SDL2 with OCamlSDL2 *) 
+    
+    (* let _ = input_loop 0 in
+    let _ = flush_events () in *)
 
     match code.(i) with
 
@@ -341,7 +369,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           then (* End of the program *)
             (if code.(i+1) = Disp
               then disp ren writing_index;
-            quit win (* Quit after the string *))
+            quit win ren true (* Quit after the string *))
           else if i<n-1 && code.(i+1) = Disp
             then
               (disp ren writing_index;
@@ -352,12 +380,9 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         let z1 = eval p e1 in
         let z2 = eval p e2 in
         (if not
-          ((is_int z1)
-          && (is_int z2)
-          && (z1.re >= 1.)
-          && (z1.re <= 21.)
-          && (z2.re >= 1.)
-          && (z2.re <= 7.))
+          ((is_int z1) && (is_int z2)
+          && (z1.re >= 1.) && (z1.re <= 21.)
+          && (z2.re >= 1.) && (z2.re <= 7.))
           then failwith "Runtime error: wrong arguments for Locate";
         (* The coordinates in Casio Basic are between 1 and 21 *)
         let sl =
@@ -379,7 +404,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           then (* End of the program *)
             (if code.(i+1) = Disp
               then disp ren writing_index;
-            quit win (* Quit after the string *))
+            quit win ren true (* Quit after the string *))
           else if i<n-1 && code.(i+1) = Disp
           then
             (disp ren writing_index;
@@ -429,8 +454,11 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
       
       | Prog name ->
         (prog_goback := (i+1)::!prog_goback;
-        let j = List.assoc name proglist in
-        aux j)
+        try
+          let j = List.assoc name proglist in
+          aux j
+        with
+          | Not_found -> failwith ("Runtime error: Prog "^name^" not found"))
 
       | End ->
         (match !prog_goback with
@@ -442,7 +470,13 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
       | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
   in
   
-  aux 0;;
+  (try
+    aux 0
+  with
+    | Runtime_interruption
+    | Window_Closed -> print_endline "--- Runtime interruption ---"
+    | Failure s -> print_endline s);
+  close_graph win;;
 
 (* To do:
   - Slow down execution

@@ -109,7 +109,7 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
     | (Runop ro)::t, _ ->
       (match output_q with
         | x::outq -> shunting_yard p t ((Value (apply_rop ro (get_val p x)))::outq) op_q
-        | _ -> failwith ("No operand for operator "^ro))
+        | _ -> failwith ("Arithmetic parsing: No operand for operator "^ro))
 
     (* Obsolete *)
     (* Comma *)
@@ -136,7 +136,7 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
             (match output_q with
               | x2::x1::outq ->
                 shunting_yard p t ((Value (apply_op o2 (get_val p x1) (get_val p x2)))::outq) ((Op o1)::opqt)
-              | _ -> failwith ("Not enough operands for operator "^o2))
+              | _ -> failwith ("Arithmetic parsing: Not enough operands for operator "^o2))
           else
             let noutq, nopq = right_reduce p output_q op_q in
             shunting_yard p t noutq ((Op o1)::nopq)
@@ -156,13 +156,13 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
             shunting_yard p (Rpar::t) ((Value (apply_lop lo (get_val p x)))::outq) opqt
           | x2::x1::outq, (Op o)::opqt ->
             shunting_yard p (Rpar::t) ((Value (apply_op o (get_val p x1) (get_val p x2)))::outq) opqt
-          | _, (Op o)::opqt -> failwith ("Not enough operands for operator "^o)
+          | _, (Op o)::opqt -> failwith ("Arithmetic parsing: Not enough operands for operator "^o)
 
           (* Errors *)
-          | _, [] -> failwith "Mismatched parentheses"
+          | _, [] -> failwith "Arithmetic parsing: Mismatched parentheses"
           
-          | _ -> failwith "Untreated case")    
-    | _,_ -> failwith "Syntax error"
+          | _ -> failwith "Arithmetic parsing: Untreated case")    
+    | _,_ -> failwith "Arithmetic parsing: Syntax error"
 
 (* General arithmetic evaluation function *)
 (* p is the parameter container, containing the variables, lists and matrices *)

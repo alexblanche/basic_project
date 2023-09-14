@@ -8,6 +8,8 @@ let sdl_init () : unit =
 in
 sdl_init ();;
 
+(* Exception raised when the window is closed *)
+exception Window_Closed;;
 
 (** Parameters **)
 
@@ -48,19 +50,6 @@ let update_parameters (new_width : int) (new_height : int) : unit =
 
 (* Parameters initialization *)
 update_parameters (!width+2*40) (!height+2*40);;
-
-(* Loop that is required to make Sdlmouse.get_state work *)
-let rec flush_events () : unit =
-  match Sdlevent.poll_event () with
-    | None -> ()
-    | _ -> flush_events ();;
-
-(* Wait for KeyUp event with given keycode *)
-let rec wait_keyup (keycode : Sdlkeycode.t) : unit =
-  match Sdlevent.poll_event () with
-    | Some (KeyUp {keycode = keycode}) -> ()
-    | _ -> wait_keyup keycode;;
-
 
 
 

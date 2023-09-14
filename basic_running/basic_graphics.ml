@@ -2,12 +2,6 @@
 (* Contains all functions that interact with the graphic window,
   i.e. text mode and graphic mode *)
 
-(* #use "topfind"
-#require "graphics"
-
-#use "picture_editor/picture_drawer.ml"
-#use "basic_parsing/basic_encoding.ml" *)
-
 (* repr_text, repr_graph: hash tables of the visual representation of the characters in
   text mode and graphic mode respectively *)
 let repr_text = visual ();;
@@ -28,23 +22,10 @@ let open_graphic () : Sdlwindow.t * Sdlrender.t =
   refresh ren;
   (win, ren);;
 
-exception Quit;;
-
-let wait_enter () : unit =
-  let rec aux () =
-		match Sdlevent.poll_event () with
-			| Some (Window_Event {kind = WindowEvent_Close}) -> raise Quit
-			| Some (KeyDown {keycode = k}) ->
-        if k = KP_Enter then ()
-        else if k = Escape then raise Quit
-        else aux ()
-			| _ -> aux ()
-	in
-	aux ();;
-
 (** Graphic display **)
 let gdraw (ren : Sdlrender.t) : unit =
-  print_mat ren gscreen false (fun ren -> rect ren !margin_h !margin_v !width !height);;
+  print_mat ren gscreen false
+    (fun ren -> rect ren !margin_h !margin_v !width !height);;
 
 (* Erases the pixels of the matrix m *)
 let wipe (m : bool array array) : unit =
@@ -67,7 +48,7 @@ let tdraw (ren : Sdlrender.t) : unit =
         for y = 0 to 6 do
           for x = 0 to 4 do
             if t.(5*y+x)
-              then ploton ren m (1+6*i+x) (63-8*j-y)
+              then ploton ren m (1+6*i+x) (8*j+y)
           done
         done
     done
@@ -140,10 +121,42 @@ let print_number (z : complex) (polar : bool) : unit =
 
 (* Prints the "- DISP -" on the tscreen at line j *)
 let print_disp (j : int) : unit =
-  locate ["-"; " "; "D"; "i"; "s"; "p"; " "; "-"] 13 j;;
+  locate ["-"; " "; "p"; "s"; "i"; "D"; " "; "-"] 13 j;;
 
 (* Clears the whole tscreen *)
 let clear_text () : unit =
   for j = 0 to 6 do
     clear_line j
   done;;
+
+(* Waits for Enter key to be pressed *)
+(* Raises exception Window_Closed if the window is closed or Escape is pressed *)
+(* When the window is resized, if text_graph is true, tdraw is applied, otherwise gdraw *)
+let wait_enter (ren : Sdlrender.t) (text_graph : bool) : unit =
+  let rec aux (cpt_resize : int) : unit =
+    match Sdlevent.poll_event () with
+      (* Quitting *)
+      | Some (Window_Event {kind = WindowEvent_Close}) -> raise Window_Closed
+
+      (* Resizing *)
+			| Some (Window_Event {kind = WindowEvent_Resized wxy}) ->
+        if cpt_resize >= resize_threshold then
+					(update_parameters wxy.win_x wxy.win_y;
+					if text_graph then tdraw ren else gdraw ren;
+          aux 0)
+        else aux (cpt_resize + 1)
+
+      | Some (Window_Event {kind = WindowEvent_Exposed})
+      | Some Keymap_Changed -> aux resize_threshold
+
+      (* Input *)
+      | Some (KeyDown {keycode = k}) ->
+        if k = Return || k = KP_Enter (* Enter or keypad Enter *)
+          then ()
+        else if k = Escape
+          then raise Window_Closed
+        else aux cpt_resize
+
+      | _ -> aux cpt_resize
+  in
+  aux 0;;
