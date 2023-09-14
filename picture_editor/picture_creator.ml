@@ -242,7 +242,7 @@ let view_side_by_side (img : image_mat) : bool array array =
         rect ren margin margin ((2 * height_img)+1) (height_img+1));
     (* Black frame around the monochromatic image *)
     set_color ren black;
-    rect ren (2 * margin + width_img) margin (128*size+1) (64*size+1);
+    rect ren (2*margin+width_img) (margin-1) (128*size+2) (64*size+2);
     (* Display of the monochromatic image *)
     if fs_mode
       then draw_texture ren monofs_txt monofs_dstr (2*margin + width_img + 1) margin

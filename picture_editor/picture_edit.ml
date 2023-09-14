@@ -97,7 +97,7 @@ let edit (grid : bool) (m : bool array array) : unit =
         loop ())
 
 			(* Input *)
-			
+
 			| Some (KeyDown {keycode = A}) ->
 				(let _ = wait_keyup A in
 				line := not !line;
@@ -143,5 +143,5 @@ let edit (grid : bool) (m : bool array array) : unit =
 (* Interface that lets the user draw from scratch *)
 let interface (grid : bool) : bool array array =
 	let m = Array.make_matrix 64 128 false in
-	let _ = edit grid m in
+	edit grid m;
 	m;;
