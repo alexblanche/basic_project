@@ -35,14 +35,16 @@ let edit (grid : bool) (m : bool array array) : unit =
 	
 	(* line = true if we draw a line, false if we draw a rectangle *)
 	let line = ref true in
-	let key_down = ref false in
 	let current_pixel = ref (-1,-1) in
 
 	(* Window resizing counter *)
 	let cpt_resize = ref 0 in
-	
-	print_mat ren m grid instr;
-	refresh ren;
+
+	let draw () =
+		print_mat ren m grid instr;
+		refresh ren
+	in
+	draw ();
 
 	(* Loop that displays the previsualized line/rectangle until the mouse button is released *)
 	let loop_previs (mbb : int) : unit =
@@ -51,7 +53,7 @@ let edit (grid : bool) (m : bool array array) : unit =
 
 		while !click do
 			(* Required for Sdlmouse.get_state to return a non-zero value *)
-			let _ = update_loop () in
+			let _ = flush_events () in
 			let ((x,y), bl) = Sdlmouse.get_state () in
 			click :=
 				(if mbb = 1
@@ -75,29 +77,30 @@ let edit (grid : bool) (m : bool array array) : unit =
 
 	let rec loop () =
 		match Sdlevent.poll_event () with
+			(* Quitting *)
 			| Some (Window_Event {kind = WindowEvent_Close})
 			| Some (KeyDown {keycode = Escape}) -> ()
 
+			(* Resizing *)
 			| Some (Window_Event {kind = WindowEvent_Resized wxy}) ->
         (incr cpt_resize;
         if !cpt_resize >= resize_threshold then
 					(update_parameters wxy.win_x wxy.win_y;
+					draw ();
 					cpt_resize := 0);
         loop ())
 
       | Some (Window_Event {kind = WindowEvent_Exposed})
       | Some Keymap_Changed ->
         (cpt_resize := resize_threshold;
+				draw ();
         loop ())
 
-			| Some (KeyUp _) ->
-				(key_down := false;
-				loop ())
+			(* Input *)
 			
 			| Some (KeyDown {keycode = A}) ->
-				(if not !key_down
-					then line := not !line;
-				key_down := true;
+				(let _ = wait_keyup A in
+				line := not !line;
 				loop ())
 			
 			| Some (Mouse_Button_Down {mb_button = mbb; mb_x = x; mb_y = y}) ->
@@ -140,5 +143,5 @@ let edit (grid : bool) (m : bool array array) : unit =
 (* Interface that lets the user draw from scratch *)
 let interface (grid : bool) : bool array array =
 	let m = Array.make_matrix 64 128 false in
-	edit grid m;
+	let _ = edit grid m in
 	m;;

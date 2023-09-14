@@ -5,6 +5,9 @@
 #require "sdl2"
 #require "sdl2_ttf"
 
+(* Initialization *)
+#use "picture_editor/graphic_parameters.ml"
+
 (* Emulation *)
 #use "basic_parsing/file_reader.ml"
 #use "picture_editor/bmp_reader.ml"
@@ -12,7 +15,6 @@
 #use "basic_parsing/basic_type.ml"
 #use "basic_parsing/project_type.ml"
 #use "basic_parsing/basic_encoding.ml"
-#use "basic_parsing/command_display"
 #use "basic_parsing/g1m_reader.ml"
 
 #use "basic_parsing/arithmetic/arithmetic_def.ml"
@@ -20,12 +22,12 @@
 #use "basic_parsing/arithmetic/arithmetic_parsing.ml"
 #use "basic_parsing/basic_compilation.ml"
 
-#use "picture_editor/graphic_parameters.ml"
 #use "picture_editor/graphics_lib.ml"
 #use "basic_running/float_repr.ml"
 #use "basic_running/locate_format.ml"
 #use "basic_running/graphic.ml"
 
+#use "basic_running/command_display.ml"
 (* Not yet adapted to SDL2 *)
 (* #use "basic_running/basic_run.ml" *)
 #use "picture_editor/picture_edit.ml"
@@ -62,4 +64,5 @@ In the distant future:
   - Implement the fraction display (5 FRACSIGN 3 displays as a pair of int separated by FRACSIGN)
   - Implement as many functions as possible (from the to do list)
   - Implement the menu in the QMark entry menu, to access all functions
+  - Improve the side by side interface, by allowing changing the conversion window when clicking
 *)

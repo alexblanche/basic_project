@@ -1,5 +1,14 @@
 (* Parameters and updating functions for graphic display *)
 
+(** SDL2 initialization **)
+
+let sdl_init () : unit =
+  Sdl.init [`VIDEO; `EVENTS];
+  Sdlttf.init ()
+in
+sdl_init ();;
+
+
 (** Parameters **)
 
 (* Window parameters *)
@@ -18,16 +27,8 @@ let black = (0, 0, 0);;
 (* Number of window resizings after which the screen is redrawn *)
 let resize_threshold = 15;;
 
-(* SDL2 initialization *)
-let sdl_init () : unit =
-  Sdl.init [`VIDEO];
-  Sdlttf.init () in
-sdl_init ();;
-
 (* Font used for draw_string *)
 let font = Sdlttf.open_font ~file:"data/UbuntuMono-R.ttf" ~ptsize:16;;
-
-
 
 
 (** Updating functions **)
@@ -40,18 +41,26 @@ let update_parameters (new_width : int) (new_height : int) : unit =
   width := 128 * !size;
   height := 64 * !size;
   margin_h := (new_width - !width)/2;
-  margin_v := (new_height - !height)/2;
-  List.iter (fun x -> print_int !x; print_char ' ') [width; height; margin_h; margin_v];
-  print_newline ()
-  ;;
+  margin_v := (new_height - !height)/2
+  (* List.iter (fun x -> print_int !x; print_char ' ') [width; height; margin_h; margin_v];
+  print_newline () *)
+;;
 
+(* Parameters initialization *)
 update_parameters (!width+2*40) (!height+2*40);;
 
 (* Loop that is required to make Sdlmouse.get_state work *)
-let rec update_loop () =
+let rec flush_events () : unit =
   match Sdlevent.poll_event () with
     | None -> ()
-    | _ -> update_loop ();;
+    | _ -> flush_events ();;
+
+(* Wait for KeyUp event with given keycode *)
+let rec wait_keyup (keycode : Sdlkeycode.t) : unit =
+  match Sdlevent.poll_event () with
+    | Some (KeyUp {keycode = keycode}) -> ()
+    | _ -> wait_keyup keycode;;
+
 
 
 

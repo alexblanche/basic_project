@@ -2,13 +2,6 @@
   through the Floyd-Steinberg dithering algorithm
   and the Threshold algorithm applied on existing BMP images *)
 
-(** Warning **)
-(* The convention of Graphics function draw_image is (0,0) = upper-left corner
-  while the convention of the rest of the Graphics library is (0,0) = lower-left corner,
-  and I respected the latest convention in picture_drawer.
-  Thus, we flip the monochromatic matrix before feeding it to the editing interface *)
-(* The convention of the matrix output by create_edit is (0,0) = lower-left corner. *)
-
 (** Useful functions **)
 
 (* Returns true if the color (r,g,b) is closer to black (pixel)
@@ -25,13 +18,6 @@ let closest_color_threshold (r : int) (g : int) (b : int) (threshold : float) : 
   let gf = float_of_int g in
   let bf = float_of_int b in
   0.3*.rf +. 0.59*.gf +. 0.11*.bf <= 255. *. threshold;;
-
-(* Obsolete *)
-(* Returns the tuple (r,g,b) associated with the color c *)
-(* let reverse_rgb (c : Graphics.color) : int * int * int =
-  let b = c mod 256 in
-  let c2 = c / 256 in
-  (c2 / 256, c2 mod 256, b);; *)
 
 
 (** Conversion functions **)
@@ -101,19 +87,6 @@ let reduce_img (img : image_mat) (target_height : int) (target_width : int) : im
     yb := !yb +. size_reduced
   done;
   reduced_img;;
-
-(* Flips the image upside down *)
-(* Returns a new matrix *)
-let flip (m : 'a array array) : 'a array array =
-  let height = Array.length m in
-  let width = Array.length m.(0) in
-  let fm = Array.make_matrix height width m.(0).(0) in
-  for i = 0 to width-1 do
-    for j = 0 to height-1 do
-      fm.(j).(i) <- m.(height-j-1).(i)
-    done
-  done;
-  fm;;
 
 
 (** Floyd-Steinberg algorithm **)
@@ -220,10 +193,13 @@ let view_side_by_side (img : image_mat) : bool array array =
   let margin = 35 in
   let size = max (min (height_img/64) (width_img/128)) 3 in
   let img_mono_fs = mono_to_image_mat mono_fs size in
-  let exit = ref false in
-  let fs_mode = ref true in (* true if Floyd-Steinberg, false if Threshold mode *)
-  let thresh = ref 0.5 in
-  let mono_th = ref (img_to_mono_threshold rimg !thresh) in
+  (* let exit = ref false in *)
+  (* let fs_mode = ref true in  *)
+  (* let thresh = ref 0.5 in *)
+  let mono_th = ref (img_to_mono_threshold rimg 0.5) in
+
+  (* Window resizing counter *)
+	let cpt_resize = ref 0 in
   
   let win =
 		Sdlwindow.create
@@ -250,7 +226,9 @@ let view_side_by_side (img : image_mat) : bool array array =
   let (img_txt, img_dstr) = make_texture ren img in
   let (monofs_txt, monofs_dstr) = make_texture ren img_mono_fs in
 
-  while not !exit do
+  (* Displays the image and the monochromatic version side by side *)
+  (* Called by the main loop *)
+  let draw fs_mode =
     (* Display of the colorful image and the monochromatic version (FS or threshold) *)
     clear_graph ren;
     bg ();
@@ -259,40 +237,80 @@ let view_side_by_side (img : image_mat) : bool array array =
     set_color ren (255,0,0);
     (if width_img < height_img*2
       then (* Ratio < 2:1 (portrait, 16/9...) *)
-        rect ren margin (margin + height_img - width_img/2) (width_img+1) ((width_img/2)+1)
+        rect ren margin margin (width_img+1) ((width_img/2)+1)
       else (* Ratio >= 2:1 (flat landscape) *)
         rect ren margin margin ((2 * height_img)+1) (height_img+1));
     (* Black frame around the monochromatic image *)
     set_color ren black;
     rect ren (2 * margin + width_img) margin (128*size+1) (64*size+1);
     (* Display of the monochromatic image *)
-    if !fs_mode
+    if fs_mode
       then draw_texture ren monofs_txt monofs_dstr (2*margin + width_img + 1) margin
-      else (); (* To redo *)
+      else
+        (* Obsolete *)
         (* let pict_mono_th = make_image (mono_to_image_mat !mono_th size) in
         draw_image pict_mono_th (2 * margin + width_img + 1) (margin + 1)); *)
-    refresh ren;
+        print_mat_content ren !mono_th (2 * margin + width_img + 1) (margin + 1) size;
+    refresh ren
+  in
+  
+  (* Input loop *)
+  (* true if Floyd-Steinberg, false if Threshold mode *)
+  let rec input_loop fs_mode thresh =
+    match Sdlevent.poll_event () with
+      (* Quitting *)
+      | Some (Window_Event {kind = WindowEvent_Close})
+      | Some (KeyDown {keycode = Escape}) ->
+        (close_graph win;
+        (* Output *)
+        if fs_mode
+          then mono_fs
+          else !mono_th)
 
-    (* Input loop *) (* To redo *)
-    (* let {mouse_x; mouse_y; button; keypressed; key} =
-			wait_next_event [Button_down; Key_pressed]
-		in
-		exit := key = '\027'; (* Esc *)
-    if keypressed then
-      if key = 'a' then
-        fs_mode := not !fs_mode
-      else if not !fs_mode then
-        if key = '+' && !thresh <> 1. then
-          (thresh := min 1. (!thresh +. 0.05);
-          mono_th := img_to_mono_threshold rimg !thresh)
-        else if key = '-' && !thresh <> 0. then
-          (thresh := max 0. (!thresh -. 0.05);
-          mono_th := img_to_mono_threshold rimg !thresh) *)
-  done;
-  close_graph win;
-  if !fs_mode
-    then mono_fs
-    else !mono_th;;
+      (* Resizing *)
+			| Some (Window_Event {kind = WindowEvent_Resized wxy}) ->
+        (incr cpt_resize;
+        if !cpt_resize >= resize_threshold then
+					(update_parameters wxy.win_x wxy.win_y;
+					draw fs_mode;
+					cpt_resize := 0);
+        input_loop fs_mode thresh)
+
+      | Some (Window_Event {kind = WindowEvent_Exposed})
+      | Some Keymap_Changed ->
+        (cpt_resize := resize_threshold;
+				draw fs_mode;
+        input_loop fs_mode thresh)
+
+			(* Input *)
+
+      | Some (KeyDown {keycode = k}) ->
+        let _ = wait_keyup k in
+        if k = A then
+          (flush_events ();
+          draw (not fs_mode);
+          input_loop (not fs_mode) thresh)
+        else if not fs_mode then
+          if k = KP_Plus && thresh < 1. then
+            (flush_events ();
+            let n_thresh = min 1. (thresh +. 0.05) in
+            mono_th := img_to_mono_threshold rimg n_thresh;
+            draw fs_mode;
+            input_loop fs_mode n_thresh)
+          else if k = KP_Minus && thresh > 0. then
+            (flush_events ();
+            let n_thresh = max 0. (thresh -. 0.05) in
+            mono_th := img_to_mono_threshold rimg n_thresh;
+            draw fs_mode;
+            input_loop fs_mode n_thresh)
+          else input_loop fs_mode thresh
+        else input_loop fs_mode thresh
+
+      | _ -> input_loop fs_mode thresh
+  in
+
+  let _ = draw true in
+  input_loop true 0.5;;
 
 (* Full interface: reads the BMP file, generates the monochromatic image
   through Floyd-Steinberg or the Threshold algorithm and edit the resulting image *)
@@ -300,9 +318,8 @@ let view_side_by_side (img : image_mat) : bool array array =
 let create_edit (file_name : string) : bool array array =
   let img = read_bmp file_name in
   let mono = view_side_by_side img in
-  let fmono = flip mono in
-  edit true fmono;
-  fmono;;
+  let _ = edit true mono in
+  mono;;
 
 (* Testing function *)
 let test_fs (s : string) =

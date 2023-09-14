@@ -69,8 +69,6 @@ let make_texture (ren : Sdlrender.t) (img : image_mat) : Sdltexture.t * Sdlrect.
 let draw_texture (ren : Sdlrender.t) (texture : Sdltexture.t) (dst_rect : Sdlrect.t) (x : int) (y : int) : unit =
 	Sdlrender.copy ren ~texture ~dst_rect:(Sdlrect.move dst_rect ~x ~y) ();;
 
-
-
 (* Traces a rectangle of width w and height h, with lower-left point (a,b) *)
 let rect (ren : Sdlrender.t) (a : int) (b : int) (w : int) (h : int) =
 	Sdlrender.draw_rect ren (Sdlrect.make ~pos:(a,b) ~dims:(w,h));;
@@ -323,11 +321,10 @@ let config (grid : bool) (bg : Sdlrender.t -> unit) : Sdlwindow.t * Sdlrender.t 
 	refresh renderer;
 	(window, renderer);;
 
-(* Displays the matrix m on the screen with the grid (if grid = true) and the background bg *)
-(* Does not open a window, nor refresh it *)
-let print_mat (ren : Sdlrender.t) (m : bool array array) (grid : bool) (bg : Sdlrender.t -> unit) : unit =
-	clear_graph ren;
-	print_bg ren grid bg;
+
+(* Displays the matrix m on the screen at position (x,y) with pixels of given size *)
+(* Does not refresh the window *)
+let print_mat_content (ren : Sdlrender.t) (m : bool array array) (x : int) (y : int) (size : int) : unit =
 	let ibeg = ref 0 in
 	let i = ref 0 in
 	for j = 0 to 63 do
@@ -344,10 +341,17 @@ let print_mat (ren : Sdlrender.t) (m : bool array array) (grid : bool) (bg : Sdl
 			while !i<>128 && m.(j).(!i) do
 				incr i
 			done;
-			fill_rect ren (!margin_h + !size * !ibeg) (!margin_v + !size * j) ((!i - !ibeg) * !size) !size;
+			fill_rect ren (x + size * !ibeg) (y + size * j) ((!i - !ibeg) * size) size;
 			incr i
 		done;
 	done;;
+
+(* Displays the matrix m on the screen with the grid (if grid = true) and the background bg *)
+(* Does not open a window, nor refresh it *)
+let print_mat (ren : Sdlrender.t) (m : bool array array) (grid : bool) (bg : Sdlrender.t -> unit) : unit =
+	clear_graph ren;
+	print_bg ren grid bg;
+	print_mat_content ren m !margin_h !margin_v !size;;
 	
 (* Opens a new graphic window and displays the matrix m *)
 let view_matrix (m : bool array array) : unit =

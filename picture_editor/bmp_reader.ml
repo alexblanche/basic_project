@@ -1,9 +1,5 @@
 (* Simplified 24 bits BMP image reader *)
 
-(* #use "topfind"
-#require "graphics"
-open Graphics;; *)
-
 (** Types **)
 
 (* Types for word (2 bytes) and dword (4 bytes) *)
