@@ -343,8 +343,10 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
               let z_repr = float_to_casio z.re in
               str_to_rev_symblist_simple z_repr)
         in
-        locate sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
-        tdraw ren;
+        (* locate sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
+        tdraw ren; *)
+        (* Alternative: *)
+        fast_locate ren sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
         val_seen := true;
         if (i = n-2 && code.(i+1) = End
           || i = n-3 && code.(i+1) = Disp && code.(i+2) = End)

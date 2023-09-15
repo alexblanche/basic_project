@@ -81,6 +81,30 @@ let locate (slist : string list) (i : int) (j : int) : unit =
   let n = List.length slist in
   List.iteri (fun k s -> if i+n <= 21+k then tscreen.(j).(i+n-1-k) <- s) slist;;
 
+(* Same as Locate, but does not need to refresh the whole screen *)
+let fast_locate (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : unit =
+  let n = List.length slist in
+  List.iteri (fun k s -> if i+n <= 21+k then tscreen.(j).(i+n-1-k) <- s) slist;
+  let m = Array.make_matrix 64 128 false in
+  let bound = min 20 (i+n-1) in
+  set_color ren white;
+  let white_r = Sdlrect.make2
+    ~pos:(!margin_h + !size*(1+6*i), !margin_v + !size*8*j)
+    ~dims:(6 * !size * (bound-i+1) - !size, 7 * !size)
+  in
+  Sdlrender.fill_rect ren white_r;
+  set_color ren black;
+  for k = i to bound do
+    let t = Hashtbl.find repr_text tscreen.(j).(k) in
+    for y = 0 to 6 do
+      for x = 0 to 4 do
+        if t.(5*y+x)
+          then ploton ren m (1+6*k+x) (8*j+y)
+      done
+    done
+  done;
+  refresh ren;;
+
 (* Prints the number z (of type complex) at the right of the writing line *)
 (* polar = true if the complex is to be printed in polar form, false in a+ib form *)
 let print_number (z : complex) (polar : bool) : unit =

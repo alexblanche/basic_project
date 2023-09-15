@@ -95,8 +95,8 @@ let plotoff (ren : Sdlrender.t) (m : bool array array) (grid : bool) (i : int) (
 		if grid then
 			(* reform the grid around the deleted pixel *)
 			(set_color ren gray;
-			rect ren (!margin_h + !size*i) (!margin_v + !size*j) (!size+1) (!size+1);
-			set_color ren black));;
+			rect ren (!margin_h + !size*i) (!margin_v + !size*j) (!size+1) (!size+1));
+		set_color ren black);;
 
 
 (* Traces an horizontal line between pixel (i1,j) and (i2,j) (i1 is the leftmost pixel) *)
