@@ -110,7 +110,7 @@ type parameters = {
   mutable axes : bool;
 
   (* Getkey *)
-  mutable getkey : int;
+  mutable getkey : int
 }
 
 
@@ -147,7 +147,7 @@ let empty_param () : parameters =
     axes = false;
 
     (* Getkey *)
-    getkey = 0;
+    getkey = 0
   };;
 
 (* Returns a new array with twice the size of t, with the elements of t as first elements

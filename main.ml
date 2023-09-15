@@ -19,6 +19,7 @@
 #use "g1m_read_write/g1m_reader.ml"
 
 (* Compilation *)
+#use "basic_running/getkey.ml"
 #use "arithmetic/arithmetic_def.ml"
 #use "arithmetic/arithmetic_lexing.ml"
 #use "arithmetic/arithmetic_parsing.ml"

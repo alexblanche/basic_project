@@ -10,8 +10,6 @@
     according to the number of commas on the operator queue.
   - The parentheses are not always closed.
 *)
-
-
     
 (** Evaluation **)
 
@@ -39,7 +37,25 @@ let rec get_val (p : parameters) (n : basic_number) : complex =
   match n with
     | Value z -> z
     | Variable (Var i) -> get_var_val p.var i
-    | Variable Getkey -> complex_of_int p.getkey
+    | Variable Getkey ->
+      (match read_getkey_input p.getkey with
+        | released, Some keycode ->
+          let key_v = get_getkey_val keycode in
+          if released || p.getkey = 0
+            then
+              (p.getkey <- key_v;
+              complex_of_int key_v)
+            else
+              complex_of_int p.getkey
+              
+        | released, _ ->
+          if released
+            then
+              (p.getkey <- 0;
+              complex_of_int 0)
+            else
+              (complex_of_int p.getkey))
+
     | Variable (ListIndex (a,e)) ->
       let z = eval p e in
       (if not (is_int z)
