@@ -35,6 +35,8 @@
 (* Not yet adapted to SDL2 *)
 #use "basic_running/basic_run.ml"
 
+#use "tests/tests_run.ml"
+
 
 (* Picture generation *)
 (*
@@ -58,7 +60,6 @@ To do next:
   - Recode the operators for complex numbers (espacially '=')
   (At this point, the original Timeless might run.)
   - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
-  - Use SDL2 with OCamlSDL2 to have more control over keyboard, windows, etc.
 
 In the distant future:
   - Redo the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."

@@ -173,7 +173,6 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) (p : parameters) (v : variable
     then failwith "Runtime error: wrong entry";
   let z = eval p e in
   assign_var p (Value z) v;;
-    
 
 (* General execution function *)
 let run (proj : project_content) ((code, proglist): basic_code) : unit =
@@ -206,12 +205,25 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   wipe gscreen;
   writing_index := -1;
 
+
   (** Looping function **)
   let rec aux (i : int) : unit =
     
     if i >= n then (* End of the execution *)
       quit_print win ren !val_seen !last_val p.polar
     else
+
+    (* Checks whether the window was resized/closed *)
+    (* It has minimal cost, but disturbs Getkey. *)
+    let found_keyup = check_resize_close () in
+    let _ = (* If a KeyUp event was encountered, refresh getkey value *)
+      if !getkey_encountered && found_keyup
+        then
+          match read_getkey_input 0 with
+            | (_, Some keycode) ->
+              p.getkey <- get_getkey_val keycode
+            | _ -> p.getkey <- 0
+    in
 
     match code.(i) with
 

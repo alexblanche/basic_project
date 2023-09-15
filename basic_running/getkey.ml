@@ -1,7 +1,7 @@
 (** Getkey related **)
 
-(* Equals true if the recorded key is released *)
-let getkey_released = ref true;;
+(* Is set to true when the first Getkey command is encountered *)
+let getkey_encountered = ref false;;
 
 (* Getkey values *)
 (* Returns the Getkey value of the given key, as observerd on a Casio calculator *)
@@ -46,25 +46,14 @@ let rec read_getkey_input (current_getkey : int) : (bool * Sdlkeycode.t option) 
         if none_counter < 8300
           then aux (none_counter + 1)
           else (false, None)
-
-      (* Quitting *)
-      | Some (Window_Event {kind = WindowEvent_Close})
-      | Some (KeyDown {keycode = Escape}) -> raise Window_Closed
-
-      (* Resizing *)
-      | Some (Window_Event {kind = WindowEvent_Resized wxy}) ->
-        (update_parameters wxy.win_x wxy.win_y;
-        aux none_counter)
       
-      (* Input *)
       | Some (KeyDown {keycode = key}) ->
         (false, Some key)
 
       | Some (KeyUp kue) ->
         if get_getkey_val (kue.keycode) = current_getkey
 					then
-            (getkey_released := true;
-            let (_, k) = read_getkey_input 0 in
+            (let (_, k) = read_getkey_input 0 in
             (true, k))
 					else aux none_counter
 

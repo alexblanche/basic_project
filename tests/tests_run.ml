@@ -97,7 +97,7 @@ let run_prog5 () =
     compile
       [("main",
         ["QUOTE"; "R"; "E"; "A"; "D"; "Y"; "?"; "QUOTE"; "DISP";
-        "FOR"; "1"; "ASSIGN"; "X"; "TO"; "1"; "TIMESTENPOWER"; "8"; "EOL";
+        "FOR"; "1"; "ASSIGN"; "X"; "TO"; "1"; "TIMESTENPOWER"; "3"; "EOL";
         "LOCATE"; "1"; "COMMA"; "2"; "COMMA"; "X"; "EOL";
         "NEXT";
         "QUOTE"; "D"; "O"; "N"; "E"; "QUOTE"; "DISP"
