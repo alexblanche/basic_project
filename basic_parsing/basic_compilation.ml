@@ -56,6 +56,7 @@ let extract_str (lexlist : string list) : (string list) * (string list) =
         if s = "\092" (* anti-slash *)
           then aux ("\034"::sl) t (* The quote is kept *)
           else (s::sl, t)
+      | "COLON"::_
       | "EOL"::_ -> failwith "extract_str: string ends without closing \""
       | s::t -> aux (s::sl) t
       | [] -> failwith "extract_str: program ends without closing \""
@@ -287,7 +288,8 @@ let process_for i t code mem =
           if e3 = QMark
             then failwith "Compilation error: ? cannot set the bound of a For";
           match t6 with
-            | "EOL" :: t7 -> 
+            | "EOL" :: t7
+            | "COLON" :: t7 -> 
               (set code i (For (var_index v, e1, e2, e3, -1));
               (i+1, t7))
             | _ -> failwith "Compilation error: Syntax error after For loop definition"
@@ -336,7 +338,7 @@ let process_lpwhile i t code mem =
 let process_lbl i t code mem (a : string) (eol : string) =
   if not (is_var a)
     then failwith "Compilation error: Wrong label"
-    else if eol <> "EOL"
+    else if eol <> "EOL" && eol <> "COLON"
       then failwith "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
       else
         let a_index = var_index a in
@@ -350,7 +352,7 @@ let process_lbl i t code mem (a : string) (eol : string) =
 let process_goto i t code mem (a : string) (eol : string) =
   if not (is_var a)
     then failwith "Compilation error: Wrong goto"
-    else if eol <> "EOL"
+    else if eol <> "EOL" && eol <> "COLON"
       then failwith "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
       else
         let a_index = var_index a in
@@ -364,7 +366,8 @@ let process_prog i t code mem =
   let sl, t' = extract_str t in
   let s = String.concat "" (List.rev sl) in
   match t' with
-    | "EOL"::t'' ->
+    | "EOL"::t''
+    | "COLON"::t'' ->
       (set code i (Prog s);
       ((i+1),t''))
     | _ -> failwith "Compilation error: Syntax error, a Prog is supposed to be followed by EOL";;
@@ -396,7 +399,7 @@ let process_locate i t code mem =
 let rec skip_line (lexlist : string list) : string list =
   match lexlist with
     | a::t ->
-      if a = "EOL" || a = "DISP"
+      if a = "EOL" || a = "COLON" || a = "DISP"
         then t
         else skip_line t
     | [] -> [];;
@@ -433,7 +436,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
             () *) (* to do: List 1[4] or List 1 *)
           ;
           
-          if eol = "EOL" || eol = "DISP" then
+          if eol = "EOL" || eol = "COLON" || eol = "DISP" then
             (true, i+1, eol::t')
           else
             failwith "Compilation error: Syntax error, -> should be followed by Eol of Disp")
@@ -441,7 +444,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         | QMark, _ -> failwith "Compilation error: Syntax error, ? should be followed by ->"
         
         | _, eol::t' ->
-          if eol = "EOL" || eol = "DISP" then
+          if eol = "EOL" || eol = "COLON" || eol = "DISP" then
             (set code i (Expr e); (* Simple expression *)
             (true, i+1, t))
           else failwith ("Compilation error: Unexpected lexeme "^eol^" after an expression")
@@ -457,7 +460,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
     (* Other lexemes *)
     match lexlist with
       
-      | "EOL" :: t -> aux t i
+      | "EOL" :: t
+      | "COLON" :: t -> aux t i
       
       | "IF" :: t ->
         let (j,t') = process_if i t code mem in

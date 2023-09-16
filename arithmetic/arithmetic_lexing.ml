@@ -173,6 +173,7 @@ let rec extract_list_index (t : string list) : arithm * (string list) =
       (match t''' with
         | "RSQBRACKET"::_
         | "EOL"::_ (* Closing bracket may be omitted in Basic Casio *)
+        | "COLON"::_
         | "DISP"::_ -> (Number (Variable (ListIndex (a, e))),t''')
         | _ -> failwith "extract_list_index: Syntax error, List '[' not properly closed")
     | _ -> failwith "extract_list_index: Syntax error, List should be followed by '['"
@@ -202,6 +203,7 @@ and extract_mat_index (t : string list) : arithm * (string list) =
           (match t5 with
           | "RSQBRACKET"::_
           | "EOL"::_
+          | "COLON"::_
           | "DISP"::_ -> ((Number (Variable (MatIndex (a, e1, e2)))), t5)
           | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
         | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
@@ -218,7 +220,7 @@ and extract_list_content (lexlist : string list) : (basic_expr list) * (string l
         aux (e::acc) t'
       else if s = "RPAR" || s = "RBRACKET" then
         (List.rev acc, t)
-      else if s = "EOL" || s = "DISP" || s = "ASSIGN" then
+      else if s = "EOL" || s = "COLON" || s = "DISP" || s = "ASSIGN" then
         (List.rev acc, l)
       else
         let (e,t') = extract_expr l in
@@ -234,7 +236,7 @@ and extract_par_content (lexlist : string list) : basic_expr * (string list) =
     | s::t' ->
       if s = "RPAR" then
         (e,t')
-      else if s = "EOL" || s = "DISP" || s = "ASSIGN" then
+      else if s = "EOL" || s = "COLON" || s = "DISP" || s = "ASSIGN" then
         (e,t)
       else
         failwith "Arithmetic lexing: Syntax error, unclosed parenthesis"
