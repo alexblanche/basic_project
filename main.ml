@@ -32,7 +32,8 @@
 #use "basic_running/float_repr.ml"
 #use "basic_running/locate_format.ml"
 #use "basic_running/basic_graphics.ml"
-(* Not yet adapted to SDL2 *)
+#use "basic_running/run_aux.ml"
+#use "basic_running/qmark.ml"
 #use "basic_running/basic_run.ml"
 
 #use "tests/tests_run.ml"

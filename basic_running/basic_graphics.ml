@@ -35,8 +35,13 @@ let wipe (m : bool array array) : unit =
     done;
   done;;
 
+(* Returns only the rectangle, so that sdlrender.fill_rects can be used instead of fill_rect *)
+let fast_ploton (i : int) (j : int) : Sdlrect.t =
+  Sdlrect.make2 ~pos:(!margin_h + !size*i, !margin_v + !size*j) ~dims:(!size, !size);;
+
 (** Text display **)
-let tdraw (ren : Sdlrender.t) : unit =
+(* Older (slower) version *)
+(* let old_tdraw (ren : Sdlrender.t) : unit =
   clear_graph ren;
   rect ren !margin_h !margin_v !width !height;
   let m = Array.make_matrix 64 128 false in
@@ -53,9 +58,31 @@ let tdraw (ren : Sdlrender.t) : unit =
         done
     done
   done;
+  refresh ren;; *)
+
+(* Faster tdraw on the model of fast_locate, does one call to Sdlrender.fill_rects *)
+(* Displays the tscreen *)
+let tdraw (ren : Sdlrender.t) : unit =
+  let acc = ref [] in
+  for j = 0 to 6 do
+    for i = 0 to 20 do
+      if tscreen.(j).(i) <> "\000" then
+        let t = Hashtbl.find repr_text tscreen.(j).(i) in
+        (* The visual representation of the character has dimensions 7*5. *)
+        for y = 0 to 6 do
+          for x = 0 to 4 do
+            if t.(5*y+x) then
+              let r = fast_ploton (1+6*i+x) (8*j+y) in
+              acc := r::!acc
+          done
+        done
+    done
+  done;
+  clear_graph ren;
+  rect ren !margin_h !margin_v !width !height;
+  Sdlrender.fill_rects ren (Array.of_list !acc);
   refresh ren;;
-(* Is it useful to have a bool matrix for the text screen too?
-  If tdraw is too slow, I will consider it. *)
+
 
 (* Clears line j of the tscreen *)
 let clear_line (j : int) : unit =
@@ -76,17 +103,48 @@ let line_feed () : unit =
     (scroll ();
     decr writing_index);;
 
-(* Prints the string s (stored as a list of lexemes in reverse order) in the tscreen at position i,j *)
-let locate (slist : string list) (i : int) (j : int) : unit =
-  let n = List.length slist in
-  List.iteri (fun k s -> if i+n <= 21+k then tscreen.(j).(i+n-1-k) <- s) slist;;
 
-(* Same as Locate, but does not need to refresh the whole screen *)
-let fast_locate (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : unit =
+(* Auxiliary function: skips the first k elements of the list and returns the tail *)
+let rec skip_k (k : int) (l : 'a list) : 'a list =
+  match l with
+    | _::t ->
+      if k <= 0
+        then l
+        else skip_k (k-1) t
+    | [] -> [];;
+
+(* Same as Locate, but does not draw on the screen *)
+let locate_no_refresh (slist : string list) (i : int) (j : int) : unit =
   let n = List.length slist in
-  List.iteri (fun k s -> if i+n <= 21+k then tscreen.(j).(i+n-1-k) <- s) slist;
-  let m = Array.make_matrix 64 128 false in
+  let sl_cut = skip_k (n+i-21) slist in
+  List.iteri (fun k s -> tscreen.(j).(i+n-1-k) <- s) sl_cut;;
+
+(* Auxiliary loop to fast_locate:
+  for k = bound downto i do (print the character at position k) done *)
+let rec fast_locate_aux (ren : Sdlrender.t) (i : int) (j : int) (acc : Sdlrect.t list ref) (l : string list) (k : int) =
+  if k >= i then
+    match l with
+      | s::lt ->
+        (tscreen.(j).(k) <- s;
+        let t = Hashtbl.find repr_text s in
+        for y = 0 to 6 do
+          for x = 0 to 4 do
+            if t.(5*y+x)
+              then
+                let r = fast_ploton (1+6*k+x) (8*j+y) in
+                acc := r::!acc
+          done
+        done;
+        fast_locate_aux ren i j acc lt (k-1))
+      | [] -> ();;
+
+(* Fast version of Locate, but does not need to refresh the whole screen *)
+(* Prints the string s (stored as a list of lexemes in reverse order) in the tscreen at position i,j *)
+let locate (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : unit =
+  let n = List.length slist in
   let bound = min 20 (i+n-1) in
+
+  (* White rectangle to cover the area we write in *)
   set_color ren white;
   let white_r = Sdlrect.make2
     ~pos:(!margin_h + !size*(1+6*i), !margin_v + !size*8*j)
@@ -94,15 +152,11 @@ let fast_locate (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : 
   in
   Sdlrender.fill_rect ren white_r;
   set_color ren black;
-  for k = i to bound do
-    let t = Hashtbl.find repr_text tscreen.(j).(k) in
-    for y = 0 to 6 do
-      for x = 0 to 4 do
-        if t.(5*y+x)
-          then ploton ren m (1+6*k+x) (8*j+y)
-      done
-    done
-  done;
+
+  (* Display of the characters *)
+  let acc = ref [] in
+  fast_locate_aux ren i j acc (skip_k (n+i-21) slist) bound;
+  Sdlrender.fill_rects ren (Array.of_list !acc);
   refresh ren;;
 
 (* Prints the number z (of type complex) at the right of the writing line *)
@@ -111,7 +165,7 @@ let print_number (z : complex) (polar : bool) : unit =
   if z.im = 0.
     then
       (let z_repr = float_to_casio z.re in
-      locate (str_to_rev_symblist_simple z_repr) (21-String.length z_repr) !writing_index)
+      locate_no_refresh (str_to_rev_symblist_simple z_repr) (21-String.length z_repr) !writing_index)
     else
       (* if the total length is too long, cut after the real part *)
       let z_repr_l =
@@ -125,12 +179,12 @@ let print_number (z : complex) (polar : bool) : unit =
           (match z_repr_l with
             | a::t ->
               (let len_a = List.length a in
-              locate a (21-len_a) !writing_index;
+              locate_no_refresh a (21-len_a) !writing_index;
               let pos = ref (21-total_length+len_a) in
               line_feed ();
               List.iter
                 (fun sl ->
-                  locate sl !pos !writing_index;
+                  locate_no_refresh sl !pos !writing_index;
                   pos := !pos + List.length sl)
                 t)
             | [] -> ())
@@ -138,14 +192,14 @@ let print_number (z : complex) (polar : bool) : unit =
           (let pos = ref (21-total_length) in
           List.iter
             (fun sl ->
-              locate sl !pos !writing_index;
+              locate_no_refresh sl !pos !writing_index;
               pos := !pos + List.length sl)
             z_repr_l;
           );;
 
 (* Prints the "- DISP -" on the tscreen at line j *)
 let print_disp (j : int) : unit =
-  locate ["-"; " "; "p"; "s"; "i"; "D"; " "; "-"] 13 j;;
+  locate_no_refresh ["-"; " "; "p"; "s"; "i"; "D"; " "; "-"] 13 j;;
 
 (* Clears the whole tscreen *)
 let clear_text () : unit =

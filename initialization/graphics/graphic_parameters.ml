@@ -43,10 +43,7 @@ let update_parameters (new_width : int) (new_height : int) : unit =
   width := 128 * !size;
   height := 64 * !size;
   margin_h := (new_width - !width)/2;
-  margin_v := (new_height - !height)/2
-  (* List.iter (fun x -> print_int !x; print_char ' ') [width; height; margin_h; margin_v];
-  print_newline () *)
-;;
+  margin_v := (new_height - !height)/2;;
 
 (* Parameters initialization *)
 update_parameters (!width+2*40) (!height+2*40);;

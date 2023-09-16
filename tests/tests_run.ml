@@ -113,3 +113,20 @@ let run_prog5 () =
 (* Getkey *)
 let run_prog_getkey () =
   run p (prog_getkey ());;
+
+(* Speed of a For loop *)
+let run_prog6 () =
+  let prog6 =
+    compile
+      [("main",
+        ["QUOTE"; "R"; "E"; "A"; "D"; "Y"; "?"; "QUOTE"; "DISP";
+        "FOR"; "1"; "ASSIGN"; "X"; "TO"; "1"; "TIMESTENPOWER"; "3"; "EOL";
+        "QUOTE"; "A"; "B"; "C"; "D"; "E"; "F"; "G"; "H"; "I"; "J"; "K"; "L"; "M";
+          "N"; "O"; "P"; "Q"; "R"; "S"; "T"; "U";
+          "V"; "W"; "X"; "Y"; "Z"; "QUOTE"; "EOL";
+        "NEXT";
+        "QUOTE"; "D"; "O"; "N"; "E"; "QUOTE"; "DISP"
+        ]
+      )]
+  in
+  run p prog6;;

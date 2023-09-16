@@ -86,6 +86,10 @@ let ploton (ren : Sdlrender.t) (m : bool array array) (i : int) (j : int) =
 	fill_rect ren (!margin_h + !size*i) (!margin_v + !size*j) !size !size;
 	m.(j).(i) <- true;;
 
+(* Same without writing in a matrix *)
+let ploton_no_writing (ren : Sdlrender.t) (i : int) (j : int) =
+	fill_rect ren (!margin_h + !size*i) (!margin_v + !size*j) !size !size;;
+
 (* Fills the pixel i,j of the screen with white and reforms the grid *)
 let plotoff (ren : Sdlrender.t) (m : bool array array) (grid : bool) (i : int) (j : int) =
 	if m.(j).(i) then
