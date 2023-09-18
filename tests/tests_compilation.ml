@@ -34,7 +34,7 @@ let prog3 () = compile
       "TO"; "8"; "STEP"; "2"; "EOL";
     "QMARK"; "ASSIGN"; "B"; "EOL";
     "B"; "TIMES"; "2"; "DISP";
-    (* "LOCATE"; "1"; "0"; "COMMA"; "5"; "COMMA"; "QUOTE"; "A"; "B"; "C"; "QUOTE"; "DISP"; *)
+    (* "LOCATE"; "1"; "0"; ","; "5"; ","; "QUOTE"; "A"; "B"; "C"; "QUOTE"; "DISP"; *)
     "NEXT";
     "QUOTE"; "T"; "H"; "E"; " "; "E"; "N"; "D"; "QUOTE"; "DISP"
     ]
@@ -72,9 +72,9 @@ let prog_getkey () = compile
     "WHILE"; "1"; "EOL";
     "GETKEY"; "ASSIGN"; "K"; "EOL";
     "IF"; "K"; "LEQ"; "9"; "EOL";
-    "THEN"; "LOCATE"; "4"; "COMMA"; "3"; "COMMA"; "QUOTE"; " "; "QUOTE"; "EOL";
+    "THEN"; "LOCATE"; "4"; ","; "3"; ","; "QUOTE"; " "; "QUOTE"; "EOL";
     "IFEND"; "EOL";
-    "LOCATE"; "3"; "COMMA"; "3"; "COMMA"; "K"; "EOL";
+    "LOCATE"; "3"; ","; "3"; ","; "K"; "EOL";
     "WHILEEND"
     ]
   )];;

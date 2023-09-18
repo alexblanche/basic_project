@@ -376,16 +376,16 @@ let process_prog i t code mem =
 let process_locate i t code mem =
   let (e1, t2) = extract_expr t in
   try
-    if List.hd t2 <> "COMMA"
+    if List.hd t2 <> ","
       then failwith "Compilation error: Syntax error in Locate command";
     let (e2, t3) = extract_expr (List.tl t2) in
     let t' =
       match t3 with
-        | "COMMA"::"QUOTE"::t4 ->
+        | ","::"QUOTE"::t4 ->
           (let (sl, t5) = extract_str t4 in
           set code i (Locate (e1, e2, Loc_text sl));
           t5)
-        | "COMMA"::t4 ->
+        | ","::t4 ->
           (let (e3, t5) = extract_expr t4 in
           set code i (Locate (e1, e2, Loc_expr e3));
           t5)
@@ -508,10 +508,15 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         aux t' j
 
       (* Strings *)
-      | "QUOTE" :: t ->
-        let sl, t' = extract_str t in
-        (set code i (String sl);
-        aux t' (i+1))
+      | "QUOTE" :: a :: t ->
+        if a = "QUOTE"
+          then
+            (set code i (String []);
+            aux t (i+1))
+          else
+            let (sl, t') = extract_str (a::t) in
+            (set code i (String sl);
+            aux t' (i+1))
 
       | "LOCATE" :: t ->
         let (j,t') = process_locate i t code mem in
@@ -537,8 +542,14 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "\039"::t ->
         aux (skip_line t) i
 
+      | "CLRTEXT" :: eol :: t ->
+        (if eol <> "EOL" && eol <> "COLON" && eol <> "DISP" then
+          failwith "Compilation error: CLRTEXT should be followed by Eol";
+        set code i (Function "CLRTEXT");
+        aux t (i+1))
+
       (* Errors *)
-      | lex :: _ -> failwith ("Compilation error: Unexpected command "^lex)
+      | lex :: _ -> failwith ("Compilation error: Unexpected command "^(String.escaped lex))
 
       (* End case *)
       (* The Goto that were encountered before their labels are set. *)
