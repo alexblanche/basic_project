@@ -254,12 +254,19 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   in
   
   (try
+    (* To do: let the user specify an entry point:
+    Add (entry_point : string) as a parameter of run
+    
+    let entry_index = List.assoc entry_point proglist in
+    aux entry_index
+    *)
     aux 0
   with
     | Runtime_interruption
     | Window_Closed -> print_endline "--- Runtime interruption ---"
     | Failure s -> print_endline s);
-  close_graph win;;
+  close_graph win;
+  Sdl.quit ();;
 
 (* To do:
   - Slow down execution

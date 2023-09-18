@@ -105,7 +105,7 @@ let line_feed () : unit =
 
 
 (* Auxiliary function: skips the first k elements of the list and returns the tail *)
-let rec skip_k (k : int) (l : 'a list) : 'a list =
+let rec skip_k (k : int) (l : string list) : string list =
   match l with
     | _::t ->
       if k <= 0

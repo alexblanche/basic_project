@@ -38,6 +38,13 @@
 
 #use "tests/tests_run.ml"
 
+(* Launches the program in the given G1M/G2M file *)
+let play (file_name : string) : unit =
+  let s = file_to_string file_name in
+  let p = g1m_reader s in
+  let code = compile p.prog in
+  run p code;;
+
 
 (* Picture generation *)
 (*

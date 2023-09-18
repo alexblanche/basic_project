@@ -21,7 +21,7 @@ let str_to_rev_symblist_full (s : string) : string list =
 (* Splitting when Locate goes out of the screen *)
 (* When the list l has length n > k, then the function returns two lists:
   the first k elements of l, then the other n-k *)
-let split_k (l : 'a list) (k : int) =
+let split_k (l : string list) (k : int) : string list * string list =
   let rec aux a b l i =
     match l with
       | h::t ->
