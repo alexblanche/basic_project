@@ -396,13 +396,16 @@ let process_locate i t code mem =
     | Failure _ -> failwith "Compilation error: Syntax error in Locate command";;
 
 (* Skip to the next EOL or DISP *)
-let rec skip_line (lexlist : string list) : string list =
-  match lexlist with
-    | a::t ->
-      if a = "EOL" || a = "COLON" || a = "DISP"
-        then t
-        else skip_line t
-    | [] -> [];;
+let rec extract_line (lexlist : string list) : string list =
+  let rec aux (acc : string list) (l : string list) =
+    match lexlist with
+      | a::t ->
+        if a = "EOL" || a = "COLON" || a = "DISP"
+          then (acc, t)
+          else aux (a::acc) t
+      | [] -> (acc, [])
+  in
+  aux [] lexlist;;
 
 (* Compiles the list of lexemes lexlist by modifying the array code in place. *)
 (* Returns the proglist parameter of the working memory *)
@@ -442,6 +445,19 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
             failwith "Compilation error: Syntax error, -> should be followed by Eol of Disp")
         
         | QMark, _ -> failwith "Compilation error: Syntax error, ? should be followed by ->"
+          
+        (* e => command *)
+        (* Compiled as
+          i          If (e, j)
+          i+1..j-1   command
+          j          ...
+        *)
+        | _, "IMPL"::t' ->
+          let (next_line, t'') = extract_line t' in
+          (* Compilation of only the next line *)
+          let j = aux next_line (i+1) in
+          (set code i (If (e, j));
+          (true, j, t''))
         
         | _, eol::t' ->
           if eol = "EOL" || eol = "COLON" || eol = "DISP" then
@@ -538,9 +554,10 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         let (j,t') = process_prog i t code mem in
         aux t' j
       
-      (* Comments: line ignored *)
+      (* Comment ('): line ignored *)
       | "\039"::t ->
-        aux (skip_line t) i
+        let (_, t') = extract_line t in
+        aux t' i
 
       | "CLRTEXT" :: eol :: t ->
         (if eol <> "EOL" && eol <> "COLON" && eol <> "DISP" then
@@ -552,17 +569,22 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | lex :: _ -> failwith ("Compilation error: Unexpected command "^(String.escaped lex))
 
       (* End case *)
-      (* The Goto that were encountered before their labels are set. *)
-      | [] ->
-        (List.iter (fun (a_j,i) -> set code i (Goto (mem.lblindex.(a_j)))) mem.gotoindex;
-        set code i End;
-        (i+1) (* Return value *))
+      | [] -> (i+1) (* Return value *)
   in
 
-  let _ = List.fold_left
-    (fun j (name,lexlist) ->
-      (mem.progindex <- (name,j)::mem.progindex;
-      aux lexlist j))
+  let _ =
+    List.fold_left
+      (fun i (name,lexlist) ->
+        (mem.progindex <- (name,i)::mem.progindex;
+        for k = 0 to 27 do
+          mem.lblindex.(k) <- -1
+        done;
+        mem.gotoindex <- [];
+        let j = aux lexlist i in
+        (* The Goto that were encountered before their labels are set. *)
+        List.iter (fun (a_j,i) -> set code i (Goto (mem.lblindex.(a_j)))) mem.gotoindex;
+        set code i End;
+        j))
       0 prog
   in
   mem.progindex;;
