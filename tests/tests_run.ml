@@ -130,3 +130,17 @@ let run_prog6 () =
       )]
   in
   run p prog6;;
+
+(* Test of IMPL => *)
+
+let run_prog7 () =
+  let prog7 =
+    compile
+      [("main",
+        ["9"; "EOL";
+        "3"; "EQUAL"; "2"; "IMPL"; "8"; "EOL";
+        "ANS"; "DISP"
+        ]
+      )]
+  in
+  run p prog7;;

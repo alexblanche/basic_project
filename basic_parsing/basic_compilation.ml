@@ -396,9 +396,9 @@ let process_locate i t code mem =
     | Failure _ -> failwith "Compilation error: Syntax error in Locate command";;
 
 (* Skip to the next EOL or DISP *)
-let rec extract_line (lexlist : string list) : string list =
+let rec extract_line (lexlist : string list) : string list * string list =
   let rec aux (acc : string list) (l : string list) =
-    match lexlist with
+    match l with
       | a::t ->
         if a = "EOL" || a = "COLON" || a = "DISP"
           then (acc, t)
@@ -456,8 +456,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           let (next_line, t'') = extract_line t' in
           (* Compilation of only the next line *)
           let j = aux next_line (i+1) in
-          (set code i (If (e, j));
-          (true, j, t''))
+          (set code i (If (e, j-1));
+          (true, j-1, t''))
         
         | _, eol::t' ->
           if eol = "EOL" || eol = "COLON" || eol = "DISP" then
@@ -569,7 +569,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | lex :: _ -> failwith ("Compilation error: Unexpected command "^(String.escaped lex))
 
       (* End case *)
-      | [] -> (i+1) (* Return value *)
+      | [] -> i+1 (* Return value *)
   in
 
   let _ =
@@ -582,8 +582,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         mem.gotoindex <- [];
         let j = aux lexlist i in
         (* The Goto that were encountered before their labels are set. *)
-        List.iter (fun (a_j,i) -> set code i (Goto (mem.lblindex.(a_j)))) mem.gotoindex;
-        set code i End;
+        List.iter (fun (a_j,k) -> set code k (Goto (mem.lblindex.(a_j)))) mem.gotoindex;
+        set code (j-1) End;
         j))
       0 prog
   in

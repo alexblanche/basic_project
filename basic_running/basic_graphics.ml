@@ -19,7 +19,7 @@ let gscreen = Array.make_matrix 64 128 false;;
 let open_graphic () : Sdlwindow.t * Sdlrender.t =
   let (win, ren) = config false (fun _ -> ()) in
   Sdlwindow.set_title ~window:win ~title:"Basic Emulator";
-  refresh ren;
+  clear_graph ren;
   (win, ren);;
 
 (** Graphic display **)
