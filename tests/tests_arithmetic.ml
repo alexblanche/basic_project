@@ -12,10 +12,12 @@ exception Test_failed of int
 let unit_tests_lexer () =
   let check i (slist, expected) =
     (* print_string ("Test "^(string_of_int i)^"... "); *)
-    let (Arithm alist), _ = extract_expr slist in
-    if alist <> expected
-      then raise (Test_failed i)
-      (* else print_endline "Done." *)
+    match extract_expr slist with
+      | (Arithm alist), _ ->
+        if alist <> expected
+          then raise (Test_failed i)
+          (* else print_endline "Done." *)
+      | _ -> failwith ("Test "^(string_of_int i)^": QMark is not supported for these tests")
   in
   try
     List.iteri check [
@@ -76,29 +78,7 @@ let unit_tests_eval () =
     }
   in
 
-  let (p : parameters) = {
-    (* proj: Contains the lists, matrices, pictures, captures and strings *)
-    proj = proj;
-    
-    (* Variables: array of size 2*29, storing the content of each variable A..Z, r, theta, Ans
-      as real part in the 29 first cells, and imaginary part in the next 29 *)
-    var = Array.make (2*29) 0.;
-    
-    (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
-    polar = false;
-
-    (* Parameters of the V-Window *)
-    xmin = 1.;
-    xmax = 127.;
-    xstep = 0.;
-    ymin = 1.;
-    ymax = 63.;
-    ystep = 0.;
-    (* Display the axes if true *)
-    axes = false;
-
-  } in
-
+  let p = empty_param () in
   (* 10 -> A *)
   p.var.(0) <- 10.;
   (* 3+4i -> B *)

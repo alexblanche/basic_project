@@ -147,8 +147,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           locate_no_refresh sl 0 !writing_index);
         tdraw ren;
         val_seen := true;
-        if (i = n-2 && code.(i+1) = End
-          || i = n-3 && code.(i+1) = Disp && code.(i+2) = End)
+        if (i <= n-2 && code.(i+1) = End
+          || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
           && !prog_goback = []
           then (* End of the program *)
             (if code.(i+1) = Disp
@@ -181,8 +181,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         in
         locate ren sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
         val_seen := true;
-        if (i = n-2 && code.(i+1) = End
-          || i = n-3 && code.(i+1) = Disp && code.(i+2) = End)
+        if (i <= n-2 && code.(i+1) = End
+          || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
           && !prog_goback = []
           then (* End of the program *)
             (if code.(i+1) = Disp

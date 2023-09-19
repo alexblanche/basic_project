@@ -61,7 +61,6 @@ let play (file_name : string) : unit =
 To do next:
   - Draw a calculator and code the execution of Getkey (by clicking or pressing keys)
     (Idea: key pressed on the keyboard highlight keys of the calculator interface)
-  - Code "=>"
   - Recode the operators for complex numbers (espacially '=')
   (At this point, the original Timeless might run.)
   - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)

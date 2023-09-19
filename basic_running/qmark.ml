@@ -92,7 +92,7 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
 
   let ns = loop [] 0 in
   
-  let (e,t) = extract_expr (List.rev ns) in
+  let (e,t) = extract_expr ns in
   if t <> []
     then failwith "Runtime error: wrong entry";
   e;;
