@@ -64,6 +64,17 @@ let func_table =
           | _ -> failwith "Function error: Abs has arity 1"
       in f)
     );
+
+    ("NOT",
+      (let f (l : complex list) : complex =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_bool (z.re = 0.)
+              else failwith "Function application error: Not accepts only real arguments"
+          | _ -> failwith "Function error: Not has arity 1"
+      in f)
+    )
     ]
   in
   List.iter (fun (fname, fdef) -> Hashtbl.add t fname fdef) func_list;

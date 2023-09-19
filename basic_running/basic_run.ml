@@ -57,7 +57,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
       | Goto j -> aux j
 
       | If (e,j) ->
-        if is_not_zero (eval p e)
+        let z = eval p e in
+        if z.im = 0. && not (is_zero_float z.re)
           then aux (i+1)
           else aux j
 
