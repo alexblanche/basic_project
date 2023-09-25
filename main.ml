@@ -8,6 +8,7 @@
 (* Initialization *)
 #use "initialization/graphics/graphic_parameters.ml"
 #use "initialization/graphics/events.ml"
+#use "initialization/key_check.ml"
 #use "initialization/file_readers/file_reader.ml"
 #use "initialization/file_readers/bmp_reader.ml"
 #use "initialization/types/complex.ml"
@@ -19,7 +20,6 @@
 #use "g1m_read_write/g1m_reader.ml"
 
 (* Compilation *)
-#use "basic_running/getkey.ml"
 #use "arithmetic/arithmetic_def.ml"
 #use "arithmetic/arithmetic_lexing.ml"
 #use "arithmetic/arithmetic_parsing.ml"
@@ -62,7 +62,6 @@ To do next:
   - Draw a calculator and code the execution of Getkey (by clicking or pressing keys)
     (Idea: key pressed on the keyboard highlight keys of the calculator interface)
   - Recode the operators for complex numbers (espacially '=')
-  (At this point, the original Timeless might run.)
   - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
   - Slow down the execution with Unix.sleepf (tests needed for text and graphic display)
 

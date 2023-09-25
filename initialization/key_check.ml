@@ -1,7 +1,13 @@
-(** Getkey related **)
-(*** OBSOLETE ***)
-(* Is set to true when the first Getkey command is encountered *)
-(* let getkey_encountered = ref false;; *)
+(** Key check loop (executed in parallel) **)
+
+(* Kill switch to exit key_check (closes the parallel execution of the domain) *)
+(* Also serves to indicate that the window was closed *)
+let exit_key_check = ref false;;
+(* Resizing counter *)
+let cpt_resize = ref 0;;
+
+(* Contains the Getkey value *)
+let getkey = ref 0;;
 
 (* Getkey values *)
 (* Returns the Getkey value of the given key, as observerd on a Casio calculator *)
@@ -17,8 +23,6 @@ b\a  7     6    5    4    3    2
 2    1     2    3    +     -
 1    0     .    E    (-)   EXE
 *)
-
-(*
 let get_getkey_val (key : Sdlkeycode.t) : int =
   try
     List.assoc key
@@ -36,34 +40,43 @@ let get_getkey_val (key : Sdlkeycode.t) : int =
     ]
   with
     | Not_found -> 0;;
-*)
 
 
-(*
-(* Returns a keycode if a key is pressed, or None if 8300 None events have been encountered *)
-(* If the current key is released, waits for the next KeyDown event and returns its keycode. *)
-(* Experimentally, there are about 8000 "None" events between two KeyDown events when holding a key *)
-(* Handles window resizing *)
-let rec read_getkey_input (current_getkey : int) : (bool * Sdlkeycode.t option) =
-  let rec aux (none_counter : int) =
+(* Key check loop *)
+let rec key_check () =
+  if not !exit_key_check then
     match Sdlevent.poll_event () with
-      | None ->
-        if none_counter < 8300
-          then aux (none_counter + 1)
-          else (false, None)
-      
-      | Some (KeyDown {keycode = key}) ->
-        (false, Some key)
+    | None -> key_check ()
+	
+    (* Quitting *)
+    | Some (Window_Event {kind = WindowEvent_Close})
+    | Some (KeyDown {keycode = Escape}) -> raise Window_Closed
 
-      | Some (KeyUp kue) ->
-        if get_getkey_val (kue.keycode) = current_getkey
-					then
-            (let (_, k) = read_getkey_input 0 in
-            (true, k))
-					else aux none_counter
+    (* Resizing *)
+    | Some (Window_Event {kind = WindowEvent_Resized wxy}) ->
+      (incr cpt_resize;
+      if !cpt_resize = resize_threshold then
+        (cpt_resize := 0;
+        update_parameters wxy.win_x wxy.win_y);
+      key_check ())
+  
+    | Some (KeyDown {keycode = key}) ->
+      (getkey := get_getkey_val key;
+      key_check ())
 
-      | _ -> aux none_counter
-  in
-  aux 0;;
+    | Some (KeyUp {keycode = key}) ->
+      (if get_getkey_val key = !getkey
+				then getkey := 0;
+      key_check ())
+  
+    | _ -> key_check ()
+;;
 
-*)
+(* Launches the check loop *)
+let launch_key_check () =
+  (* Domain.at_exit (fun () -> print_endline "!!! Key check interruption !!!"); *)
+  try
+    key_check ()
+  with
+    | Window_Closed -> exit_key_check := true
+;;

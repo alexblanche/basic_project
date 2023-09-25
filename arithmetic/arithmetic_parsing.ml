@@ -37,8 +37,8 @@ let rec get_val (p : parameters) (n : basic_number) : complex =
   match n with
     | Value z -> z
     | Variable (Var i) -> get_var_val p.var i
-    | Variable Getkey ->
-      (if not !getkey_encountered then getkey_encountered := true;
+    | Variable Getkey -> complex_of_int !getkey
+      (* (if not !getkey_encountered then getkey_encountered := true;
       match read_getkey_input p.getkey with
         | released, Some keycode ->
           let key_v = get_getkey_val keycode in
@@ -56,6 +56,7 @@ let rec get_val (p : parameters) (n : basic_number) : complex =
               complex_of_int 0)
             else (* None without any key release *)
               (complex_of_int p.getkey))
+       *)
 
     | Variable (ListIndex (a,e)) ->
       let z = eval p e in

@@ -110,7 +110,8 @@ type parameters = {
   mutable axes : bool;
 
   (* Getkey *)
-  mutable getkey : int
+  (* Obsolete: now a reference in key_check.ml *)
+  (* mutable getkey : int *)
 }
 
 
@@ -118,7 +119,7 @@ type parameters = {
 
 (* Returns an empty parameters object *)
 let empty_param () : parameters =
-  {    
+  {
     (* Variables: array of size 2*29, storing the content of each variable A..Z, r, theta, Ans
       as real part in the 29 first cells, and imaginary part in the next 29 *)
     var = Array.make (2*29) 0.;
@@ -147,7 +148,8 @@ let empty_param () : parameters =
     axes = false;
 
     (* Getkey *)
-    getkey = 0
+    (* Obsolete: now a reference in key_check.ml *)
+    (* getkey = 0 *)
   };;
 
 (* Returns a new array with twice the size of t, with the elements of t as first elements

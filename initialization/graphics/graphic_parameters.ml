@@ -35,6 +35,9 @@ let font = Sdlttf.open_font ~file:"data/UbuntuMono-R.ttf" ~ptsize:16;;
 
 (** Updating functions **)
 
+(* Indicates that the graphic parameters were updated since the screen was last drawn *)
+let parameters_updated = ref false;;
+
 (* When the window is resized, updates margin, size, width and height *)
 let update_parameters (new_width : int) (new_height : int) : unit =
   if 100*new_width >= 185*new_height
@@ -43,7 +46,8 @@ let update_parameters (new_width : int) (new_height : int) : unit =
   width := 128 * !size;
   height := 64 * !size;
   margin_h := (new_width - !width)/2;
-  margin_v := (new_height - !height)/2;;
+  margin_v := (new_height - !height)/2;
+  parameters_updated := true;;
 
 (* Parameters initialization *)
 update_parameters (!width+2*40) (!height+2*40);;

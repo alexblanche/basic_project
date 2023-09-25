@@ -32,14 +32,18 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   wipe gscreen;
   writing_index := -1;
 
+  exit_key_check := false;
 
-  (** Looping function **)
+  (** Main looping function **)
   let rec aux (i : int) : unit =
     
     if i >= n then (* End of the execution *)
-      quit_print win ren !val_seen !last_val p.polar
+      quit_print p win ren !val_seen !last_val p.polar
+    else if !exit_key_check then
+      raise Window_Closed
     else
 
+    (*
     (* Checks whether the window was resized/closed *)
     (* It has minimal cost, but disturbs Getkey. *)
     let found_keyup = check_resize_close () in
@@ -50,6 +54,12 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             | (_, Some keycode) ->
               p.getkey <- get_getkey_val keycode
             | _ -> p.getkey <- 0
+    in
+    *)
+    let _ =
+      if !parameters_updated
+        then
+          tdraw ren
     in
 
     match code.(i) with
@@ -76,7 +86,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           then
             (line_feed ();
             print_number z p.polar;
-            disp ren writing_index;
+            disp p ren writing_index;
             aux (i+2))
           else aux (i+1))
           
@@ -128,7 +138,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           then
             (line_feed ();
             print_number z p.polar;
-            disp ren writing_index;
+            disp p ren writing_index;
             aux (i+2))
           else aux (i+1))
           (* 
@@ -153,11 +163,11 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           && !prog_goback = []
           then (* End of the program *)
             (if code.(i+1) = Disp
-              then disp ren writing_index;
-            quit win ren true (* Quit after the string *))
+              then disp p ren writing_index;
+            quit p win ren true (* Quit after the string *))
           else if i<n-1 && code.(i+1) = Disp
             then
-              (disp ren writing_index;
+              (disp p ren writing_index;
               aux (i+2))
             else aux (i+1))
           
@@ -187,11 +197,11 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           && !prog_goback = []
           then (* End of the program *)
             (if code.(i+1) = Disp
-              then disp ren writing_index;
-            quit win ren true (* Quit after the string *))
+              then disp p ren writing_index;
+            quit p win ren true (* Quit after the string *))
           else if i<n-1 && code.(i+1) = Disp
           then
-            (disp ren writing_index;
+            (disp p ren writing_index;
             aux (i+2))
           else aux (i+1))
 
@@ -249,7 +259,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           | i::t ->
             (prog_goback := t;
             aux i)
-          | [] -> quit_print win ren !val_seen !last_val p.polar)
+          | [] -> quit_print p win ren !val_seen !last_val p.polar)
 
       | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
   in
@@ -261,11 +271,15 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
     let entry_index = List.assoc entry_point proglist in
     aux entry_index
     *)
-    aux 0
+    let key_check_domain = Domain.spawn launch_key_check in
+    aux 0;
+    exit_key_check := true;
+    Domain.join key_check_domain
   with
     | Runtime_interruption
     | Window_Closed -> print_endline "--- Runtime interruption ---"
     | Failure s -> print_endline s);
+  exit_key_check := true;
   close_graph win;
   Sdl.quit ();;
 

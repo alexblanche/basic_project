@@ -63,6 +63,7 @@ let fast_ploton (i : int) (j : int) : Sdlrect.t =
 (* Faster tdraw on the model of fast_locate, does one call to Sdlrender.fill_rects *)
 (* Displays the tscreen *)
 let tdraw (ren : Sdlrender.t) : unit =
+  parameters_updated := false;
   let acc = ref [] in
   for j = 0 to 6 do
     for i = 0 to 20 do
@@ -210,7 +211,17 @@ let clear_text () : unit =
 (* Waits for Enter key to be pressed *)
 (* Raises exception Window_Closed if the window is closed or Escape is pressed *)
 (* When the window is resized, if text_graph is true, tdraw is applied, otherwise gdraw *)
-let wait_enter (ren : Sdlrender.t) (text_graph : bool) : unit =
+let wait_enter (p : parameters) (ren : Sdlrender.t) (text_graph : bool) : unit =
+  while !getkey <> 31 do
+    if !parameters_updated
+      then
+        if text_graph
+          then tdraw ren
+          else gdraw ren
+    else if !exit_key_check
+      then raise Window_Closed
+  done;;
+  (*
   let rec aux (cpt_resize : int) : unit =
     match Sdlevent.poll_event () with
       (* Quitting *)
@@ -238,3 +249,4 @@ let wait_enter (ren : Sdlrender.t) (text_graph : bool) : unit =
       | _ -> aux cpt_resize
   in
   aux 0;;
+*)
