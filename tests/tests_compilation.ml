@@ -66,15 +66,75 @@ let prog4 () = compile
     ]
   )];;
 
+(* Getkey *)
 let prog_getkey () = compile
   [("main",
     [
-    "WHILE"; "1"; "EOL";
-    "GETKEY"; "ASSIGN"; "K"; "EOL";
-    "IF"; "K"; "LEQ"; "9"; "EOL";
-    "THEN"; "LOCATE"; "4"; ","; "3"; ","; "QUOTE"; " "; "QUOTE"; "EOL";
-    "IFEND"; "EOL";
-    "LOCATE"; "3"; ","; "3"; ","; "K"; "EOL";
-    "WHILEEND"
+      "WHILE"; "1"; "EOL";
+      "GETKEY"; "ASSIGN"; "K"; "EOL";
+      "IF"; "K"; "LEQ"; "9"; "EOL";
+      "THEN"; "LOCATE"; "4"; ","; "3"; ","; "QUOTE"; " "; "QUOTE"; "EOL";
+      "IFEND"; "EOL";
+      "LOCATE"; "3"; ","; "3"; ","; "K"; "EOL";
+      "WHILEEND"
     ]
   )];;
+
+(* If, Else If, Else, IfEnd *)
+let prog_if () = compile
+  [("main",
+    [
+      "IF"; "0"; "COLON"; "THEN"; "QUOTE"; "A"; "QUOTE"; "DISP";
+      "ELSE"; "IF"; "0"; "COLON"; "THEN"; "QUOTE"; "B"; "QUOTE"; "DISP";
+      "ELSE"; "IF"; "0"; "COLON"; "THEN"; "QUOTE"; "C"; "QUOTE"; "DISP";
+      "IFEND";
+      "IFEND";
+      "QUOTE"; "D"; "QUOTE"; "DISP";
+      "IFEND";
+      "QUOTE"; "E"; "QUOTE"; "DISP"
+    ]
+  )];;
+
+(*
+0 If (Arithm [Number (Value {Complex.re = 1.; im = 0.})], 4);
+1 String ["A"];
+2 Disp;
+3 Goto 13;
+4 If (Arithm [Number (Value {Complex.re = 2.; im = 0.})], 8);
+5 String ["B"];
+6 Disp;
+7 Goto 11;
+8 If (Arithm [Number (Value {Complex.re = 3.; im = 0.})], 11);
+9 String ["C"];
+10 Disp;
+11 String ["D"];
+12 Disp;
+13 String ["E"];
+14 Disp;
+15 End
+*)
+
+(* Missing IfEnd (allowed in Casio Basic) *)
+let prog_ifend () = compile
+  [("main",
+    [
+      "IF"; "0"; "COLON"; "THEN"; "QUOTE"; "A"; "QUOTE"; "DISP";
+      "ELSE"; "IF"; "0"; "COLON"; "THEN"; "QUOTE"; "B"; "QUOTE"; "DISP";
+      "ELSE"; "IF"; "0"; "COLON"; "THEN"; "QUOTE"; "C"; "QUOTE"; "DISP";
+    ]
+  )];;
+
+(*
+0 If (Arithm [Number (Value {Complex.re = 0.; im = 0.})], 4);
+1 String ["A"];
+2 Disp;
+3 Goto 11;
+4 If (Arithm [Number (Value {Complex.re = 0.; im = 0.})], 8);
+5 String ["B"];
+6 Disp;
+7 Goto 11;
+8 If (Arithm [Number (Value {Complex.re = 0.; im = 0.})], 11);
+9 String ["C"];
+10 Disp;
+11 End
+*)

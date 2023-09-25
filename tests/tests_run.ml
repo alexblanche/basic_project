@@ -144,3 +144,6 @@ let run_prog7 () =
       )]
   in
   run p prog7;;
+
+let run_prog_if () =
+  run p (prog_if ());;
