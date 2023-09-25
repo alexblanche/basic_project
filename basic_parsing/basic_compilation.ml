@@ -4,6 +4,8 @@
 #use "basic_parsing/project_type.ml"
 #use "basic_running/arithmeric_parsing.ml" *)
 
+
+
 (* Data structure:
   We store the code in an array, that doubles its size whenever it is full.
   Amortized complexity: O(1) *)
@@ -43,6 +45,77 @@ let extract_non_empty (t : command array) : command array =
 
 (********************************************************************************)
 
+(** Compilation error **)
+
+exception Compilation_error of string list * string;;
+
+(* Raises the exception *)
+let fail (t : string list) (error_message : string) =
+  raise (Compilation_error (t, error_message));;
+
+(* Skip to the next EOL or DISP *)
+let rec extract_line (lexlist : string list) : string list * string list =
+  let rec aux (acc : string list) (l : string list) =
+    match l with
+      | a::t ->
+        if a = "EOL" || a = "COLON" || a = "DISP"
+          then (a::acc, t)
+          else aux (a::acc) t
+      | [] -> (acc, [])
+  in
+  aux [] lexlist;;
+
+(* Prints one line of the program *)
+let print_lexline (line : string list) (eol : string) : unit =
+  List.iter (fun s -> print_string (String.escaped s); print_char ' ') line;
+  print_endline eol;;
+
+let skip_until (lexlist : string list) (i : int) =
+  let rec aux prev1 prev2 prev3 prev4 prev5 l k =
+    match l with
+      | [] -> (prev1, prev2, prev3, prev4, prev5, [])
+      | _ ->
+        let (line,t') = extract_line l in
+        let line_len = List.length line in
+        if k + line_len > i
+          then (prev1, prev2, prev3, prev4, prev5, l)
+          else aux prev2 prev3 prev4 prev5 line t' (k+line_len)
+      
+  in
+  aux [] [] [] [] [] lexlist 0;;
+
+
+(* Prints 5 lines before index i and 5 lines after *)
+let print_around (lexlist : string list) (i : int) : unit =
+  let rec print_five (l : string list) (k : int) =
+    if k < 5 then
+      (let (line,t) = extract_line l in
+      match line with
+        | eol :: sl ->
+          (print_lexline (List.rev sl) eol;
+          print_five t (k+1))
+        | [] -> ())
+  in
+
+  let (prev1, prev2, prev3, prev4, prev5, t) = skip_until lexlist i in
+  List.iter
+    (fun s ->
+      match s with
+        | eol::sl -> print_lexline (List.rev sl) eol
+        | [] -> ())
+    [prev1; prev2; prev3; prev4; prev5];
+  print_endline ">>> Error in this line:";
+  let (line,t') = extract_line t in
+  match line with
+    | eol :: sl ->
+      (print_lexline (List.rev sl) eol;
+      print_endline "<<<";
+      print_five t' 0)
+    | [] -> ();;
+
+
+(********************************************************************************)
+
 (** Compilation **)
 
 (* After a double-quote was encountered, extracts the string that follows,
@@ -57,9 +130,9 @@ let extract_str (lexlist : string list) : (string list) * (string list) =
           then aux ("\034"::sl) t (* The quote is kept *)
           else (s::sl, t)
       | "COLON"::_
-      | "EOL"::_ -> failwith "extract_str: string ends without closing \""
+      | "EOL"::_ -> fail l "extract_str: string ends without closing \""
       | s::t -> aux (s::sl) t
-      | [] -> failwith "extract_str: program ends without closing \""
+      | [] -> fail [] "extract_str: program ends without closing \""
   in
   aux [] lexlist;;
 
@@ -143,9 +216,9 @@ let process_then i t code mem =
   try
     if List.hd mem.stack = ("if", i-1)
       then (i,t)
-      else failwith "Compilation error: Unexpected Then, does not follow an If statement"
+      else fail t "Compilation error: Unexpected Then, does not follow an If statement"
   with
-    | Failure _ -> failwith "Compilation error: Unexpected Then with no opened If statement";;
+    | Failure _ -> fail t "Compilation error: Unexpected Then with no opened If statement";;
 
 (* Else If *)
 let process_else_if i t code mem =
@@ -155,15 +228,15 @@ let process_else_if i t code mem =
   (try
     let (s,jif) = List.hd mem.stack in
     if s <> "if" then
-      failwith "Compilation error: Unexpected Else If with no opened If statement";
+      fail t "Compilation error: Unexpected Else If with no opened If statement";
     (match (!code).(jif) with
       | If (e,k) ->
         if k = -1
           then set code jif (If (e,i+1))
-          else failwith "Compilation error: Unexpected Else If"
-      | _ -> failwith "Compilation error: Unexpected Else If")
+          else fail t "Compilation error: Unexpected Else If"
+      | _ -> fail t "Compilation error: Unexpected Else If")
   with
-    | Failure _ -> failwith "Compilation error: Unexpected Else If with no opened If statement");
+    | Failure _ -> fail t "Compilation error: Unexpected Else If with no opened If statement");
   mem.stack <- ("if",(i+1))::(List.tl mem.stack);
   add_else mem (i+1);
   ((i+2),t');;
@@ -173,7 +246,7 @@ let process_else i t code mem =
   try
     let (s,jif) = List.hd mem.stack in
     if s <> "if" then
-      failwith "Compilation error: Unexpected Else with no opened If statement";
+      fail t "Compilation error: Unexpected Else with no opened If statement";
     (match (!code).(jif) with
       | If (e,k) ->
         if k = -1
@@ -184,10 +257,10 @@ let process_else i t code mem =
             mem.stack <- List.tl mem.stack;
             ((i+1),t))
           (* The If was already treated *)
-          else failwith "Compilation error: Unexpected Else"
-      | _ -> failwith "Compilation error: Unexpected Else")
+          else fail t "Compilation error: Unexpected Else"
+      | _ -> fail t "Compilation error: Unexpected Else")
   with
-    | Failure _ -> failwith "Compilation error: Unexpected Else with no opened If statement";;
+    | Failure _ -> fail t "Compilation error: Unexpected Else with no opened If statement";;
 
 (* IfEnd *)
 let process_ifend i t code mem =
@@ -197,7 +270,7 @@ let process_ifend i t code mem =
       (try
         let (s,jif) = List.hd mem.stack in
         if s <> "if" then
-          failwith "Compilation error: Unexpected IfEnd";
+          fail t "Compilation error: Unexpected IfEnd";
         mem.stack <- List.tl mem.stack;
         (match (!code).(jif) with
           | If (e,k) ->
@@ -205,17 +278,17 @@ let process_ifend i t code mem =
               then
                 (set code jif (If (e,i));
                 (i,t))
-              else failwith "Compilation error: Unexpected IfEnd"
-          | _ -> failwith "Compilation error: Unexpected IfEnd")
+              else fail t "Compilation error: Unexpected IfEnd"
+          | _ -> fail t "Compilation error: Unexpected IfEnd")
       with
-        | Failure _ -> failwith "Compilation error: Unexpected IfEnd with no opened If statement")
+        | Failure _ -> fail t "Compilation error: Unexpected IfEnd with no opened If statement")
     (* If Then (Else If)* Else IfEnd: Adding the Goto before each Else/Else If *)
     | eil::eit ->
       (mem.elseindex <- eit;
       List.iter (fun j -> set code j (Goto i)) eil;
       (i,t))
       
-    | [] -> failwith "Compilation error: Unexpected IfEnd with no opened If statement";;
+    | [] -> fail t "Compilation error: Unexpected IfEnd with no opened If statement";;
 
 (* While, WhileEnd *)
 (*  While expr
@@ -238,7 +311,7 @@ let process_whileend i t code mem =
   try
     let (s,jwh) = List.hd mem.stack in
     if s <> "while" then
-      failwith "Compilation error: Unexpected WhileEnd";
+      fail t "Compilation error: Unexpected WhileEnd";
     mem.stack <- List.tl mem.stack;
     set code i (Goto jwh);
     (match (!code).(jwh) with
@@ -247,10 +320,10 @@ let process_whileend i t code mem =
           then
             (set code jwh (If (e,i+1));
             ((i+1),t))
-          else failwith "Compilation error: Unexpected WhileEnd"
-      | _ -> failwith "Compilation error: Unexpected WhileEnd")
+          else fail t "Compilation error: Unexpected WhileEnd"
+      | _ -> fail t "Compilation error: Unexpected WhileEnd")
   with
-    | Failure _ -> failwith "Compilation error: Unexpected WhileEnd with no opened While statement";;
+    | Failure _ -> fail t "Compilation error: Unexpected WhileEnd with no opened While statement";;
 
 
 
@@ -273,39 +346,39 @@ let process_whileend i t code mem =
 let process_for i t code mem =
   let (e1,t2) = extract_expr t in
   if e1 = QMark
-    then failwith "Compilation error: ? cannot set the variable of a For";
+    then fail t "Compilation error: ? cannot set the variable of a For";
   mem.stack <- ("for", i)::mem.stack;
   match t2 with
     | "ASSIGN"::v::"TO"::t3 ->
       (if not (is_var v)
-        then failwith "Compilation error: wrong variable in a For loop";
+        then fail t "Compilation error: wrong variable in a For loop";
       let (e2,t4) = extract_expr t3 in
       if e2 = QMark
-        then failwith "Compilation error: ? cannot set the bound of a For";
+        then fail t "Compilation error: ? cannot set the bound of a For";
       match t4 with
         | "STEP"::t5 ->
           (let (e3, t6) = extract_expr t5 in
           if e3 = QMark
-            then failwith "Compilation error: ? cannot set the bound of a For";
+            then fail t "Compilation error: ? cannot set the bound of a For";
           match t6 with
             | "EOL" :: t7
             | "COLON" :: t7 -> 
               (set code i (For (var_index v, e1, e2, e3, -1));
               (i+1, t7))
-            | _ -> failwith "Compilation error: Syntax error after For loop definition"
+            | _ -> fail t "Compilation error: Syntax error after For loop definition"
           )
         | _ -> (* No Step value, 1 by default *)
           (set code i (For (var_index v, e1, e2, Arithm [Number (Value {re = 1.; im = 0.})], -1));
           (i+1, t4))
       )
         
-    | _ -> failwith "Compilation error: Syntax error in a For loop definition";;
+    | _ -> fail t "Compilation error: Syntax error in a For loop definition";;
 
 let process_next i t code mem =
   try
     let (s,jfor) = List.hd mem.stack in
     if s <> "for" then
-      failwith "Compilation error: Unexpected Next";
+      fail t "Compilation error: Unexpected Next";
     mem.stack <- List.tl mem.stack;
     set code i Next;
     (match (!code).(jfor) with
@@ -314,22 +387,22 @@ let process_next i t code mem =
           then
             (set code jfor (For (v,e1,e2,e3,i+1));
             ((i+1),t))
-          else failwith "Compilation error: Unexpected Next"
-      | _ -> failwith "Compilation error: Unexpected Next")
+          else fail t "Compilation error: Unexpected Next"
+      | _ -> fail t "Compilation error: Unexpected Next")
   with
-    | Failure _ -> failwith "Compilation error: Unexpected Next with no opened For statement";;
+    | Failure _ -> fail t "Compilation error: Unexpected Next with no opened For statement";;
 
 (* Do, LpWhile *)
 let process_lpwhile i t code mem =
   let (e,t') = extract_expr t in
   if e = QMark
-    then failwith "Compilation error: ? cannot be the condition of a Do-LpWhile";
+    then fail t "Compilation error: ? cannot be the condition of a Do-LpWhile";
   match mem.stack with
     | ("do", jdo)::q ->
       (set code i (JumpIf (e, jdo));
       mem.stack <- q;
       (i+1, t'))
-    | _ -> failwith "Compilation error: Unexpected LpWhile with no opened Do statement";;
+    | _ -> fail t "Compilation error: Unexpected LpWhile with no opened Do statement";;
 
 (* Lbl, Goto *)
 
@@ -337,9 +410,9 @@ let process_lpwhile i t code mem =
 (* "LBL" is immediately followed by a, then eol in the original list of lexemes *)
 let process_lbl i t code mem (a : string) (eol : string) =
   if not (is_var a)
-    then failwith "Compilation error: Wrong label"
+    then fail t "Compilation error: Wrong label"
     else if eol <> "EOL" && eol <> "COLON"
-      then failwith "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
+      then fail t "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
       else
         let a_index = var_index a in
         if mem.lblindex.(a_index) <> -1
@@ -351,9 +424,9 @@ let process_lbl i t code mem (a : string) (eol : string) =
 (* Goto *)
 let process_goto i t code mem (a : string) (eol : string) =
   if not (is_var a)
-    then failwith "Compilation error: Wrong goto"
+    then fail t "Compilation error: Wrong goto"
     else if eol <> "EOL" && eol <> "COLON"
-      then failwith "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
+      then fail t "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
       else
         let a_index = var_index a in
         (if mem.lblindex.(a_index) <> -1
@@ -370,14 +443,14 @@ let process_prog i t code mem =
     | "COLON"::t'' ->
       (set code i (Prog s);
       ((i+1),t''))
-    | _ -> failwith "Compilation error: Syntax error, a Prog is supposed to be followed by EOL";;
+    | _ -> fail t "Compilation error: Syntax error, a Prog is supposed to be followed by EOL";;
 
 (* Locate *)
 let process_locate i t code mem =
   let (e1, t2) = extract_expr t in
   try
     if List.hd t2 <> ","
-      then failwith "Compilation error: Syntax error in Locate command";
+      then fail t "Compilation error: Syntax error in Locate command";
     let (e2, t3) = extract_expr (List.tl t2) in
     let t' =
       match t3 with
@@ -389,23 +462,11 @@ let process_locate i t code mem =
           (let (e3, t5) = extract_expr t4 in
           set code i (Locate (e1, e2, Loc_expr e3));
           t5)
-        | _ -> failwith "Compilation error: Syntax error in Locate command"
+        | _ -> fail t "Compilation error: Syntax error in Locate command"
       in
     (i+1,t')
   with
-    | Failure _ -> failwith "Compilation error: Syntax error in Locate command";;
-
-(* Skip to the next EOL or DISP *)
-let rec extract_line (lexlist : string list) : string list * string list =
-  let rec aux (acc : string list) (l : string list) =
-    match l with
-      | a::t ->
-        if a = "EOL" || a = "COLON" || a = "DISP"
-          then (acc, t)
-          else aux (a::acc) t
-      | [] -> (acc, [])
-  in
-  aux [] lexlist;;
+    | Failure _ -> fail t "Compilation error: Syntax error in Locate command";;
 
 (* Compiles the list of lexemes lexlist by modifying the array code in place. *)
 (* Returns the proglist parameter of the working memory *)
@@ -442,9 +503,9 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           if eol = "EOL" || eol = "COLON" || eol = "DISP" then
             (true, i+1, eol::t')
           else
-            failwith "Compilation error: Syntax error, -> should be followed by Eol of Disp")
+            fail t "Compilation error: Syntax error, -> should be followed by Eol of Disp")
         
-        | QMark, _ -> failwith "Compilation error: Syntax error, ? should be followed by ->"
+        | QMark, _ -> fail t "Compilation error: Syntax error, ? should be followed by ->"
           
         (* e => command *)
         (* Compiled as
@@ -463,7 +524,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           if eol = "EOL" || eol = "COLON" || eol = "DISP" then
             (set code i (Expr e); (* Simple expression *)
             (true, i+1, t))
-          else failwith ("Compilation error: Unexpected lexeme "^eol^" after an expression")
+          else fail t ("Compilation error: Unexpected lexeme "^eol^" after an expression")
         
         | _, [] ->
           (set code i (Expr e); (* Simple expression at the end of the code (without eol) *)
@@ -561,12 +622,12 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
       | "CLRTEXT" :: eol :: t ->
         (if eol <> "EOL" && eol <> "COLON" && eol <> "DISP" then
-          failwith "Compilation error: CLRTEXT should be followed by Eol";
+          fail (eol :: t) "Compilation error: CLRTEXT should be followed by Eol";
         set code i (Function "CLRTEXT");
         aux t (i+1))
 
       (* Errors *)
-      | lex :: _ -> failwith ("Compilation error: Unexpected command "^(String.escaped lex))
+      | lex :: _ -> fail lexlist ("Compilation error: Unexpected command "^(String.escaped lex))
 
       (* End case *)
       | [] -> i+1 (* Return value *)
@@ -580,16 +641,26 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           mem.lblindex.(k) <- -1
         done;
         mem.gotoindex <- [];
-        let j = aux lexlist i in
-        (* The Goto that were encountered before their labels are set. *)
-        List.iter (fun (a_j,k) -> set code k (Goto (mem.lblindex.(a_j)))) mem.gotoindex;
-        set code (j-1) End;
-        j))
+
+        try
+          let j = aux lexlist i in
+          (* The Goto that were encountered before their labels are set. *)
+          List.iter (fun (a_j,k) -> set code k (Goto (mem.lblindex.(a_j)))) mem.gotoindex;
+          set code (j-1) End;
+          j
+        with
+        | Compilation_error (t, error_message) ->
+          (* Handling of compilation error *)
+          (let len_t = List.length t in
+          let len_lex = List.length lexlist in
+          print_endline ("Compilation error in program "^name);
+          print_endline error_message;
+          print_around lexlist (len_lex - len_t);
+          failwith "Compilation aborted")
+        ))
       0 prog
   in
   mem.progindex;;
-
-
 
 (* Compiles the list of lexemes lexlist into an object of type basic_code *)
 let compile (proglist : program list) : basic_code =
