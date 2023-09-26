@@ -457,23 +457,41 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           (false, -1, [])
 
         (* To be combined with the case below *)
-        | _, "ASSIGN"::[v] ->
-          (if is_var v then
-            set code i (Assign (e, Var (var_index v)));
-          (true, i+1, []))
+        | _, "ASSIGN"::t' ->
+          (match t' with
+            | [v] ->
+              (if is_var v then
+                (set code i (Assign (e, Var (var_index v)));
+                (true, i+1, []))
+              else fail lexlist "Compilation: Wrong assignment (->) of a variable")
+            | v::"EOL"::t''
+            | v::"COLON"::t''
+            | v::"DISP"::t'' ->
+              if is_var v then
+                (set code i (Assign (e, Var (var_index v)));
+                (true, i+1, List.tl t'))
+              else
+                fail lexlist "Compilation error: Wrong assignment (->) of a variable"
+
+            | "LIST"::_::"LSQBRACKET"::_ ->
+              let (li,t'') = extract_list_index (List.tl t') in
+              (match li with
+                | Number (Variable lx) ->
+                  (set code i (Assign (e, lx));
+                  (true, i+1, t''))
+                | _ -> fail lexlist "Compilation error: Wrong assignment (->) of a list element")
+
+            | "MAT"::_::"LSQBRACKET"::_ ->
+              let (mi,t'') = extract_mat_index (List.tl t') in
+              (match mi with
+                | Number (Variable mx) ->
+                  (set code i (Assign (e, mx));
+                  (true, i+1, t''))
+                | _ -> fail lexlist "Compilation error: Wrong assignment (->) of a matrix element")
+            | _ -> fail lexlist "Compilation error: Syntax error during assignment"
+          )
         
-        | _, "ASSIGN"::v::eol::t' ->
-          (if is_var v then
-            set code i (Assign (e, Var (var_index v)))
-          (* else if v = "LIST" then
-            () *) (* to do: List 1[4] or List 1 *)
-          ;
-          
-          if eol = "EOL" || eol = "COLON" || eol = "DISP" then
-            (true, i+1, eol::t')
-          else
-            fail lexlist "Compilation error: Syntax error, -> should be followed by Eol of Disp")
-        
+        (* QMark is treated in the case above *)
         | QMark, _ -> fail lexlist "Compilation error: Syntax error, ? should be followed by ->"
           
         (* e => command *)
@@ -496,8 +514,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           if eol = "EOL" || eol = "COLON" || eol = "DISP" then
             (set code i (Expr e); (* Simple expression *)
             (true, i+1, t))
-          else (* (print_endline ("length of fail lexlist tail: "^(string_of_int (List.length lexlist))); *)
-            fail lexlist ("Compilation error: Unexpected lexeme "^eol^" after an expression")
+          else fail lexlist ("Compilation error: Unexpected lexeme "^eol^" after an expression")
 
         | _, [] ->
           (set code i (Expr e); (* Simple expression at the end of the code (without eol) *)

@@ -28,7 +28,8 @@ let assign_var (p : parameters) (x : basic_number) (v : variable) : unit =
       m.(iint + (Array.length m)/2).(jint) <- z.im)
     
     | _ -> failwith "Runtime error: wrong value in assignment"
-  (* to be completed (with lists, matrices) *)
+
+(* to come: assign_struct to assign a whole list or matrix *)
 
 
 
@@ -36,7 +37,7 @@ let assign_var (p : parameters) (x : basic_number) (v : variable) : unit =
 let store_ans (var : float array) (z : complex) : unit =
   (* assign_var p (Value z) (Var 28) *)
   var.(28) <- z.re;
-  var.(28+29) <- z.im;;
+  var.(57) <- z.im;;
 
 (* Wait for Enter key to be pressed, then closes the graphic window *)
 (* text_graph is true iff the text screen is displayed (as opposed to the graphic screen) *)

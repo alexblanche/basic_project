@@ -146,3 +146,7 @@ let apply_rop (ro : string) (z : complex) : complex =
 (* Application of the left unary operators *)
 let apply_lop (lo : string) (z : complex) : complex =
   apply_func lo [z];;
+
+
+(** prototype for complex arithmetic combined with list/matrix arithmetic **)
+let 

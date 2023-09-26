@@ -204,7 +204,7 @@ and extract_mat_index (t : string list) : arithm * (string list) =
           | "RSQBRACKET"::_
           | "EOL"::_
           | "COLON"::_
-          | "DISP"::_ -> ((Number (Variable (MatIndex (a, e1, e2)))), t5)
+          | "DISP"::_ -> (Number (Variable (MatIndex (a, e1, e2))), t5)
           | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
         | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
     | _ -> failwith "extract_mat_index: Syntax error, Mat should be followed by '['"

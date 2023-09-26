@@ -31,7 +31,6 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   clear_text ();
   wipe gscreen;
   writing_index := -1;
-
   exit_key_check := false;
   parameters_updated := true;
   escape_activated := true;
@@ -40,34 +39,22 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
 
   (** Main looping function **)
   let rec aux (i : int) : unit =
-    
-    if i >= n then (* End of the execution *)
+
+    (* End of the execution *)
+    if i >= n then
       quit_print win ren !val_seen !last_val p.polar
     else if !exit_key_check then
       raise Window_Closed
     else
 
-    (*
-    (* Checks whether the window was resized/closed *)
-    (* It has minimal cost, but disturbs Getkey. *)
-    let found_keyup = check_resize_close () in
-    let _ = (* If a KeyUp event was encountered, refresh getkey value *)
-      if !getkey_encountered && found_keyup
-        then
-          match read_getkey_input 0 with
-            | (_, Some keycode) ->
-              p.getkey <- get_getkey_val keycode
-            | _ -> p.getkey <- 0
-    in
-    *)
     let _ =
       if !parameters_updated
         then
           tdraw ren
     in
 
+    (* Execution of the next command *)
     match code.(i) with
-
       | Goto j -> aux j
 
       | If (e,j) ->
@@ -136,7 +123,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
               (MatIndex (Value vala,
                 Arithm [Number (Value ie)], Arithm [Number (Value je)])))
 
-          | _ -> aux (i+1) (* temporary *)
+          | _ -> failwith "Runtime error: assignment to unassignable object"
         );
         if i<n-1 && code.(i+1) = Disp
           then
@@ -145,9 +132,6 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             disp p ren writing_index;
             aux (i+2))
           else aux (i+1))
-          (* 
-          | Getkey
-          | Random) *) (* to do *)
       
       | String sl ->
         (line_feed ();

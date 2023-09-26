@@ -34,7 +34,6 @@ let rec get_val (p : parameters) (n : basic_number) : complex =
     | Value z -> z
     | Variable (Var i) -> get_var_val p.var i
     | Variable Getkey -> complex_of_int !getkey
-
     | Variable (ListIndex (a,e)) ->
       let z = eval p e in
       (if not (is_int z)
