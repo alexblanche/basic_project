@@ -34,6 +34,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
 
   exit_key_check := false;
   parameters_updated := true;
+  escape_activated := true;
   getkey := 0;
   key_pressed := Unknown;
 

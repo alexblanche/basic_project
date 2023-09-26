@@ -208,11 +208,11 @@ let clear_text () : unit =
     clear_line j
   done;;
 
-(* Waits for Enter key to be pressed *)
+(* Waits for a key to be pressed (or released if getkey_value is 0) *)
 (* Raises exception Window_Closed if the window is closed or Escape is pressed *)
 (* When the window is resized, if text_graph is true, tdraw is applied, otherwise gdraw *)
-let wait_enter (ren : Sdlrender.t) (text_graph : bool) : unit =
-  while !getkey <> 31 do
+let wait_press_key (ren : Sdlrender.t) (text_graph : bool) (getkey_value : int): unit =
+  while !getkey <> getkey_value do
     if !parameters_updated
       then
         if text_graph
@@ -221,39 +221,22 @@ let wait_enter (ren : Sdlrender.t) (text_graph : bool) : unit =
     else if !exit_key_check
       then raise Window_Closed
   done;;
-  (*
-  let rec aux (cpt_resize : int) : unit =
-    match Sdlevent.poll_event () with
-      (* Quitting *)
-      | Some (Window_Event {kind = WindowEvent_Close}) -> raise Window_Closed
 
-      (* Resizing *)
-			| Some (Window_Event {kind = WindowEvent_Resized wxy}) ->
-        if cpt_resize >= resize_threshold then
-					(update_parameters wxy.win_x wxy.win_y;
-					if text_graph then tdraw ren else gdraw ren;
-          aux 0)
-        else aux (cpt_resize + 1)
-
-      | Some (Window_Event {kind = WindowEvent_Exposed})
-      | Some Keymap_Changed -> aux resize_threshold
-
-      (* Input *)
-      | Some (KeyDown {keycode = k}) ->
-        if k = Return || k = KP_Enter (* Enter or keypad Enter *)
-          then ()
-        else if k = Escape
-          then raise Window_Closed
-        else aux cpt_resize
-
-      | _ -> aux cpt_resize
-  in
-  aux 0;;
-*)
-
-(* Wait for a key to be released *)
-let wait_release () : unit =
-  while !getkey <> 0 do
-    if !exit_key_check
+let wait_press (ren : Sdlrender.t) (text_graph : bool) : unit =
+  while !getkey = 0 do
+    if !parameters_updated
+      then
+        if text_graph
+          then tdraw ren
+          else gdraw ren
+    else if !exit_key_check
       then raise Window_Closed
   done;;
+
+(* Waits for Enter key to be pressed *)
+let wait_enter (ren : Sdlrender.t) (text_graph : bool) : unit =
+  wait_press_key ren text_graph 31;;
+
+(* Wait for a key to be released *)
+let wait_release (ren : Sdlrender.t) (text_graph : bool) : unit =
+  wait_press_key ren text_graph 0;;

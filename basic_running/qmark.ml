@@ -1,33 +1,13 @@
 (** Executes the ? (QMark) operation **)
 
 let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
-  (* Obsolete due to parallel key check replacing sequential key check *)
-  (* Same as wait_keydown but supports resizing *)
-  (*
-  let rec wait_keydown_resize (cpt_resize : int) : Sdlkeycode.t =
-    match Sdlevent.poll_event () with
-      (* Quitting *)
-      | Some (Window_Event {kind = WindowEvent_Close}) -> raise Window_Closed
-      (* Resizing *)
-			| Some (Window_Event {kind = WindowEvent_Resized wxy}) ->
-        if cpt_resize >= resize_threshold then
-					(update_parameters wxy.win_x wxy.win_y;
-					tdraw ren;
-          wait_keydown_resize 0)
-        else wait_keydown_resize (cpt_resize + 1)
-      
-      | Some (KeyDown {keycode = keycode}) -> keycode
-      | _ -> wait_keydown_resize cpt_resize
-  in
-  *)
-
   (* Main loop *)
   (* ns: list of strings storing the number entered
     x: index of writing in line !writing_index *)
   let rec loop (ns : string list) (x : int) : string list =
-    (* let key = wait_keydown_resize 0 in
-    flush_events (); *)
-
+    
+    wait_press ren true;
+    
     let key = !key_pressed in
     (* Enter or keypad Enter *)
     if (key = Return || key = KP_Enter) && ns <> []
@@ -37,9 +17,10 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
         if ns <> []
           then (* Something was typed: Reset *)
             (clear_text ();
-            locate ren ["?"] 0 0;
+            locate_no_refresh ["?"] 0 0;
             writing_index := 1;
-            wait_keyup key;
+            tdraw ren;
+            wait_release ren true;
             loop [] 0)
           else (* Nothing was typed: Exitting the program *)
             raise Runtime_interruption
@@ -55,11 +36,11 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
           (line_feed ();
           locate_no_refresh [cs] 0 !writing_index;
           tdraw ren;
-          wait_keyup key;
+          wait_release ren true;
           loop (cs::ns) 1)
         else
           (locate ren [cs] x !writing_index;
-          wait_keyup key;
+          wait_release ren true;
           loop (cs::ns) (x+1))
     else if List.mem key (* Other lexemes: their representation is different from the lexeme *)
         [LeftParen; RightParen; KP_Plus; KP_Minus; KP_Multiply; KP_Divide]
@@ -77,15 +58,17 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
           line_feed ();
           locate_no_refresh (List.rev csk) 0 !writing_index;
           tdraw ren;
-          wait_keyup key;
+          wait_release ren true;
           loop (lex::ns) ((x + len) mod 21))
         else
           (locate ren cs x !writing_index;
-          wait_keyup key;
+          wait_release ren true;
           loop (lex::ns) (x+len))
     else
       (if !parameters_updated then
-        tdraw ren;
+        tdraw ren
+      else if !exit_key_check then
+        raise Window_Closed;
       loop ns x)
   in
 
@@ -97,7 +80,9 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
   (* The writing line is not cleared on screen until a character is typed *)
   clear_line !writing_index;
 
+  escape_activated := false;
   let ns = loop [] 0 in
+  escape_activated := true;
   
   let (e,t) = extract_expr ns in
   if t <> []

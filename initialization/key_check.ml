@@ -6,6 +6,10 @@ let exit_key_check = ref false;;
 (* Resizing counter *)
 let cpt_resize = ref 0;;
 
+(* Exception to the activation of the kill switch via an Escape key press *)
+(* True if Escape interrupts the program, False if it proceeds as normal *)
+let escape_activated = ref true;;
+
 (* Contains the Getkey value *)
 let getkey = ref 0;;
 (* Contains the key pressed (type Sdlkeycode.t) *)
@@ -21,11 +25,12 @@ b\a  7     6    5    4    3    2
 7    ALPHA x2   ^    EXIT v    >
 6    XthT  log  ln   sin  cos  tan
 5    FRAC  FD   (    )    ,    ->
-4    7     8    9    DEL
+4    7     8    9    DEL  (AC)
 3    4     5    6    x     /
 2    1     2    3    +     -
 1    0     .    E    (-)   EXE
 *)
+(* AC = 34 is treated separately (not an actual Getkey value) *)
 let get_getkey_val (key : Sdlkeycode.t) : int =
   try
     List.assoc key
@@ -52,8 +57,14 @@ let rec key_check () =
     | None -> key_check ()
 	
     (* Quitting *)
-    | Some (Window_Event {kind = WindowEvent_Close})
-    | Some (KeyDown {keycode = Escape}) -> raise Window_Closed
+    | Some (Window_Event {kind = WindowEvent_Close}) -> raise Window_Closed
+    | Some (KeyDown {keycode = Escape}) ->
+      if !escape_activated
+        then raise Window_Closed
+        else
+          (getkey := 34;
+          key_pressed := Escape;
+          key_check ())
 
     (* Resizing *)
     | Some (Window_Event {kind = WindowEvent_Resized wxy}) ->

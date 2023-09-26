@@ -42,6 +42,7 @@ let store_ans (var : float array) (z : complex) : unit =
 (* text_graph is true iff the text screen is displayed (as opposed to the graphic screen) *)
 let quit (win : Sdlwindow.t) (ren : Sdlrender.t) (text_graph : bool) : unit =
   (try
+    wait_release ren text_graph;
     wait_enter ren text_graph
   with
     | Window_Closed -> ());
@@ -66,7 +67,7 @@ let disp (p : parameters) (ren : Sdlrender.t) (writing_index : int ref) : unit =
   clear_line !writing_index;
   print_disp !writing_index;
   tdraw ren;
-  wait_release ();
+  wait_release ren true;
   wait_enter ren true;
   clear_line !writing_index;
   decr writing_index;
