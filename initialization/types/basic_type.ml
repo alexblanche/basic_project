@@ -8,12 +8,6 @@
   where l is the line where the Lbl A points to.
   - Conditionals (If) and loops (For, While, Do-LpWhile) are transformed with the Goto method. *)
 
-(* Lists, Matrices, Strings *)
-type data_struct =
-  | List of int
-  | Mat of char
-  | Str of int
-
 (* variable, basic_number, arithm and basic_expr are circular recursive types *)
 
 (* Type for Basic variables *)
@@ -82,7 +76,11 @@ type command =
   
   (* -> *)
   | Assign of basic_expr * variable (* expr -> X or expr -> List A[X] *)
-  | AssignStruct of basic_expr * data_struct (* 2+3*{1,2,3} -> List A or 5*[[1,2][3,4]] -> Mat A *)
+  (* Lists accept variables: 3->A, {1} -> List A will assign {1} to List 3 *)
+  | AssignList of basic_expr * basic_number (* 2+3*{1,2,3} -> List A *) (* to be changed with expression (basic_expr * ListExpr) *)
+  (* Matrices and Strings do not accept variables *)
+  | AssignMat of basic_expr * int (* 5*[[1,2][3,4]] -> Mat A *) (* to be changed with expression (basic_expr * MatExpr) *) 
+  | AssignStr of string * int (* s -> Str i *)
   
   (* Jumps *)
   | Goto of int (* Jump to line l on the array *)

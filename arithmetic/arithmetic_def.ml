@@ -149,4 +149,61 @@ let apply_lop (lo : string) (z : complex) : complex =
 
 
 (** prototype for complex arithmetic combined with list/matrix arithmetic **)
-let 
+(*
+
+(* Separated into several functions *)
+let apply_op_entity (op : string) (q1 : entity) (q2 : entity) : entity =
+  match q1, q2 with
+    | Number n1, Number n2 -> Number (apply_op op (eval p n1) (eval p n2))
+    | Number n1, List l2 ->
+      (* The evaluation of the first term is done prior to the application on each element of the list *)
+      let z1 = eval p n1 in
+      Array.init (Array.length l2) (fun k -> apply_op op z1 (eval p l2.(k)))
+    | List l1, Number n2 ->
+      let z2 = eval p n2 in
+      Array.init (Array.length l1) (fun k -> apply_op op (eval p l1.(k)) z2)
+    | List l1, List l2 ->
+      let size1 = Array.length l1 in
+      if Array.length l2 = size1
+        then Array.init size1 (fun k -> apply_op op (eval p l1.(k)) (eval p l2.(k)))
+    | Number n1, Mat m2 -> (* *)
+    | Mat m1, Number n2 -> (* *)
+    | Mat m1, Mat m2 -> (* *)
+    | _ -> failwith "apply_op: Incompatible types"
+*)
+
+(* Plan for integration of list/matrix arithmetic:
+  Separate num_expr, list_expr and mat_expr at lexing time,
+  each made up of a basic_expr containing some variables List _, Mat _, {...} and [[][]]
+  
+  The output type of the lexing function is the following:
+  type expression_type = Numerical | ListExpr | MatExpr
+  type expression = basic_expr * expression_type
+  
+  We define these specific types:
+  type num_expr = basic_expr
+  type list_expr = basic_expr
+  type mat_expr = basic_expr
+
+  basic_number now contains
+  | Value of complex
+  | Variable of variable
+  | ListContent of num_expr array (* {...} *)
+  | MatContent of num_expr array array (* [[...][...]...] *)
+  | VarList of variable (* List _ *)
+  | VarMat of int (* Mat _ *)
+  
+  Each constructor takes the specific type it needs, or a general expression
+  Assign of num_expr * variable
+  AssignList of list_expr * basic_number
+  AssignMat of mat_expr * int
+
+  There are three evaluation functions, one for each input (and output type)
+  eval (num_expr -> complex)
+  eval_list (list_expr -> complex array)
+  eval_mat (mat_expr -> complex array array)
+
+  At runtime, an error is raised if the sizes of two lists or two matrices do not match,
+  or if unexpected types (MatContent or VarMat in a list_expr) are present in the same
+  basic_expr (it should not happen if lexing is correct)
+*)

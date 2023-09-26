@@ -123,19 +123,19 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
     (* Rpar *)
     | Rpar::t, _::_ ->
       (match output_q, op_q with
-          | _, Lpar::opqt -> shunting_yard p t output_q opqt
+        | _, Lpar::opqt -> shunting_yard p t output_q opqt
 
-          (* Operator evaluation *)
-          | x::outq, (Lunop lo)::opqt ->
-            shunting_yard p (Rpar::t) ((Value (apply_lop lo (get_val p x)))::outq) opqt
-          | x2::x1::outq, (Op o)::opqt ->
-            shunting_yard p (Rpar::t) ((Value (apply_op o (get_val p x1) (get_val p x2)))::outq) opqt
-          | _, (Op o)::opqt -> failwith ("Arithmetic parsing: Not enough operands for operator "^o)
+        (* Operator evaluation *)
+        | x::outq, (Lunop lo)::opqt ->
+          shunting_yard p (Rpar::t) ((Value (apply_lop lo (get_val p x)))::outq) opqt
+        | x2::x1::outq, (Op o)::opqt ->
+          shunting_yard p (Rpar::t) ((Value (apply_op o (get_val p x1) (get_val p x2)))::outq) opqt
+        | _, (Op o)::opqt -> failwith ("Arithmetic parsing: Not enough operands for operator "^o)
 
-          (* Errors *)
-          | _, [] -> failwith "Arithmetic parsing: Mismatched parentheses"
-          
-          | _ -> failwith "Arithmetic parsing: Untreated case")    
+        (* Errors *)
+        | _, [] -> failwith "Arithmetic parsing: Mismatched parentheses"
+        
+        | _ -> failwith "Arithmetic parsing: Untreated case")    
     | _,_ -> failwith "Arithmetic parsing: Syntax error"
 
 (* General arithmetic evaluation function *)

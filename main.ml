@@ -55,8 +55,7 @@ let play (file_name : string) : unit =
 
 
 (* To do immediately:
-  - Encapsulate the type complex (in Value) into another type also containing whole lists and matrices
-  - Integrate list/matrix arithmetic in arithmetic_lexing, parsing and basic_compilation
+  - Integrate list/matrix arithmetic in arithmetic_lexing, parsing and basic_compilation (cf comment in airthmetic_def)
   
 To do next:
   - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
