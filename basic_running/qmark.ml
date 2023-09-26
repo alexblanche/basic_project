@@ -1,7 +1,9 @@
 (** Executes the ? (QMark) operation **)
 
 let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
+  (* Obsolete due to parallel key check replacing sequential key check *)
   (* Same as wait_keydown but supports resizing *)
+  (*
   let rec wait_keydown_resize (cpt_resize : int) : Sdlkeycode.t =
     match Sdlevent.poll_event () with
       (* Quitting *)
@@ -17,13 +19,16 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
       | Some (KeyDown {keycode = keycode}) -> keycode
       | _ -> wait_keydown_resize cpt_resize
   in
+  *)
 
   (* Main loop *)
   (* ns: list of strings storing the number entered
     x: index of writing in line !writing_index *)
   let rec loop (ns : string list) (x : int) : string list =
-    let key = wait_keydown_resize 0 in
-    flush_events ();
+    (* let key = wait_keydown_resize 0 in
+    flush_events (); *)
+
+    let key = !key_pressed in
     (* Enter or keypad Enter *)
     if (key = Return || key = KP_Enter) && ns <> []
       then List.rev ns
@@ -79,7 +84,9 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
           wait_keyup key;
           loop (lex::ns) (x+len))
     else
-      loop ns x
+      (if !parameters_updated then
+        tdraw ren;
+      loop ns x)
   in
 
   line_feed ();

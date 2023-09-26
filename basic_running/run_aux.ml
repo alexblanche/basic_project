@@ -40,15 +40,15 @@ let store_ans (var : float array) (z : complex) : unit =
 
 (* Wait for Enter key to be pressed, then closes the graphic window *)
 (* text_graph is true iff the text screen is displayed (as opposed to the graphic screen) *)
-let quit (p : parameters) (win : Sdlwindow.t) (ren : Sdlrender.t) (text_graph : bool) : unit =
+let quit (win : Sdlwindow.t) (ren : Sdlrender.t) (text_graph : bool) : unit =
   (try
-    wait_enter p ren text_graph
+    wait_enter ren text_graph
   with
     | Window_Closed -> ());
   close_graph win;;
 
 (* Prints the value of Ans if val_seen, "Done" otherwise, then quits *)
-let quit_print (p : parameters) (win : Sdlwindow.t) (ren : Sdlrender.t) (val_seen : bool) (value : complex) (polar : bool) : unit =
+let quit_print (win : Sdlwindow.t) (ren : Sdlrender.t) (val_seen : bool) (value : complex) (polar : bool) : unit =
   if val_seen
     then
       (line_feed ();
@@ -57,7 +57,7 @@ let quit_print (p : parameters) (win : Sdlwindow.t) (ren : Sdlrender.t) (val_see
     else
       (clear_text ();
       locate ren ["e"; "n"; "o"; "D"] 17 0); (* "Done" *)
-  quit p win ren true;;
+  quit win ren true;;
 
 
 (* Executes the Disp (black triangle) operation *)
@@ -66,7 +66,8 @@ let disp (p : parameters) (ren : Sdlrender.t) (writing_index : int ref) : unit =
   clear_line !writing_index;
   print_disp !writing_index;
   tdraw ren;
-  wait_enter p ren true;
+  wait_release ();
+  wait_enter ren true;
   clear_line !writing_index;
   decr writing_index;
   tdraw ren;; (* Can the last tdraw be removed to speed up the execution? *)

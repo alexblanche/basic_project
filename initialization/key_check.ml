@@ -8,6 +8,9 @@ let cpt_resize = ref 0;;
 
 (* Contains the Getkey value *)
 let getkey = ref 0;;
+(* Contains the key pressed (type Sdlkeycode.t) *)
+let key_pressed = ref Sdlkeycode.Unknown;;
+
 
 (* Getkey values *)
 (* Returns the Getkey value of the given key, as observerd on a Casio calculator *)
@@ -55,18 +58,26 @@ let rec key_check () =
     (* Resizing *)
     | Some (Window_Event {kind = WindowEvent_Resized wxy}) ->
       (incr cpt_resize;
-      if !cpt_resize = resize_threshold then
+      if !cpt_resize >= resize_threshold then
         (cpt_resize := 0;
         update_parameters wxy.win_x wxy.win_y);
       key_check ())
-  
+
+    | Some (Window_Event {kind = WindowEvent_Exposed})
+    | Some Keymap_Changed ->
+      (cpt_resize := resize_threshold;
+      key_check ())
+        
+    (* KeyDown, KeyUp check *)
     | Some (KeyDown {keycode = key}) ->
       (getkey := get_getkey_val key;
+      key_pressed := key;
       key_check ())
 
     | Some (KeyUp {keycode = key}) ->
-      (if get_getkey_val key = !getkey
-				then getkey := 0;
+      (if key = !key_pressed then
+        (getkey := 0;
+        key_pressed := Unknown);
       key_check ())
   
     | _ -> key_check ()

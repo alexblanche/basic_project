@@ -616,10 +616,11 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       let j = aux lexlist i in
 
       (* Post-treatment *)
+
       set code (j-1) End;
       (* The Goto that were encountered before their labels are set. *)
       List.iter (fun (a_j,k) -> set code k (Goto (mem.lblindex.(a_j)))) mem.gotoindex;
-      (* The missing IfEnd are closed *)
+      (* The missing IfEnd are closed. *)
       (* Raises a Compilation_error exception if a keyword different from "if" or "else" is encountered *)
       while mem.stack <> [] do
         let _ = process_ifend (j-1) [] code mem in ()

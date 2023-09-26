@@ -33,12 +33,15 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   writing_index := -1;
 
   exit_key_check := false;
+  parameters_updated := true;
+  getkey := 0;
+  key_pressed := Unknown;
 
   (** Main looping function **)
   let rec aux (i : int) : unit =
     
     if i >= n then (* End of the execution *)
-      quit_print p win ren !val_seen !last_val p.polar
+      quit_print win ren !val_seen !last_val p.polar
     else if !exit_key_check then
       raise Window_Closed
     else
@@ -164,7 +167,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           then (* End of the program *)
             (if code.(i+1) = Disp
               then disp p ren writing_index;
-            quit p win ren true (* Quit after the string *))
+            quit win ren true (* Quit after the string *))
           else if i<n-1 && code.(i+1) = Disp
             then
               (disp p ren writing_index;
@@ -198,7 +201,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           then (* End of the program *)
             (if code.(i+1) = Disp
               then disp p ren writing_index;
-            quit p win ren true (* Quit after the string *))
+            quit win ren true (* Quit after the string *))
           else if i<n-1 && code.(i+1) = Disp
           then
             (disp p ren writing_index;
@@ -259,7 +262,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           | i::t ->
             (prog_goback := t;
             aux i)
-          | [] -> quit_print p win ren !val_seen !last_val p.polar)
+          | [] -> quit_print win ren !val_seen !last_val p.polar)
 
       | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
   in

@@ -1,4 +1,6 @@
 (* Events handling *)
+(* Used only in the picture edition interface, where the sequential event handling is still in place *)
+(* In the emulator, the events are handled in parallel *)
 
 (* Loop that is required to make Sdlmouse.get_state work *)
 let rec flush_events () : unit =

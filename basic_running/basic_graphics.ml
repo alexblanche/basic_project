@@ -211,7 +211,7 @@ let clear_text () : unit =
 (* Waits for Enter key to be pressed *)
 (* Raises exception Window_Closed if the window is closed or Escape is pressed *)
 (* When the window is resized, if text_graph is true, tdraw is applied, otherwise gdraw *)
-let wait_enter (p : parameters) (ren : Sdlrender.t) (text_graph : bool) : unit =
+let wait_enter (ren : Sdlrender.t) (text_graph : bool) : unit =
   while !getkey <> 31 do
     if !parameters_updated
       then
@@ -250,3 +250,10 @@ let wait_enter (p : parameters) (ren : Sdlrender.t) (text_graph : bool) : unit =
   in
   aux 0;;
 *)
+
+(* Wait for a key to be released *)
+let wait_release () : unit =
+  while !getkey <> 0 do
+    if !exit_key_check
+      then raise Window_Closed
+  done;;
