@@ -67,6 +67,7 @@ let unit_tests_lexer () =
 
 let unit_tests_eval () =
   
+  (*
   let (proj : project_content) =
     {
       prog = [];
@@ -77,7 +78,8 @@ let unit_tests_eval () =
       str = [||]
     }
   in
-
+  *)
+  
   let p = empty_param () in
   (* 10 -> A *)
   p.var.(0) <- 10.;

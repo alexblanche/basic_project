@@ -109,16 +109,25 @@ let apply_op (o : string) (z1 : complex) (z2 : complex) : complex =
   (* Arithmetic *)
   if o = "PLUS" then Complex.add z1 z2
   else if o = "MINUS" then Complex.sub z1 z2
-  else if o = "TIMES" then Complex.mul z1 z2
-  else if o = "DIVIDED" then Complex.div z1 z2
-  else if o = "POWER" then Complex.pow z1 z2
+  else if o = "TIMES" then
+    if z1.im = 0. && z2.im = 0.
+      then complex_of_float (z1.re *. z2.re)
+      else Complex.mul z1 z2
+  else if o = "DIVIDED" then
+    if z1.im = 0. && z2.im = 0.
+      then complex_of_float (z1.re /. z2.re)
+      else Complex.div z1 z2
+  else if o = "POWER" then
+    if z1.im = 0. && z2.im = 0.
+      then complex_of_float (z1.re ** z2.re)
+      else Complex.pow z1 z2
   (* Relations *)
   else if o = "LEQ" then complex_of_bool (z1 <= z2)
   else if o = "LESS" then complex_of_bool (z1 < z2)
   else if o = "GEQ" then complex_of_bool (z1 >= z2)
   else if o = "GREATER" then complex_of_bool (z1 > z2)
-  else if o = "EQUAL" then complex_of_bool (z1 = z2)
-  else if o = "DIFFERENT" then complex_of_bool (z1 <> z2)
+  else if o = "EQUAL" then complex_of_bool (is_zero_float (z1.re -. z2.re) && is_zero_float (z1.im -. z2.im))
+  else if o = "DIFFERENT" then complex_of_bool (not (is_zero_float (z1.re -. z2.re)) || not (is_zero_float (z1.im -. z2.im)))
   (* Logic *)
   else if o = "AND" then complex_of_bool ((is_not_zero z1) && (is_not_zero z2))
   else if o = "OR" then complex_of_bool ((is_not_zero z1) || (is_not_zero z2))

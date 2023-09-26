@@ -59,11 +59,11 @@ let play (file_name : string) : unit =
   - Integrate list/matrix arithmetic in arithmetic_lexing, parsing and basic_compilation
   
 To do next:
+  - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
+  - Slow down the execution with Unix.sleepf (tests needed for text and graphic display)
   - Draw a calculator and code the execution of Getkey (by clicking or pressing keys)
     (Idea: key pressed on the keyboard highlight keys of the calculator interface)
   - Recode the operators for complex numbers (espacially '=')
-  - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
-  - Slow down the execution with Unix.sleepf (tests needed for text and graphic display)
 
 In the distant future:
   - Redo the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."

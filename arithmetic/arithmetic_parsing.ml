@@ -1,13 +1,9 @@
 (* Parsing and evaluation of arithmetical expressions, done at runtime *)
-(* #use "basic_parsing/basic_type.ml" *)
-
 
 (* Subtleties to consider:
   - In Casio Basic, some functions (like Abs, sin...) do not need parentheses.
     They are considered prefix unary operators here.
-  - Some functions have a built-in "(". They are parsed as FUNC LPAR and the RPAR is present somewhere in the program.
-  - For functions with variable arity (Solve...), we can add several versions with the same name, and choose
-    according to the number of commas on the operator queue.
+  - Some functions have a built-in "(". They are parsed as FUNC (without the LPAR), and the RPAR is present somewhere in the program.
   - The parentheses are not always closed.
 *)
     
@@ -38,25 +34,6 @@ let rec get_val (p : parameters) (n : basic_number) : complex =
     | Value z -> z
     | Variable (Var i) -> get_var_val p.var i
     | Variable Getkey -> complex_of_int !getkey
-      (* (if not !getkey_encountered then getkey_encountered := true;
-      match read_getkey_input p.getkey with
-        | released, Some keycode ->
-          let key_v = get_getkey_val keycode in
-          if released || p.getkey = 0
-            then
-              (p.getkey <- key_v;
-              complex_of_int key_v)
-            else
-              complex_of_int p.getkey
-
-        | released, _ ->
-          if released
-            then (* None after key is released *)
-              (p.getkey <- 0;
-              complex_of_int 0)
-            else (* None without any key release *)
-              (complex_of_int p.getkey))
-       *)
 
     | Variable (ListIndex (a,e)) ->
       let z = eval p e in
@@ -97,9 +74,6 @@ and right_reduce p output_q op_q =
         right_reduce p ((Value (apply_lop lo (get_val p x)))::outq) opqt
     | _ -> failwith "reduce: Syntax error"
 
-
-(*** Functions will soon be adapted to the new format: Function of string * (basic_expr list) ***)
-
 (* Shunting_yard algorithm: returns the value of the expression *)
 (* p is the parameter container, containing the variables, lists and matrices *)
 and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_number list) (op_q : arithm list) : complex =
@@ -115,7 +89,7 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
 
     (* Function evaluation *)
     | (Function (fname, el))::t, _ ->
-      let vl = List.map (eval p) el in
+      let vl = List.map (fun e -> eval p e) el in
       shunting_yard p t ((Value (apply_func fname vl))::output_q) op_q
 
     | Lpar::t, _ -> shunting_yard p t output_q (Lpar::op_q)
@@ -128,23 +102,6 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
       (match output_q with
         | x::outq -> shunting_yard p t ((Value (apply_rop ro (get_val p x)))::outq) op_q
         | _ -> failwith ("Arithmetic parsing: No operand for operator "^ro))
-
-    (* Obsolete *)
-    (* Comma *)
-    (* | Comma::t, (Op o)::opqt ->
-      if left_assoc o
-        then (* Associative or left-associative *)
-          (match output_q with
-            | x2::x1::outq ->
-              shunting_yard p t ((Value (apply_op o (get_val p x1) (get_val p x2)))::outq) (Comma::opqt)
-            | _ -> failwith ("Not enough operands for operator "^o))
-        else (* Right-associative *)
-          let noutq, nopq = right_reduce p output_q op_q in
-          shunting_yard p t noutq (Comma::nopq)
-    | Comma::t, (Lunop lo)::opqt ->
-      let noutq, nopq = right_reduce p output_q op_q in
-      shunting_yard p t noutq (Comma::nopq)
-    | Comma::t, _ -> shunting_yard p t output_q (Comma::op_q) *)
 
     (* Op *)
     | (Op o1)::t, (Op o2)::opqt ->
@@ -190,31 +147,8 @@ and eval (p : parameters) (e : basic_expr) : complex =
     | _ -> failwith "eval: error, QMark provided";;
 
 
-(* The question of the unification of functions and list_index parsing is also
-  asked in arithmetic_lexing.
-  When lexing a List i[e], the expression e is extracted and placed in the constructor ListIndex (i,e)
-  when lexing a function f(e1,...,ek), the function is simply added to the queue, with the brackets and commas.
-  Do we need to unify these approaches?
-  Would it be beneficial (and easy?)to extract the expressions e1,...,ek and put them in a constructor
-  Function((fname : string), (el : basic_expr list))?
-
-  Also, the parsing of parameters will also serve in functions like Locate, View-Window, list parsing (see below)...
-  So we should simplify the lexing of parameters separated by commas.
-*)
-
 (* To do: List/Mat arithmetic
   2*(3+{1,2,3}), evaluates as {8,10,12} 
   It should be unified with complex arithmetic, because it works in the exact same way.
   
   Maybe we should just encapsulate the complex type in a numerical entity type, along with list and mat *)
-
-
-(* - We could also code all functions with LISTS of parameters
-   -> easier to lex (unified with lists)
-   -> allows functions of all arities
-   -> allows functions of variable arity
-   -> simplifies the code
- *)
-
-(* Conclusion: we should handle lists (of arguments, of elements, etc.) in the lexing part.
-  Then we can delete the "Comma" arithmetic constructor. *)
