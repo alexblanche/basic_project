@@ -6,7 +6,7 @@
   - Some functions have a built-in "(". They are parsed as FUNC (without the LPAR), and the RPAR is present somewhere in the program.
   - The parentheses are not always closed.
 *)
-    
+
 (** Evaluation **)
 
 (* Returns the value of the variable of index i in the array var *)
@@ -14,16 +14,53 @@ let get_var_val (var : float array) (i : int) : complex =
   get_complex var.(i) var.(i+29);;
 
 (* Returns the value of List a[i] *)
-let get_list_val (tlist : (float array array)) (a : int) (i : int) : complex =
+let get_list_val (tlist : float array array) (a : int) (i : int) : complex =
   let l = tlist.(a) in
   let n = Array.length l in
   get_complex l.(i) l.(i+n/2);;
 
 (* Returns the value of Mat a[i1][i2] *)
-let get_mat_val (tmat : (float array array array)) (a : int) (i1 : int) (i2 : int) : complex =
+let get_mat_val (tmat : float array array array) (a : int) (i1 : int) (i2 : int) : complex =
   let m = tmat.(a) in
   let n = Array.length m in
   get_complex m.(i1).(i2) m.(i1+n/2).(i2);;
+
+(* Returns the length of n when n is an entity of type list *)
+let get_list_length (var : float array) (tlist : float array array) (n : entity) : int =
+  match n with
+    | ListContent t -> Array.length t
+    | VarList (Value z) ->
+      Array.length (get_list tlist (int_of_complex z))
+    | VarList (Variable (Var vi)) ->
+      Array.length (get_list tlist (int_of_complex (get_var_val var vi)))
+    | _ -> failwith "get_list_length: n is not a list";;
+
+(* Returns the dimensions of n when n is an entity of type matrix *)
+let get_mat_dim (tmat : float array array array) (n : entity) : int * int =
+  match n with
+    | MatContent m ->
+      let n = Array.length m in
+      if n = 0
+        then (0,0)
+        else (n, Array.length m.(0))
+    | VarMat a ->
+      let m = get_mat tmat a in
+      let n = Array.length m in
+      if n = 0
+        then (0,0)
+        else (n, Array.length m.(0))
+    | _ -> failwith "get_list_length: n is not a matrix";;
+
+(* Returns true if the two given entities are compatible,
+  i.e. have compatible types (see have_compatible_types) and
+  have the same dimensions if they are two lists or two matrices *)
+let are_compatible (p : parameters) (n1 : entity) (n2 : entity) : bool =
+  is_number n1
+  || is_number n2
+  || is_list n1 && is_list n2
+    && get_list_length p.var p.list n1 = get_list_length p.var p.list n2
+  || is_mat n1 && is_mat n2
+    && get_mat_dim p.mat n1 = get_mat_dim p.mat n2;;
 
 
 (* All evaluation functions are mutually recursive *)
@@ -46,6 +83,7 @@ let rec get_val (p : parameters) (n : entity) : complex =
         then failwith "get_val: access to Mat from an index that is not an integer";
       get_mat_val p.mat ai (int_of_complex z1) (int_of_complex z2))
     | Variable Random -> complex_of_float (Random.float 1.)
+    | _ -> failwith "get_val: entity is a list or matrix"
 
 (* Final evaluation of the arithmetic formula *)
 (* p is the parameter container, containing the variables, lists and matrices *)

@@ -81,8 +81,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             aux (i+2))
           else aux (i+1))
           
-      | Assign (QMark, v) ->
-        (let e = qmark win ren in
+      | Assign (QMark, v) -> (* to do: treat list/mat assignment *)
+        (let (e, _) = qmark win ren in
         let z = eval p e in
         assign_var p (Value z) v;
         aux (i+1))

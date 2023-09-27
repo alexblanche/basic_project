@@ -171,13 +171,16 @@ let rec extract_list_index (t : string list) : arithm * (string list) =
   (* Detection of the index between square brackets *)
   match t' with
     | "LSQBRACKET"::t'' ->
-      let (e,t''') = extract_expr t'' in
-      (match t''' with
-        | "RSQBRACKET"::_
-        | "EOL"::_ (* Closing bracket may be omitted in Basic Casio *)
-        | "COLON"::_
-        | "DISP"::_ -> (Entity (Variable (ListIndex (a, e))),t''')
-        | _ -> failwith "extract_list_index: Syntax error, List '[' not properly closed")
+      let (e, expr_type, t''') = extract_expr t'' in
+      if expr_type <> Numerical
+        then failwith "extract_list_index: numerical expression expected"
+      else
+        (match t''' with
+          | "RSQBRACKET"::_
+          | "EOL"::_ (* Closing bracket may be omitted in Basic Casio *)
+          | "COLON"::_
+          | "DISP"::_ -> (Entity (Variable (ListIndex (a, e))),t''')
+          | _ -> failwith "extract_list_index: Syntax error, List '[' not properly closed")
     | _ -> failwith "extract_list_index: Syntax error, List should be followed by '['"
 
 (* Extracts the content of Mat i[e1][e2] from the lexlist when lexlist is the tail
@@ -195,42 +198,88 @@ and extract_mat_index (t : string list) : arithm * (string list) =
   (* Detection of the indices between square brackets *)
   match t2 with
     | "LSQBRACKET"::t2 ->
-      let (e1,t3) = extract_expr t2 in
+      let (e1, expr_type1, t3) = extract_expr t2 in
       (match t3 with
         | "RSQBRACKET"::"LSQBRACKET"::t4 ->
-          let (e2,t5) = extract_expr t4 in
-          (match t5 with
-          | "RSQBRACKET"::_
-          | "EOL"::_
-          | "COLON"::_
-          | "DISP"::_ -> (Entity (Variable (MatIndex (ai, e1, e2))), t5)
-          | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
+          let (e2, expr_type2, t5) = extract_expr t4 in
+          if expr_type1 <> Numerical || expr_type2 <> Numerical
+            then failwith "extract_mat_index: numerical expression expected"
+          else
+            (match t5 with
+            | "RSQBRACKET"::_
+            | "EOL"::_
+            | "COLON"::_
+            | "DISP"::_ -> (Entity (Variable (MatIndex (ai, e1, e2))), t5)
+            | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
         | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
     | _ -> failwith "extract_mat_index: Syntax error, Mat should be followed by '['"
 
 (* Return the list of expressions separated by commas at the beginning of lexlist
-  and ending with RBRACKET, EOL, DISP or ASSIGN *)
+  and ending with RPAR, RBRACKET, RSQBRACKET, EOL, DISP or ASSIGN *)
 and extract_list_content (lexlist : string list) : (basic_expr list) * (string list) =
   let rec aux acc l =
     match l with
-    | s::t ->
-      if s = "COMMA" then
-        let (e,t') = extract_expr t in
+      | "COMMA"::t ->
+        let (e,_,t') = extract_expr t in
         aux (e::acc) t'
-      else if s = "RPAR" || s = "RBRACKET" then
-        (List.rev acc, t)
-      else if s = "EOL" || s = "COLON" || s = "DISP" || s = "ASSIGN" then
-        (List.rev acc, l)
-      else
-        let (e,t') = extract_expr l in
+      
+      | "RPAR"::t
+      | "RBRACKET"::t
+      | "RSQBRACKET"::t -> (List.rev acc, t)
+      
+      | "EOL"::_
+      | "COLON"::_
+      | "DISP"::_
+      | "ASSIGN"::_ -> (List.rev acc, l)
+
+      | [] -> (List.rev acc, [])
+      
+      | _ ->
+        let (e,_,t') = extract_expr l in
         aux (e::acc) t'
-    | [] -> (List.rev acc, [])
   in
   aux [] lexlist
 
+(* Returns the content of the matrix at the beginning of lexlist *)
+and extract_mat_content (lexlist : string list) : (num_expr array array) * (string list) =
+  let rec aux acc l =
+    match l with
+      | "LSQBRACKET"::t -> (* [...]...], beginning of a new line *)
+        let (el,t') = extract_list_content t in
+        aux (el::acc) t'
+
+      (* ], end of the matrix definition *)
+      | "RSQBRACKET"::t -> (acc, t)
+      (* Omitted ] *)
+      | "EOL"::_
+      | "COLON"::_
+      | "DISP"::_
+      | "ASSIGN"::_ -> (acc, l)
+      | _ -> failwith "extract_mat_content: syntax error in matrix definition"
+  in
+  let (ell, t) = aux [] lexlist in
+  let row = List.length ell in
+  if row = 0
+    then failwith "extract_mat_content: empty matrix"
+  else
+    let l1 = List.hd ell in
+    let col = List.length l1 in
+    if col = 0
+      then failwith "extract_mat_content: empty matrix"
+    else
+      let m = Array.make_matrix row col (Arithm []) in
+      (List.iteri
+        (fun i el ->
+          if List.length el <> col
+            then failwith "extract_mat_content: lines have different length"
+          else List.iteri (fun j x -> m.(row-1-i).(col-1-j) <- x) el)
+        ell;
+      (m, t))
+
+
 (* Return the expression within LPAR RPAR *)
 and extract_par_content (lexlist : string list) : basic_expr * (string list) =
-  let (e,t) = extract_expr lexlist in
+  let (e,_,t) = extract_expr lexlist in
   match t with
     | s::t' ->
       if s = "RPAR" then
@@ -246,60 +295,120 @@ and extract_par_content (lexlist : string list) : basic_expr * (string list) =
 
 (* Converts a list of lexemes containing an arithmetic expression into a list of arithmetic lexemes *)
 (* Return the basic_expr and the tail of the list of lexemes after the expression *)
-and extract_expr (lexlist : string list) : basic_expr * (string list) =
+and extract_expr (lexlist : string list) : basic_expr * expression_type * (string list) =
 
-  let rec aux acc l =
+  let rec aux acc expr_type l =
     match l with
       | s::t ->
         (* Values and variables *)
         if is_digit s || s = "." then
           let (x, t') = read_float l in
-          aux ((Entity (Value (complex_of_float x)))::acc) t'
+          aux ((Entity (Value (complex_of_float x)))::acc) expr_type t'
         else if is_var s || s = "ANS" || s = "SMALLR" || s = "THETA" then
-          aux ((Entity (Variable (Var (var_index s))))::acc) t
+          aux ((Entity (Variable (Var (var_index s))))::acc) expr_type t
         else if s = "CPLXI" then
-          aux ((Entity (Value (Complex.i)))::acc) t
+          aux ((Entity (Value (Complex.i)))::acc) expr_type t
         else if s = "PI" then
-          aux ((Entity (Value {re = Float.pi; im = 0.}))::acc) t
+          aux ((Entity (Value {re = Float.pi; im = 0.}))::acc) expr_type t
         else if s = "GETKEY" then
-          aux ((Entity (Variable Getkey))::acc) t
+          aux ((Entity (Variable Getkey))::acc) expr_type t
 
         (* Parentheses *)
         else if s = "LPAR" then
           let (e,t') = extract_par_content t in
           (match e with
-            | Arithm al -> aux (Rpar::(List.rev_append (Lpar::al) acc)) t'
+            | Arithm al -> aux (Rpar::(List.rev_append (Lpar::al) acc)) expr_type t'
             | QMark -> failwith "Arithmetic lexing: syntax error, ? in parentheses")
 
         (* Unary and binary operators *)
         else if List.exists (fun (op,_) -> s=op) op_list then
-          aux ((Op s)::acc) t
+          aux ((Op s)::acc) expr_type t
         else if List.mem s lop_list then
-          aux ((Lunop s)::acc) t
+          aux ((Lunop s)::acc) expr_type t
         else if List.mem s rop_list then
-          aux ((Runop s)::acc) t
-        
-        (* List a[e] and Mat a[e1][e2] *)
-        else if s = "LIST" then
-          let (li,t') = extract_list_index t in
-          aux (li::acc) t'
-        else if s = "MAT" then
-          let (li,t') = extract_mat_index t in
-          aux (li::acc) t'
+          aux ((Runop s)::acc) expr_type t
 
         (* Function *)
         else if Hashtbl.mem func_table s then
           let (el, t') = extract_list_content t in
-          aux ((Function (s, el))::acc) t'
+          aux ((Function (s, el))::acc) expr_type t'
+        
+        (* List a[e] and List a *)
+        else if s = "LIST" then
+          (match t with
+            | _::"LSQBRACKET"::_
+            | _::_::"LSQBRACKET"::_ -> (* List a[e] *)
+              let (li,t') = extract_list_index t in
+              aux (li::acc) expr_type t'
+            | a::t' -> (* List a *)
+              if expr_type = MatExpr
+                then failwith "extract_expr: lists and matrices are incompatible"
+              else if is_var a || a = "ANS" then
+                aux ((Entity (VarList (Variable (Var (var_index a)))))::acc) ListExpr t'
+              else if is_digit a then
+                let (i,q) = read_int t true in
+                aux ((Entity (VarList (Value (complex_of_int i))))::acc) ListExpr q
+              else failwith "extract_expr: wrong list index"
+            | _ -> failwith "extract_expr: syntax error in list access")
+        
+        (* Mat a[e1][e2] and Mat a *)
+        else if s = "MAT" then
+          (match t with
+            | _::"LSQBRACKET"::_
+            | _::_::"LSQBRACKET"::_ -> (* Mat a[e1][e2] *)
+              let (mi,t') = extract_mat_index t in
+              aux (mi::acc) expr_type t'
+            | a::t' -> (* Mat a *)
+              if expr_type = ListExpr
+                then failwith "extract_expr: matrices and lists are incompatible"
+              else if is_var a && a <> "SMALLR" && a <> "THETA" || a = "ANS" then
+                aux ((Entity (VarMat (var_index a)))::acc) MatExpr t'
+              else failwith "extract_mat_index: wrong matrix index"
+            | _ -> failwith "extract_expr: syntax error in matrix access")
+        
+        (* {...} *)
+        else if s = "LBRACKET" then
+          (if expr_type = MatExpr
+            then failwith "extract_expr: lists and matrices are incompatible"
+          else
+            let (el, t') = extract_list_content t in
+            aux ((Entity (ListContent (Array.of_list el)))::acc) ListExpr t')
+
+        (* [[...]...[...]] *)
+        else if s = "LSQBRACKET" then
+          (if expr_type = ListExpr
+            then failwith "extract_expr: matrices and lists are incompatible"
+          else
+            let (m, t') = extract_mat_content t in
+            aux ((Entity (MatContent m))::acc) MatExpr t')
         
         (* End of the expression *)
-        else (acc, l)
-      | [] -> (acc, [])
+        else (acc, expr_type, l)
+      | [] -> (acc, expr_type, [])
   in
 
   match lexlist with
-    | "QMARK"::t -> (QMark, t)
+    | "QMARK"::t -> (QMark, Numerical, t)
     | _ ->
-      let (sl, t) = aux [] lexlist in
-      (Arithm (List.rev sl), t)
+        let (sl, expr_type, t) = aux [] Numerical lexlist in
+        (Arithm (List.rev sl), expr_type, t)
 ;;
+
+(* Specific lexing functions that check the return type *)
+let extract_num_expr (lexlist : string list) : num_expr * (string list) =
+  let (e, expr_type, t) = extract_expr lexlist in
+  if expr_type = Numerical
+    then (e,t)
+    else failwith "extract_num_expr: numerical expression expected";;
+
+let extract_list_expr (lexlist : string list) : list_expr * (string list) =
+  let (e, expr_type, t) = extract_expr lexlist in
+  if expr_type = ListExpr
+    then (e,t)
+    else failwith "extract_list_expr: list expression expected";;
+
+let extract_mat_expr (lexlist : string list) : mat_expr * (string list) =
+  let (e, expr_type, t) = extract_expr lexlist in
+  if expr_type = MatExpr
+    then (e,t)
+    else failwith "extract_mat_expr: mat expression expected";;

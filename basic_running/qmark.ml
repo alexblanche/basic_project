@@ -1,6 +1,6 @@
 (** Executes the ? (QMark) operation **)
 
-let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
+let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr * expression_type =
   (* Main loop *)
   (* ns: list of strings storing the number entered
     x: index of writing in line !writing_index *)
@@ -84,7 +84,7 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
   let ns = loop [] 0 in
   escape_activated := true;
   
-  let (e,t) = extract_expr ns in
+  let (e, expr_type, t) = extract_expr ns in
   if t <> []
     then failwith "Runtime error: wrong entry";
-  e;;
+  (e, expr_type);;

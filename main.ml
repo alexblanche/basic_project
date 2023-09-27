@@ -1,6 +1,8 @@
 (* Temporary main function *)
 (* Used to launch all the programs in order *)
 
+(* To be replaced by a makefile *)
+
 #use "topfind"
 #require "sdl2"
 #require "sdl2_ttf"
@@ -11,9 +13,12 @@
 #use "initialization/key_check.ml"
 #use "initialization/file_readers/file_reader.ml"
 #use "initialization/file_readers/bmp_reader.ml"
+
 #use "initialization/types/complex.ml"
+#use "initialization/types/arithmetic_type.ml"
 #use "initialization/types/basic_type.ml"
 #use "initialization/types/project_type.ml"
+
 #use "initialization/basic_encoding.ml"
 #use "initialization/command_display.ml"
 
@@ -36,6 +41,7 @@
 #use "basic_running/qmark.ml"
 #use "basic_running/basic_run.ml"
 
+(* Tests *)
 #use "tests/tests_run.ml"
 
 (* Launches the program in the given G1M/G2M file *)

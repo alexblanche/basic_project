@@ -73,7 +73,7 @@ let skip_until (lexlist : string list) (i : int) =
     match l with
       | [] -> (prev1, prev2, prev3, prev4, prev5, [])
       | _ ->
-        let (line,t') = extract_line l in
+        let (line, t') = extract_line l in
         let line_len = List.length line in
         if k + line_len > i
           then (prev1, prev2, prev3, prev4, prev5, l)
@@ -87,7 +87,7 @@ let skip_until (lexlist : string list) (i : int) =
 let print_around (lexlist : string list) (i : int) : unit =
   let rec print_five (l : string list) (k : int) =
     if k < 5 then
-      (let (line,t) = extract_line l in
+      (let (line, t) = extract_line l in
       match line with
         | eol :: sl ->
           (print_lexline (List.rev sl) eol;
@@ -103,7 +103,7 @@ let print_around (lexlist : string list) (i : int) : unit =
         | [] -> ())
     [prev1; prev2; prev3; prev4; prev5];
   print_endline ">>> Error in this line:";
-  let (line,t') = extract_line t in
+  let (line, t') = extract_line t in
   match line with
     | eol :: sl ->
       (print_lexline (List.rev sl) eol;
@@ -194,7 +194,7 @@ type working_mem =
 
 (* If *)
 let process_if i t code mem =
-  let e, t' = extract_expr t in
+  let (e, t') = extract_num_expr t in
   set code i (If (e, -1));
   mem.stack <- ("if", i)::mem.stack;
   ((i+1), t');;
@@ -263,7 +263,7 @@ let process_ifend i t code mem =
     23..    prog2
 *)
 let process_while i t code mem =
-  let e, t' = extract_expr t in
+  let (e, t') = extract_num_expr t in
   set code i (If (e, -1));
   mem.stack <- ("while", i)::mem.stack;
   ((i+1), t');;
@@ -305,7 +305,7 @@ let process_whileend i t code mem =
 *)
 
 let process_for i t code mem =
-  let (e1,t2) = extract_expr t in
+  let (e1, t2) = extract_num_expr t in
   if e1 = QMark
     then fail t "Compilation error: ? cannot set the variable of a For";
   mem.stack <- ("for", i)::mem.stack;
@@ -313,12 +313,12 @@ let process_for i t code mem =
     | "ASSIGN"::v::"TO"::t3 ->
       (if not (is_var v)
         then fail t "Compilation error: wrong variable in a For loop";
-      let (e2,t4) = extract_expr t3 in
+      let (e2, t4) = extract_num_expr t3 in
       if e2 = QMark
         then fail t "Compilation error: ? cannot set the bound of a For";
       match t4 with
         | "STEP"::t5 ->
-          (let (e3, t6) = extract_expr t5 in
+          (let (e3, t6) = extract_num_expr t5 in
           if e3 = QMark
             then fail t "Compilation error: ? cannot set the bound of a For";
           match t6 with
@@ -355,7 +355,7 @@ let process_next i t code mem =
 
 (* Do, LpWhile *)
 let process_lpwhile i t code mem =
-  let (e,t') = extract_expr t in
+  let (e, t') = extract_num_expr t in
   if e = QMark
     then fail t "Compilation error: ? cannot be the condition of a Do-LpWhile";
   match mem.stack with
@@ -397,7 +397,7 @@ let process_goto i t code mem (a : string) (eol : string) =
 
 (* Prog *)
 let process_prog i t code mem =
-  let sl, t' = extract_str t in
+  let (sl, t') = extract_str t in
   let s = String.concat "" (List.rev sl) in
   match t' with
     | "EOL"::t''
@@ -408,11 +408,11 @@ let process_prog i t code mem =
 
 (* Locate *)
 let process_locate i t code mem =
-  let (e1, t2) = extract_expr t in
+  let (e1, t2) = extract_num_expr t in
   try
     if List.hd t2 <> ","
       then fail t "Compilation error: Syntax error in Locate command";
-    let (e2, t3) = extract_expr (List.tl t2) in
+    let (e2, t3) = extract_num_expr (List.tl t2) in
     let t' =
       match t3 with
         | ","::"QUOTE"::t4 ->
@@ -420,7 +420,7 @@ let process_locate i t code mem =
           set code i (Locate (e1, e2, Loc_text sl));
           t5)
         | ","::t4 ->
-          (let (e3, t5) = extract_expr t4 in
+          (let (e3, t5) = extract_num_expr t4 in
           set code i (Locate (e1, e2, Loc_expr e3));
           t5)
         | _ -> fail t "Compilation error: Syntax error in Locate command"
@@ -448,9 +448,9 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
     (* print_endline (string_of_int i); *)
 
     (* Expression handling *)
-    let (e,t) = extract_expr lexlist in
+    let (e, expr_type, t) = extract_expr lexlist in
     let (expr_found, j, next_t) =
-      (match e,t with
+      (match e, t with
       
         | Arithm [], _ ->
           (* The beginning of lexlist is not an expression *)
@@ -458,22 +458,22 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
         (* To be combined with the case below *)
         | _, "ASSIGN"::t' ->
-          (match t' with
-            | [v] ->
+          (match expr_type, t' with
+            | Numerical, [v] ->
               (if is_var v then
                 (set code i (Assign (e, Var (var_index v)));
                 (true, i+1, []))
               else fail lexlist "Compilation: Wrong assignment (->) of a variable")
-            | v::"EOL"::t''
-            | v::"COLON"::t''
-            | v::"DISP"::t'' ->
-              if is_var v then
+            | _, v::"EOL"::t''
+            | _, v::"COLON"::t''
+            | _, v::"DISP"::t'' ->
+              if is_var v && expr_type = Numerical then
                 (set code i (Assign (e, Var (var_index v)));
                 (true, i+1, List.tl t'))
               else
                 fail lexlist "Compilation error: Wrong assignment (->) of a variable"
 
-            | "LIST"::_::"LSQBRACKET"::_ ->
+            | Numerical, "LIST"::_::"LSQBRACKET"::_ ->
               let (li,t'') = extract_list_index (List.tl t') in
               (match li with
                 | Entity (Variable lx) ->
@@ -481,13 +481,37 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                   (true, i+1, t''))
                 | _ -> fail lexlist "Compilation error: Wrong assignment (->) of a list element")
 
-            | "MAT"::_::"LSQBRACKET"::_ ->
+            | Numerical, "MAT"::_::"LSQBRACKET"::_ ->
               let (mi,t'') = extract_mat_index (List.tl t') in
               (match mi with
                 | Entity (Variable mx) ->
                   (set code i (Assign (e, mx));
                   (true, i+1, t''))
                 | _ -> fail lexlist "Compilation error: Wrong assignment (->) of a matrix element")
+
+            | ListExpr, "LIST"::a::t'' ->
+              if is_var a || a = "ANS" then
+                (set code i (AssignList (e, Variable (Var (var_index a))));
+                (true, i+1, t''))
+              else if is_digit a then
+                let (vi,q) = read_int (a::t'') true in
+                (set code i (AssignList (e, Value (complex_of_int vi)));
+                (true, i+1, t''))
+              else fail lexlist  "Compilation error: wrong list index"
+
+            | MatExpr, "MAT"::a::t'' ->
+              if is_var a && a <> "SMALLR" && a <> "THETA" || a = "ANS" then
+                (set code i (AssignMat (e, var_index a));
+                (true, i+1, t''))
+              else fail lexlist  "extract_mat_index: wrong matrix index"
+
+            (* Errors *)
+            | Numerical, "LIST"::_
+            | Numerical, "MAT"::_
+            | ListExpr, "MAT"::_
+            | MatExpr, "LIST"::_
+            | ListExpr, _::_
+            | MatExpr, _::_ -> fail lexlist "Compilation error: incompatible types during assignment"
             | _ -> fail lexlist "Compilation error: Syntax error during assignment"
           )
         

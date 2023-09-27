@@ -1,5 +1,4 @@
 (* Definition of all the arithmetic functions of the Basic Casio language *)
-(* #use "basic_parsing/basic_type.ml" *)
 
 (* Factorial *)
 let fact n =
@@ -151,28 +150,3 @@ let apply_rop (ro : string) (z : complex) : complex =
 (* Application of the left unary operators *)
 let apply_lop (lo : string) (z : complex) : complex =
   apply_func lo [z];;
-
-
-(** prototype for complex arithmetic combined with list/matrix arithmetic **)
-(*
-
-(* Separated into several functions *)
-let apply_op_entity (op : string) (q1 : entity) (q2 : entity) : entity =
-  match q1, q2 with
-    | Number n1, Number n2 -> Number (apply_op op (eval p n1) (eval p n2))
-    | Number n1, List l2 ->
-      (* The evaluation of the first term is done prior to the application on each element of the list *)
-      let z1 = eval p n1 in
-      Array.init (Array.length l2) (fun k -> apply_op op z1 (eval p l2.(k)))
-    | List l1, Number n2 ->
-      let z2 = eval p n2 in
-      Array.init (Array.length l1) (fun k -> apply_op op (eval p l1.(k)) z2)
-    | List l1, List l2 ->
-      let size1 = Array.length l1 in
-      if Array.length l2 = size1
-        then Array.init size1 (fun k -> apply_op op (eval p l1.(k)) (eval p l2.(k)))
-    | Number n1, Mat m2 -> (* *)
-    | Mat m1, Number n2 -> (* *)
-    | Mat m1, Mat m2 -> (* *)
-    | _ -> failwith "apply_op: Incompatible types"
-*)
