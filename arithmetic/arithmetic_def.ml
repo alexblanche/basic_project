@@ -105,35 +105,40 @@ let op_list = [("PLUS", 3); ("MINUS", 3); ("TIMES", 2); ("DIVIDED", 2); ("POWER"
 
 
 (* Application of the operators *)
+(* Real and complex operations are sometimes separated for efficiency and precision
+  (ex: float ** is much more precise than Complex.pow) *)
 let apply_op (o : string) (z1 : complex) (z2 : complex) : complex =
+  match o with
   (* Arithmetic *)
-  if o = "PLUS" then Complex.add z1 z2
-  else if o = "MINUS" then Complex.sub z1 z2
-  else if o = "TIMES" then
-    if z1.im = 0. && z2.im = 0.
-      then complex_of_float (z1.re *. z2.re)
-      else Complex.mul z1 z2
-  else if o = "DIVIDED" then
-    if z1.im = 0. && z2.im = 0.
-      then complex_of_float (z1.re /. z2.re)
-      else Complex.div z1 z2
-  else if o = "POWER" then
-    if z1.im = 0. && z2.im = 0.
-      then complex_of_float (z1.re ** z2.re)
-      else Complex.pow z1 z2
+    | "PLUS" -> Complex.add z1 z2
+    | "MINUS" -> Complex.sub z1 z2
+    | "TIMES" ->
+      if z1.im = 0. && z2.im = 0.
+        then complex_of_float (z1.re *. z2.re)
+        else Complex.mul z1 z2
+    | "DIVIDED" ->
+      if z1.im = 0. && z2.im = 0.
+        then complex_of_float (z1.re /. z2.re)
+        else Complex.div z1 z2
+    | "POWER" ->
+      if z1.im = 0. && z2.im = 0.
+        then complex_of_float (z1.re ** z2.re)
+        else Complex.pow z1 z2
   (* Relations *)
-  else if o = "LEQ" then complex_of_bool (z1 <= z2)
-  else if o = "LESS" then complex_of_bool (z1 < z2)
-  else if o = "GEQ" then complex_of_bool (z1 >= z2)
-  else if o = "GREATER" then complex_of_bool (z1 > z2)
-  else if o = "EQUAL" then complex_of_bool (is_zero_float (z1.re -. z2.re) && is_zero_float (z1.im -. z2.im))
-  else if o = "DIFFERENT" then complex_of_bool (not (is_zero_float (z1.re -. z2.re)) || not (is_zero_float (z1.im -. z2.im)))
+    | "LEQ" -> complex_of_bool (z1 <= z2)
+    | "LESS" -> complex_of_bool (z1 < z2)
+    | "GEQ" -> complex_of_bool (z1 >= z2)
+    | "GREATER" -> complex_of_bool (z1 > z2)
+    | "EQUAL" ->
+      complex_of_bool (is_zero_float (z1.re -. z2.re) && is_zero_float (z1.im -. z2.im))
+    | "DIFFERENT" ->
+      complex_of_bool (not (is_zero_float (z1.re -. z2.re)) || not (is_zero_float (z1.im -. z2.im)))
   (* Logic *)
-  else if o = "AND" then complex_of_bool ((is_not_zero z1) && (is_not_zero z2))
-  else if o = "OR" then complex_of_bool ((is_not_zero z1) || (is_not_zero z2))
-  else if o = "XOR" then
-    complex_of_bool ((is_not_zero z1) && (is_zero z2) || (is_zero z1) && (is_not_zero z2))
-  else failwith ("apply_op: Unkown operator "^o);;
+    | "AND" -> complex_of_bool ((is_not_zero z1) && (is_not_zero z2))
+    | "OR" -> complex_of_bool ((is_not_zero z1) || (is_not_zero z2))
+    | "XOR" ->
+      complex_of_bool ((is_not_zero z1) && (is_zero z2) || (is_zero z1) && (is_not_zero z2))
+    | _ -> failwith ("apply_op: Unkown operator "^o);;
 
 (* Application of the right unary operators *)
 (* Since there are only a few, we hard-code them like the operators. *)
@@ -170,40 +175,4 @@ let apply_op_entity (op : string) (q1 : entity) (q2 : entity) : entity =
     | Mat m1, Number n2 -> (* *)
     | Mat m1, Mat m2 -> (* *)
     | _ -> failwith "apply_op: Incompatible types"
-*)
-
-(* Plan for integration of list/matrix arithmetic:
-  Separate num_expr, list_expr and mat_expr at lexing time,
-  each made up of a basic_expr containing some variables List _, Mat _, {...} and [[][]]
-  
-  The output type of the lexing function is the following:
-  type expression_type = Numerical | ListExpr | MatExpr
-  type expression = basic_expr * expression_type
-  
-  We define these specific types:
-  type num_expr = basic_expr
-  type list_expr = basic_expr
-  type mat_expr = basic_expr
-
-  basic_number now contains
-  | Value of complex
-  | Variable of variable
-  | ListContent of num_expr array (* {...} *)
-  | MatContent of num_expr array array (* [[...][...]...] *)
-  | VarList of variable (* List _ *)
-  | VarMat of int (* Mat _ *)
-  
-  Each constructor takes the specific type it needs, or a general expression
-  Assign of num_expr * variable
-  AssignList of list_expr * basic_number
-  AssignMat of mat_expr * int
-
-  There are three evaluation functions, one for each input (and output type)
-  eval (num_expr -> complex)
-  eval_list (list_expr -> complex array)
-  eval_mat (mat_expr -> complex array array)
-
-  At runtime, an error is raised if the sizes of two lists or two matrices do not match,
-  or if unexpected types (MatContent or VarMat in a list_expr) are present in the same
-  basic_expr (it should not happen if lexing is correct)
 *)

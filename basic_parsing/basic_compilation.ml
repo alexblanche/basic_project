@@ -329,7 +329,7 @@ let process_for i t code mem =
             | _ -> fail t "Compilation error: Syntax error after For loop definition"
           )
         | _ -> (* No Step value, 1 by default *)
-          (set code i (For (var_index v, e1, e2, Arithm [Number (Value {re = 1.; im = 0.})], -1));
+          (set code i (For (var_index v, e1, e2, Arithm [Entity (Value {re = 1.; im = 0.})], -1));
           (i+1, t4))
       )
         
@@ -371,7 +371,7 @@ let process_lpwhile i t code mem =
 (* "LBL" is immediately followed by a, then eol in the original list of lexemes *)
 let process_lbl i t code mem (a : string) (eol : string) =
   if not (is_var a)
-    then fail t "Compilation error: Wrong label"
+    then fail t "Compilation error: Wrong Lbl index"
     else if eol <> "EOL" && eol <> "COLON"
       then fail t "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
       else
@@ -385,7 +385,7 @@ let process_lbl i t code mem (a : string) (eol : string) =
 (* Goto *)
 let process_goto i t code mem (a : string) (eol : string) =
   if not (is_var a)
-    then fail t "Compilation error: Wrong goto"
+    then fail t "Compilation error: Wrong Goto index"
     else if eol <> "EOL" && eol <> "COLON"
       then fail t "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
       else
@@ -476,7 +476,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
             | "LIST"::_::"LSQBRACKET"::_ ->
               let (li,t'') = extract_list_index (List.tl t') in
               (match li with
-                | Number (Variable lx) ->
+                | Entity (Variable lx) ->
                   (set code i (Assign (e, lx));
                   (true, i+1, t''))
                 | _ -> fail lexlist "Compilation error: Wrong assignment (->) of a list element")
@@ -484,7 +484,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
             | "MAT"::_::"LSQBRACKET"::_ ->
               let (mi,t'') = extract_mat_index (List.tl t') in
               (match mi with
-                | Number (Variable mx) ->
+                | Entity (Variable mx) ->
                   (set code i (Assign (e, mx));
                   (true, i+1, t''))
                 | _ -> fail lexlist "Compilation error: Wrong assignment (->) of a matrix element")
@@ -510,15 +510,14 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           with
             | Compilation_error (_, error_message) -> fail lexlist error_message)
         
-        | _, eol::t' ->
-          if eol = "EOL" || eol = "COLON" || eol = "DISP" then
-            (set code i (Expr e); (* Simple expression *)
-            (true, i+1, t))
-          else fail lexlist ("Compilation error: Unexpected lexeme "^eol^" after an expression")
-
+        | _, "EOL"::_
+        | _, "COLON"::_
+        | _, "DISP"::_
         | _, [] ->
-          (set code i (Expr e); (* Simple expression at the end of the code (without eol) *)
-          (true, i+1, []))
+          (set code i (Expr (e, Numerical)); (* Simple expression *) (* To do: implement list_expr and mat_expr *)
+          (true, i+1, t))
+
+        | _ -> fail lexlist "Compilation error: Syntax error after an expression"
       )
     in
     if expr_found then aux next_t j

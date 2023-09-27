@@ -4,14 +4,14 @@
 exception Runtime_interruption;;
 
 (* Assigns the value x to the variable v *)
-let assign_var (p : parameters) (x : basic_number) (v : variable) : unit =
+let assign_var (p : parameters) (x : entity) (v : variable) : unit =
   match x,v with
     | Value z, Var vi -> 
       (p.var.(vi) <- z.re;
       p.var.(vi+29) <- z.im)
 
     | Value z,
-      ListIndex (Value a, Arithm [Number (Value i)])
+      ListIndex (Value a, Arithm [Entity (Value i)])
       ->
       (let t = p.list.(int_of_complex a) in
       let iint = int_of_complex i in
@@ -19,9 +19,9 @@ let assign_var (p : parameters) (x : basic_number) (v : variable) : unit =
       t.(iint + (Array.length t)/2) <- z.im)
 
     | Value z,
-      MatIndex (Value a, Arithm [Number (Value i)], Arithm [Number (Value j)])
+      MatIndex (ai, Arithm [Entity (Value i)], Arithm [Entity (Value j)])
       ->
-      (let m = p.mat.(int_of_complex a) in
+      (let m = p.mat.(ai) in
       let iint = int_of_complex i in
       let jint = int_of_complex j in
       m.(iint).(jint) <- z.re;

@@ -68,7 +68,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           then aux j
           else aux (i+1)
           
-      | Expr (Arithm al) ->
+      | Expr (Arithm al, _) -> (* To do: treat list_expr, mat_expr *)
         let z = eval p (Arithm al) in
         (store_ans p.var z;
         last_val := z;
@@ -106,13 +106,12 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             let iint = int_of_complex ie in
             t.(iint) <- z.re;
             t.(iint + (Array.length t)/2) <- z.im) *)
-            assign_var p (Value z) (ListIndex (Value vala, Arithm [Number (Value ie)])))
+            assign_var p (Value z) (ListIndex (Value vala, Arithm [Entity (Value ie)])))
 
-          | MatIndex (a, iexp, jexp) ->
-            (let vala = get_val p a in
-            let ie = eval p iexp in
+          | MatIndex (ai, iexp, jexp) ->
+            (let ie = eval p iexp in
             let je = eval p jexp in
-            if not (is_int vala && is_int ie && is_int je)
+            if not (is_int ie && is_int je)
               then failwith "Runtime error: wrong index for matrix";
             (* let m = p.mat.(int_of_complex vala) in
             let iint = int_of_complex ie in
@@ -120,8 +119,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             m.(iint).(jint) <- z.re;
             m.(iint + (Array.length m)/2).(jint) <- z.im) *)
             assign_var p (Value z)
-              (MatIndex (Value vala,
-                Arithm [Number (Value ie)], Arithm [Number (Value je)])))
+              (MatIndex (ai,
+                Arithm [Entity (Value ie)], Arithm [Entity (Value je)])))
 
           | _ -> failwith "Runtime error: assignment to unassignable object"
         );

@@ -28,8 +28,8 @@ let get_mat_val (tmat : (float array array array)) (a : int) (i1 : int) (i2 : in
 
 (* All evaluation functions are mutually recursive *)
 
-(* Returns the value of the basic_number n, being a value or a variable *)
-let rec get_val (p : parameters) (n : basic_number) : complex =
+(* Returns the value of the entity n, being a value or a variable *)
+let rec get_val (p : parameters) (n : entity) : complex =
   match n with
     | Value z -> z
     | Variable (Var i) -> get_var_val p.var i
@@ -39,17 +39,17 @@ let rec get_val (p : parameters) (n : basic_number) : complex =
       (if not (is_int z)
         then failwith "get_val: access to List from an index that is not an integer";
       get_list_val p.list (int_of_complex (get_val p a)) (int_of_complex z))
-    | Variable (MatIndex (a,e1,e2)) ->
+    | Variable (MatIndex (ai,e1,e2)) ->
       let z1 = eval p e1 in
       let z2 = eval p e2 in
       (if not ((is_int z1) && (is_int z2))
         then failwith "get_val: access to Mat from an index that is not an integer";
-      get_mat_val p.mat (int_of_complex (get_val p a)) (int_of_complex z1) (int_of_complex z2))
+      get_mat_val p.mat ai (int_of_complex z1) (int_of_complex z2))
     | Variable Random -> complex_of_float (Random.float 1.)
 
 (* Final evaluation of the arithmetic formula *)
 (* p is the parameter container, containing the variables, lists and matrices *)
-and calculate (p : parameters) (outq : basic_number list) (opq : arithm list) : complex =
+and calculate (p : parameters) (outq : entity list) (opq : arithm list) : complex =
   match outq, opq with
     (* Right parentheses may be omitted at the end of expressions in Casio Basic *)
     | _, Lpar::opqt -> calculate p outq opqt
@@ -75,16 +75,16 @@ and right_reduce p output_q op_q =
 
 (* Shunting_yard algorithm: returns the value of the expression *)
 (* p is the parameter container, containing the variables, lists and matrices *)
-and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_number list) (op_q : arithm list) : complex =
+and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity list) (op_q : arithm list) : complex =
   match (lexlist,op_q) with
     (* End case *)
     | [], _ -> calculate p output_q op_q
 
     (* Add to a queue *)
     (* Case of omitted multiplication operator *)
-    | (Number x1)::(Number x2)::t, _ -> shunting_yard p ((Op "TIMES")::(Number x2)::t) (x1::output_q) op_q
+    | (Entity x1)::(Entity x2)::t, _ -> shunting_yard p ((Op "TIMES")::(Entity x2)::t) (x1::output_q) op_q
     (* Normal number case *)
-    | (Number x)::t, _ -> shunting_yard p t (x::output_q) op_q
+    | (Entity x)::t, _ -> shunting_yard p t (x::output_q) op_q
 
     (* Function evaluation *)
     | (Function (fname, el))::t, _ ->
@@ -140,7 +140,7 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : basic_num
 
 (* General arithmetic evaluation function *)
 (* p is the parameter container, containing the variables, lists and matrices *)
-and eval (p : parameters) (e : basic_expr) : complex =
+and eval (p : parameters) (e : num_expr) : complex =
   match e with
     | Arithm al -> shunting_yard p al [] []
     | _ -> failwith "eval: error, QMark provided";;

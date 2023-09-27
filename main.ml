@@ -63,6 +63,7 @@ To do next:
   - Draw a calculator and code the execution of Getkey (by clicking or pressing keys)
     (Idea: key pressed on the keyboard highlight keys of the calculator interface)
   - Recode the operators for complex numbers (espacially '=')
+  - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
 
 In the distant future:
   - Redo the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."

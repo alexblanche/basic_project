@@ -17,21 +17,21 @@ let (p : project_content) =
 let run_prog1 () =
   run p (
     [|
-      Expr (Arithm [Number (Value {re = 1.; im = 0.})]);
+      Expr (Arithm [Entity (Value {re = 1.; im = 0.})], Numerical);
       Disp;
       String ["D"; "C"; "B"; "A"];
       Disp;
-      Expr (Arithm [Number (Value {re = 2.; im = 0.})]);
+      Expr (Arithm [Entity (Value {re = 2.; im = 0.})], Numerical);
       Disp;
-      Expr (Arithm [Number (Value {re = 1.; im = 2.})]);
+      Expr (Arithm [Entity (Value {re = 1.; im = 2.})], Numerical);
       Disp;
-      Expr (Arithm [Number (Value {re = 123456789012.; im = 2222.})]);
+      Expr (Arithm [Entity (Value {re = 123456789012.; im = 2222.})], Numerical);
       Disp;
-      Expr (Arithm [Number (Value {re = 123456789012.; im = 22222.})]);
+      Expr (Arithm [Entity (Value {re = 123456789012.; im = 22222.})], Numerical);
       Disp;
       String ["H"; "G"; "F"; "E"];
       Disp; 
-      Expr (Arithm [Number (Value {re = 5.; im = 0.})]);
+      Expr (Arithm [Entity (Value {re = 5.; im = 0.})], Numerical);
       Disp;
       End
     |]
@@ -42,11 +42,11 @@ let run_prog1 () =
 let run_prog2 () =
   run p (
     [|
-      Assign (Arithm [Number (Value {re = 8.; im = 0.})], (Var 0)); (* 8 -> A DISP *)
+      Assign (Arithm [Entity (Value {re = 8.; im = 0.})], (Var 0)); (* 8 -> A DISP *)
       Disp;
-      Assign (Arithm [Number (Value {re = 10.; im = 0.})], (Var 1)); (* 10 -> B DISP *)
+      Assign (Arithm [Entity (Value {re = 10.; im = 0.})], (Var 1)); (* 10 -> B DISP *)
       Disp;
-      Expr (Arithm [Number (Variable (Var 0)); Op "TIMES"; Number (Variable (Var 1))]); (* A*B DISP *)
+      Expr (Arithm [Entity (Variable (Var 0)); Op "TIMES"; Entity (Variable (Var 1))], Numerical); (* A*B DISP *)
       Disp;
       End
     |]
@@ -58,15 +58,15 @@ let run_prog3 () =
   run p (
     [|
       For (0, (* For 3-1 -> A To 8 Step 2 *)
-        Arithm [Number (Value {re = 3.; im = 0.}); Op "MINUS"; Number (Value {re = 1.; im = 0.})],
-        Arithm [Number (Value {re = 8.; im = 0.})],
-        Arithm [Number (Value {re = 2.; im = 0.})],
+        Arithm [Entity (Value {re = 3.; im = 0.}); Op "MINUS"; Entity (Value {re = 1.; im = 0.})],
+        Arithm [Entity (Value {re = 8.; im = 0.})],
+        Arithm [Entity (Value {re = 2.; im = 0.})],
         7);
       Assign (QMark, Var 1); (* ? -> B *)
-      Expr (Arithm [Number (Variable (Var 1)); Op "TIMES"; Number (Value {re = 2.; im = 0.})]); (* B*2 DISP *)
+      Expr (Arithm [Entity (Variable (Var 1)); Op "TIMES"; Entity (Value {re = 2.; im = 0.})], Numerical); (* B*2 DISP *)
       Disp;
-      Locate (Arithm [Number (Value {re = 10.; im = 0.})],
-        Arithm [Number (Value {re = 5.; im = 0.})],
+      Locate (Arithm [Entity (Value {re = 10.; im = 0.})],
+        Arithm [Entity (Value {re = 5.; im = 0.})],
         Loc_text ["C"; "B"; "A"]);
       Disp;
       Next;
@@ -83,8 +83,8 @@ let run_prog4 () =
 
 (* Test Locate *)
 (* run p ([|
-  Locate (Arithm [Number (Value {re = 10.; im = 0.})],
-    Arithm [Number (Value {re = 5.; im = 0.})],
+  Locate (Arithm [Entity (Value {re = 10.; im = 0.})],
+    Arithm [Entity (Value {re = 5.; im = 0.})],
     ["A"; "B"; "C"]);
     Disp;
     End

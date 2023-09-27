@@ -44,8 +44,9 @@ let is_var (s : string) : bool =
   (String.length s = 1)
   &&
   (let c = Char.code s.[0] in
-  (c >= 65 && c <= 90)
-  || c = 205 || c = 206);;
+  (c >= 65 && c <= 90))
+  || s = "SMALLR"
+  || s = "THETA";;
 
 (* Returns true if the string s contains exactly one character that is a digit *)
 let is_digit (s : string) : bool =
@@ -57,10 +58,11 @@ let is_digit (s : string) : bool =
   the variable array used in basic_run.ml
   A..Z = 0..25, r = 26, theta = 27, Ans = 28 *)
 let var_index (a : string) : int =
-  if a = "SMALLR" then 26
-  else if a = "THETA" then 27
-  else if a = "ANS" then 28
-  else (Char.code a.[0]) - 65;;
+  match a with
+    | "SMALLR" -> 26
+    | "THETA" -> 27
+    | "ANS" -> 28
+    | _ -> (Char.code a.[0]) - 65;;
 
 (** Main lexing function **)
 
@@ -158,11 +160,11 @@ let rec extract_list_index (t : string list) : arithm * (string list) =
   let (a,t') =
     match t with
       | a::q ->
-        if is_var a then
+        if is_var a || a = "ANS" then
           (Variable (Var (var_index a)), q)
         else if is_digit a then
-          let (i,q) = read_int t true in
-          (Value (complex_of_int i), q)
+          let (i,q') = read_int t true in
+          (Value (complex_of_int i), q')
         else failwith "extract_list_index: List should be followed by a number or a variable"
       | [] -> failwith "extract_list_index: Error, the list of lexemes is empty"
   in
@@ -174,7 +176,7 @@ let rec extract_list_index (t : string list) : arithm * (string list) =
         | "RSQBRACKET"::_
         | "EOL"::_ (* Closing bracket may be omitted in Basic Casio *)
         | "COLON"::_
-        | "DISP"::_ -> (Number (Variable (ListIndex (a, e))),t''')
+        | "DISP"::_ -> (Entity (Variable (ListIndex (a, e))),t''')
         | _ -> failwith "extract_list_index: Syntax error, List '[' not properly closed")
     | _ -> failwith "extract_list_index: Syntax error, List should be followed by '['"
 
@@ -182,15 +184,12 @@ let rec extract_list_index (t : string list) : arithm * (string list) =
   of a list of lexemes starting with "MAT" *)
 and extract_mat_index (t : string list) : arithm * (string list) =
   (* Detection of the first variable *)
-  let (a,t2) =
+  let (ai,t2) =
     match t with
       | a::q ->
-        if is_var a then
-          (Variable (Var (var_index a)), q)
-        else if is_digit a then
-          let (i,q) = read_int t true in
-          (Value (complex_of_int i), q)
-        else failwith "extract_mat_index: Mat should be followed by a number or a variable"
+        if is_var a && a <> "SMALLR" && a <> "THETA" then
+          (var_index a, q)
+        else failwith "extract_mat_index: Mat should be followed by a"
       | [] -> failwith "extract_mat_index: Error, the list of lexemes is empty"
   in
   (* Detection of the indices between square brackets *)
@@ -204,7 +203,7 @@ and extract_mat_index (t : string list) : arithm * (string list) =
           | "RSQBRACKET"::_
           | "EOL"::_
           | "COLON"::_
-          | "DISP"::_ -> (Number (Variable (MatIndex (a, e1, e2))), t5)
+          | "DISP"::_ -> (Entity (Variable (MatIndex (ai, e1, e2))), t5)
           | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
         | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
     | _ -> failwith "extract_mat_index: Syntax error, Mat should be followed by '['"
@@ -255,15 +254,15 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
         (* Values and variables *)
         if is_digit s || s = "." then
           let (x, t') = read_float l in
-          aux ((Number (Value (complex_of_float x)))::acc) t'
+          aux ((Entity (Value (complex_of_float x)))::acc) t'
         else if is_var s || s = "ANS" || s = "SMALLR" || s = "THETA" then
-          aux ((Number (Variable (Var (var_index s))))::acc) t
+          aux ((Entity (Variable (Var (var_index s))))::acc) t
         else if s = "CPLXI" then
-          aux ((Number (Value (Complex.i)))::acc) t
+          aux ((Entity (Value (Complex.i)))::acc) t
         else if s = "PI" then
-          aux ((Number (Value {re = Float.pi; im = 0.}))::acc) t
+          aux ((Entity (Value {re = Float.pi; im = 0.}))::acc) t
         else if s = "GETKEY" then
-          aux ((Number (Variable Getkey))::acc) t
+          aux ((Entity (Variable Getkey))::acc) t
 
         (* Parentheses *)
         else if s = "LPAR" then
