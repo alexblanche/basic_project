@@ -219,7 +219,7 @@ and extract_mat_index (t : string list) : arithm * (string list) =
 and extract_list_content (lexlist : string list) : (basic_expr * expression_type) list * string list =
   let rec aux acc l =
     match l with
-      | "COMMA"::t ->
+      | ","::t ->
         let (e, expr_type, t') = extract_expr t in
         aux ((e, expr_type)::acc) t'
       
@@ -276,7 +276,7 @@ and extract_mat_content (lexlist : string list) : num_expr array array * string 
             List.iteri
               (fun j (x,expr_type) ->
                 if expr_type = Numerical
-                  then m.(row-1-i).(col-1-j) <- x
+                  then m.(row-1-i).(j) <- x
                   else failwith "extract_mat_content: one expression is not numerical")
               el)
         ell;
@@ -324,7 +324,7 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
           let (e,t') = extract_par_content t in
           (match e with
             | Arithm al -> aux (Rpar::(List.rev_append (Lpar::al) acc)) expr_type t'
-            | Complex z -> aux (Rpar::(Entity (Value z))::acc) expr_type t'
+            | Complex z -> aux (Rpar::(Entity (Value z))::Lpar::acc) expr_type t'
             | QMark -> failwith "Arithmetic lexing: syntax error, ? in parentheses")
 
         (* Unary and binary operators *)
