@@ -86,9 +86,9 @@ let get_list_length (var : float array) (tlist : float array array) (n : entity)
   match n with
     | ListContent t -> Array.length t
     | VarList (Value z) ->
-      Array.length (get_list tlist (int_of_complex z))
+      Array.length (get_list tlist (int_of_complex z - 1))
     | VarList (Variable (Var vi)) ->
-      Array.length (get_list tlist (int_of_complex (get_var_val var vi)))
+      Array.length (get_list tlist (int_of_complex (get_var_val var vi) - 1))
     | _ -> failwith "get_list_length: n is not a list";;
 
 (* Returns the dimensions of n when n is an entity of type matrix *)
@@ -107,21 +107,6 @@ let get_mat_dim (tmat : float array array array) (n : entity) : int * int =
         else (n/2, Array.length m.(0))
     | _ -> failwith "get_list_length: n is not a matrix";;
 
-(* Useless *)
-(* Returns true if the two given entities are compatible,
-  i.e. have compatible types (see have_compatible_types) and
-  have the same dimensions if they are two lists or two matrices *)
-(*
-let are_compatible (p : parameters) (n1 : entity) (n2 : entity) : bool =
-  is_number n1
-  || is_number n2
-  || is_list n1 && is_list n2
-    && get_list_length p.var p.list n1 = get_list_length p.var p.list n2
-  || is_mat n1 && is_mat n2
-    && get_mat_dim p.mat n1 = get_mat_dim p.mat n2;; *)
-
-
-
 
 (* All evaluation functions are mutually recursive *)
 
@@ -135,7 +120,7 @@ let rec get_val_numexpr (p : parameters) (n : entity) : complex =
       let z = eval_num p e in
       (if not (is_int z)
         then failwith "get_val_numexpr: access to List from an index that is not an integer";
-      get_list_val p.list (int_of_complex (get_val_numexpr p a)) (int_of_complex z))
+      get_list_val p.list (int_of_complex (get_val_numexpr p a) - 1) (int_of_complex z))
     | Variable (MatIndex (ai,e1,e2)) ->
       let z1 = eval_num p e1 in
       let z2 = eval_num p e2 in
@@ -153,12 +138,12 @@ and get_val_listexpr (p : parameters) (n : entity) : num_expr array =
     | VarList (Value z) ->
       (if not (is_int z)
         then failwith "get_val_list: access to List from an index that is not an integer";
-      float_to_numexpr_array p.list.(int_of_complex z))
+      float_to_numexpr_array p.list.(int_of_complex z - 1))
     | VarList (Variable (Var vi)) ->
       let z = get_var_val p.var vi in
       (if not (is_int z)
         then failwith "get_val_list: access to List from an index that is not an integer";
-      float_to_numexpr_array p.list.(int_of_complex z))
+      float_to_numexpr_array p.list.(int_of_complex z - 1))
     | _ -> failwith "get_val_listexpr: entity is a number or a matrix, or is accessed with a wrong index"
 
 (* Returns the value of the entity n, when n is a matrix *)
@@ -300,7 +285,16 @@ and calculate (p : parameters) (outq : entity list) (opq : arithm list) : entity
     | _, Lpar::opqt -> calculate p outq opqt
     | x2::x1::t, (Op o)::opqt -> calculate p ((apply_op p o x1 x2)::t) opqt
     | x::t, (Lunop lo)::opqt -> calculate p ((apply_lop p lo x)::t) opqt
-    | [x], [] -> x
+    | [x], [] ->
+      (match x with
+        (* Numbers *)
+        | Value _ -> x
+        | Variable _ -> Value (get_val_numexpr p x)
+        (* Lists and matrices *)
+        | ListContent _
+        | MatContent _ -> x
+        | VarList _ -> ListContent (get_val_listexpr p x)
+        | _ -> MatContent (get_val_matexpr p x))
     | _ -> failwith "calculate: Syntax error"
 
 (* Calculates the result of a sequence of right-associative operations

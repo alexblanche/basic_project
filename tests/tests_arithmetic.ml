@@ -67,7 +67,7 @@ let unit_tests_lexer () =
     (["5"; "MINUS";
       "LSQBRACKET";
         "LSQBRACKET"; "2"; ","; "1"; "RSQBRACKET";
-        "LSQBRACKET"; "4"; "PLUS"; "2"; ","; "A"; "RBRACKET";
+        "LSQBRACKET"; "4"; "PLUS"; "2"; ","; "A"; "RSQBRACKET";
       "RSQBRACKET";
       "PLUS"; "0"],
       [Entity (Value {re = 5.; im = 0.}); Op "MINUS";
@@ -99,6 +99,8 @@ let unit_tests_eval_num () =
   (* 3+4i -> B *)
   p.var.(1) <- 3.;
   p.var.(1+29) <- 4.;
+  (* List 1 *)
+  p.list.(0) <- [| 5.; 2.; 3.; 1. |];
 
   let check i (slist, expected) =
     let (expr, _, _) = extract_expr slist in
@@ -123,7 +125,8 @@ let unit_tests_eval_num () =
       (["2"; "B"; "PLUS"; "3"; "A"; "MINUS"; "4"; "CPLXI"], {re = 36.; im = 4.});
       (["1"; "PLUS"; "ABS"; "LPAR"; "UMINUS"; "8"; "RPAR"; "ASSIGN"; "A"], {re = 9.; im = 0.});
       (["1"; "PLUS"; "MAX"; "4"; "."; "5"; ","; "LPAR"; "7"; "TIMES"; "1"; "RPAR"; ","; "3"; "TIMES"; "2"; "RPAR";
-      "TIMES"; "2"; "EOL"], {re = 15.; im = 0.})
+      "TIMES"; "2"; "EOL"], {re = 15.; im = 0.});
+      (["LIST"; "1"; "LSQBRACKET"; "2"; "MINUS"; "1"; "RSQBRACKET"], {re = 2.; im = 1.})
     ];
     print_endline "--------------------------------------------";
     print_endline "Tests_arithmetic, eval_num: all tests passed";
@@ -141,6 +144,8 @@ let unit_tests_eval_list_mat () =
   p.list.(0) <- [| 5.; 2.; 3.; 1. |];
   p.list.(1) <- [| 8.; 8.; 8.; 0.; 0.; 0. |];
 
+  p.mat.(2) <- [|[|4.; 5.|]; [|6.; 8.|]; [|0.; 0.|]; [|0.; 0.|]|];
+
   let check i (slist, expected) =
     let (expr, expr_type, _) = extract_expr slist in
     match expr with
@@ -152,7 +157,7 @@ let unit_tests_eval_list_mat () =
             | _ -> raise (Test_failed i))
         in
         if not equal
-          then raise (Test_failed i)
+          then (raise (Test_failed i))
           (* else print_endline ("Test "^(string_of_int i)^" passed") *)
       | _ -> failwith "Unexpected QMark or Complex"
     
@@ -162,15 +167,28 @@ let unit_tests_eval_list_mat () =
       (["2"; "TIMES"; "5"; "PLUS"; "LBRACKET"; "8"; ","; "8"; "PLUS"; "2"; ","; "1"; "0"; "0"; "RBRACKET"],
         ListContent [| Complex {re = 18.; im = 0.} ; Complex {re = 20.; im = 0.}; Complex {re = 110.; im = 0.}|]);
 
-    (["5"; "MINUS";
-      "LSQBRACKET";
-        "LSQBRACKET"; "2"; ","; "1"; "RSQBRACKET";
-        "LSQBRACKET"; "4"; "PLUS"; "2"; ","; "9"; "0"; "RBRACKET";
-      "RSQBRACKET";
-      "PLUS"; "1"],
+      (["5"; "MINUS";
+        "LSQBRACKET";
+          "LSQBRACKET"; "2"; ","; "1"; "RSQBRACKET";
+          "LSQBRACKET"; "4"; "PLUS"; "2"; ","; "9"; "0"; "RSQBRACKET";
+        "RSQBRACKET";
+        "PLUS"; "1"],
         MatContent
-        [|[|Complex {re = 4.; im = 0.}; Complex {re = 5.; im = 0.}|];
-          [|Complex {re = 0.; im = 0.}; Complex {re = -84.; im = 0.}|]|])
+          [|[|Complex {re = 4.; im = 0.}; Complex {re = 5.; im = 0.}|];
+            [|Complex {re = 0.; im = 0.}; Complex {re = -84.; im = 0.}|]|]);
+
+      (["LIST"; "1"],
+        ListContent [| Complex {re = 5.; im = 3.} ; Complex {re = 2.; im = 1.}|]);
+
+      (["LSQBRACKET";
+          "LSQBRACKET"; "2"; ","; "1"; "RSQBRACKET";
+          "LSQBRACKET"; "4"; ","; "5"; "RSQBRACKET";
+        "RSQBRACKET";
+        "PLUS";
+        "MAT"; "C"],
+        MatContent
+          [|[|Complex {re = 6.; im = 0.}; Complex {re = 6.; im = 0.}|];
+            [|Complex {re = 10.; im = 0.}; Complex {re = 13.; im = 0.}|]|])
     ];
     print_endline "-------------------------------------------------";
     print_endline "Tests_arithmetic, eval_list_mat: all tests passed";
