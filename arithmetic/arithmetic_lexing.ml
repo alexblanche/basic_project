@@ -216,12 +216,12 @@ and extract_mat_index (t : string list) : arithm * (string list) =
 
 (* Return the list of expressions separated by commas at the beginning of lexlist
   and ending with RPAR, RBRACKET, RSQBRACKET, EOL, DISP or ASSIGN *)
-and extract_list_content (lexlist : string list) : (basic_expr list) * (string list) =
+and extract_list_content (lexlist : string list) : (basic_expr * expression_type) list * string list =
   let rec aux acc l =
     match l with
       | "COMMA"::t ->
-        let (e,_,t') = extract_expr t in
-        aux (e::acc) t'
+        let (e, expr_type, t') = extract_expr t in
+        aux ((e, expr_type)::acc) t'
       
       | "RPAR"::t
       | "RBRACKET"::t
@@ -235,13 +235,13 @@ and extract_list_content (lexlist : string list) : (basic_expr list) * (string l
       | [] -> (List.rev acc, [])
       
       | _ ->
-        let (e,_,t') = extract_expr l in
-        aux (e::acc) t'
+        let (e, expr_type, t') = extract_expr l in
+        aux ((e, expr_type)::acc) t'
   in
   aux [] lexlist
 
 (* Returns the content of the matrix at the beginning of lexlist *)
-and extract_mat_content (lexlist : string list) : (num_expr array array) * (string list) =
+and extract_mat_content (lexlist : string list) : num_expr array array * string list =
   let rec aux acc l =
     match l with
       | "LSQBRACKET"::t -> (* [...]...], beginning of a new line *)
@@ -272,7 +272,13 @@ and extract_mat_content (lexlist : string list) : (num_expr array array) * (stri
         (fun i el ->
           if List.length el <> col
             then failwith "extract_mat_content: lines have different length"
-          else List.iteri (fun j x -> m.(row-1-i).(col-1-j) <- x) el)
+          else
+            List.iteri
+              (fun j (x,expr_type) ->
+                if expr_type = Numerical
+                  then m.(row-1-i).(col-1-j) <- x
+                  else failwith "extract_mat_content: one expression is not numerical")
+              el)
         ell;
       (m, t))
 
@@ -318,6 +324,7 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
           let (e,t') = extract_par_content t in
           (match e with
             | Arithm al -> aux (Rpar::(List.rev_append (Lpar::al) acc)) expr_type t'
+            | Complex z -> aux (Rpar::(Entity (Value z))::acc) expr_type t'
             | QMark -> failwith "Arithmetic lexing: syntax error, ? in parentheses")
 
         (* Unary and binary operators *)
@@ -331,7 +338,15 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
         (* Function *)
         else if Hashtbl.mem func_table s then
           let (el, t') = extract_list_content t in
-          aux ((Function (s, el))::acc) expr_type t'
+          let checked_el =
+            List.map
+              (fun (e,expr_t) ->
+                if expr_t <> Numerical
+                  then failwith "extract_expr: list contains another list or a matrix"
+                  else e)
+              el
+          in
+          aux ((Function (s, checked_el))::acc) expr_type t'
         
         (* List a[e] and List a *)
         else if s = "LIST" then
@@ -372,7 +387,15 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
             then failwith "extract_expr: lists and matrices are incompatible"
           else
             let (el, t') = extract_list_content t in
-            aux ((Entity (ListContent (Array.of_list el)))::acc) ListExpr t')
+            let checked_el =
+              List.map
+                (fun (e,expr_t) ->
+                  if expr_t <> Numerical
+                    then failwith "extract_expr: list contains another list or a matrix"
+                    else e)
+                el
+            in
+            aux ((Entity (ListContent (Array.of_list checked_el)))::acc) ListExpr t')
 
         (* [[...]...[...]] *)
         else if s = "LSQBRACKET" then
@@ -391,8 +414,12 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
     | "QMARK"::t -> (QMark, Numerical, t)
     | _ ->
         let (sl, expr_type, t) = aux [] Numerical lexlist in
-        (Arithm (List.rev sl), expr_type, t)
-;;
+        if List.length sl = 1 && expr_type = Numerical
+          then
+            (match sl with
+              | [Entity (Value z)] -> (Complex z, Numerical, t)
+              | _ -> (Arithm sl, Numerical, t))
+          else (Arithm (List.rev sl), expr_type, t);;
 
 (* Specific lexing functions that check the return type *)
 let extract_num_expr (lexlist : string list) : num_expr * (string list) =

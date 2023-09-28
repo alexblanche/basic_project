@@ -60,16 +60,16 @@ let play (file_name : string) : unit =
 *)
 
 
-(* To do immediately:
-  - Integrate list/matrix arithmetic in arithmetic_lexing, parsing and basic_compilation (cf comment in airthmetic_def)
-  
+(*
+TO DO: debug get_mat_dim
+
 To do next:
   - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
   - Slow down the execution with Unix.sleepf (tests needed for text and graphic display)
   - Draw a calculator and code the execution of Getkey (by clicking or pressing keys)
     (Idea: key pressed on the keyboard highlight keys of the calculator interface)
-  - Recode the operators for complex numbers (espacially '=')
   - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
+  - Implement functions on lists (that take lists as parameters) and matrices
 
 In the distant future:
   - Redo the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."

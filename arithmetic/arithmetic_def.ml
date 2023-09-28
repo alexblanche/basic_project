@@ -18,7 +18,6 @@ let fact n =
 
 (* Hash table containing all the arithmetic functions *)
 let func_table =
-  let t = Hashtbl.create 10 in
   let (func_list : (string * (complex list -> complex)) list) = [
     (* Max: Works for complex numbers, as max of a pair in lexicographic order *)
     ("MAX",
@@ -76,24 +75,14 @@ let func_table =
     )
     ]
   in
+  let t = Hashtbl.create (5 + List.length func_list) in
   List.iter (fun (fname, fdef) -> Hashtbl.add t fname fdef) func_list;
   t;;
 
-(** Application functions **)
-
-(* Application of the functions *)
-let apply_func (fname : string) (zl : complex list) =
-  try
-    (Hashtbl.find func_table fname) zl
-  with
-    | Not_found -> failwith ("apply_func: Function "^fname^" undefined");;
-
 (* List of handled left unary operators *)
-(* Temporary *)
 let lop_list = ["ABS"; "UMINUS"; "EPOWER"];;
 
 (* List of handled right unary operators *)
-(* Temporary *)
 let rop_list = ["EXCLAMATIONMARK"; "POWER2"];;
 
 (* List of handled operators and their index of precedence (1 = greatest *)
@@ -102,11 +91,18 @@ let op_list = [("PLUS", 3); ("MINUS", 3); ("TIMES", 2); ("DIVIDED", 2); ("POWER"
   ("AND", 5); ("OR", 6); ("XOR", 7)];;
 
 
+(* Application of the functions *)
+let apply_func (fname : string) (zl : complex list) : complex =
+  try
+    (Hashtbl.find func_table fname) zl
+  with
+    | Not_found -> failwith ("apply_func: Function "^fname^" undefined");;
 
-(* Application of the operators *)
+(** Application of operators and functions to one complex **)
+
 (* Real and complex operations are sometimes separated for efficiency and precision
   (ex: float ** is much more precise than Complex.pow) *)
-let apply_op (o : string) (z1 : complex) (z2 : complex) : complex =
+let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
   match o with
   (* Arithmetic *)
     | "PLUS" -> Complex.add z1 z2
@@ -141,12 +137,15 @@ let apply_op (o : string) (z1 : complex) (z2 : complex) : complex =
 
 (* Application of the right unary operators *)
 (* Since there are only a few, we hard-code them like the operators. *)
-let apply_rop (ro : string) (z : complex) : complex =
+let apply_rop_single (ro : string) (z : complex) : complex =
   match ro with
     | "EXCLAMATIONMARK" -> complex_of_int (fact (int_of_float z.re))
-    | "POWER2" -> Complex.mul z z
+    | "POWER2" ->
+      if z.im = 0.
+        then complex_of_float (z.re *. z.re)
+        else Complex.mul z z
     | _ -> failwith ("apply_rop: Unkown operator "^ro);;
 
 (* Application of the left unary operators *)
-let apply_lop (lo : string) (z : complex) : complex =
+let apply_lop_single (lo : string) (z : complex) : complex =
   apply_func lo [z];;

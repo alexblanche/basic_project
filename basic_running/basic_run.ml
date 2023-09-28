@@ -58,18 +58,17 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
       | Goto j -> aux j
 
       | If (e,j) ->
-        let z = eval p e in
+        let z = eval_num p e in
         if z.im = 0. && not (is_zero_float z.re)
           then aux (i+1)
           else aux j
 
       | JumpIf (e,j) ->
-        if is_not_zero (eval p e)
+        if is_not_zero (eval_num p e)
           then aux j
           else aux (i+1)
-          
-      | Expr (Arithm al, _) -> (* To do: treat list_expr, mat_expr *)
-        let z = eval p (Arithm al) in
+      
+      | Expr (Complex z, _) ->
         (store_ans p.var z;
         last_val := z;
         val_seen := true;
@@ -80,15 +79,37 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             disp p ren writing_index;
             aux (i+2))
           else aux (i+1))
+      
+      | Expr (Arithm al, expr_type) ->
+        (match expr_type with
+          | Numerical ->
+            let z = eval_num p (Arithm al) in
+            (store_ans p.var z;
+            last_val := z;
+            val_seen := true;
+            if i<n-1 && code.(i+1) = Disp
+              then
+                (line_feed ();
+                print_number z p.polar;
+                disp p ren writing_index;
+                aux (i+2))
+              else aux (i+1))
+          | ListExpr (* TO DO: list_expr, mat_expr *)
+          | _ -> aux (i+1))
+        
           
       | Assign (QMark, v) -> (* to do: treat list/mat assignment *)
-        (let (e, _) = qmark win ren in
-        let z = eval p e in
-        assign_var p (Value z) v;
-        aux (i+1))
+        let (e, expr_type) = qmark win ren in
+        (match expr_type with
+          | Numerical ->
+            let z = eval_num p e in
+            assign_var p (Value z) v;
+            aux (i+1)
+          | ListExpr (* TO DO: list_expr, mat_expr *)
+          | _ -> aux (i+1))
 
       | Assign (e, v) ->
-        let z = eval p e in
+        let z = eval_num p e in
         (last_val := z;
         val_seen := true;
         (match v with
@@ -98,8 +119,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             assign_var p (Value z) v
 
           | ListIndex (a, iexp) ->
-            (let vala = get_val p a in
-            let ie = eval p iexp in
+            (let vala = get_val_numexpr p a in
+            let ie = eval_num p iexp in
             if not (is_int vala && is_int ie)
               then failwith "Runtime error: wrong index for list";
             (* let t = p.list.(int_of_complex vala) in
@@ -109,8 +130,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             assign_var p (Value z) (ListIndex (Value vala, Arithm [Entity (Value ie)])))
 
           | MatIndex (ai, iexp, jexp) ->
-            (let ie = eval p iexp in
-            let je = eval p jexp in
+            (let ie = eval_num p iexp in
+            let je = eval_num p jexp in
             if not (is_int ie && is_int je)
               then failwith "Runtime error: wrong index for matrix";
             (* let m = p.mat.(int_of_complex vala) in
@@ -131,6 +152,13 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             disp p ren writing_index;
             aux (i+2))
           else aux (i+1))
+
+      (*
+      TODO:
+      | AssignList (le, n) ->
+      | AssignMat (me, mi) ->
+      | AssignStr (s, si) ->
+      *)
       
       | String sl ->
         (line_feed ();
@@ -159,8 +187,8 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             else aux (i+1))
           
       | Locate (e1, e2, c) ->
-        let z1 = eval p e1 in
-        let z2 = eval p e2 in
+        let z1 = eval_num p e1 in
+        let z2 = eval_num p e2 in
         (if not
           ((is_int z1) && (is_int z2)
           && (z1.re >= 1.) && (z1.re <= 21.)
@@ -171,7 +199,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           match c with
             | Loc_text s -> s
             | Loc_expr e ->
-              (let z = eval p e in
+              (let z = eval_num p e in
               if z.im <> 0. (* In Casio Basic, Locate does not handle complex numbers *)
                 then failwith "Runtime error: a number printed by Locate cannot be a complex number";
               let z_repr = float_to_casio z.re in
@@ -199,13 +227,13 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         aux (i+1))
       
       | For (vi, e1, e2, e3, inext) ->
-        (let z1 = eval p e1 in
+        (let z1 = eval_num p e1 in
         if z1.im <> 0.
           then failwith "Runtime error: complex value given to a For loop";
         p.var.(vi) <- z1.re;
         p.var.(vi+29) <- 0.;
-        let z2 = eval p e2 in
-        let z3 = eval p e3 in
+        let z2 = eval_num p e2 in
+        let z3 = eval_num p e3 in
         if z2.im <> 0. || z3.im <> 0.
           then failwith "Runtime error: complex value given to a For loop"
         else if is_zero z3

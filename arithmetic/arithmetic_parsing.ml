@@ -7,6 +7,62 @@
   - The parentheses are not always closed.
 *)
 
+(** Array and matrix representation conversion functions **)
+(* The float representation is used when matrices are stored in memory,
+  the entity representation is used in the computation of list/mat arithmetic expressions *)
+
+let float_to_numexpr_array (t : float array) : num_expr array =
+  let n = Array.length t in
+  Array.init (n/2) (fun i -> Complex (get_complex t.(i) t.(i+n/2)));;
+
+let float_to_numexpr_matrix (m : float array array) : num_expr array array =
+  let n = Array.length m in
+  if n = 0
+    then [||]
+  else
+    let k = Array.length m.(0) in
+    let em = Array.make_matrix (n/2) k (Complex {re = 0.; im = 0.}) in
+    (for i = 0 to (n/2)-1 do
+      for j = 0 to k-1 do
+        em.(i).(j) <- Complex (get_complex m.(i).(j) m.(i+n/2).(j))
+      done
+    done;
+    em);;
+
+(* Works only when each element of et is a constructor Complex *)
+let numexpr_to_float_array (et : num_expr array) : float array =
+  let n = Array.length et in
+  let t = Array.make (2*n) 0. in
+  Array.iteri
+    (fun i e ->
+      match e with
+        | Complex z ->
+          (t.(i) <- z.re;
+          t.(i+n) <- z.im)
+        | _ -> failwith "entity_to_float_array: wrong input")
+    et;
+  t;;
+
+(* Works only when each element of em is a constructor Complex *)
+let numexpr_to_float_matrix (em : num_expr array array) : float array array =
+  let n = Array.length em in
+  if n = 0
+    then [||]
+  else
+    let k = Array.length em.(0) in
+    let m = Array.make_matrix (2*n) k 0. in
+    (for i = 0 to n-1 do
+      for j = 0 to k-1 do
+        match em.(i).(j) with
+          | Complex z ->
+            (m.(i).(j) <- z.re;
+            m.(i+n).(j) <- z.im)
+          | _ -> failwith "entity_to_float_matrix: wrong input"
+      done
+    done;
+    m);;
+
+
 (** Evaluation **)
 
 (* Returns the value of the variable of index i in the array var *)
@@ -48,73 +104,224 @@ let get_mat_dim (tmat : float array array array) (n : entity) : int * int =
       let n = Array.length m in
       if n = 0
         then (0,0)
-        else (n, Array.length m.(0))
+        else (n/2, Array.length m.(0))
     | _ -> failwith "get_list_length: n is not a matrix";;
 
+(* Useless *)
 (* Returns true if the two given entities are compatible,
   i.e. have compatible types (see have_compatible_types) and
   have the same dimensions if they are two lists or two matrices *)
+(*
 let are_compatible (p : parameters) (n1 : entity) (n2 : entity) : bool =
   is_number n1
   || is_number n2
   || is_list n1 && is_list n2
     && get_list_length p.var p.list n1 = get_list_length p.var p.list n2
   || is_mat n1 && is_mat n2
-    && get_mat_dim p.mat n1 = get_mat_dim p.mat n2;;
+    && get_mat_dim p.mat n1 = get_mat_dim p.mat n2;; *)
+
+
 
 
 (* All evaluation functions are mutually recursive *)
 
-(* Returns the value of the entity n, being a value or a variable *)
-let rec get_val (p : parameters) (n : entity) : complex =
+(* Returns the value of the entity n, when n is a value or a variable *)
+let rec get_val_numexpr (p : parameters) (n : entity) : complex =
   match n with
     | Value z -> z
     | Variable (Var i) -> get_var_val p.var i
     | Variable Getkey -> complex_of_int !getkey
     | Variable (ListIndex (a,e)) ->
-      let z = eval p e in
+      let z = eval_num p e in
       (if not (is_int z)
-        then failwith "get_val: access to List from an index that is not an integer";
-      get_list_val p.list (int_of_complex (get_val p a)) (int_of_complex z))
+        then failwith "get_val_numexpr: access to List from an index that is not an integer";
+      get_list_val p.list (int_of_complex (get_val_numexpr p a)) (int_of_complex z))
     | Variable (MatIndex (ai,e1,e2)) ->
-      let z1 = eval p e1 in
-      let z2 = eval p e2 in
+      let z1 = eval_num p e1 in
+      let z2 = eval_num p e2 in
       (if not ((is_int z1) && (is_int z2))
-        then failwith "get_val: access to Mat from an index that is not an integer";
+        then failwith "get_val_numexpr: access to Mat from an index that is not an integer";
       get_mat_val p.mat ai (int_of_complex z1) (int_of_complex z2))
     | Variable Random -> complex_of_float (Random.float 1.)
-    | _ -> failwith "get_val: entity is a list or matrix"
+    | _ -> failwith "get_val_numexpr: entity is a list or matrix"
+
+(* Returns the value of the entity n, when n is a list *)
+(* Evaluates each expression and returns an array of (Complex complex) constructors *)
+and get_val_listexpr (p : parameters) (n : entity) : num_expr array =
+  match n with
+    | ListContent et -> Array.map (fun e -> Complex (eval_num p e)) et
+    | VarList (Value z) ->
+      (if not (is_int z)
+        then failwith "get_val_list: access to List from an index that is not an integer";
+      float_to_numexpr_array p.list.(int_of_complex z))
+    | VarList (Variable (Var vi)) ->
+      let z = get_var_val p.var vi in
+      (if not (is_int z)
+        then failwith "get_val_list: access to List from an index that is not an integer";
+      float_to_numexpr_array p.list.(int_of_complex z))
+    | _ -> failwith "get_val_listexpr: entity is a number or a matrix, or is accessed with a wrong index"
+
+(* Returns the value of the entity n, when n is a matrix *)
+(* Evaluates each expression and returns a matrix of (Complex complex) constructors *)
+and get_val_matexpr (p : parameters) (n : entity) : num_expr array array =
+  match n with
+    | MatContent em ->
+      let (r,c) = get_mat_dim p.mat n in
+      (if r=0 || c=0
+        then failwith "get_val_matexpr: the matrix is empty";
+      let m = Array.make_matrix r c QMark in
+      for i = 0 to r-1 do
+        for j = 0 to c-1 do
+          m.(i).(j) <- Complex (eval_num p em.(i).(j))
+        done
+      done;
+      m)
+    | VarMat ai ->
+      float_to_numexpr_matrix p.mat.(ai)
+    | _ -> failwith "get_val_listexpr: entity is a number or a matrix"
+
+(** Application of the operators to an entity **)
+(* Binary operators *)
+and apply_op (p : parameters) (o : string) (n1 : entity) (n2 : entity) : entity =
+  match n1, n2 with
+    | Value z1, Value z2 -> Value (apply_op_single o z1 z2)
+    | _ ->
+      (match entity_type n1, entity_type n2 with
+        (* Two numbers or variables *)
+        | Numerical, Numerical ->
+          let z1 = get_val_numexpr p n1 in
+          let z2 = get_val_numexpr p n2 in
+          Value (apply_op_single o z1 z2)
+
+        (* Number and list *)
+        | Numerical, ListExpr ->
+          let z1 = get_val_numexpr p n1 in (* complex *)
+          let et2 = get_val_listexpr p n2 in (* (Complex complex) array *)
+          ListContent (Array.map (fun x -> Complex (apply_op_single o z1 (eval_num p x))) et2)          
+        | ListExpr, Numerical ->
+          let et1 = get_val_listexpr p n1 in (* (Complex complex) array *)
+          let z2 = get_val_numexpr p n2 in (* complex *)
+          ListContent (Array.map (fun x -> Complex (apply_op_single o (eval_num p x) z2)) et1)
+
+        (* Two lists *)
+        | ListExpr, ListExpr ->
+          let et1 = get_val_listexpr p n1 in (* (Complex complex) array *)
+          let et2 = get_val_listexpr p n2 in (* (Complex complex) array *)
+          let n1 = Array.length et1 in
+          if Array.length et2 = n1 then
+            ListContent (Array.map2 (fun x1 x2 -> Complex (apply_op_single o (eval_num p x1) (eval_num p x2))) et1 et2)
+          else failwith "apply_op: the two lists do not have the same length"
+
+        (* Number and matrix *)
+        | Numerical, _ ->
+          let z1 = get_val_numexpr p n1 in (* complex *)
+          let em2 = get_val_matexpr p n2 in (* (Complex complex) array array *)
+          let (r,c) = get_mat_dim p.mat n2 in
+          let m = Array.make_matrix r c QMark in
+          (for i = 0 to r-1 do
+            for j = 0 to c-1 do
+              m.(i).(j) <- Complex (apply_op_single o z1 (eval_num p em2.(i).(j)))
+            done
+          done;
+          MatContent m)
+        | _, Numerical ->
+          let em1 = get_val_matexpr p n1 in (* (Complex complex) array array *)
+          let z2 = get_val_numexpr p n2 in (* complex *)
+          let (r,c) = get_mat_dim p.mat n1 in
+          let m = Array.make_matrix r c QMark in
+          (for i = 0 to r-1 do
+            for j = 0 to c-1 do
+              m.(i).(j) <- Complex (apply_op_single o (eval_num p em1.(i).(j)) z2)
+            done
+          done;
+          MatContent m)
+
+        (* Two matrices *)
+        | MatExpr, _ ->
+          let em1 = get_val_matexpr p n1 in (* (Complex complex) array array *)
+          let em2 = get_val_matexpr p n2 in (* (Complex complex) array array *)
+          let (r1,c1) = get_mat_dim p.mat n1 in
+          let (r2,c2) = get_mat_dim p.mat n2 in
+          (if r1<>r2 || c1<>c2
+            then failwith "apply_op: the two matrices do not have the same dimensions";
+          let m = Array.make_matrix r1 c1 QMark in
+          for i = 0 to r1-1 do
+            for j = 0 to c1-1 do
+              m.(i).(j) <- Complex (apply_op_single o (eval_num p em1.(i).(j)) (eval_num p em2.(i).(j)))
+            done
+          done;
+          MatContent m)
+
+        (* Errors *)
+        | _ -> failwith "apply_op: incompatible types (list and matrix)"
+      )
+
+(* Left unary operators *)
+and apply_lop (p : parameters) (lo : string) (n : entity) : entity =
+  match entity_type n with
+    | Numerical -> Value (apply_lop_single lo (get_val_numexpr p n))
+    | ListExpr ->
+      let et = get_val_listexpr p n in (* (Complex complex) array *)
+      ListContent (Array.map (fun x -> Complex (apply_lop_single lo (eval_num p x))) et)
+    | _ ->
+      let em = get_val_matexpr p n in (* (Complex complex) array array *)
+      let (r,c) = get_mat_dim p.mat n in
+      let m = Array.make_matrix r c QMark in
+      (for i = 0 to r-1 do
+        for j = 0 to c-1 do
+          m.(i).(j) <- Complex (apply_lop_single lo (eval_num p em.(i).(j)))
+        done
+      done;
+      MatContent m)
+
+(* Right unary operators *)
+and apply_rop (p : parameters) (ro : string) (n : entity) : entity =
+  match entity_type n with
+    | Numerical -> Value (apply_rop_single ro (get_val_numexpr p n))
+    | ListExpr ->
+      let et = get_val_listexpr p n in (* (Complex complex) array *)
+      ListContent (Array.map (fun x -> Complex (apply_rop_single ro (eval_num p x))) et)
+    | _ ->
+      let em = get_val_matexpr p n in (* (Complex complex) array array *)
+      let (r,c) = get_mat_dim p.mat n in
+      let m = Array.make_matrix r c QMark in
+      (for i = 0 to r-1 do
+        for j = 0 to c-1 do
+          m.(i).(j) <- Complex (apply_rop_single ro (eval_num p em.(i).(j)))
+        done
+      done;
+      MatContent m)
 
 (* Final evaluation of the arithmetic formula *)
 (* p is the parameter container, containing the variables, lists and matrices *)
-and calculate (p : parameters) (outq : entity list) (opq : arithm list) : complex =
+and calculate (p : parameters) (outq : entity list) (opq : arithm list) : entity =
   match outq, opq with
     (* Right parentheses may be omitted at the end of expressions in Casio Basic *)
     | _, Lpar::opqt -> calculate p outq opqt
-    | x2::x1::t, (Op o)::opqt -> calculate p ((Value (apply_op o (get_val p x1) (get_val p x2)))::t) opqt
-    | x::t, (Lunop lo)::opqt -> calculate p ((Value (apply_lop lo (get_val p x)))::t) opqt
-    | [x], [] -> get_val p x
+    | x2::x1::t, (Op o)::opqt -> calculate p ((apply_op p o x1 x2)::t) opqt
+    | x::t, (Lunop lo)::opqt -> calculate p ((apply_lop p lo x)::t) opqt
+    | [x], [] -> x
     | _ -> failwith "calculate: Syntax error"
 
 (* Calculates the result of a sequence of right-associative operations
   (ex: 1+2^2^2 is reduced to 1+16) *)
-and right_reduce p output_q op_q =
+and right_reduce (p : parameters) (output_q : entity list) (op_q : arithm list) : entity list * arithm list =
   match (output_q,op_q) with
     | _, []
     | _, Lpar::_ -> (output_q, op_q)
     | x2::x1::outq, (Op o)::opqt ->
       if left_assoc o
         then (output_q, op_q)
-        else right_reduce p ((Value (apply_op o (get_val p x1) (get_val p x2)))::outq) opqt
+        else right_reduce p ((apply_op p o x1 x2)::outq) opqt
     | _, (Op o)::_ -> failwith ("reduce: Not enough operands for operator "^o)
     | x::outq, (Lunop lo)::opqt ->
-        right_reduce p ((Value (apply_lop lo (get_val p x)))::outq) opqt
+        right_reduce p ((apply_lop p lo x)::outq) opqt
     | _ -> failwith "reduce: Syntax error"
 
 (* Shunting_yard algorithm: returns the value of the expression *)
 (* p is the parameter container, containing the variables, lists and matrices *)
-and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity list) (op_q : arithm list) : complex =
-  match (lexlist,op_q) with
+and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity list) (op_q : arithm list) : entity =
+  match (lexlist, op_q) with
     (* End case *)
     | [], _ -> calculate p output_q op_q
 
@@ -126,8 +333,12 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity li
 
     (* Function evaluation *)
     | (Function (fname, el))::t, _ ->
-      let vl = List.map (fun e -> eval p e) el in
-      shunting_yard p t ((Value (apply_func fname vl))::output_q) op_q
+      (try
+        let vl = List.map (fun e -> eval_num p e) el in
+        shunting_yard p t ((Value (apply_func fname vl))::output_q) op_q
+      with
+        | Failure _ -> failwith "Arithmetic parsing: a function takes a list or matrix as argument, this case is not treated yet")
+      
 
     | Lpar::t, _ -> shunting_yard p t output_q (Lpar::op_q)
     
@@ -137,7 +348,7 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity li
     (* Runop *)
     | (Runop ro)::t, _ ->
       (match output_q with
-        | x::outq -> shunting_yard p t ((Value (apply_rop ro (get_val p x)))::outq) op_q
+        | x::outq -> shunting_yard p t ((apply_rop p ro x)::outq) op_q
         | _ -> failwith ("Arithmetic parsing: No operand for operator "^ro))
 
     (* Op *)
@@ -147,7 +358,7 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity li
           then
             (match output_q with
               | x2::x1::outq ->
-                shunting_yard p t ((Value (apply_op o2 (get_val p x1) (get_val p x2)))::outq) ((Op o1)::opqt)
+                shunting_yard p t ((apply_op p o2 x1 x2)::outq) ((Op o1)::opqt)
               | _ -> failwith ("Arithmetic parsing: Not enough operands for operator "^o2))
           else
             let noutq, nopq = right_reduce p output_q op_q in
@@ -165,9 +376,9 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity li
 
         (* Operator evaluation *)
         | x::outq, (Lunop lo)::opqt ->
-          shunting_yard p (Rpar::t) ((Value (apply_lop lo (get_val p x)))::outq) opqt
+          shunting_yard p (Rpar::t) ((apply_lop p lo x)::outq) opqt
         | x2::x1::outq, (Op o)::opqt ->
-          shunting_yard p (Rpar::t) ((Value (apply_op o (get_val p x1) (get_val p x2)))::outq) opqt
+          shunting_yard p (Rpar::t) ((apply_op p o x1 x2)::outq) opqt
         | _, (Op o)::opqt -> failwith ("Arithmetic parsing: Not enough operands for operator "^o)
 
         (* Errors *)
@@ -176,16 +387,31 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity li
         | _ -> failwith "Arithmetic parsing: Untreated case")    
     | _,_ -> failwith "Arithmetic parsing: Syntax error"
 
-(* General arithmetic evaluation function *)
+(* General numerical evaluation function *)
 (* p is the parameter container, containing the variables, lists and matrices *)
-and eval (p : parameters) (e : num_expr) : complex =
+and eval_num (p : parameters) (e : num_expr) : complex =
   match e with
-    | Arithm al -> shunting_yard p al [] []
-    | _ -> failwith "eval: error, QMark provided";;
+    | Complex z -> z
+    | Arithm al ->
+      (match shunting_yard p al [] [] with
+        | Value z -> z
+        | _ -> failwith "eval_num: error, wrong output type")
+    | _ -> failwith "eval_num: error, QMark provided";;
 
+(* List expression evaluation function *)
+let eval_list (p : parameters) (e : list_expr) : float array =
+  match e with
+    | Arithm al ->
+      (match shunting_yard p al [] [] with
+        | ListContent t -> numexpr_to_float_array t
+        | _ -> failwith "eval_list: error, wrong output type")
+    | _ -> failwith "eval_list: error, QMark or Complex provided";;
 
-(* To do: List/Mat arithmetic
-  2*(3+{1,2,3}), evaluates as {8,10,12} 
-  It should be unified with complex arithmetic, because it works in the exact same way.
-  
-  Maybe we should just encapsulate the complex type in a numerical entity type, along with list and mat *)
+(* List expression evaluation function *)
+let eval_mat (p : parameters) (e : mat_expr) : float array array =
+  match e with
+    | Arithm al ->
+      (match shunting_yard p al [] [] with
+        | MatContent m -> numexpr_to_float_matrix m
+        | _ -> failwith "eval_mat: error, wrong output type")
+    | _ -> failwith "eval_mat: error, QMark or Complex provided";;

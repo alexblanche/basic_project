@@ -61,7 +61,8 @@ and
 (* Conditions are expressions: 0 = false, <>0 = true *)
 basic_expr =
   | QMark (* ? (asks the user for a value) *)
-  | Arithm of arithm list
+  | Arithm of arithm list (* Arithmetic expression *)
+  | Complex of complex (* Single complex value *)
   
 (* Specific types for numerical expressions, list expressions and matrix expressions *)
 and num_expr = basic_expr
@@ -83,31 +84,12 @@ let get_list (tlist : float array array) (a : int) : float array =
 let get_mat (tmat : float array array array) (a : int) : float array array =
   tmat.(a);;
 
-(* is_number, is_list, is_mat:
-  return true if the entity is a complex, a list or a matrix respectively *)
-let is_number (n : entity) : bool =
+(* Returns the type of the entity, as an expression_type constructor *)
+let entity_type (n : entity) : expression_type =
   match n with
     | Value _
-    | Variable _ -> true
-    | _ -> false;;
-
-let is_list (n : entity) : bool =
-  match n with
+    | Variable _ -> Numerical
     | ListContent _
-    | VarList _ -> true
-    | _ -> false;;
-
-let is_mat (n : entity) : bool =
-  match n with
-    | MatContent _
-    | VarMat _ -> true
-    | _ -> false;;
-
-(* Returns true if the two given entities have compatible types,
-  i.e. two complexes, one complex and a list or a matrix,
-  two lists of the same size, two matrices of the same size *)
-  let have_compatible_types (n1 : entity) (n2 : entity) : bool =
-    is_number n1
-    || is_number n2
-    || is_list n1 && is_list n2
-    || is_mat n1 && is_mat n2;;
+    | VarList _ -> ListExpr
+    | _ -> MatExpr
+;;
