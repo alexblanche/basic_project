@@ -33,6 +33,7 @@
 #use "basic_compilation/initialization/data_structures.ml"
 #use "basic_compilation/initialization/compilation_error.ml"
 #use "basic_compilation/process_commands.ml"
+#use "basic_compilation/compile_aux.ml"
 #use "basic_compilation/basic_compile.ml"
 
 (* Emulation *)

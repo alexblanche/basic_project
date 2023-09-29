@@ -218,7 +218,7 @@ let rec process_next i t code mem =
 
 (* Do, LpWhile *)
 let process_lpwhile i t code mem =
-  let rec aux ms =
+  let rec aux ms e t' =
     match ms with
       | ("do", jdo)::stack_t ->
         (set code i (JumpIf (e, jdo));
@@ -226,13 +226,12 @@ let process_lpwhile i t code mem =
         (i+1, t'))
       | ("break", jbr)::stack_t ->
         (set code jbr (Goto (i+1));
-        aux stack_t)
+        aux stack_t e t')
       | _ -> fail t "Compilation error: Unexpected LpWhile with no opened Do statement"
   in
-  let (e, t') = extract_num_expr t in
-  if e = QMark
-    then fail t "Compilation error: ? cannot be the condition of a Do-LpWhile";
-    else aux mem.stack;;
+  match extract_num_expr t with
+    | (QMark, _) -> fail t "Compilation error: ? cannot be the condition of a Do-LpWhile"
+    | (e, t') -> aux mem.stack e t';;
 
 (* Lbl, Goto *)
 
@@ -280,6 +279,7 @@ let process_goto i t code mem =
           then set code i (Goto (mem.lblindex.(a_index)))
           else mem.gotoindex <- (a_index,i)::mem.gotoindex;
         ((i+1),t''))
+    | _ -> fail t "Compilation error: Missing a Goto index";;
 
 (* Prog *)
 let process_prog i t code mem =
