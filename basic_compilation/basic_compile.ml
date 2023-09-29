@@ -50,7 +50,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                   (true, i+1, t''))
                 else fail lexlist "Compilation error: Wrong order in multiple assignment (~)"
               else fail lexlist "Compilation error: Wrong multi-assignment (-> ~) of a variable"
-
+            
+            | Numerical, "LIST"::_::_::"LSQBRACKET"::_
             | Numerical, "LIST"::_::"LSQBRACKET"::_ ->
               let (li,t'') = extract_list_index (List.tl t') in
               (match li with
@@ -59,6 +60,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                   (true, i+1, t''))
                 | _ -> fail lexlist "Compilation error: Wrong assignment (->) of a list element")
 
+            | Numerical, "MAT"::_::_::"LSQBRACKET"::_
             | Numerical, "MAT"::_::"LSQBRACKET"::_ ->
               let (mi,t'') = extract_mat_index (List.tl t') in
               (match mi with

@@ -178,6 +178,8 @@ let rec extract_list_index (t : string list) : arithm * (string list) =
           | "RSQBRACKET"::_
           | "EOL"::_ (* Closing bracket may be omitted in Basic Casio *)
           | "COLON"::_
+          | "IMPL"::_
+          | "ASSIGN"::_
           | "DISP"::_ -> (Entity (Variable (ListIndex (a, e))),t''')
           | _ -> failwith "extract_list_index: Syntax error, List '[' not properly closed")
     | _ -> failwith "extract_list_index: Syntax error, List should be followed by '['"

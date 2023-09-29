@@ -121,7 +121,7 @@ let func_table =
   t;;
 
 (* List of handled left unary operators *)
-let lop_list = ["ABS"; "UMINUS"; "EPOWER"; "INT"; "FRAC"];;
+let lop_list = ["ABS"; "NOT"; "UMINUS"; "EPOWER"; "INT"; "FRAC"];;
 
 (* List of handled right unary operators *)
 let rop_list = ["EXCLAMATIONMARK"; "POWER2"];;
