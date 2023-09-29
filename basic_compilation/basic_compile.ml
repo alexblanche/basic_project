@@ -196,15 +196,15 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         (set code i Disp;
         aux t (i+1))
       
-      | "LBL"::a::eol::t ->
-        let (j,t') = process_lbl i t code mem a eol in
+      | "LBL" :: t ->
+        let (j,t') = process_lbl i t code mem in
         aux t' j
       
-      | "GOTO"::a::eol::t ->
-        let (j,t') = process_goto i t code mem a eol in
+      | "GOTO" :: t ->
+        let (j,t') = process_goto i t code mem in
         aux t' j
       
-      | "PROG"::"QUOTE"::t ->
+      | "PROG" :: "QUOTE" :: t ->
         let (j,t') = process_prog i t code mem in
         aux t' j
       
@@ -212,12 +212,29 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "\039"::t ->
         let (_, t') = extract_line t in
         aux t' i
-
-      | "CLRTEXT" :: eol :: t ->
-        (if eol <> "EOL" && eol <> "COLON" && eol <> "DISP" then
-          fail (eol :: t) "Compilation error: CLRTEXT should be followed by Eol";
-        set code i (Function "CLRTEXT");
+      
+      | "CLRTEXT" :: t
+      | "STOP" :: t ->
+        (fail_if_not_eol lexlist;
+        set code i (Function (List.hd lexlist));
         aux t (i+1))
+
+      | "RETURN" :: t ->
+        (fail_if_not_eol lexlist;
+        set code i End;
+        aux t (i+1))
+
+      | "BREAK" :: t ->
+        (fail_if_not_eol lexlist;
+        match mem.stack with
+          | ("for", _)::_
+          | ("while", _)::_
+          | ("do", _)::_ ->
+            (mem.stack <- ("break", i)::mem.stack;
+            (* One spot is left empty for a Goto command to be inserted
+              when the closing statement of the loop is encountered *)
+            aux t (i+1))
+          | _ -> fail t "Compilation error: Unexpected Break with no opened loop")
 
       (* Errors *)
       | lex :: _ -> fail lexlist ("Compilation error: Unexpected command "^(String.escaped lex))
@@ -245,7 +262,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       (* The Goto that were encountered before their labels are set. *)
       List.iter (fun (a_j,k) -> set code k (Goto (mem.lblindex.(a_j)))) mem.gotoindex;
       (* The missing IfEnd are closed. *)
-      (* Raises a Compilation_error exception if a keyword different from "if" or "else" is encountered *)
+      (* Raises a Compilation_error exception if a keyword different from "if" or "else" is encountered,
+        or if mem.stack only contains "break" pointers *)
       while mem.stack <> [] do
         let _ = process_ifend (j-1) [] code mem in ()
       done;

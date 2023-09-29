@@ -288,10 +288,17 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
 
       | End ->
         (match !prog_goback with
-          | i::t ->
+          | j::t ->
             (prog_goback := t;
-            aux i)
+            aux j)
           | [] -> quit_print win ren !val_seen !last_val p.polar)
+
+      | Function "STOP" ->
+        (* Hard stop: ends the execution without returning to the calling program *)
+        quit_print win ren !val_seen !last_val p.polar
+
+      (* Ignored commands *)
+      | Disp -> aux (i+1)
 
       | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
   in

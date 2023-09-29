@@ -4,20 +4,20 @@
   until another double-quote is encountered *)
 (* Returns (sl, t), where sl is the output string, as list of lexemes, in reverse order,
    and t is the tail of lexlist after the second double-quote (excluded) *)
-   let extract_str (lexlist : string list) : (string list) * (string list) =
-    let rec aux sl l =
-      match l with
-        | "QUOTE"::t -> (sl, t)
-        | s::"QUOTE"::t ->
-          if s = "\092" (* anti-slash *)
-            then aux ("\034"::sl) t (* The quote is kept *)
-            else (s::sl, t)
-        | "COLON"::_
-        | "EOL"::_ -> fail lexlist "extract_str: string ends without closing \""
-        | s::t -> aux (s::sl) t
-        | [] -> fail lexlist "extract_str: program ends without closing \""
-    in
-    aux [] lexlist;;
+let extract_str (lexlist : string list) : (string list) * (string list) =
+  let rec aux sl l =
+    match l with
+      | "QUOTE"::t -> (sl, t)
+      | s::"QUOTE"::t ->
+        if s = "\092" (* anti-slash *)
+          then aux ("\034"::sl) t (* The quote is kept *)
+          else (s::sl, t)
+      | "COLON"::_
+      | "EOL"::_ -> fail lexlist "extract_str: string ends without closing \""
+      | s::t -> aux (s::sl) t
+      | [] -> fail lexlist "extract_str: program ends without closing \""
+  in
+  aux [] lexlist;;
 
 (** Processing function for each keyword **)
 (* Each function has type
@@ -71,46 +71,53 @@ let process_then i t code mem =
 
 (* Else *)
 let process_else i t code mem =
-  try
-    let (s,jif) = List.hd mem.stack in
-    if s <> "if" then
-      fail t "Compilation error: Unexpected Else with no opened If statement";
-    (match (!code).(jif) with
-      | If (e,k) ->
-        if k = -1
-          (* One cell is left empty to add a Goto when the IfEnd is encountered *)
-          then
+  (* We skip the "break" statements in mem.stack to reach the "if",
+    then we remove the "if" and add back the "break" in the same order,
+    and finally add the "else" *)
+  let rec aux ms br_acc =
+    match ms with
+      | ("if", jif)::stack_t ->
+        (match (!code).(jif) with
+          | If (e,-1) ->
+            (* One cell is left empty to add a Goto when the IfEnd is encountered *)
             (set code jif (If (e,(i+1)));
-            mem.stack <- ("else", i)::mem.stack;
+            mem.stack <- ("else", i)::(List.rev_append br_acc stack_t);
             ((i+1),t))
-          (* The If was already treated *)
-          else fail t "Compilation error: Unexpected Else"
-      | _ -> fail t "Compilation error: Unexpected Else")
-  with
-    | Failure _ -> fail t "Compilation error: Unexpected Else with no opened If statement";;
+          | _ -> fail t "Compilation error: Unexpected Else")
+      | ("break", j)::stack_t ->
+        aux stack_t (("break", j)::br_acc)
+      | _ -> fail t "Compilation error: Unexpected Else with no opened If statement"
+  in
+  aux mem.stack [];;
 
 (* IfEnd *)
 let process_ifend i t code mem =
-  match mem.stack with
-    (* If Then IfEnd (no Else): setting up the If *)
-    | ("if", jif)::stack_t ->
-      (mem.stack <- List.tl mem.stack;
-      match (!code).(jif) with
-        | If (e,k) ->
-          if k = -1
-            then
-              (set code jif (If (e,i));
-              mem.stack <- stack_t;
-              (i,t))
-            else fail t "Compilation error: Unexpected IfEnd"
-        | _ -> fail t "Compilation error: Unexpected IfEnd")
-    (* If Then Else IfEnd*)
-    | ("else", jelse)::("if", _)::stack_t ->
-      (set code jelse (Goto i);
-      mem.stack <- stack_t;
-      (i,t))
-    | _ -> fail t "Compilation error: Unexpected IfEnd with no opened If statement";;
+  let rec aux ms br_acc =
+    match ms with
+      (* If Then IfEnd (no Else): setting up the If *)
+      | ("if", jif)::stack_t ->
+        (match (!code).(jif) with
+          | If (e,-1) ->
+            (set code jif (If (e,i));
+            mem.stack <- List.rev_append br_acc stack_t;
+            (i,t))
+          | _ -> fail t "Compilation error: Unexpected IfEnd")
+      (* If Then Else IfEnd*)
+      (* The Goto index of the If was set by the call to process_else
+        that put the ("else", jelse) in mem.stack *)
+      | ("else", jelse)::stack_t ->
+        (set code jelse (Goto i);
+        mem.stack <- List.rev_append br_acc stack_t;
+        (i,t))
+      | ("break", j)::stack_t ->
+        aux stack_t (("break", j)::br_acc)
+      | _ -> fail t "Compilation error: Unexpected IfEnd with no opened If statement"
+  in
+  aux mem.stack [];;
 
+(** Loops **)
+(* Loop bodies can contain "Break" statements, which we compile as Goto commands pointing
+  to the index of the closing statement of the loop. *)
 
 (* While, WhileEnd *)
 (*  While expr
@@ -129,24 +136,21 @@ let process_while i t code mem =
   mem.stack <- ("while", i)::mem.stack;
   ((i+1), t');;
 
-let process_whileend i t code mem =
-  try
-    let (s,jwh) = List.hd mem.stack in
-    if s <> "while" then
-      fail t "Compilation error: Unexpected WhileEnd";
-    mem.stack <- List.tl mem.stack;
-    set code i (Goto jwh);
-    (match (!code).(jwh) with
-      | If (e,k) ->
-        if k = -1
-          then
-            (set code jwh (If (e,i+1));
-            ((i+1),t))
-          else fail t "Compilation error: Unexpected WhileEnd"
-      | _ -> fail t "Compilation error: Unexpected WhileEnd")
-  with
-    | Failure _ -> fail t "Compilation error: Unexpected WhileEnd with no opened While statement";;
-
+let rec process_whileend i t code mem =
+  match mem.stack with
+    | ("while", jwh)::stack_t ->
+      (set code i (Goto jwh);
+      mem.stack <- stack_t;
+      match (!code).(jwh) with
+        | If (e,-1) ->
+          (set code jwh (If (e,i+1));
+          ((i+1),t))
+        | _ -> fail t "Compilation error: Unexpected WhileEnd")
+    | ("break", jbr)::stack_t ->
+      (set code jbr (Goto (i+1));
+      mem.stack <- stack_t;
+      process_whileend i t code mem)
+    | _ -> fail t "Compilation error: Unexpected WhileEnd";;
 
 
 (* For To Step Next *)
@@ -190,71 +194,92 @@ let process_for i t code mem =
             | _ -> fail t "Compilation error: Syntax error after For loop definition"
           )
         | _ -> (* No Step value, 1 by default *)
-          (set code i (For (var_index v, e1, e2, Arithm [Entity (Value {re = 1.; im = 0.})], -1));
+          (set code i (For (var_index v, e1, e2, Complex {re = 1.; im = 0.}, -1));
           (i+1, t4))
       )
         
     | _ -> fail t "Compilation error: Syntax error in a For loop definition";;
 
-let process_next i t code mem =
-  try
-    let (s,jfor) = List.hd mem.stack in
-    if s <> "for" then
-      fail t "Compilation error: Unexpected Next";
-    mem.stack <- List.tl mem.stack;
-    set code i Next;
-    (match (!code).(jfor) with
-      | For (v,e1,e2,e3,k) ->
-        if k = -1
-          then
-            (set code jfor (For (v,e1,e2,e3,i+1));
-            ((i+1),t))
-          else fail t "Compilation error: Unexpected Next"
-      | _ -> fail t "Compilation error: Unexpected Next")
-  with
-    | Failure _ -> fail t "Compilation error: Unexpected Next with no opened For statement";;
+let rec process_next i t code mem =
+  match mem.stack with
+    | ("for", jfor)::stack_t ->
+      (mem.stack <- stack_t;
+      set code i Next;
+      match (!code).(jfor) with
+        | For (v,e1,e2,e3,-1) ->
+          (set code jfor (For (v,e1,e2,e3,i+1));
+          ((i+1),t))
+        | _ -> fail t "Compilation error: Unexpected Next")
+    | ("break", jbr)::stack_t ->
+      (set code jbr (Goto (i+1));
+      mem.stack <- stack_t;
+      process_next i t code mem)
+    | _ -> fail t "Compilation error: Unexpected Next";;
 
 (* Do, LpWhile *)
 let process_lpwhile i t code mem =
+  let rec aux ms =
+    match ms with
+      | ("do", jdo)::stack_t ->
+        (set code i (JumpIf (e, jdo));
+        mem.stack <- stack_t;
+        (i+1, t'))
+      | ("break", jbr)::stack_t ->
+        (set code jbr (Goto (i+1));
+        aux stack_t)
+      | _ -> fail t "Compilation error: Unexpected LpWhile with no opened Do statement"
+  in
   let (e, t') = extract_num_expr t in
   if e = QMark
     then fail t "Compilation error: ? cannot be the condition of a Do-LpWhile";
-  match mem.stack with
-    | ("do", jdo)::q ->
-      (set code i (JumpIf (e, jdo));
-      mem.stack <- q;
-      (i+1, t'))
-    | _ -> fail t "Compilation error: Unexpected LpWhile with no opened Do statement";;
+    else aux mem.stack;;
 
 (* Lbl, Goto *)
 
 (* Lbl *)
 (* "LBL" is immediately followed by a, then eol in the original list of lexemes *)
-let process_lbl i t code mem (a : string) (eol : string) =
-  if not (is_var a)
-    then fail t "Compilation error: Wrong Lbl index"
-    else if eol <> "EOL" && eol <> "COLON"
-      then fail t "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
+let process_lbl i t code mem =
+  match t with
+    | a::t' ->
+      if not (is_var a)
+        then fail t "Compilation error: Wrong Lbl index"
       else
+        let t'' =
+          match t' with
+            | eol::q ->
+              if eol <> "EOL" && eol <> "COLON"
+                then fail t "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
+                else q
+            | [] -> []
+        in
         let a_index = var_index a in
         if mem.lblindex.(a_index) <> -1
-          then (i,t)
+          then (i,t'')
           else
             (mem.lblindex.(a_index) <- i;
-            (i,t));;
+            (i,t''))
+    | _ -> fail t "Compilation error: Missing an Lbl index";;
 
 (* Goto *)
-let process_goto i t code mem (a : string) (eol : string) =
-  if not (is_var a)
-    then fail t "Compilation error: Wrong Goto index"
-    else if eol <> "EOL" && eol <> "COLON"
-      then fail t "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
+let process_goto i t code mem =
+  match t with
+    | a::t' ->
+      if not (is_var a)
+        then fail t "Compilation error: Wrong Goto index"
       else
+        let t'' =
+          match t' with
+            | eol::q ->
+              if eol <> "EOL" && eol <> "COLON"
+                then fail t "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
+                else q
+            | [] -> []
+        in
         let a_index = var_index a in
         (if mem.lblindex.(a_index) <> -1
           then set code i (Goto (mem.lblindex.(a_index)))
           else mem.gotoindex <- (a_index,i)::mem.gotoindex;
-        ((i+1),t))
+        ((i+1),t''))
 
 (* Prog *)
 let process_prog i t code mem =
