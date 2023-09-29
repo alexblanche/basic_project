@@ -93,8 +93,8 @@ type parameters = {
   (* Captures: an array of 20 matrices containing the captures *)
   capt : (bool array array) array;
   
-  (* Strings: an array of 20 strings *)
-  str : string array;
+  (* Strings: an array of 20 strings, stored as lists of lexemes in reverse order *)
+  str : (string list) array;
 
   (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
   mutable polar : bool;
@@ -132,7 +132,7 @@ let empty_param () : parameters =
 
     capt = Array.make 20 [||];
 
-    str = Array.make 20 "";
+    str = Array.make 20 [];
     
     (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
     polar = false;

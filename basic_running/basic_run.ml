@@ -157,7 +157,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
       TODO:
       | AssignList (le, n) ->
       | AssignMat (me, mi) ->
-      | AssignStr (s, si) ->
+      
       *)
       
       | String sl ->
@@ -268,6 +268,10 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           aux j
         with
           | Not_found -> failwith ("Runtime error: Prog "^name^" not found"))
+      
+      | AssignStr (sl, si) ->
+        (p.str.(si) <- sl;
+        aux (i+1))
 
       | End ->
         (match !prog_goback with

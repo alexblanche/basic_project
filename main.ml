@@ -29,6 +29,9 @@
 #use "arithmetic/arithmetic_lexing.ml"
 #use "arithmetic/arithmetic_parsing.ml"
 
+#use "basic_parsing/data_structures.ml"
+#use "basic_parsing/compilation_error.ml"
+#use "basic_parsing/process_commands.ml"
 #use "basic_parsing/basic_compilation.ml"
 
 (* Emulation *)
