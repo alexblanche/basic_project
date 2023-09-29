@@ -54,6 +54,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
     in
 
     (* Execution of the next command *)
+    (* The commands are ordered in the match by order of frequency in usual programs *)
     match code.(i) with
       | Goto j -> aux j
 
@@ -197,13 +198,16 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         (* The coordinates in Casio Basic are between 1 and 21 *)
         let sl =
           match c with
-            | Loc_text s -> s
-            | Loc_expr e ->
+            | Str_content s -> s
+            | Num_expr e ->
               (let z = eval_num p e in
               if z.im <> 0. (* In Casio Basic, Locate does not handle complex numbers *)
                 then failwith "Runtime error: a number printed by Locate cannot be a complex number";
               let z_repr = float_to_casio z.re in
               str_to_rev_symblist_simple z_repr)
+            | Str_access si -> p.str.(si)
+            (* to do: string expressions *)
+            | _ -> failwith "Runtime: the case of string functions is not treated yet"
         in
         locate ren sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
         val_seen := true;
@@ -271,6 +275,15 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
       
       | AssignStr (sl, si) ->
         (p.str.(si) <- sl;
+        aux (i+1))
+
+      | AssignMult (e, vi1, vi2) ->
+        let z = eval_num p e in
+        (last_val := z;
+        val_seen := true;
+        for vi = vi1 to vi2 do
+          assign_var p (Value z) (Var vi)
+        done;
         aux (i+1))
 
       | End ->

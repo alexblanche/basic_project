@@ -43,6 +43,15 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 (true, i+1, List.tl t'))
               else
                 fail lexlist "Compilation error: Wrong assignment (->) of a variable"
+            | Numerical, v1::"\126"::v2::t'' ->
+              if is_var v1 && is_var v2 then
+                let vi1 = var_index v1 in
+                let vi2 = var_index v2 in
+                if vi2 >= vi1 then
+                  (set code i (AssignMult (e, vi1, vi2));
+                  (true, i+1, t''))
+                else fail lexlist "Compilation error: Wrong order in multiple assignment (~)"
+              else fail lexlist "Compilation error: Wrong multi-assignment (-> ~) of a variable"
 
             | Numerical, "LIST"::_::"LSQBRACKET"::_ ->
               let (li,t'') = extract_list_index (List.tl t') in

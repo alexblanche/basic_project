@@ -17,10 +17,11 @@
 #use "initialization/types/complex.ml"
 #use "initialization/types/arithmetic_type.ml"
 #use "initialization/types/basic_type.ml"
+#use "initialization/encodings/locate_format.ml"
 #use "initialization/types/project_type.ml"
 
-#use "initialization/basic_encoding.ml"
-#use "initialization/command_display.ml"
+#use "initialization/encodings/basic_encoding.ml"
+#use "initialization/encodings/command_display.ml"
 
 #use "g1m_read_write/g1m_reader.ml"
 
@@ -29,20 +30,18 @@
 #use "arithmetic/arithmetic_lexing.ml"
 #use "arithmetic/arithmetic_parsing.ml"
 
-#use "basic_parsing/data_structures.ml"
-#use "basic_parsing/compilation_error.ml"
-#use "basic_parsing/process_commands.ml"
-#use "basic_parsing/basic_compilation.ml"
+#use "basic_compilation/initialization/data_structures.ml"
+#use "basic_compilation/initialization/compilation_error.ml"
+#use "basic_compilation/process_commands.ml"
+#use "basic_compilation/basic_compile.ml"
 
 (* Emulation *)
 #use "initialization/graphics/graphics_lib.ml"
-
-#use "basic_running/float_repr.ml"
-#use "basic_running/locate_format.ml"
-#use "basic_running/basic_graphics.ml"
-#use "basic_running/run_aux.ml"
-#use "basic_running/qmark.ml"
-#use "basic_running/basic_run.ml"
+#use "basic_execution/float_repr.ml"
+#use "basic_execution/basic_graphics.ml"
+#use "basic_execution/run_aux.ml"
+#use "basic_execution/qmark.ml"
+#use "basic_execution/basic_run.ml"
 
 (* Tests *)
 #use "tests/tests_run.ml"
@@ -62,10 +61,7 @@ let play (file_name : string) : unit =
 #use "g1m_read_write/g1m_writer.ml"
 *)
 
-
 (*
-TO DO: debug get_mat_dim
-
 To do next:
   - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
   - Slow down the execution with Unix.sleepf (tests needed for text and graphic display)
@@ -73,6 +69,7 @@ To do next:
     (Idea: key pressed on the keyboard highlight keys of the calculator interface)
   - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
   - Implement functions on lists (that take lists as parameters) and matrices
+  - Implement string expressions in AssignStr and Locate
 
 In the distant future:
   - Redo the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."

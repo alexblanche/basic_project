@@ -186,6 +186,6 @@ let new_param (proj : project_content) : parameters =
   (* Copy of the pictures, captures and strings *)
   Array.iteri (fun i nm -> p.pict.(i) <- nm) proj.pict;
   Array.iteri (fun i c -> p.capt.(i) <- c) proj.capt;
-  Array.iteri (fun i s -> p.str.(i) <- s) proj.str;
+  Array.iteri (fun i s -> p.str.(i) <- str_to_rev_symblist_full s) proj.str;
   
   p;;

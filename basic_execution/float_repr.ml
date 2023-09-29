@@ -136,3 +136,22 @@ let float_to_casio (n : float) : string =
     else res
 ;;
 
+
+(** Formatting complex numbers **)
+
+(* Returns the representation of the complex z as a Casio complex number
+  under the form a+ib, as a list of strings: [(repr of a); [plus (\137)]; (repr of b); [i (\127\080)]] *)
+  let complex_to_casio_aib (z : complex) : string list list =
+    [str_to_rev_symblist_simple (float_to_casio z.re);
+    ["\137"];
+    str_to_rev_symblist_simple (float_to_casio z.im);
+    ["\127\080"]];;
+  
+  (* Same with polar representation of a complex number:
+    [repr of r; repr of complex angle (\127\084); repr of theta] *)
+  let complex_to_casio_polar (z : complex) : string list list =
+    [str_to_rev_symblist_simple (float_to_casio (Complex.norm z));
+    ["\127\084"];
+    str_to_rev_symblist_simple (float_to_casio (Complex.arg z))];;
+  
+  

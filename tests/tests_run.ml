@@ -67,7 +67,7 @@ let run_prog3 () =
       Disp;
       Locate (Arithm [Entity (Value {re = 10.; im = 0.})],
         Arithm [Entity (Value {re = 5.; im = 0.})],
-        Loc_text ["C"; "B"; "A"]);
+        Str_content ["C"; "B"; "A"]);
       Disp;
       Next;
       String ["D"; "N"; "E"; " "; "E"; "H"; "T"];
@@ -122,14 +122,15 @@ let run_prog6 () =
         ["QUOTE"; "R"; "E"; "A"; "D"; "Y"; "?"; "QUOTE"; "DISP";
         "FOR"; "1"; "ASSIGN"; "X"; "TO"; "1"; "TIMESTENPOWER"; "3"; "EOL";
         "QUOTE"; "A"; "B"; "C"; "D"; "E"; "F"; "G"; "H"; "I"; "J"; "K"; "L"; "M";
-          "N"; "O"; "P"; "Q"; "R"; "S"; "T"; "U";
-          "V"; "W"; "X"; "Y"; "Z"; "QUOTE"; "EOL";
+          "N"; "O"; "P"; "Q"; "R"; "S"; "T"; "U"; "V"; "W"; "X"; "Y"; "Z"; "QUOTE"; "EOL";
+        "QUOTE"; "1"; "2"; "3"; "4"; "5"; "6"; "7"; "8"; "9"; "0"; "QUOTE"; "EOL";
         "NEXT";
         "QUOTE"; "D"; "O"; "N"; "E"; "QUOTE"; "DISP"
         ]
       )]
   in
   run p prog6;;
+  (* 22s in the emulator, 37s in the calculator *)
 
 (* Test of IMPL => *)
 

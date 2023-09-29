@@ -281,8 +281,8 @@ let process_locate i t code mem =
           set code i (Locate (e1, e2, Str_content sl));
           t5)
         | ","::"STR"::t4 ->
-          (let (vi, t5) = read_int t4 true in
-          set code i (Locate (e1, e2, Str_access (vi-1)));
+          (let (si, t5) = read_int t4 true in
+          set code i (Locate (e1, e2, Str_access (si-1)));
           t5)
         (* to come: handling of string expressions *)
         | ","::t4 ->
