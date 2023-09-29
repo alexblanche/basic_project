@@ -72,7 +72,48 @@ let func_table =
               else failwith "Function application error: Not accepts only real arguments"
           | _ -> failwith "Function error: Not has arity 1"
       in f)
-    )
+    );
+
+    ("MOD",
+      (let f (l : complex list) : complex =
+        match l with
+          | [z1; z2] ->
+            if is_int z1 && is_int z2 then
+              let i1 = int_of_float z1.re in
+              let i2 = int_of_float z2.re in
+              if i1 >= 0
+                then complex_of_int (i1 mod i2)
+                else complex_of_int (i2 + (i1 mod i2))
+            else failwith "Function application error: Mod accepts only integer arguments"
+          | _ -> failwith "Function error: Mod has arity 2"
+      in f)
+    );
+
+    ("INT",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (float_of_int (int_of_float z.re))
+              else
+                {re = float_of_int (int_of_float z.re);
+                 im = float_of_int (int_of_float z.im)}
+          | _ -> failwith "Function error: Int has arity 1"
+      in f)
+    );
+
+    ("FRAC",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (z.re -. float_of_int (int_of_float z.re))
+              else
+                {re = z.re -. float_of_int (int_of_float z.re);
+                 im = z.im -. float_of_int (int_of_float z.im)}
+          | _ -> failwith "Function error: Frac has arity 1"
+      in f)
+    );
     ]
   in
   let t = Hashtbl.create (5 + List.length func_list) in
@@ -80,15 +121,28 @@ let func_table =
   t;;
 
 (* List of handled left unary operators *)
-let lop_list = ["ABS"; "UMINUS"; "EPOWER"];;
+let lop_list = ["ABS"; "UMINUS"; "EPOWER"; "INT"; "FRAC"];;
 
 (* List of handled right unary operators *)
 let rop_list = ["EXCLAMATIONMARK"; "POWER2"];;
 
 (* List of handled operators and their index of precedence (1 = greatest *)
-let op_list = [("PLUS", 3); ("MINUS", 3); ("TIMES", 2); ("DIVIDED", 2); ("POWER", 1);
+(* The operators are ordered by frequency in usual expresssions *)
+let op_list = [
+  ("PLUS", 3); ("MINUS", 3); ("TIMES", 2); ("DIVIDED", 2); ("POWER", 1);
   ("LEQ", 4); ("LESS", 4); ("GEQ", 4); ("GREATER", 4); ("EQUAL", 4); ("DIFFERENT", 4);
-  ("AND", 5); ("OR", 6); ("XOR", 7)];;
+  ("AND", 5); ("OR", 6); ("INTDIV", 7); ("RMDR", 7); ("XOR", 8)
+  ];;
+
+(* All precedences were checked on a Casio calculator
+  POWER
+    << (TIMES, DIVIDED)
+    << (PLUS, MINUS)
+    << (LEQ, LESS, GEQ, GREATER, EQUAL, DIFFERENT)
+    << (AND, OR)
+    << (INTDIV, RMDR)
+    << (XOR)
+*)
 
 
 (* Application of the functions *)
@@ -133,6 +187,27 @@ let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
     | "OR" -> complex_of_bool ((is_not_zero z1) || (is_not_zero z2))
     | "XOR" ->
       complex_of_bool ((is_not_zero z1) && (is_zero z2) || (is_zero z1) && (is_not_zero z2))
+  (* Others *)
+
+    (* /!\
+      (-27) intdiv 5 = -5 (as in -27 = -5*5-2)
+      (-27) rmdr   5 = 3  (as in -27 = -6*5+3)
+    *)
+    | "INTDIV" ->
+      if is_int z1 && is_int z2 then
+        let i1 = int_of_float z1.re in
+        let i2 = int_of_float z2.re in
+        complex_of_int (i1 / i2)
+      else failwith "apply_op: Intdiv only accepts integer arguments"
+    | "RMDR" ->
+      if is_int z1 && is_int z2 then
+        let i1 = int_of_float z1.re in
+        let i2 = int_of_float z2.re in
+        if i1 >= 0 (* tested for both signs i1, i2 *)
+          then complex_of_int (i1 mod i2)
+          else complex_of_int ((abs i2) + (i1 mod i2))
+      else failwith "apply_op: Rmdr only accepts integer arguments"
+
     | _ -> failwith ("apply_op: Unkown operator "^o);;
 
 (* Application of the right unary operators *)

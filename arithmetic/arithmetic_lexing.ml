@@ -106,12 +106,11 @@ let read_float (lexlist : string list) : float * (string list) =
   let (exp_part, t'') =
     match t' with
       | e::s::q ->
-        if e = "TIMESTENPOWER"
-          then
-            if s = "PLUS"
-              then read_int q true
-              else read_int (s::q) false
-          else (0, t')
+        if e = "TIMESTENPOWER" then
+          if s = "PLUS"
+            then read_int q true
+            else read_int (s::q) false
+        else (0, t')
       | _ -> (0, t')
   in
   let ints = string_of_int int_part in
