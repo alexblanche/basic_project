@@ -226,7 +226,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
       | "BREAK" :: t ->
         (fail_if_not_eol lexlist;
-        match mem.stack with
+        match skip_breaks mem.stack with
           | ("for", _)::_
           | ("while", _)::_
           | ("do", _)::_ ->
@@ -235,6 +235,26 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
               when the closing statement of the loop is encountered *)
             aux t (i+1))
           | _ -> fail t "Compilation error: Unexpected Break with no opened loop")
+      
+      | "ISZ" :: t
+      | "DSZ" :: t ->
+        (* Compiled as V + 1 -> V or V - 1 -> V *)
+        (fail_if_not_eol lexlist;
+        let isz = List.hd lexlist = "ISZ" in
+        match t with
+          | v :: t' ->
+            if is_var v then
+              (let vi = var_index v in
+              let e =
+                Arithm
+                  [Entity (Variable (Var vi));
+                  Op (if isz then "PLUS" else "MINUS");
+                  Entity (Value {Complex.re = 1.; im = 0.})]
+              in
+              set code i (Assign (e, Var vi));
+              aux t (i+1))
+            else fail t ("Compilation error: Wrong variable for "^(if isz then "Isz" else "Dsz"))
+          | _ -> fail t ("Compilation error: "^(if isz then "Isz" else "Dsz")^" without specified variable"))
 
       (* Errors *)
       | lex :: _ -> fail lexlist ("Compilation error: Unexpected command "^(String.escaped lex))

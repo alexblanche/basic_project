@@ -7,3 +7,9 @@ let fail_if_not_eol (lexlist : string list) : unit =
       if eol <> "EOL" && eol <> "COLON" && eol <> "DISP" then
         fail (eol :: t) ("Compilation error: "^lex^" should be followed by Eol")
     | _ -> ();;
+
+(* Returns the list l without the first consecutive "break" elements *)
+let rec skip_breaks (l : (string * int) list) =
+  match l with
+    | ("break", _)::t -> skip_breaks t
+    | _ -> l;; 
