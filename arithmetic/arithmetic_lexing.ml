@@ -229,6 +229,7 @@ and extract_list_content (lexlist : string list) : (basic_expr * expression_type
       | "EOL"::_
       | "COLON"::_
       | "DISP"::_
+      | "IMPL"::_
       | "ASSIGN"::_ -> (List.rev acc, l)
 
       | [] -> (List.rev acc, [])

@@ -16,8 +16,6 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
   
   let rec aux (lexlist : string list) (i : int) : int =
 
-    (* print_endline (string_of_int i); *)
-
     (* Expression handling *)
     let (e, expr_type, t) = extract_expr lexlist in
     let (expr_found, j, next_t) =
@@ -126,7 +124,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
     in
     if expr_found then aux next_t j
     else
-
+    
     (* Other lexemes *)
     match lexlist with
       
@@ -252,7 +250,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                   Entity (Value {Complex.re = 1.; im = 0.})]
               in
               set code i (Assign (e, Var vi));
-              aux t (i+1))
+              aux t' (i+1))
             else fail t ("Compilation error: Wrong variable for "^(if isz then "Isz" else "Dsz"))
           | _ -> fail t ("Compilation error: "^(if isz then "Isz" else "Dsz")^" without specified variable"))
 
