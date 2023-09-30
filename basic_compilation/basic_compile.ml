@@ -60,7 +60,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                   (true, i+1, t''))
                 | _ -> fail lexlist "Compilation error: Wrong assignment (->) of a list element")
 
-            | Numerical, "MAT"::_::_::"LSQBRACKET"::_
+            | Numerical, "MAT"::_::"LSQBRACKET"::_
             | Numerical, "MAT"::_::"LSQBRACKET"::_ ->
               let (mi,t'') = extract_mat_index (List.tl t') in
               (match mi with
@@ -84,6 +84,18 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 (set code i (AssignMat (e, var_index a));
                 (true, i+1, t''))
               else fail lexlist  "extract_mat_index: wrong matrix index"
+            
+            (* TO DO *)
+            (* | Numerical, "DIM"::"LIST"::a::t'' ->
+              let 
+              if is_var a || a = "ANS" then
+                (set code i (AssignList (e, Variable (Var (var_index a))));
+                (true, i+1, t''))
+              else if is_digit a then
+                let (vi,q) = read_int (a::t'') true in
+                (set code i (AssignList (e, Value (complex_of_int vi)));
+                (true, i+1, t''))
+              else fail lexlist  "Compilation error: wrong list index" *)
 
             (* Errors *)
             | Numerical, "LIST"::_

@@ -64,13 +64,21 @@ let play (file_name : string) : unit =
 
 (*
 To do next:
+  - Implement functions that take a list of entities as parameters
+    (they only include the functions that take at least one argument that is not a numerical expression,
+    or that returns a list or matrix (ex: Mat->List(A,2) returns the column 2 of Mat A converted to a list))
+
+  - Code functions on lists/matrices (starting with e -> Dim List / Dim Mat)
+  - Code the execution of AssignList, AssignMat
+  - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
+  - Implement string expressions in AssignStr and Locate
+  - Implement all the "main" functions from the to do list
+  (goal: make Timeless run at this point)
+  
   - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
   - Slow down the execution with Unix.sleepf (tests needed for text and graphic display)
-  - Draw a calculator and code the execution of Getkey (by clicking or pressing keys)
-    (Idea: key pressed on the keyboard highlight keys of the calculator interface)
-  - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
-  - Implement functions on lists (that take lists as parameters) and matrices
-  - Implement string expressions in AssignStr and Locate
+  - Draw a calculator and link it to Getkey (by clicking on keys)
+    (key pressed on the keyboard highlight keys of the calculator interface)
 
 In the distant future:
   - Redo the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."

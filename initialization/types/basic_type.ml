@@ -60,7 +60,7 @@ type command =
 
   (* Graphic functions and other functions *)
   | Graphic of graphic (* Graphic screen functions *)
-  | Function of string (* Any other function, stored in a hashtable *)
+  | Function of string (* Any other function *)
 
 (* Type for compiled Basic code *)
 (* An object of type basic_code has the form (code, progindex),
