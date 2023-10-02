@@ -12,6 +12,8 @@ let fact n =
 (* Table of handled functions *)
 (* All functions take a list of arguments as parameter.
   This allows for functions of all arities and variable arity. *)
+(* These functions must be closed by a parenthesis (RPAR),
+   unless they are also in lop_list *)
 
 (* Some functions have their real and complex cases treated separately
   to reduce the rounding errors of complex operations *)
@@ -137,7 +139,7 @@ let func_table =
   t;;
 
 (* List of handled left unary operators *)
-let lop_list = ["ABS"; "NOT"; "UMINUS"; "EPOWER"; "INT"; "FRAC"];;
+let lop_list = ["ABS"; "NOT"; "UMINUS"; "EPOWER"; "INT"; "FRAC"; "REP"; "IMP"];;
 
 (* List of handled right unary operators *)
 let rop_list = ["EXCLAMATIONMARK"; "POWER2"];;

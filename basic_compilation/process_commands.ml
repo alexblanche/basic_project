@@ -315,7 +315,7 @@ let process_locate i t code mem =
           set code i (Locate (e1, e2, Num_expr e3));
           t5)
         | _ -> fail t "Compilation error: Syntax error in Locate command"
-      in
+    in
     (i+1,t')
   with
     | Failure _ -> fail t "Compilation error: Syntax error in Locate command";;

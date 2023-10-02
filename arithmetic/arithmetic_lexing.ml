@@ -174,13 +174,15 @@ let rec extract_list_index (t : string list) : arithm * (string list) =
       if expr_type <> Numerical
         then failwith "extract_list_index: numerical expression expected"
       else
+        let x = Entity (Variable (ListIndex (a, e))) in
         (match t''' with
-          | "RSQBRACKET"::_
+          | "RSQBRACKET"::q -> (x, q)
           | "EOL"::_ (* Closing bracket may be omitted in Basic Casio *)
           | "COLON"::_
           | "IMPL"::_
           | "ASSIGN"::_
-          | "DISP"::_ -> (Entity (Variable (ListIndex (a, e))),t''')
+          | ","::_
+          | "DISP"::_ -> (x, t''')
           | _ -> failwith "extract_list_index: Syntax error, List '[' not properly closed")
     | _ -> failwith "extract_list_index: Syntax error, List should be followed by '['"
 
@@ -206,13 +208,15 @@ and extract_mat_index (t : string list) : arithm * (string list) =
           if expr_type1 <> Numerical || expr_type2 <> Numerical
             then failwith "extract_mat_index: numerical expression expected"
           else
+            let x = Entity (Variable (MatIndex (ai, e1, e2))) in
             (match t5 with
-            | "RSQBRACKET"::_
+            | "RSQBRACKET"::q -> (x, q)
             | "EOL"::_
             | "COLON"::_
             | "IMPL"::_
             | "ASSIGN"::_
-            | "DISP"::_ -> (Entity (Variable (MatIndex (ai, e1, e2))), t5)
+            | ","::_
+            | "DISP"::_ -> (x, t5)
             | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
         | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
     | _ -> failwith "extract_mat_index: Syntax error, Mat should be followed by '['"
@@ -379,7 +383,7 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
         else if s = "MAT" then
           (match t with
             | _::"LSQBRACKET"::_
-            | _::_::"LSQBRACKET"::_ -> (* Mat a[e1][e2] *)
+            | _::_::"LSQBRACKET"::_ -> (* Mat a[e1,e2] *)
               let (mi,t') = extract_mat_index t in
               aux (mi::acc) expr_type t'
             | a::t' -> (* Mat a *)

@@ -16,6 +16,13 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
   
   let rec aux (lexlist : string list) (i : int) : int =
 
+    (* Debug *)
+    (* (try
+      let (line, _) = extract_line lexlist in
+      print_endline ("i = "^(string_of_int i)^" -> "^(String.concat " " (List.rev (List.map String.escaped line))))
+    with
+      | _ -> ()); *)
+
     (* Expression handling *)
     let (e, expr_type, t) =
       try
@@ -315,6 +322,9 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       mem.lblindex.(k) <- -1
     done;
     mem.gotoindex <- [];
+
+    (* Debug *)
+    print_endline name;
 
     try
       (* Compilation of the program *)
