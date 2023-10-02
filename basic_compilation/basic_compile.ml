@@ -17,7 +17,12 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
   let rec aux (lexlist : string list) (i : int) : int =
 
     (* Expression handling *)
-    let (e, expr_type, t) = extract_expr lexlist in
+    let (e, expr_type, t) =
+      try
+        extract_expr lexlist
+      with
+        | Failure s -> fail lexlist s
+    in
     let (expr_found, j, next_t) =
       (match e, t with
       
@@ -68,7 +73,9 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                   (true, i+1, t''))
                 | _ -> fail lexlist "Compilation error: Wrong assignment (->) of a matrix element")
 
-            | ListExpr, "LIST"::a::t'' ->
+            | ListExpr, "LIST"::a::t''
+            | Numerical, "LIST"::a::t'' ->
+              (* Numerical is allowed, because entity functions have unspecified output type *)
               if is_var a || a = "ANS" then
                 (set code i (AssignList (e, Variable (Var (var_index a))));
                 (true, i+1, t''))
@@ -78,7 +85,9 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 (true, i+1, q))
               else fail lexlist  "Compilation error: wrong list index"
 
-            | MatExpr, "MAT"::a::t'' ->
+            | MatExpr, "MAT"::a::t''
+            | Numerical, "MAT"::a::t'' ->
+              (* Numerical is allowed, because entity functions have unspecified output type *)
               if is_var a && a <> "SMALLR" && a <> "THETA" || a = "ANS" then
                 (set code i (AssignMat (e, var_index a));
                 (true, i+1, t''))
@@ -95,7 +104,9 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 (true, i+1, q))
               else fail lexlist  "Compilation error: wrong list index in dimension assignment"
 
-            | ListExpr, "DIM"::"MAT"::a::t'' ->
+            | ListExpr, "DIM"::"MAT"::a::t''
+            | Numerical, "DIM"::"MAT"::a::t'' ->
+              (* Numerical is allowed, because entity functions have unspecified output type *)
               let dim_expr = Arithm [Function ("Init", [e])] in
               if is_var a || a = "ANS" then
                 (set code i (AssignMat (dim_expr, var_index a));
@@ -103,8 +114,6 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
               else fail lexlist  "Compilation error: wrong matrix index in dimension assignment"
 
             (* Errors *)
-            | Numerical, "LIST"::_
-            | Numerical, "MAT"::_
             | ListExpr, "MAT"::_
             | MatExpr, "LIST"::_
             | ListExpr, _::_

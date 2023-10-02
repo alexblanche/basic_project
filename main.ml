@@ -65,12 +65,6 @@ let play (file_name : string) : unit =
 
 (*
 To do next:
-  - Implement functions that take a list of entities as parameters
-    (they only include the functions that take at least one argument that is not a numerical expression,
-    or that return a list or matrix (ex: Mat->List(A,2) returns the column 2 of Mat A converted to a list))
-
-  - Code functions on lists/matrices (starting with e -> Dim List / Dim Mat)
-  - Code the execution of AssignList, AssignMat
   - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
   - Implement string expressions in AssignStr and Locate
   - Implement all the "main" functions from the to do list

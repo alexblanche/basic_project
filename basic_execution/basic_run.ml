@@ -154,12 +154,16 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             aux (i+2))
           else aux (i+1))
 
-      (*
-      TODO:
       | AssignList (le, n) ->
+        let t = eval_list p le in
+        let ni = get_val_numexpr p n in
+        if is_int ni then
+          p.list.((int_of_complex ni)-1) <- t
+        else failwith "Runtime error: wrong index for list assignment"
+
       | AssignMat (me, mi) ->
-      
-      *)
+        let m = eval_mat p me in
+        p.mat.(mi-1) <- m
       
       | String sl ->
         (line_feed ();

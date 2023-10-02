@@ -29,7 +29,6 @@ let assign_var (p : parameters) (x : entity) (v : variable) : unit =
     
     | _ -> failwith "Runtime error: wrong value in assignment"
 
-(* to come: assign_struct to assign a whole list or matrix *)
 
 
 

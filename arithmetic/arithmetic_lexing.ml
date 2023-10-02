@@ -292,7 +292,7 @@ and extract_par_content (lexlist : string list) : basic_expr * (string list) =
     | s::t' ->
       if s = "RPAR" then
         (e,t')
-      else if s = "EOL" || s = "COLON" || s = "DISP" || s = "ASSIGN" then
+      else if s = "EOL" || s = "COLON" || s = "DISP" || s = "ASSIGN" || s = "IMPL" then
         (e,t)
       else
         failwith "Arithmetic lexing: Syntax error, unclosed parenthesis"
