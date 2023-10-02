@@ -114,6 +114,22 @@ let func_table =
           | _ -> failwith "Function error: Frac has arity 1"
       in f)
     );
+
+    ("REP",
+      (let f (l : complex list) =
+        match l with
+          | [z] -> complex_of_float z.re
+          | _ -> failwith "Function error: ReP has arity 1"
+      in f)
+    );
+
+    ("IMP",
+      (let f (l : complex list) =
+        match l with
+          | [z] -> complex_of_float z.im
+          | _ -> failwith "Function error: ImP has arity 1"
+      in f)
+    );
     ]
   in
   let t = Hashtbl.create (5 + List.length func_list) in

@@ -281,6 +281,24 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
               aux t' (i+1))
             else fail t ("Compilation error: Wrong variable for "^(if isz then "Isz" else "Dsz"))
           | _ -> fail t ("Compilation error: "^(if isz then "Isz" else "Dsz")^" without specified variable"))
+        
+      | "CLRLIST" :: a :: t'' ->
+        let empty_list = Arithm [Entity (ListContent [||])] in
+        if is_var a || a = "ANS" then
+          (set code i (AssignList (empty_list, Variable (Var (var_index a))));
+          aux t'' (i+1))
+        else if is_digit a then
+          let (vi,q) = read_int (a::t'') true in
+          (set code i (AssignList (empty_list, Value (complex_of_int vi)));
+          aux q (i+1))
+        else fail lexlist "Compilation error: Wrong index for ClrList"
+
+      | "CLRMAT" :: a :: t'' ->
+        let empty_mat = Arithm [Entity (MatContent [||])] in
+        if is_var a || a = "ANS" then
+          (set code i (AssignMat (empty_mat, var_index a));
+          aux t'' (i+1))
+        else fail lexlist "Compilation error: Wrong index for ClrMat"
 
       (* Errors *)
       | lex :: _ -> fail lexlist ("Compilation error: Unexpected command "^(String.escaped lex))
