@@ -214,13 +214,65 @@ let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
 (* Since there are only a few, we hard-code them like the operators. *)
 let apply_rop_single (ro : string) (z : complex) : complex =
   match ro with
-    | "EXCLAMATIONMARK" -> complex_of_int (fact (int_of_float z.re))
+    | "EXCLAMATIONMARK" ->
+      if is_int z
+        then complex_of_int (fact (int_of_float z.re))
+        else failwith "apply_rop: Factorial only accepts integer arguments"
     | "POWER2" ->
       if z.im = 0.
         then complex_of_float (z.re *. z.re)
         else Complex.mul z z
+    | "POWERMINUS1" ->
+      if z.im = 0.
+        then complex_of_float (1. /. z.re)
+        else Complex.div {re = 1.; im = 0.} z
+    | "FEMTO" ->
+      if z.im = 0.
+        then complex_of_float (z.re *. 1e-15)
+        else scal 1e-15 z
+    | "PICO" ->
+      if z.im = 0.
+        then complex_of_float (z.re *. 1e-12)
+        else scal 1e-12 z
+    | "NANO" ->
+      if z.im = 0.
+        then complex_of_float (z.re *. 1e-09)
+        else scal 1e-09 z
+    | "MICRO" ->
+      if z.im = 0.
+        then complex_of_float (z.re *. 1e-06)
+        else scal 1e-06 z
+    | "MILLI" ->
+      if z.im = 0.
+        then complex_of_float (z.re *. 1e-03)
+        else scal 1e-03 z
+    | "KILO" ->
+      if z.im = 0.
+        then complex_of_float (z.re *. 1000.)
+        else scal 1000. z
+    | "MEGA" ->
+      if z.im = 0.
+        then complex_of_float (z.re *. 1000000.)
+        else scal 1000000. z
+    | "GIGA" ->
+      if z.im = 0.
+        then complex_of_float (z.re *. 1e09)
+        else scal 1e09 z
+    | "TERA" ->
+      if z.im = 0.
+        then complex_of_float (z.re *. 1e12)
+        else scal 1e12 z
+    | "PETA" ->
+      if z.im = 0.
+        then complex_of_float (z.re *. 1e15)
+        else scal 1e15 z
+    | "EXA" ->
+      if z.im = 0.
+      then complex_of_float (z.re *. 1e18)
+      else scal 1e18 z
     | _ -> failwith ("apply_rop: Unkown operator "^ro);;
 
 (* Application of the left unary operators *)
 let apply_lop_single (lo : string) (z : complex) : complex =
   apply_func lo [z];;
+

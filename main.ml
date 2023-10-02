@@ -27,6 +27,7 @@
 
 (* Compilation *)
 #use "arithmetic/arithmetic_def.ml"
+#use "arithmetic/entity_functions.ml"
 #use "arithmetic/arithmetic_lexing.ml"
 #use "arithmetic/arithmetic_parsing.ml"
 
@@ -66,7 +67,7 @@ let play (file_name : string) : unit =
 To do next:
   - Implement functions that take a list of entities as parameters
     (they only include the functions that take at least one argument that is not a numerical expression,
-    or that returns a list or matrix (ex: Mat->List(A,2) returns the column 2 of Mat A converted to a list))
+    or that return a list or matrix (ex: Mat->List(A,2) returns the column 2 of Mat A converted to a list))
 
   - Code functions on lists/matrices (starting with e -> Dim List / Dim Mat)
   - Code the execution of AssignList, AssignMat

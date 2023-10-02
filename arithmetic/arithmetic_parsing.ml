@@ -327,12 +327,14 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity li
 
     (* Function evaluation *)
     | (Function (fname, el))::t, _ ->
-      (try
+      (if Hashtbl.mem func_table fname then
         let vl = List.map (fun e -> eval_num p e) el in
         shunting_yard p t ((Value (apply_func fname vl))::output_q) op_q
-      with
-        | Failure _ -> failwith "Arithmetic parsing: a function takes a list or matrix as argument, this case is not treated yet")
-      
+      else if Hashtbl.mem entity_func_table fname then
+        let nl = List.map (fun e -> eval_entity p e) el in
+        shunting_yard p t ((apply_entity_func fname nl)::output_q) op_q
+      else
+        failwith ("Arithmetic parsing: Unknown function "^fname))
 
     | Lpar::t, _ -> shunting_yard p t output_q (Lpar::op_q)
     
@@ -381,8 +383,15 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity li
         | _ -> failwith "Arithmetic parsing: Untreated case")    
     | _,_ -> failwith "Arithmetic parsing: Syntax error"
 
-(* General numerical evaluation function *)
+(* General evaluation function, returns an entity *)
 (* p is the parameter container, containing the variables, lists and matrices *)
+and eval_entity (p : parameters) (e : basic_expr) : entity =
+  match e with
+    | Complex z -> Value z
+    | Arithm al -> shunting_yard p al [] []
+    | _ -> failwith "eval_entity: error, QMark provided"
+
+(* Numerical evaluation function *)
 and eval_num (p : parameters) (e : num_expr) : complex =
   match e with
     | Complex z -> z

@@ -54,7 +54,10 @@ let is_int (z : complex) : bool =
 (** Recoding of the operations **)
 
 (* The exponentiation Complex.pow seems a lot less precise than the float one (**) on float numbers *)
-let pow (z1 : complex) (z2 : complex) : complex =
+(* let pow (z1 : complex) (z2 : complex) : complex =
   if z1.im = 0. && z2.im = 0.
     then get_complex (z1.re ** z2.re) 0.
-    else Complex.pow z1 z2;;
+    else Complex.pow z1 z2;; *)
+
+let scal (a : float) (z : complex) : complex =
+  get_complex (a *. z.re) (a *. z.im);;

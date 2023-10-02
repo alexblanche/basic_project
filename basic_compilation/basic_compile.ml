@@ -60,7 +60,6 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                   (true, i+1, t''))
                 | _ -> fail lexlist "Compilation error: Wrong assignment (->) of a list element")
 
-            | Numerical, "MAT"::_::"LSQBRACKET"::_
             | Numerical, "MAT"::_::"LSQBRACKET"::_ ->
               let (mi,t'') = extract_mat_index (List.tl t') in
               (match mi with
@@ -76,7 +75,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
               else if is_digit a then
                 let (vi,q) = read_int (a::t'') true in
                 (set code i (AssignList (e, Value (complex_of_int vi)));
-                (true, i+1, t''))
+                (true, i+1, q))
               else fail lexlist  "Compilation error: wrong list index"
 
             | MatExpr, "MAT"::a::t'' ->
@@ -85,17 +84,23 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 (true, i+1, t''))
               else fail lexlist  "extract_mat_index: wrong matrix index"
             
-            (* TO DO *)
-            (* | Numerical, "DIM"::"LIST"::a::t'' ->
-              let 
+            | Numerical, "DIM"::"LIST"::a::t'' ->
+              let dim_expr = Arithm [Function ("Init", [e])] in
               if is_var a || a = "ANS" then
-                (set code i (AssignList (e, Variable (Var (var_index a))));
+                (set code i (AssignList (dim_expr, Variable (Var (var_index a))));
                 (true, i+1, t''))
               else if is_digit a then
                 let (vi,q) = read_int (a::t'') true in
-                (set code i (AssignList (e, Value (complex_of_int vi)));
+                (set code i (AssignList (dim_expr, Value (complex_of_int vi)));
+                (true, i+1, q))
+              else fail lexlist  "Compilation error: wrong list index in dimension assignment"
+
+            | ListExpr, "DIM"::"MAT"::a::t'' ->
+              let dim_expr = Arithm [Function ("Init", [e])] in
+              if is_var a || a = "ANS" then
+                (set code i (AssignMat (dim_expr, var_index a));
                 (true, i+1, t''))
-              else fail lexlist  "Compilation error: wrong list index" *)
+              else fail lexlist  "Compilation error: wrong matrix index in dimension assignment"
 
             (* Errors *)
             | Numerical, "LIST"::_

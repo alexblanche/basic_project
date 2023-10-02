@@ -184,7 +184,7 @@ let rec extract_list_index (t : string list) : arithm * (string list) =
           | _ -> failwith "extract_list_index: Syntax error, List '[' not properly closed")
     | _ -> failwith "extract_list_index: Syntax error, List should be followed by '['"
 
-(* Extracts the content of Mat i[e1][e2] from the lexlist when lexlist is the tail
+(* Extracts the content of Mat i[e1,e2] from the lexlist when lexlist is the tail
   of a list of lexemes starting with "MAT" *)
 and extract_mat_index (t : string list) : arithm * (string list) =
   (* Detection of the first variable *)
@@ -201,7 +201,7 @@ and extract_mat_index (t : string list) : arithm * (string list) =
     | "LSQBRACKET"::t2 ->
       let (e1, expr_type1, t3) = extract_expr t2 in
       (match t3 with
-        | "RSQBRACKET"::"LSQBRACKET"::t4 ->
+        | ","::t4 ->
           let (e2, expr_type2, t5) = extract_expr t4 in
           if expr_type1 <> Numerical || expr_type2 <> Numerical
             then failwith "extract_mat_index: numerical expression expected"
@@ -337,7 +337,7 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
         else if List.mem s rop_list then
           aux ((Runop s)::acc) expr_type t
 
-        (* Function *)
+        (* Arithmetic function *)
         else if Hashtbl.mem func_table s then
           let (el, t') = extract_list_content t in
           let checked_el =
@@ -349,6 +349,11 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
               el
           in
           aux ((Function (s, checked_el))::acc) expr_type t'
+
+        (* Entity function *)
+        else if Hashtbl.mem entity_func_table s then
+          let (el, t') = extract_list_content t in
+          aux ((Function (s, List.map fst el))::acc) expr_type t'
         
         (* List a[e] and List a *)
         else if s = "LIST" then
@@ -368,7 +373,7 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
               else failwith "extract_expr: wrong list index"
             | _ -> failwith "extract_expr: syntax error in list access")
         
-        (* Mat a[e1][e2] and Mat a *)
+        (* Mat a[e1,e2] and Mat a *)
         else if s = "MAT" then
           (match t with
             | _::"LSQBRACKET"::_

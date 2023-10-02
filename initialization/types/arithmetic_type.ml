@@ -37,11 +37,11 @@ and
 
 (* Type for Basic variables *)
 variable =
-| Var of int (* index: 0..25 = A ... Z, 26 = r, 27 = theta, 28 = Ans *)
-| ListIndex of entity * num_expr (* ListIndex(x, e) = List x[e] *)
-| MatIndex of int * num_expr * num_expr (* MatIndex (x,e1,e2) -> Mat x[e1][e2] *)
-| Getkey (* its value depends on the key currently pressed *)
-| Random (* Ran# *)
+  | Var of int (* index: 0..25 = A ... Z, 26 = r, 27 = theta, 28 = Ans *)
+  | ListIndex of entity * num_expr (* ListIndex(x, e) = List x[e] *)
+  | MatIndex of int * num_expr * num_expr (* MatIndex (x,e1,e2) -> Mat x[e1][e2] *)
+  | Getkey (* its value depends on the key currently pressed *)
+  | Random (* Ran# *)
 
 and
 
