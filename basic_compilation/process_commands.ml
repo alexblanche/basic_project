@@ -281,18 +281,9 @@ let process_locate i t code mem =
     let (e2, t3) = extract_num_expr (List.tl t2) in
     let t' =
       match t3 with
-        | ","::"QUOTE"::t4 ->
-          (let (sl, t5) = extract_str t4 in
-          set code i (Locate (e1, e2, Str_content sl));
-          t5)
-        | ","::"STR"::t4 ->
-          (let (si, t5) = read_int t4 true in
-          set code i (Locate (e1, e2, Str_access (si-1)));
-          t5)
-        (* to come: handling of string expressions *)
         | ","::t4 ->
-          (let (e3, t5) = extract_num_expr t4 in
-          set code i (Locate (e1, e2, Num_expr e3));
+          let (se, t5) = extract_string_expr t4 in
+          (set code i (Locate (e1, e2, se));
           t5)
         | _ -> fail t "Compilation error: Syntax error in Locate command"
     in

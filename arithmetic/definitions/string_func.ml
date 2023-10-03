@@ -26,6 +26,7 @@ let search (sl1 : string list) (sl2 : string list) : int =
 (****************************************************************************************)
 
 (* Application of the string functions *)
+(* Returns a string_expr of the form Str_content _ or Num_expr (Complex _) *)
 let apply_str_func (p : parameters) (fname : string) (sel : string_expr list) : string_expr =
   match fname, sel with
     | "STRJOIN", [Str_content sl1; Str_content sl2] ->

@@ -17,11 +17,11 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
   let rec aux (lexlist : string list) (i : int) : int =
 
     (* Debug *)
-    (* (try
+    (try
       let (line, _) = extract_line lexlist in
       print_endline ("i = "^(string_of_int i)^" -> "^(String.concat " " (List.rev (List.map String.escaped line))))
     with
-      | _ -> ()); *)
+      | _ -> ());
 
     (* Expression handling *)
     let (e, expr_type, t) =
@@ -212,7 +212,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         (match t' with
           | "EOL"::_
           | "DISP"::_
-          | "COLON"::_ ->
+          | "COLON"::_
+          | [] ->
             (set code i (String sl);
             aux t' (i+1))
           | "ASSIGN"::"STR"::t'' ->

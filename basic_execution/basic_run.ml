@@ -180,7 +180,7 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
               aux (i+2))
             else aux (i+1))
           
-      | Locate (e1, e2, c) ->
+      | Locate (e1, e2, se) ->
         let z1 = eval_num p e1 in
         let z2 = eval_num p e2 in
         (if not
@@ -190,17 +190,14 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
           then failwith "Runtime error: wrong arguments for Locate";
         (* The coordinates in Casio Basic are between 1 and 21 *)
         let sl =
-          match c with
+          match eval_str p se with
             | Str_content s -> s
-            | Num_expr e ->
-              (let z = eval_num p e in
-              if z.im <> 0. (* In Casio Basic, Locate does not handle complex numbers *)
+            | Num_expr (Complex z) ->
+              (if z.im <> 0. (* In Casio Basic, Locate does not handle complex numbers *)
                 then failwith "Runtime error: a number printed by Locate cannot be a complex number";
               let z_repr = float_to_casio z.re in
               str_to_rev_symblist_simple z_repr)
-            | Str_access si -> p.str.(si)
-            (* to do: string expressions *)
-            | _ -> failwith "Runtime: the case of string functions is not treated yet"
+            | _ -> failwith "Runtime error: wrong output type for string expression evaluation"
         in
         locate ren sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
         val_seen := true;

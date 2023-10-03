@@ -278,8 +278,7 @@ and apply_rop (p : parameters) (ro : string) (n : entity) : entity =
       MatContent m)
 
 (* String expressions evaluation *)
-(* Evaluation function
-  returns a string_expr of the form Str_content or Num_expr (used as arguments of functions) *)
+(* Returns a string_expr of the form Str_content _ or Num_expr (Complex _) (used as arguments of functions) *)
 and eval_str (p : parameters) (se : string_expr) : string_expr =
   match se with
     | Num_expr e -> Num_expr (Complex (eval_num p e))

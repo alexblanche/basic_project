@@ -26,7 +26,6 @@ let extract_str (lexlist : string list) : (string list) * (string list) =
         if s = "\092" (* anti-slash *)
           then aux ("\034"::sl) t (* The quote is kept *)
           else (s::sl, t)
-      | "COLON"::_
       | "EOL"::_ -> fail lexlist "extract_str: string ends without closing \""
       | s::t -> aux (s::sl) t
       | [] -> fail lexlist "extract_str: program ends without closing \""

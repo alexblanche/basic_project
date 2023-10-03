@@ -30,7 +30,7 @@
 #use "arithmetic/definitions/entity_functions.ml"
 #use "arithmetic/definitions/string_func.ml"
 #use "arithmetic/arithmetic_lexing.ml"
-#use "arithmetic/arithmetic_parsing.ml"
+#use "arithmetic/arithmetic_evaluation.ml"
 
 #use "basic_compilation/initialization/data_structures.ml"
 #use "basic_compilation/initialization/compilation_error.ml"
@@ -67,7 +67,7 @@ let play (file_name : string) : unit =
 (*
 To do next:
   - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
-  - Implement string expressions in AssignStr and Locate
+  - Implement AssignStr in compile and run
   - Implement all the "main" functions from the to do list
   (goal: make Timeless run at this point)
   
