@@ -25,7 +25,7 @@
   Numbers and variables for numerical expressions
   ListContent ({1,2,3}) and VarList (List 1) for list expressions
   MatContent ([[1,2][3,4]]) and VarMat (Mat A) for matrix expressions *)
-  type entity =
+type entity =
   | Value of complex
   | Variable of variable
   | ListContent of num_expr array (* {...} *)
@@ -57,12 +57,22 @@ arithm =
 
 and
 
+(* String expressions *)
+string_expr =
+  | Num_expr of num_expr (* numerical expression *)
+  | Str_content of string list (* explicit definition of a string *)
+  | Str_access of int (* Str i *)
+  | Str_Func of string * string_expr list (* Function applied to several string_expr objects *)
+
+and
+
 (* Type for Basic numerical and boolean expressions *)
 (* Conditions are expressions: 0 = false, <>0 = true *)
 basic_expr =
   | QMark (* ? (asks the user for a value) *)
   | Arithm of arithm list (* Arithmetic expression *)
   | Complex of complex (* Single complex value *)
+  | StringExpr of string_expr (* String expression *)
   
 (* Specific types for numerical expressions, list expressions and matrix expressions *)
 and num_expr = basic_expr

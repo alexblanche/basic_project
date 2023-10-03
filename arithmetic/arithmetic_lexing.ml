@@ -150,6 +150,18 @@ let read_name (s : string) (i : int) : (string * int) =
       else aux_read_name (i+1);; *)
 
 
+(* Auxiliary function to extract a string, simpler than the one from compile_aux *)
+(* Returns the string in reverse order in string list form and the tail of the list of lexemes *)
+let aux_extract_str (lexlist : string list) : string list * string list =
+  let rec aux acc l =
+    match l with
+      | "QUOTE" :: t -> (acc, t)
+      | s :: t -> aux (s::acc) t
+      | [] -> failwith "aux_extract_str: the string is not closed properly"
+  in
+  aux [] lexlist;;
+
+
 (* Expression extraction functions are mutually recursive *)
     
 (* Extracts the content of List i[e] from the lexlist when lexlist is the tail
@@ -304,6 +316,62 @@ and extract_par_content (lexlist : string list) : basic_expr * (string list) =
         failwith "Arithmetic lexing: Syntax error, unclosed parenthesis"
     | [] -> (e,[])
 
+(** Lexing string expressions **)
+
+(* Auxiliary function to extract the arguments of a string function *)
+and aux_extract_str_args (lexlist : string list) : string_expr list * string list =
+  let rec aux acc l =
+    match l with
+      | "," :: t ->
+        let (se, t') = extract_string_expr t in
+        aux (se::acc) t'
+
+      | "RPAR" :: t -> (List.rev acc, t)
+      | "EOL" :: t
+      | "COLON" :: t
+      | "DISP" :: t
+      | "IMPL" :: t
+      | "ASSIGN" :: t -> (List.rev acc, l)
+
+      | [] -> (List.rev acc, [])
+
+      | _ ->
+        let (se, t) = extract_string_expr l in
+        aux (se::acc) t
+  in
+  aux [] lexlist
+
+(* Returns the string expression and the tail of the list of lexemes *)
+and extract_string_expr (lexlist : string list) : string_expr * string list =
+  let rec aux l =
+    match l with
+      | "QUOTE" :: t ->
+        let (sl, t') = aux_extract_str t in
+        (Str_content sl, t')
+      | "STR" :: a :: b :: t ->
+        if String.length a = 1 && a >= "0" && a <= "9" then
+          if String.length b = 1 && b >= "0" && b <= "9"
+            then (Str_access (10*((Char.code a.[0])-48) + (Char.code b.[0])-48-1), t)
+            else (Str_access ((Char.code a.[0])-48-1), (b::t))
+        else failwith "extract_string_expr: wrong index for string access"
+      | "STR" :: [a] ->
+        if String.length a = 1 && a >= "0" && a <= "9"
+          then (Str_access ((Char.code a.[0])-48-1), [])
+          else failwith "extract_string_expr: wrong index for string access"
+      | s :: t ->
+        if List.mem s string_func_list then
+          let (args, t') = aux_extract_str_args t in
+          (Str_Func (s, args), t')
+        else
+          let (e, expr_type, t') = extract_expr l in
+          if expr_type = Numerical then
+            (Num_expr e, t')
+          else failwith "extract_string_expr: wrong type for numerical expression"
+      | _ -> (Str_content [], [])
+  in
+  aux lexlist
+
+
 
 (** General arithmetic lexing function **)
 
@@ -333,7 +401,9 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
           (match e with
             | Arithm al -> aux (Rpar::(List.rev_append (Lpar::al) acc)) expr_type t'
             | Complex z -> aux (Rpar::(Entity (Value z))::Lpar::acc) expr_type t'
-            | QMark -> failwith "Arithmetic lexing: syntax error, ? in parentheses")
+            | StringExpr (Str_Func (fname, sel)) ->
+              aux (Rpar::(Function (fname, List.map (fun se -> StringExpr se) sel))::Lpar::acc) expr_type t'
+            | _ -> failwith "Arithmetic lexing: syntax error, wrong type in parentheses")
 
         (* Unary and binary operators *)
         else if List.exists (fun (op,_) -> s=op) op_list then
@@ -417,6 +487,14 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
           else
             let (m, t') = extract_mat_content t in
             aux ((Entity (MatContent m))::acc) MatExpr t')
+
+        (* String functions *)
+        else if List.mem s numerical_string_functions then
+          let (se, t') = extract_string_expr (s::t) in
+          (match se with
+            | Str_Func (_, sel) ->
+              aux ((Function (s, List.map (fun se -> StringExpr se) sel))::acc) expr_type t'
+            | _ -> failwith "extract_expr: error in lexing of string function")
         
         (* End of the expression *)
         else (acc, expr_type, l)

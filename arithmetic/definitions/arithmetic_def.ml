@@ -294,3 +294,8 @@ let apply_rop_single (ro : string) (z : complex) : complex =
 let apply_lop_single (lo : string) (z : complex) : complex =
   apply_func lo [z];;
 
+
+(** Integration of string functions into arithmetic evaluation **)
+
+(* Complicated... eval_num and eval_str should be mutually recursive... :( *)
+(* Example: 2x3 + StrLen(StrLeft("ABCDE", 3-1))x2 *)

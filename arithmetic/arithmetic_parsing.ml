@@ -277,6 +277,17 @@ and apply_rop (p : parameters) (ro : string) (n : entity) : entity =
       done;
       MatContent m)
 
+(* String expressions evaluation *)
+(* Evaluation function
+  returns a string_expr of the form Str_content or Num_expr (used as arguments of functions) *)
+and eval_str (p : parameters) (se : string_expr) : string_expr =
+  match se with
+    | Num_expr e -> Num_expr (Complex (eval_num p e))
+    | Str_content _ -> se
+    | Str_access si -> Str_content p.str.(si)
+    | Str_Func (fname, sel) ->
+      apply_str_func p fname (List.map (fun se -> eval_str p se) sel)
+
 (* Final evaluation of the arithmetic formula *)
 (* p is the parameter container, containing the variables, lists and matrices *)
 and calculate (p : parameters) (outq : entity list) (opq : arithm list) : entity =
@@ -327,12 +338,27 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity li
 
     (* Function evaluation *)
     | (Function (fname, el))::t, _ ->
+      (* Complex functions (complex list -> complex) *)
       (if Hashtbl.mem func_table fname then
         let vl = List.map (fun e -> eval_num p e) el in
         shunting_yard p t ((Value (apply_func fname vl))::output_q) op_q
+      (* Entity functions (entity list -> entity) *)
       else if Hashtbl.mem entity_func_table fname then
         let nl = List.map (fun e -> eval_entity p e) el in
         shunting_yard p t ((apply_entity_func fname nl)::output_q) op_q
+      (* String functions, numerical output only (str_expr -> complex) *)
+      else if List.mem fname numerical_string_functions then
+        let sel =
+          List.map
+            (fun e ->
+              match e with
+                | StringExpr se -> se
+                | _ -> failwith "Arithmetic parsing: wrong type in string function arguments")
+            el
+        in
+        (match eval_str p (Str_Func (fname, sel)) with
+          | Num_expr (Complex z) -> shunting_yard p t ((Value z)::output_q) op_q
+          | _ -> failwith "Arithmetic parsing: wrong output type of string function")
       else
         failwith ("Arithmetic parsing: Unknown function "^fname))
 
@@ -380,7 +406,10 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity li
         (* Errors *)
         | _, [] -> failwith "Arithmetic parsing: Mismatched parentheses"
         
-        | _ -> failwith "Arithmetic parsing: Untreated case")    
+        | _ -> failwith "Arithmetic parsing: Untreated case")
+    
+    (* String functions *)
+    (* to do *)
     | _,_ -> failwith "Arithmetic parsing: Syntax error"
 
 (* General evaluation function, returns an entity *)
@@ -389,6 +418,10 @@ and eval_entity (p : parameters) (e : basic_expr) : entity =
   match e with
     | Complex z -> Value z
     | Arithm al -> shunting_yard p al [] []
+    | StringExpr se ->
+      (match eval_str p se with
+        | Num_expr (Complex z) -> Value z
+        | _ -> failwith "eval_entity: error, string expression evaluation returned a non-numerical string value")
     | _ -> failwith "eval_entity: error, QMark provided"
 
 (* Numerical evaluation function *)
@@ -399,6 +432,10 @@ and eval_num (p : parameters) (e : num_expr) : complex =
       (match shunting_yard p al [] [] with
         | Value z -> z
         | _ -> failwith "eval_num: error, wrong output type")
+    | StringExpr se ->
+      (match eval_str p se with
+        | Num_expr (Complex z) -> z
+        | _ -> failwith "eval_entity: error, string expression evaluation returned a non-numerical string value")
     | _ -> failwith "eval_num: error, QMark provided";;
 
 (* List expression evaluation function *)
@@ -408,7 +445,7 @@ let eval_list (p : parameters) (e : list_expr) : float array =
       (match shunting_yard p al [] [] with
         | ListContent t -> numexpr_to_float_array t
         | _ -> failwith "eval_list: error, wrong output type")
-    | _ -> failwith "eval_list: error, QMark or Complex provided";;
+    | _ -> failwith "eval_list: error, wrong input type";;
 
 (* List expression evaluation function *)
 let eval_mat (p : parameters) (e : mat_expr) : float array array =
@@ -417,4 +454,4 @@ let eval_mat (p : parameters) (e : mat_expr) : float array array =
       (match shunting_yard p al [] [] with
         | MatContent m -> numexpr_to_float_matrix m
         | _ -> failwith "eval_mat: error, wrong output type")
-    | _ -> failwith "eval_mat: error, QMark or Complex provided";;
+    | _ -> failwith "eval_mat: error, wrong input type";;

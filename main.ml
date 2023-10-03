@@ -26,15 +26,16 @@
 #use "g1m_read_write/g1m_reader.ml"
 
 (* Compilation *)
-#use "arithmetic/arithmetic_def.ml"
-#use "arithmetic/entity_functions.ml"
+#use "arithmetic/definitions/arithmetic_def.ml"
+#use "arithmetic/definitions/entity_functions.ml"
+#use "arithmetic/definitions/string_func.ml"
 #use "arithmetic/arithmetic_lexing.ml"
 #use "arithmetic/arithmetic_parsing.ml"
 
 #use "basic_compilation/initialization/data_structures.ml"
 #use "basic_compilation/initialization/compilation_error.ml"
-#use "basic_compilation/process_commands.ml"
 #use "basic_compilation/compile_aux.ml"
+#use "basic_compilation/process_commands.ml"
 #use "basic_compilation/basic_compile.ml"
 
 (* Emulation *)

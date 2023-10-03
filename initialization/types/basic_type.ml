@@ -17,13 +17,6 @@ type graphic =
   | GraphicText of num_expr * num_expr * (string list)
   | Graphic_Function of string (* Other graphic functions *)
 
-(* String expressions *)
-type string_expr =
-  | Num_expr of num_expr (* numerical expression *)
-  | Str_content of string list (* explicit definition of a string *)
-  | Str_access of int (* Str i *)
-  | Str_Func of string * string_expr list (* Function applied to several string_expr objects *)
-
 (* Type for Basic commands *)
 type command =
 
