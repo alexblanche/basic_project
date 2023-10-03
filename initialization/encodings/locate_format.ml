@@ -32,6 +32,36 @@ let split_k (l : string list) (k : int) : string list * string list =
   in
   aux [] [] l 0;;
 
+(* Extracts the last k elements of list l *)
+let first_k (l : string list) (k : int) : string list =
+  let rec aux l acc i =
+    if i >= k then acc
+    else
+      match l with
+        | h::t -> aux t (h::acc) (i+1)
+        | [] -> acc
+  in
+  List.rev (aux l [] 0);;
 
+(* Extracts the last k elements of list l *)
+let last_k (l : string list) (k : int) : string list =
+  let n = List.length l in
+  let rec aux l i =
+    if i >= n-k then l
+    else
+      match l with
+        | _::t -> aux t (i+1)
+        | [] -> []
+  in
+  aux l 0;;
+
+(* Returns a list of n copies of the string s *)
+let create_sl (n : int) (s : string) : string list =
+  let rec aux acc k =
+    if k = 0
+      then acc
+      else aux (s::acc) (k-1)
+  in
+  aux [] n;;
 
 
