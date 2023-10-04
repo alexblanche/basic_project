@@ -46,6 +46,7 @@ let func_table =
       in f)
     );
 
+    (* Unary minus *)
     ("UMINUS",
       (let f (l : complex list) : complex =
         match l with
@@ -54,6 +55,7 @@ let func_table =
       in f)
     );
 
+    (* e^ *)
     ("EPOWER",
       (let f (l : complex list) =
         match l with
@@ -61,6 +63,19 @@ let func_table =
             if z.im = 0.
               then complex_of_float (Float.exp z.re)
               else Complex.exp z
+          | _ -> failwith "Function error: Abs has arity 1"
+      in f)
+    );
+
+    (* 10^ *)
+    (* 10^(a+ib) = (10^a)(10^(ib)) = (10^a)(e^(i*b*ln 10)) *)
+    ("TENPOWER",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (10. ** z.re)
+              else scal (10. ** z.re) (Complex.exp (get_complex 0. (z.im*.Float.log 10.)))
           | _ -> failwith "Function error: Abs has arity 1"
       in f)
     );
@@ -104,6 +119,24 @@ let func_table =
       in f)
     );
 
+    ("INTG",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            let intg x =
+              if x >= 0.
+                then float_of_int (int_of_float x)
+                else float_of_int (int_of_float x - 1)
+            in
+            if z.im = 0.
+              then complex_of_float (intg z.re)
+              else
+                {re = intg z.re;
+                 im = intg z.im}
+          | _ -> failwith "Function error: Intg has arity 1"
+      in f)
+    );
+
     ("FRAC",
       (let f (l : complex list) =
         match l with
@@ -117,6 +150,7 @@ let func_table =
       in f)
     );
 
+    (* Real part *)
     ("REP",
       (let f (l : complex list) =
         match l with
@@ -125,11 +159,218 @@ let func_table =
       in f)
     );
 
+    (* Imaginary part *)
     ("IMP",
       (let f (l : complex list) =
         match l with
           | [z] -> complex_of_float z.im
           | _ -> failwith "Function error: ImP has arity 1"
+      in f)
+    );
+
+    (* Trigonometric functions are only implemented in radians so far *)
+    ("SIN",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.sin z.re)
+              else failwith "Function error: Sin only accepts real arguments"
+          | _ -> failwith "Function error: Sin has arity 1"
+      in f)
+    );
+
+    ("COS",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.cos z.re)
+              else failwith "Function error: Cos only accepts real arguments"
+          | _ -> failwith "Function error: Cos has arity 1"
+      in f)
+    );
+
+    ("TAN",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.tan z.re)
+              else failwith "Function error: Tan only accepts real arguments"
+          | _ -> failwith "Function error: Tan has arity 1"
+      in f)
+    );
+
+    ("ARCSIN",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.asin z.re)
+              else failwith "Function error: Sin only accepts real arguments"
+          | _ -> failwith "Function error: Sin has arity 1"
+      in f)
+    );
+
+    ("ARCCOS",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.acos z.re)
+              else failwith "Function error: Cos only accepts real arguments"
+          | _ -> failwith "Function error: Cos has arity 1"
+      in f)
+    );
+
+    ("ARCTAN",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.atan z.re)
+              else failwith "Function error: Tan only accepts real arguments"
+          | _ -> failwith "Function error: Tan has arity 1"
+      in f)
+    );
+
+    (* Natural logarithm (in base e) *)
+    ("LN",
+      (let f (l : complex list) =
+        match l with
+          | [z] -> Complex.log z
+          | _ -> failwith "Function error: Ln has arity 1"
+      in f)
+    );
+
+    (* Logarithm in base 10 *)
+    ("LOG",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float ((Float.log z.re) /. (Float.log 10.))
+              else scal (1./.Float.log 10.) (Complex.log z)
+          | _ -> failwith "Function error: Log has arity 1"
+      in f)
+    );
+
+    ("SQRT",
+      (let f (l : complex list) =
+        match l with
+          | [z] -> Complex.sqrt z
+          | _ -> failwith "Function error: Sqrt has arity 1"
+      in f)
+    );
+
+    (* Cubic root *)
+    ("CURT",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.pow z.re (1./.3.))
+              else Complex.pow z (complex_of_float (1./.3.))
+          | _ -> failwith "Function error: Sqrt has arity 1"
+      in f)
+    );
+
+    (* n-th root *)
+    ("NSQRT",
+      (let f (l : complex list) =
+        match l with
+          | [z; n] ->
+            if z.im = 0. && is_int n
+              then complex_of_float (Float.pow z.re (1./. n.re))
+              else Complex.pow z (complex_of_float (1./.n.re))
+          | _ -> failwith "Function error: Nsqrt has arity 2"
+      in f)
+    );
+
+    (* Hyperbolic functions *)
+    ("SINH",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.sinh z.re)
+              else failwith "Function error: Sin only accepts real arguments"
+          | _ -> failwith "Function error: Sinh has arity 1"
+      in f)
+    );
+
+    ("COSH",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.cosh z.re)
+              else failwith "Function error: Cos only accepts real arguments"
+          | _ -> failwith "Function error: Cosh has arity 1"
+      in f)
+    );
+
+    ("TANH",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.tanh z.re)
+              else failwith "Function error: Tan only accepts real arguments"
+          | _ -> failwith "Function error: Tanh has arity 1"
+      in f)
+    );
+
+    ("ARCSINH",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.asinh z.re)
+              else failwith "Function error: Sin only accepts real arguments"
+          | _ -> failwith "Function error: Arcsinh has arity 1"
+      in f)
+    );
+
+    ("ARCCOSH",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.acosh z.re)
+              else failwith "Function error: Cos only accepts real arguments"
+          | _ -> failwith "Function error: Arccosh has arity 1"
+      in f)
+    );
+
+    ("ARCTANH",
+      (let f (l : complex list) =
+        match l with
+          | [z] ->
+            if z.im = 0.
+              then complex_of_float (Float.atanh z.re)
+              else failwith "Function error: Tan only accepts real arguments"
+          | _ -> failwith "Function error: Arctanh has arity 1"
+      in f)
+    );
+
+    (* Argument of a complex *)
+    (* In radians so far *)
+    ("ARG",
+      (let f (l : complex list) =
+        match l with
+          | [z] -> complex_of_float (Complex.arg z)
+          | _ -> failwith "Function error: Conjg has arity 1"
+      in f)
+    );
+
+    (* Conjugate *)
+    ("CONJG",
+      (let f (l : complex list) =
+        match l with
+          | [z] -> Complex.conj z
+          | _ -> failwith "Function error: Conjg has arity 1"
       in f)
     );
     ]

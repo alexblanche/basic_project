@@ -67,7 +67,6 @@ let play (file_name : string) : unit =
 (*
 To do next:
   - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
-  - Implement AssignStr in compile and run
   - Implement all the "main" functions from the to do list
   (goal: make Timeless run at this point)
   
