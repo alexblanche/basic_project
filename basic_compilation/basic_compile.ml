@@ -184,6 +184,11 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         | _, "QMARK"::"ASSIGN"::_ -> (* "ABC"?->X *)
           (set code i (String se);
           (true, i+1, t))
+        | _, "ASSIGN"::"FN"::t' ->
+          (* Fn functionalities are not implemented:
+             the line is ignored *)
+          let (_, t'') = extract_line t in
+          (true, i, t'')
         | _ -> fail t i "Compilation error: Syntax error after a string"
     in
     if str_expr_found then aux next_t j

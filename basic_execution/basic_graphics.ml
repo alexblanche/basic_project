@@ -25,7 +25,7 @@ let open_graphic () : Sdlwindow.t * Sdlrender.t =
 (** Graphic display **)
 let gdraw (ren : Sdlrender.t) : unit =
   print_mat ren gscreen false
-    (fun ren -> rect ren !margin_h !margin_v !width !height);;
+    (fun ren -> rect ren (!margin_h-1) (!margin_v-1) (!width+1) (!height+1));;
 
 (* Erases the pixels of the matrix m *)
 let wipe (m : bool array array) : unit =
@@ -80,7 +80,7 @@ let tdraw (ren : Sdlrender.t) : unit =
     done
   done;
   clear_graph ren;
-  rect ren !margin_h !margin_v !width !height;
+  rect ren (!margin_h-1) (!margin_v-1) (!width+1) (!height+1);
   Sdlrender.fill_rects ren (Array.of_list !acc);
   refresh ren;;
 
@@ -130,10 +130,9 @@ let rec fast_locate_aux (ren : Sdlrender.t) (i : int) (j : int) (acc : Sdlrect.t
         let t = Hashtbl.find repr_text s in
         for y = 0 to 6 do
           for x = 0 to 4 do
-            if t.(5*y+x)
-              then
-                let r = fast_ploton (1+6*k+x) (8*j+y) in
-                acc := r::!acc
+            if t.(5*y+x) then
+              let r = fast_ploton (1+6*k+x) (8*j+y) in
+              acc := r::!acc
           done
         done;
         fast_locate_aux ren i j acc lt (k-1))
