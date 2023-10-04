@@ -2,7 +2,7 @@
 
 
 (* General execution function *)
-let run (proj : project_content) ((code, proglist): basic_code) : unit =
+let run (proj : project_content) ((code, proglist): basic_code) (entry_point : string) : unit =
   
   (** Initialization of all parameters **)
   let (p : parameters) = new_param proj in
@@ -333,17 +333,13 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
   in
   
   (try
-    (* To do: let the user specify an entry point:
-    Add (entry_point : string) as a parameter of run
-    
-    let entry_index = List.assoc entry_point proglist in
-    aux entry_index
-    *)
     let key_check_domain = Domain.spawn launch_key_check in
-    aux 0;
+    let entry_index = List.assoc entry_point proglist in
+    aux entry_index;
     exit_key_check := true;
     Domain.join key_check_domain
   with
+    | Not_found -> print_endline ("No program named "^entry_point)
     | Runtime_interruption
     | Window_Closed -> print_endline "--- Runtime interruption ---"
     | Failure s -> print_endline s);

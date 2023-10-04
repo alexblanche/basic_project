@@ -36,7 +36,8 @@ let run_prog1 () =
       End
     |]
     ,
-    [("main", 0)]);;
+    [("main", 0)])
+  "main";;
 
 (* Variables *)
 let run_prog2 () =
@@ -51,7 +52,8 @@ let run_prog2 () =
       End
     |]
     ,
-    [("main", 0)]);;
+    [("main", 0)])
+  "main";;
 
 (* For, QMark *)
 let run_prog3 () =
@@ -75,11 +77,12 @@ let run_prog3 () =
       End
     |]
     ,
-    [("main", 0)]);;
+    [("main", 0)])
+  "main";;
 
 (* Subroutine calls *)
 let run_prog4 () =
-  run p (prog4 ());;
+  run p (prog4 ()) "MAIN";;
 
 (* Test Locate *)
 (* run p ([|
@@ -104,7 +107,7 @@ let run_prog5 () =
         ]
       )]
   in
-  run p prog5;;
+  run p prog5 "main";;
 
 (* Result: about 10^8 operations (empty For Next) in 6 to 10s *)
 (* With Locate, program runs 3 times faster than the calculator... *)
@@ -112,7 +115,7 @@ let run_prog5 () =
 
 (* Getkey *)
 let run_prog_getkey () =
-  run p (prog_getkey ());;
+  run p (prog_getkey ()) "main";;
 
 (* Speed of a For loop *)
 let run_prog6 () =
@@ -129,7 +132,7 @@ let run_prog6 () =
         ]
       )]
   in
-  run p prog6;;
+  run p prog6 "main";;
   (* 22s in the emulator, 37s in the calculator *)
 
 (* Test of IMPL => *)
@@ -144,7 +147,7 @@ let run_prog7 () =
         ]
       )]
   in
-  run p prog7;;
+  run p prog7 "main";;
 
 let run_prog_if () =
-  run p (prog_if ());;
+  run p (prog_if ()) "main";;

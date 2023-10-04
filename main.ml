@@ -50,11 +50,11 @@
 #use "tests/tests_run.ml"
 
 (* Launches the program in the given G1M/G2M file *)
-let play (file_name : string) : unit =
+let play (file_name : string) (entry_point : string) : unit =
   let s = file_to_string file_name in
   let p = g1m_reader s in
   let code = compile p.prog in
-  run p code;;
+  run p code entry_point;;
 
 
 (* Picture generation *)
@@ -66,6 +66,7 @@ let play (file_name : string) : unit =
 
 (*
 To do next:
+  - Implement the entry point menu
   - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
   - Implement all the "main" functions from the to do list
   (goal: make Timeless run at this point)
