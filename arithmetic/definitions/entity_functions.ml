@@ -69,6 +69,103 @@ let entity_func_table =
           | _ -> failwith "Function error: Augment has arity 2 and accepts lists and matrices"
       in f)
     );
+
+    ("TRN",
+      (let f nl =
+        match nl with
+          | [MatContent m] ->
+            let r = Array.length m in
+            if r = 0 then MatContent [||]
+            else
+              let c = Array.length m.(0) in
+              let zero = Complex (complex_of_float 0.) in
+              let tm = Array.make_matrix c r zero in
+              for i = 0 to r-1 do
+                for j = 0 to c-1 do
+                  tm.(j).(i) <- m.(i).(j)
+                done
+              done;
+              MatContent tm
+          | _ -> failwith "Function error: Trn has arity 1 and only accepts matrices"
+      in f)
+    );
+
+    ("IDENTITY",
+      (let f nl =
+        match nl with
+          | [Value z] ->
+            if is_int z then
+              let n = int_of_complex z in
+              let zero = Complex (complex_of_float 0.) in
+              let id = Array.make_matrix n n zero in
+              (for i = 0 to n-1 do
+                id.(i).(i) <- Complex (complex_of_float 1.)
+              done;
+              MatContent id)
+            else failwith "Function error: Augment has arity 1 and only accepts integer arguments"
+          | _ -> failwith "Function error: Augment has arity 1 and only accepts integer arguments"
+      in f)
+    );
+
+    ("SUM",
+      (let f nl =
+        match nl with
+          | [ListContent t] ->
+            let s =
+              Array.fold_left
+                (fun e1 e2 ->
+                  match e1,e2 with
+                    | Complex z1, Complex z2 -> Complex (Complex.add z1 z2)
+                    | _ -> failwith "Sum: wrong type")
+                (Complex (complex_of_float 0.)) t
+            in
+            (match s with
+              | Complex z -> Value z
+              | _ -> failwith "Sum: wrong type")
+          | _ -> failwith "Function error: Sum has arity 1 and only accepts lists"
+      in f)
+    );
+
+    ("PROD",
+      (let f nl =
+        match nl with
+        | [ListContent t] ->
+          let p =
+            Array.fold_left
+              (fun e1 e2 ->
+                match e1,e2 with
+                  | Complex z1, Complex z2 -> Complex (Complex.mul z1 z2)
+                  | _ -> failwith "Function error: Prod has arity 1 and only accepts lists")
+              (Complex (complex_of_float 1.)) t
+          in
+          (match p with
+            | Complex z -> Value z
+            | _ -> failwith "Function error: Prod has arity 1 and only accepts lists")
+          | _ -> failwith "Function error: Prod has arity 1 and only accepts lists"
+      in f)
+    );
+
+    ("PERCENT",
+      (let f nl =
+        match nl with
+          | [ListContent t] ->
+            if Array.exists (function (Complex z) -> z.im <> 0. | _ -> failwith "Percent: wrong type") t
+              then failwith "Function error: Percent has arity 1 and only accepts lists of real numbers"
+            else
+              let tre =
+                Array.map
+                (function
+                  | (Complex z) -> z.re
+                  | _ -> failwith "Function error: Percent has arity 1 and only accepts lists of real numbers")
+                t
+              in
+              let sum = Array.fold_left (fun a b -> a +. b) 0. tre in
+              ListContent
+                (Array.init (Array.length t)
+                  (fun i -> Complex (complex_of_float (tre.(i) /. sum))))
+          | _ -> failwith "Function error: Percent has arity 1 and only accepts lists of real numbers"
+      in f)
+    );
     ]
   in
   let t = Hashtbl.create (5 + List.length entity_func_list) in

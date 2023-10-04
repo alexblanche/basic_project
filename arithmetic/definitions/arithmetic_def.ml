@@ -1,5 +1,7 @@
 (* Definition of all the arithmetic functions of the Basic Casio language *)
 
+(* Definition of functions not present in the standard library *)
+
 (* Factorial *)
 let fact n =
   let rec aux a i =
@@ -8,6 +10,33 @@ let fact n =
       else aux (i*a) (i-1)
   in
   aux 1 n;;
+
+(* Greatest common divisor *)
+let rec gcd (a : int) (b : int) : int =
+  if b = 0
+    then a
+    else gcd b (a mod b);;
+
+(* Version of gcd for >= 2 integers *)
+let gcd_l (l : int list) : int =
+  match l with
+    | x::y::t ->
+      List.fold_left gcd x (y::t)
+    | _ -> failwith "gcd_l: at least two integers are expected";;
+
+(* Least common multiple *)
+let lcm (a : int) (b : int) : int =
+  (a*b)/(gcd a b);;
+
+(* Version of lcm for >= 2 integers *)
+let lcm_l (l : int list) : int =
+  match l with
+    | x::y::t ->
+      List.fold_left lcm x (y::t)
+    | _ -> failwith "lcm_l: at least two integers are expected"
+
+(**********************************************************************************)
+
 
 (* Table of handled functions *)
 (* All functions take a list of arguments as parameter.
@@ -22,7 +51,7 @@ let fact n =
 let func_table =
   let (func_list : (string * (complex list -> complex)) list) = [
     (* Max: Works for complex numbers, as max of a pair in lexicographic order *)
-    ("MAX",
+    (* ("MAX",
       (let f l =
         let rec aux m l =
           match l with
@@ -33,7 +62,7 @@ let func_table =
           | a::t -> aux a t
           | [] -> failwith "Function error: Max should have at least one argument"
       in f)
-    );
+    ); *)
 
     ("ABS",
       (let f (l : complex list) =
@@ -373,6 +402,22 @@ let func_table =
           | _ -> failwith "Function error: Conjg has arity 1"
       in f)
     );
+
+    ("GCD",
+      (let f (l : complex list) =
+        if List.length l < 2 || List.exists (fun z -> not (is_int z)) l
+          then failwith "Function error: GCD has arity 2 and only accepts integer arguments"
+        else complex_of_int (gcd_l (List.map int_of_complex l))
+      in f)
+    );
+
+    ("LCM",
+      (let f (l : complex list) =
+        if List.length l < 2 || List.exists (fun z -> not (is_int z)) l
+          then failwith "Function error: LCM has arity 2 and only accepts integer arguments"
+        else complex_of_int (lcm_l (List.map int_of_complex l))
+      in f)
+    );
     ]
   in
   let t = Hashtbl.create (5 + List.length func_list) in
@@ -380,10 +425,21 @@ let func_table =
   t;;
 
 (* List of handled left unary operators *)
-let lop_list = ["ABS"; "NOT"; "UMINUS"; "EPOWER"; "INT"; "FRAC"; "REP"; "IMP"];;
+let lop_list = [
+  "ABS"; "NOT"; "UMINUS"; "EPOWER"; "TENPOWER"; "INT"; "INTG"; "FRAC";
+  "REP"; "IMP"; "ARG";
+  "LN"; "LOG"; "SQRT";
+  "SIN"; "COS"; "TAN"; "ARCSIN"; "ARCCOS"; "ARCTAN";
+  "SINH"; "COSH"; "TAN"; "ARCSINH"; "ARCCOSH"; "ARCTANH";
+  "CURT"; "NSQRT"; "CONJG"
+  ];;
 
 (* List of handled right unary operators *)
-let rop_list = ["EXCLAMATIONMARK"; "POWER2"];;
+let rop_list = [
+  "EXCLAMATIONMARK"; "POWER2"; "POWERMINUS1";
+  "FEMTO"; "PICO"; "NANO"; "MICRO"; "MILLI";
+  "KILO"; "MEGA"; "GIGA"; "TERA"; "PETA"; "EXA"
+  ];;
 
 (* List of handled operators and their index of precedence (1 = greatest *)
 (* The operators are ordered by frequency in usual expresssions *)
@@ -535,8 +591,3 @@ let apply_rop_single (ro : string) (z : complex) : complex =
 let apply_lop_single (lo : string) (z : complex) : complex =
   apply_func lo [z];;
 
-
-(** Integration of string functions into arithmetic evaluation **)
-
-(* Complicated... eval_num and eval_str should be mutually recursive... :( *)
-(* Example: 2x3 + StrLen(StrLeft("ABCDE", 3-1))x2 *)
