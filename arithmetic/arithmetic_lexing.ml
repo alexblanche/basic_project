@@ -156,10 +156,16 @@ let aux_extract_str (lexlist : string list) : string list * string list =
   let rec aux acc l =
     match l with
       | "QUOTE" :: t -> (acc, t)
+      | s::"QUOTE"::t ->
+        if s = "\092" (* anti-slash *)
+          then aux ("\034"::acc) t (* The quote is kept *)
+          else (s::acc, t)
       | s :: t -> aux (s::acc) t
       | [] -> failwith "aux_extract_str: the string is not closed properly"
   in
   aux [] lexlist;;
+
+
 
 
 (* Expression extraction functions are mutually recursive *)
@@ -367,7 +373,7 @@ and extract_string_expr (lexlist : string list) : string_expr * string list =
           if expr_type = Numerical then
             (Num_expr e, t')
           else failwith "extract_string_expr: wrong type for numerical expression"
-      | _ -> (Str_content [], [])
+      | _ -> (Num_expr (Arithm []), [])
   in
   (* Handling of the '+' operation, that concatenates two non-numerical string expressions *)
   let (se, t) = aux lexlist in

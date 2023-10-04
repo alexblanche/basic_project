@@ -19,6 +19,9 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
   
   let rec aux (lexlist : string list) (i : int) : int =
 
+    (* Debug (might be kept in, with higher bound) *)
+    (* if i >= 1000 then failwith "Max number of lines reached"; *)
+
     (* Debug *)
     (* (try
       let (line, _) = extract_line lexlist in
@@ -333,6 +336,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       mem.lblindex.(k) <- -1
     done;
     mem.gotoindex <- [];
+    mem.stack <- [];
 
     (* Debug *)
     (* print_endline name; *)

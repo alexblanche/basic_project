@@ -263,13 +263,16 @@ let process_goto i t code mem =
 
 (* Prog *)
 let process_prog i t code mem =
-  let (sl, t') = extract_str t i in
+  let (sl, t') = aux_extract_str t in
   let s = String.concat "" (List.rev sl) in
   match t' with
     | "EOL"::t''
     | "COLON"::t'' ->
       (set code i (Prog s);
       ((i+1),t''))
+    | [] ->
+      (set code i (Prog s);
+      ((i+1),[]))
     | _ -> fail t i "Compilation error: Syntax error, a Prog is supposed to be followed by EOL";;
 
 (* Locate *)
