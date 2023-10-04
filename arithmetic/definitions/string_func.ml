@@ -130,10 +130,10 @@ let apply_str_func (p : parameters) (fname : string) (sel : string_expr list) : 
 
 (* List of all string functions *)
 let string_func_list =
-  ["STRJOIN"; "STRSRC"; "STRLEFT";
-   "STRRIGHT"; "STRMID"; "STRUPR";
-   "STRLWR"; "STRINV"; "STRSHIFT";
-   "STRROTATE"];;
+  ["STRJOIN"; "STRLEN"; "STRCMP";
+   "STRUPR"; "STRLWR"; "STRLEFT";
+   "STRRIGHT"; "STRMID"; "STRINV";
+   "STRROTATE"; "STRSHIFT"; "STRSRC"];;
 
 (* List of string functions that return a numerical value *)
 let numerical_string_functions = ["STRLEN"; "STRCMP"; "STRSRC"];;

@@ -19,7 +19,7 @@ let run_prog1 () =
     [|
       Expr (Arithm [Entity (Value {re = 1.; im = 0.})], Numerical);
       Disp;
-      String ["D"; "C"; "B"; "A"];
+      String (Str_content ["D"; "C"; "B"; "A"]);
       Disp;
       Expr (Arithm [Entity (Value {re = 2.; im = 0.})], Numerical);
       Disp;
@@ -29,7 +29,7 @@ let run_prog1 () =
       Disp;
       Expr (Arithm [Entity (Value {re = 123456789012.; im = 22222.})], Numerical);
       Disp;
-      String ["H"; "G"; "F"; "E"];
+      String (Str_content ["H"; "G"; "F"; "E"]);
       Disp; 
       Expr (Arithm [Entity (Value {re = 5.; im = 0.})], Numerical);
       Disp;
@@ -70,7 +70,7 @@ let run_prog3 () =
         Str_content ["C"; "B"; "A"]);
       Disp;
       Next;
-      String ["D"; "N"; "E"; " "; "E"; "H"; "T"];
+      String (Str_content ["D"; "N"; "E"; " "; "E"; "H"; "T"]);
       Disp;
       End
     |]

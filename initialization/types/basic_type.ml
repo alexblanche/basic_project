@@ -26,7 +26,7 @@ type command =
 
   (* Expressions, strings and text display *)
   | Expr of basic_expr * expression_type (* Arithmetic expression *)
-  | String of string list (* Text, stored as list of lexemes (strings of 1 or 2 characters) *)
+  | String of string_expr
   | Locate of num_expr * num_expr * string_expr
     (* Locate (e1, e2, c): Locate function, prints c (string or result of an expression)
       at coordinates z1,z2 (where z1,z2 are the results of the evaluation of e1,e2) *)
@@ -39,7 +39,7 @@ type command =
   | AssignList of list_expr * entity (* 2+3*{1,2,3} -> List A *)
   (* Matrices and Strings do not accept variables *)
   | AssignMat of mat_expr * int (* 5*[[1,2][3,4]] -> Mat A *)
-  | AssignStr of string list * int (* s -> Str i *)
+  | AssignStr of string_expr * int (* s -> Str i *)
   
   (* Jumps *)
   | Goto of int (* Jump to line l on the array *)

@@ -369,7 +369,24 @@ and extract_string_expr (lexlist : string list) : string_expr * string list =
           else failwith "extract_string_expr: wrong type for numerical expression"
       | _ -> (Str_content [], [])
   in
-  aux lexlist
+  (* Handling of the '+' operation, that concatenates two non-numerical string expressions *)
+  let (se, t) = aux lexlist in
+  match (se, t) with
+    | Str_content _, "PLUS"::t'
+    | Str_access _, "PLUS"::t' ->
+      let (se2, t'') = extract_string_expr t' in
+      (Str_Func ("STRJOIN", [se; se2]), t'')
+    | Str_Func (fname, _), "PLUS"::t' ->
+      if List.mem fname numerical_string_functions then
+        (* Numerical return value, '+' is the arithmetic operation *)
+        (se, t)
+      else
+        (* String return value, '+' is the concatenation operation *)
+        let (se2, t'') = extract_string_expr t' in
+        (Str_Func ("STRJOIN", [se; se2]), t'')
+    | Num_expr _, _ ->
+      (se, t)
+    | _ -> (se, t)
 
 
 
@@ -488,7 +505,7 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
             let (m, t') = extract_mat_content t in
             aux ((Entity (MatContent m))::acc) MatExpr t')
 
-        (* String functions *)
+        (* String functions (with numerical return value) *)
         else if List.mem s numerical_string_functions then
           let (se, t') = extract_string_expr (s::t) in
           (match se with

@@ -45,9 +45,9 @@ let process_then i t code mem =
   try
     if List.hd mem.stack = ("if", i-1)
       then (i,t)
-      else fail t "Compilation error: Unexpected Then, does not follow an If statement"
+      else fail t i "Compilation error: Unexpected Then, does not follow an If statement"
   with
-    | Failure _ -> fail t "Compilation error: Unexpected Then with no opened If statement";;
+    | Failure _ -> fail t i "Compilation error: Unexpected Then with no opened If statement";;
 
 (* Else *)
 let process_else i t code mem =
@@ -63,10 +63,10 @@ let process_else i t code mem =
             (set code jif (If (e,(i+1)));
             mem.stack <- ("else", i)::(List.rev_append br_acc stack_t);
             ((i+1),t))
-          | _ -> fail t "Compilation error: Unexpected Else")
+          | _ -> fail t i "Compilation error: Unexpected Else")
       | ("break", j)::stack_t ->
         aux stack_t (("break", j)::br_acc)
-      | _ -> fail t "Compilation error: Unexpected Else with no opened If statement"
+      | _ -> fail t i "Compilation error: Unexpected Else with no opened If statement"
   in
   aux mem.stack [];;
 
@@ -81,7 +81,7 @@ let process_ifend i t code mem =
             (set code jif (If (e,i));
             mem.stack <- List.rev_append br_acc stack_t;
             (i,t))
-          | _ -> fail t "Compilation error: Unexpected IfEnd")
+          | _ -> fail t i "Compilation error: Unexpected IfEnd")
       (* If Then Else IfEnd*)
       (* The Goto index of the If was set by the call to process_else
         that put the ("else", jelse) in mem.stack *)
@@ -91,7 +91,7 @@ let process_ifend i t code mem =
         (i,t))
       | ("break", j)::stack_t ->
         aux stack_t (("break", j)::br_acc)
-      | _ -> fail t "Compilation error: Unexpected IfEnd with no opened If statement"
+      | _ -> fail t i "Compilation error: Unexpected IfEnd with no opened If statement"
   in
   aux mem.stack [];;
 
@@ -125,12 +125,12 @@ let rec process_whileend i t code mem =
         | If (e,-1) ->
           (set code jwh (If (e,i+1));
           ((i+1),t))
-        | _ -> fail t "Compilation error: Unexpected WhileEnd")
+        | _ -> fail t i "Compilation error: Unexpected WhileEnd")
     | ("break", jbr)::stack_t ->
       (set code jbr (Goto (i+1));
       mem.stack <- stack_t;
       process_whileend i t code mem)
-    | _ -> fail t "Compilation error: Unexpected WhileEnd";;
+    | _ -> fail t i "Compilation error: Unexpected WhileEnd";;
 
 
 (* For To Step Next *)
@@ -152,33 +152,33 @@ let rec process_whileend i t code mem =
 let process_for i t code mem =
   let (e1, t2) = extract_num_expr t in
   if e1 = QMark
-    then fail t "Compilation error: ? cannot set the variable of a For";
+    then fail t i "Compilation error: ? cannot set the variable of a For";
   mem.stack <- ("for", i)::mem.stack;
   match t2 with
     | "ASSIGN"::v::"TO"::t3 ->
       (if not (is_var v)
-        then fail t "Compilation error: wrong variable in a For loop";
+        then fail t i "Compilation error: wrong variable in a For loop";
       let (e2, t4) = extract_num_expr t3 in
       if e2 = QMark
-        then fail t "Compilation error: ? cannot set the bound of a For";
+        then fail t i "Compilation error: ? cannot set the bound of a For";
       match t4 with
         | "STEP"::t5 ->
           (let (e3, t6) = extract_num_expr t5 in
           if e3 = QMark
-            then fail t "Compilation error: ? cannot set the bound of a For";
+            then fail t i "Compilation error: ? cannot set the bound of a For";
           match t6 with
             | "EOL" :: t7
             | "COLON" :: t7 -> 
               (set code i (For (var_index v, e1, e2, e3, -1));
               (i+1, t7))
-            | _ -> fail t "Compilation error: Syntax error after For loop definition"
+            | _ -> fail t i "Compilation error: Syntax error after For loop definition"
           )
         | _ -> (* No Step value, 1 by default *)
           (set code i (For (var_index v, e1, e2, Complex {re = 1.; im = 0.}, -1));
           (i+1, t4))
       )
         
-    | _ -> fail t "Compilation error: Syntax error in a For loop definition";;
+    | _ -> fail t i "Compilation error: Syntax error in a For loop definition";;
 
 let rec process_next i t code mem =
   match mem.stack with
@@ -189,12 +189,12 @@ let rec process_next i t code mem =
         | For (v,e1,e2,e3,-1) ->
           (set code jfor (For (v,e1,e2,e3,i+1));
           ((i+1),t))
-        | _ -> fail t "Compilation error: Unexpected Next")
+        | _ -> fail t i "Compilation error: Unexpected Next")
     | ("break", jbr)::stack_t ->
       (set code jbr (Goto (i+1));
       mem.stack <- stack_t;
       process_next i t code mem)
-    | _ -> fail t "Compilation error: Unexpected Next";;
+    | _ -> fail t i "Compilation error: Unexpected Next";;
 
 (* Do, LpWhile *)
 let process_lpwhile i t code mem =
@@ -207,10 +207,10 @@ let process_lpwhile i t code mem =
       | ("break", jbr)::stack_t ->
         (set code jbr (Goto (i+1));
         aux stack_t e t')
-      | _ -> fail t "Compilation error: Unexpected LpWhile with no opened Do statement"
+      | _ -> fail t i "Compilation error: Unexpected LpWhile with no opened Do statement"
   in
   match extract_num_expr t with
-    | (QMark, _) -> fail t "Compilation error: ? cannot be the condition of a Do-LpWhile"
+    | (QMark, _) -> fail t i "Compilation error: ? cannot be the condition of a Do-LpWhile"
     | (e, t') -> aux mem.stack e t';;
 
 (* Lbl, Goto *)
@@ -221,13 +221,13 @@ let process_lbl i t code mem =
   match t with
     | a::t' ->
       if not (is_var a)
-        then fail t "Compilation error: Wrong Lbl index"
+        then fail t i "Compilation error: Wrong Lbl index"
       else
         let t'' =
           match t' with
             | eol::q ->
               if eol <> "EOL" && eol <> "COLON"
-                then fail t "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
+                then fail t i "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
                 else q
             | [] -> []
         in
@@ -237,20 +237,20 @@ let process_lbl i t code mem =
           else
             (mem.lblindex.(a_index) <- i;
             (i,t''))
-    | _ -> fail t "Compilation error: Missing an Lbl index";;
+    | _ -> fail t i "Compilation error: Missing an Lbl index";;
 
 (* Goto *)
 let process_goto i t code mem =
   match t with
     | a::t' ->
       if not (is_var a)
-        then fail t "Compilation error: Wrong Goto index"
+        then fail t i "Compilation error: Wrong Goto index"
       else
         let t'' =
           match t' with
             | eol::q ->
               if eol <> "EOL" && eol <> "COLON"
-                then fail t "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
+                then fail t i "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
                 else q
             | [] -> []
         in
@@ -259,25 +259,25 @@ let process_goto i t code mem =
           then set code i (Goto (mem.lblindex.(a_index)))
           else mem.gotoindex <- (a_index,i)::mem.gotoindex;
         ((i+1),t''))
-    | _ -> fail t "Compilation error: Missing a Goto index";;
+    | _ -> fail t i "Compilation error: Missing a Goto index";;
 
 (* Prog *)
 let process_prog i t code mem =
-  let (sl, t') = extract_str t in
+  let (sl, t') = extract_str t i in
   let s = String.concat "" (List.rev sl) in
   match t' with
     | "EOL"::t''
     | "COLON"::t'' ->
       (set code i (Prog s);
       ((i+1),t''))
-    | _ -> fail t "Compilation error: Syntax error, a Prog is supposed to be followed by EOL";;
+    | _ -> fail t i "Compilation error: Syntax error, a Prog is supposed to be followed by EOL";;
 
 (* Locate *)
 let process_locate i t code mem =
   let (e1, t2) = extract_num_expr t in
   try
     if List.hd t2 <> ","
-      then fail t "Compilation error: Syntax error in Locate command";
+      then fail t i "Compilation error: Syntax error in Locate command";
     let (e2, t3) = extract_num_expr (List.tl t2) in
     let t' =
       match t3 with
@@ -285,8 +285,8 @@ let process_locate i t code mem =
           let (se, t5) = extract_string_expr t4 in
           (set code i (Locate (e1, e2, se));
           t5)
-        | _ -> fail t "Compilation error: Syntax error in Locate command"
+        | _ -> fail t i "Compilation error: Syntax error in Locate command"
     in
     (i+1,t')
   with
-    | Failure _ -> fail t "Compilation error: Syntax error in Locate command";;
+    | Failure _ -> fail t i "Compilation error: Syntax error in Locate command";;

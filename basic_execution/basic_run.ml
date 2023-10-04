@@ -154,31 +154,54 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
             aux (i+2))
           else aux (i+1))
       
-      | String sl ->
-        (line_feed ();
-        clear_line !writing_index;
-        let len = List.length sl in
-        (if len > 21 then
-          (let (slk,slnk) = split_k sl (len-21) in
-          locate_no_refresh (List.rev slnk) 0 !writing_index;
-          line_feed ();
-          locate_no_refresh (List.rev slk) 0 !writing_index)
-        else
-          locate_no_refresh sl 0 !writing_index);
-        tdraw ren;
-        val_seen := true;
-        if (i <= n-2 && code.(i+1) = End
-          || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
-          && !prog_goback = []
-          then (* End of the program *)
-            (if code.(i+1) = Disp
-              then disp p ren writing_index;
-            quit win ren true (* Quit after the string *))
-          else if i<n-1 && code.(i+1) = Disp
-            then
-              (disp p ren writing_index;
-              aux (i+2))
-            else aux (i+1))
+      | String se ->
+        (* A string alone is printed, an application of string function is not *)
+        (match se, eval_str p se with
+            | Str_content _, Str_content sl ->
+              (line_feed ();
+              clear_line !writing_index;
+              let len = List.length sl in
+              (if len > 21 then
+                (let (slk,slnk) = split_k sl (len-21) in
+                locate_no_refresh (List.rev slnk) 0 !writing_index;
+                line_feed ();
+                locate_no_refresh (List.rev slk) 0 !writing_index)
+              else
+                locate_no_refresh sl 0 !writing_index);
+              tdraw ren;
+              val_seen := true;
+              if (i <= n-2 && code.(i+1) = End
+                || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
+                && !prog_goback = []
+                then (* End of the program *)
+                  (if code.(i+1) = Disp
+                    then disp p ren writing_index;
+                  quit win ren true (* Quit after the string *))
+                else if i<n-1 && code.(i+1) = Disp
+                  then
+                    (disp p ren writing_index;
+                    aux (i+2))
+                  else aux (i+1))
+
+            | _, Str_content sl -> (* Uninteresting case, prints a "Done" *)
+              (* To be redone when we take care of the Dones *)
+              (line_feed ();
+              clear_line !writing_index;
+              locate_no_refresh ["e"; "n"; "o"; "D"] 0 !writing_index;
+              tdraw ren;
+              if (i <= n-2 && code.(i+1) = End
+                || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
+                && !prog_goback = []
+                then (* End of the program *)
+                  (if code.(i+1) = Disp
+                    then disp p ren writing_index;
+                  quit win ren true (* Quit after the string *))
+                else if i<n-1 && code.(i+1) = Disp then
+                  (disp p ren writing_index;
+                  aux (i+2))
+                else aux (i+1))
+            | _, Num_expr _ -> failwith "Runtime error: string expression has numerical value"
+            | _  -> failwith "Runtime error: wrong type in string expression evaluation")
           
       | Locate (e1, e2, se) ->
         let z1 = eval_num p e1 in
@@ -263,7 +286,12 @@ let run (proj : project_content) ((code, proglist): basic_code) : unit =
         with
           | Not_found -> failwith ("Runtime error: Prog "^name^" not found"))
       
-      | AssignStr (sl, si) ->
+      | AssignStr (se, si) ->
+        let sl =
+          match eval_str p se with
+            | Str_content s -> s
+            | _ -> failwith ("Runtime error: wrong type in string assignment")
+        in
         (p.str.(si) <- sl;
         aux (i+1))
 

@@ -1,10 +1,10 @@
 (* Compilation error handling *)
 
-exception Compilation_error of string list * string;;
+exception Compilation_error of string list * int * string;;
 
 (* Raises the exception *)
-let fail (t : string list) (error_message : string) =
-  raise (Compilation_error (t, error_message));;
+let fail (t : string list) (i : int) (error_message : string) =
+  raise (Compilation_error (t, i, error_message));;
 
 (* Skip to the next EOL or DISP *)
 let rec extract_line (lexlist : string list) : string list * string list =
