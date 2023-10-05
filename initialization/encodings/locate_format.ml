@@ -17,6 +17,7 @@ let str_to_rev_symblist_full (s : string) : string list =
       else aux ((String.make 1 s.[i])::acc) (i+1)
   in
   aux [] 0;;
+  
 
 (* Splitting when Locate goes out of the screen *)
 (* When the list l has length n > k, then the function returns two lists:

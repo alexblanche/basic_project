@@ -40,6 +40,9 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   (** Main looping function **)
   let rec aux (i : int) : unit =
 
+    (* debug *)
+    print_endline (string_of_int i);
+
     (* Pause for 1/798s *)
     (* Overridden by Press on Tab *)
     if !key_pressed <> Tab then
@@ -53,9 +56,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
     else
 
     let _ =
-      if !parameters_updated
-        then
-          tdraw ren
+      if !parameters_updated then
+        tdraw ren
     in
 
     (* Execution of the next command *)
@@ -93,13 +95,12 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             (store_ans p.var z;
             last_val := z;
             val_seen := true;
-            if i<n-1 && code.(i+1) = Disp
-              then
-                (line_feed ();
-                print_number z p.polar;
-                disp p ren writing_index;
-                aux (i+2))
-              else aux (i+1))
+            if i<n-1 && code.(i+1) = Disp then
+              (line_feed ();
+              print_number z p.polar;
+              disp p ren writing_index;
+              aux (i+2))
+            else aux (i+1))
           | ListExpr (* TO DO: list_expr, mat_expr *)
           | _ -> aux (i+1))
         
@@ -162,8 +163,9 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
       | String se ->
         (* A string alone is printed, an application of string function is not *)
         (match se, eval_str p se with
-          | Str_content _, Str_content sl ->
-            (line_feed ();
+          | Str_content _, Str_content s ->
+            (let sl = rev_lexlist_to_rev_symblist s true in
+            line_feed ();
             clear_line !writing_index;
             let len = List.length sl in
             (if len >= 21 then
@@ -218,7 +220,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         (* The coordinates in Casio Basic are between 1 and 21 *)
         let sl =
           match eval_str p se with
-            | Str_content s -> s
+            | Str_content s -> rev_lexlist_to_rev_symblist s true
             | Num_expr (Complex z) ->
               (if z.im <> 0. (* In Casio Basic, Locate does not handle complex numbers *)
                 then failwith "Runtime error: a number printed by Locate cannot be a complex number";

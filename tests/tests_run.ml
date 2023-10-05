@@ -166,3 +166,12 @@ let run_prog_assign_list () =
       )]
   in
   (prog_assign_list, run (empty_projcont ()) prog_assign_list "main");;
+
+let run_prog_locate () =
+  let prog =
+    compile
+      [("main",
+        ["QUOTE"; "\092"; "QUOTE"; "INTEGRALPAR"; " "; "CLS"; "\092"; "QUOTE"; "QUOTE"; "DISP"]
+      )]
+  in
+  run (empty_projcont ()) prog "main";;

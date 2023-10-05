@@ -43,13 +43,37 @@ let assign_var (p : parameters) (x : entity) (v : variable) : unit =
     | _ -> failwith "Runtime error: wrong value in assignment"
 
 
-
-
 (* Stores the value z in the Ans variable *)
 let store_ans (var : float array) (z : complex) : unit =
   (* assign_var p (Value z) (Var 28) *)
   var.(28) <- z.re;
   var.(57) <- z.im;;
+
+(* Converts as string in reverse string list type to reverse symbol list*)
+(* text = true if the string is about to be printed in text mode, and false if in graphic mode *)
+let rev_lexlist_to_rev_symblist (lexlist : string list) (text : bool) : string list =
+  let l =
+    let repr_table =
+      if text
+        then repr_text
+        else repr_graph
+    in
+    List.fold_left
+      (fun acc lex ->
+        if Hashtbl.mem repr_table lex
+          then lex::acc
+          else
+            let repr =
+              try
+                List.assoc lex text_display
+              with
+                | Not_found -> (print_endline ("Runtime warning: Unknown lexeme "^lex); "")
+            in
+            List.rev_append (str_to_rev_symblist_full repr) acc)
+      []
+      lexlist
+  in
+  List.rev l;;
 
 (* Wait for Enter key to be pressed, then closes the graphic window *)
 (* text_graph is true iff the text screen is displayed (as opposed to the graphic screen) *)
