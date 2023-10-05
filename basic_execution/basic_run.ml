@@ -41,7 +41,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   let rec aux (i : int) : unit =
 
     (* debug *)
-    print_endline (string_of_int i);
+    (* print_endline (string_of_int i); *)
 
     (* Pause for 1/798s *)
     (* Overridden by Press on Tab *)
@@ -169,10 +169,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             clear_line !writing_index;
             let len = List.length sl in
             (if len >= 21 then
-              (let (slk,slnk) = split_k sl (len-21) in
-              locate_no_refresh (List.rev slnk) 0 !writing_index;
-              line_feed ();
-              locate_no_refresh (List.rev slk) 0 !writing_index)
+              display_long_string sl
             else
               locate_no_refresh sl 0 !writing_index);
             tdraw ren;

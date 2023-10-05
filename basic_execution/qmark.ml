@@ -54,7 +54,7 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr * expression_type
         let len = List.length cs in
         if x + len >= 21 then
           (let (csk,csnk) = split_k cs (len-(21-x)) in
-          locate_no_refresh (List.rev csnk) x !writing_index;
+          locate_no_refresh csnk x !writing_index;
           line_feed ();
           locate_no_refresh (List.rev csk) 0 !writing_index;
           tdraw ren;

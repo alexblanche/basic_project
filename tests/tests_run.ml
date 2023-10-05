@@ -171,7 +171,11 @@ let run_prog_locate () =
   let prog =
     compile
       [("main",
-        ["QUOTE"; "\092"; "QUOTE"; "INTEGRALPAR"; " "; "CLS"; "\092"; "QUOTE"; "QUOTE"; "DISP"]
+        ["QUOTE";
+          "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "a"; "a"; "a";
+          "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "b"; "b"; "b";
+          "C"; "c";
+        "QUOTE"; "DISP"]
       )]
   in
   run (empty_projcont ()) prog "main";;

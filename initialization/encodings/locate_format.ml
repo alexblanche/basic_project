@@ -21,17 +21,17 @@ let str_to_rev_symblist_full (s : string) : string list =
 
 (* Splitting when Locate goes out of the screen *)
 (* When the list l has length n > k, then the function returns two lists:
-  the first k elements of l, then the other n-k *)
+  the first k elements of l in reverse order, then the other n-k in the original order *)
 let split_k (l : string list) (k : int) : string list * string list =
-  let rec aux a b l i =
+  let rec aux a l i =
     match l with
       | h::t ->
         if i < k
-          then aux (h::a) b t (i+1)
-          else aux a (h::b) t (i+1)
-      | [] -> (a,b)
+          then aux (h::a) t (i+1)
+          else (a, l)
+      | [] -> (a,[])
   in
-  aux [] [] l 0;;
+  aux [] l 0;;
 
 (* Extracts the last k elements of list l *)
 let first_k (l : string list) (k : int) : string list =

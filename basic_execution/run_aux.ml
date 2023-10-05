@@ -109,3 +109,20 @@ let disp (p : parameters) (ren : Sdlrender.t) (writing_index : int ref) : unit =
   clear_line !writing_index;
   decr writing_index;
   tdraw ren;; (* Can the last tdraw be removed to speed up the execution? *)
+
+(* Handles the display of strings of length len > 21 symbols *)
+let display_long_string (sl : string list) : unit =
+  let rec aux sl =
+    match split_k sl 21 with
+      | [], _ -> ()
+      | slk, [] ->
+        (locate_no_refresh slk 0 !writing_index;
+        if List.length slk = 21
+          then line_feed ())
+      | slk, slnk ->
+        (locate_no_refresh slk 0 !writing_index;
+        line_feed ();
+        aux slnk)
+  in
+  let rsl = List.rev sl in
+  aux rsl;;
