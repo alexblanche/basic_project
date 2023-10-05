@@ -132,7 +132,15 @@ let unit_tests_eval_num () =
       (["1"; "PLUS"; "ABS"; "LPAR"; "UMINUS"; "8"; "RPAR"; "ASSIGN"; "A"], {re = 9.; im = 0.});
       (["1"; "PLUS"; "MAX"; "LBRACKET"; "4"; "."; "5"; ","; "LPAR"; "7"; "TIMES"; "1"; "RPAR"; ","; "3"; "TIMES"; "2"; "RPAR"; "RBRACKET";
       "TIMES"; "2"; "EOL"], {re = 15.; im = 0.});
-      (["LIST"; "1"; "LSQBRACKET"; "2"; "MINUS"; "1"; "RSQBRACKET"], {re = 5.; im = 3.})
+      (["LIST"; "1"; "LSQBRACKET"; "2"; "MINUS"; "1"; "RSQBRACKET"], {re = 5.; im = 3.});
+
+      (* Tests for precedence *)
+      (* Test 13 *) (["2"; "PLUS"; "2"; "TIMES"; "3"], {re = 8.; im = 0.});
+      (["2"; "OR"; "2"; "INTDIV"; "3"], {re = 1.; im = 0.});
+      (["2"; "PLUS"; "2"; "INTDIV"; "3"], {re = 2.; im = 0.});
+      (["8"; "AND"; "9"; "INTDIV"; "3"], {re = 1.; im = 0.});
+      (["2"; "PLUS"; "2"; "OR"; "3"], {re = 1.; im = 0.});
+      (["2"; "PLUS"; "2"; "AND"; "3"], {re = 1.; im = 0.});
     ];
     print_endline "--------------------------------------------";
     print_endline "Tests_arithmetic, eval_num: all tests passed";

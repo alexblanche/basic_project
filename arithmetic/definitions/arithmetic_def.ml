@@ -444,18 +444,23 @@ let rop_list = [
 (* List of handled operators and their index of precedence (1 = greatest *)
 (* The operators are ordered by frequency in usual expresssions *)
 let op_list = [
-  ("PLUS", 3); ("MINUS", 3); ("TIMES", 2); ("DIVIDED", 2); ("POWER", 1);
+  ("PLUS", 3); ("MINUS", 3);
+  ("TIMES", 2); ("DIVIDED", 2);
+  ("POWER", 0);
   ("LEQ", 4); ("LESS", 4); ("GEQ", 4); ("GREATER", 4); ("EQUAL", 4); ("DIFFERENT", 4);
-  ("AND", 5); ("OR", 6); ("INTDIV", 7); ("RMDR", 7); ("XOR", 8)
+  ("AND", 5);
+  ("OR", 6);
+  ("INTDIV", 1); ("RMDR", 1);
+  ("XOR", 8)
   ];;
 
 (* All precedences were checked on a Casio calculator
-  POWER
+        POWER
+    << (INTDIV, RMDR)
     << (TIMES, DIVIDED)
     << (PLUS, MINUS)
     << (LEQ, LESS, GEQ, GREATER, EQUAL, DIFFERENT)
     << (AND, OR)
-    << (INTDIV, RMDR)
     << (XOR)
 *)
 
