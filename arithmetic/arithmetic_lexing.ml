@@ -458,7 +458,16 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
         else if s = "LIST" then
           (match t with
             | _::"LSQBRACKET"::_
-            | _::_::"LSQBRACKET"::_ -> (* List a[e] *)
+            | _::"0"::"LSQBRACKET"::_
+            | _::"1"::"LSQBRACKET"::_
+            | _::"2"::"LSQBRACKET"::_
+            | _::"3"::"LSQBRACKET"::_
+            | _::"4"::"LSQBRACKET"::_
+            | _::"5"::"LSQBRACKET"::_
+            | _::"6"::"LSQBRACKET"::_
+            | _::"7"::"LSQBRACKET"::_
+            | _::"8"::"LSQBRACKET"::_
+            | _::"9"::"LSQBRACKET"::_ -> (* List a[e] *)
               let (li,t') = extract_list_index t in
               aux (li::acc) expr_type t'
             | a::t' -> (* List a *)
@@ -475,8 +484,7 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
         (* Mat a[e1,e2] and Mat a *)
         else if s = "MAT" then
           (match t with
-            | _::"LSQBRACKET"::_
-            | _::_::"LSQBRACKET"::_ -> (* Mat a[e1,e2] *)
+            | _::"LSQBRACKET"::_ -> (* Mat a[e1,e2] *)
               let (mi,t') = extract_mat_index t in
               aux (mi::acc) expr_type t'
             | a::t' -> (* Mat a *)

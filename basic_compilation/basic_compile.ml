@@ -58,6 +58,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 (true, i+1, List.tl t'))
               else
                 fail lexlist i "Compilation error: Wrong assignment (->) of a variable"
+            (* e -> X~Z *)
             | Numerical, v1::"\126"::v2::t'' ->
               if is_var v1 && is_var v2 then
                 let vi1 = var_index v1 in
@@ -68,8 +69,17 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 else fail lexlist i "Compilation error: Wrong order in multiple assignment (~)"
               else fail lexlist i "Compilation error: Wrong multi-assignment (-> ~) of a variable"
             
-            | Numerical, "LIST"::_::_::"LSQBRACKET"::_
-            | Numerical, "LIST"::_::"LSQBRACKET"::_ ->
+            | Numerical, "LIST"::_::"LSQBRACKET"::_
+            | Numerical, "LIST"::_::"0"::"LSQBRACKET"::_
+            | Numerical, "LIST"::_::"1"::"LSQBRACKET"::_
+            | Numerical, "LIST"::_::"2"::"LSQBRACKET"::_
+            | Numerical, "LIST"::_::"3"::"LSQBRACKET"::_
+            | Numerical, "LIST"::_::"4"::"LSQBRACKET"::_
+            | Numerical, "LIST"::_::"5"::"LSQBRACKET"::_
+            | Numerical, "LIST"::_::"6"::"LSQBRACKET"::_
+            | Numerical, "LIST"::_::"7"::"LSQBRACKET"::_
+            | Numerical, "LIST"::_::"8"::"LSQBRACKET"::_
+            | Numerical, "LIST"::_::"9"::"LSQBRACKET"::_ ->
               let (li,t'') = extract_list_index (List.tl t') in
               (match li with
                 | Entity (Variable lx) ->

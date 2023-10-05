@@ -162,40 +162,39 @@ let locate (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : unit 
 (* Prints the number z (of type complex) at the right of the writing line *)
 (* polar = true if the complex is to be printed in polar form, false in a+ib form *)
 let print_number (z : complex) (polar : bool) : unit =
-  if z.im = 0.
-    then
-      (let z_repr = float_to_casio z.re in
-      locate_no_refresh (str_to_rev_symblist_simple z_repr) (21-String.length z_repr) !writing_index)
-    else
-      (* if the total length is too long, cut after the real part *)
-      let z_repr_l =
-        if polar
-          then complex_to_casio_polar z
+  if z.im = 0. then
+    (let z_repr = float_to_casio z.re in
+    locate_no_refresh (str_to_rev_symblist_simple z_repr) (21-String.length z_repr) !writing_index)
+  else
+    (* if the total length is too long, cut after the real part *)
+    let z_repr_l =
+      if polar
+        then complex_to_casio_polar z
+        else if z.re = 0.
+          then [[]; []; str_to_rev_symblist_simple (float_to_casio z.im); ["\127\080"]]
           else complex_to_casio_aib z
-      in
-      let total_length = List.fold_left (fun s l -> s+List.length l) 0 z_repr_l in
-      if total_length > 20
-        then
-          (match z_repr_l with
-            | a::t ->
-              (let len_a = List.length a in
-              locate_no_refresh a (21-len_a) !writing_index;
-              let pos = ref (21-total_length+len_a) in
-              line_feed ();
-              List.iter
-                (fun sl ->
-                  locate_no_refresh sl !pos !writing_index;
-                  pos := !pos + List.length sl)
-                t)
-            | [] -> ())
-        else
-          (let pos = ref (21-total_length) in
+    in
+    let total_length = List.fold_left (fun s l -> s+List.length l) 0 z_repr_l in
+    if total_length > 20 then
+      (match z_repr_l with
+        | a::t ->
+          (let len_a = List.length a in
+          locate_no_refresh a (21-len_a) !writing_index;
+          let pos = ref (21-total_length+len_a) in
+          line_feed ();
           List.iter
             (fun sl ->
               locate_no_refresh sl !pos !writing_index;
               pos := !pos + List.length sl)
-            z_repr_l;
-          );;
+            t)
+        | [] -> ())
+    else
+      (let pos = ref (21-total_length) in
+      List.iter
+        (fun sl ->
+          locate_no_refresh sl !pos !writing_index;
+          pos := !pos + List.length sl)
+        z_repr_l);;
 
 (* Prints the "- DISP -" on the tscreen at line j *)
 let print_disp (j : int) : unit =

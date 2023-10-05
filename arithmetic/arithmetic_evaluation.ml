@@ -39,7 +39,7 @@ let numexpr_to_float_array (et : num_expr array) : float array =
         | Complex z ->
           (t.(i) <- z.re;
           t.(i+n) <- z.im)
-        | _ -> failwith "entity_to_float_array: wrong input")
+        | _ -> failwith "numexpr_to_float_array: wrong input")
     et;
   t;;
 
@@ -57,7 +57,7 @@ let numexpr_to_float_matrix (em : num_expr array array) : float array array =
           | Complex z ->
             (m.(i).(j) <- z.re;
             m.(i+n).(j) <- z.im)
-          | _ -> failwith "entity_to_float_matrix: wrong input"
+          | _ -> failwith "numexpr_to_float_matrix: wrong input"
       done
     done;
     m);;
@@ -302,7 +302,6 @@ and calculate (p : parameters) (outq : entity list) (opq : arithm list) : entity
         | Variable _ -> Value (get_val_numexpr p x)
         (* Lists and matrices *)
         | ListContent _
-        | MatContent _ -> x
         | VarList _ -> ListContent (get_val_listexpr p x)
         | _ -> MatContent (get_val_matexpr p x))
     | _ -> failwith "calculate: Syntax error"

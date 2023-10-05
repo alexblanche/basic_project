@@ -159,9 +159,13 @@ let run_prog_assign_list () =
   let prog_assign_list =
     compile
       [("main",
-        ["5"; "ASSIGN"; "DIM"; "LIST"; "9"; "EOL";
-        "1"; "2"; "ASSIGN"; "LIST"; "9"; "LSQBRACKET"; "4"; "EOL";
-        "LIST"; "9"; "LSQBRACKET"; "4"; "DISP"
+        [
+        (* "5"; "ASSIGN"; "DIM"; "LIST"; "9"; "EOL"; *)
+        (* "1"; "2"; "ASSIGN"; "LIST"; "9"; "LSQBRACKET"; "4"; "EOL"; *)
+        "1"; "1"; "ASSIGN"; "U"; "EOL";
+        "LBRACKET"; "1"; ","; "2"; "CPLXI"; "ASSIGN"; "LIST"; "U"; "EOL";
+        (* "LIST"; "9"; "LSQBRACKET"; "4"; "DISP"; *)
+        "LIST"; "1"; "1"; "LSQBRACKET"; "2"; "DISP"
         ]
       )]
   in
