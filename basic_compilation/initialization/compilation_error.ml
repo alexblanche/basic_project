@@ -20,7 +20,14 @@ let rec extract_line (lexlist : string list) : string list * string list =
 
 (* Prints one line of the program *)
 let print_lexline (line : string list) (eol : string) : unit =
-  List.iter (fun s -> print_string (String.escaped s); print_char ' ') line;
+  List.iteri
+    (fun i s ->
+      if i mod 20 = 0 then
+        print_endline (String.escaped s)
+      else
+        (print_string (String.escaped s);
+        print_char ' '))
+    line;
   print_endline eol;;
 
 let skip_until (lexlist : string list) (i : int) =

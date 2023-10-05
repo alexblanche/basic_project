@@ -40,6 +40,11 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   (** Main looping function **)
   let rec aux (i : int) : unit =
 
+    (* Pause for 1/798s *)
+    (* Overridden by Press on Tab *)
+    if !key_pressed <> Tab then
+    Unix.sleepf 0.001253133;
+
     (* End of the execution *)
     if i >= n then
       quit_print win ren !val_seen !last_val p.polar
@@ -128,7 +133,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             let iint = int_of_complex ie in
             t.(iint) <- z.re;
             t.(iint + (Array.length t)/2) <- z.im) *)
-            assign_var p (Value z) (ListIndex (Value vala, Arithm [Entity (Value ie)])))
+            assign_var p (Value z) (ListIndex (Value vala, Complex ie)))
 
           | MatIndex (ai, iexp, jexp) ->
             (let ie = eval_num p iexp in
@@ -142,7 +147,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             m.(iint + (Array.length m)/2).(jint) <- z.im) *)
             assign_var p (Value z)
               (MatIndex (ai,
-                Arithm [Entity (Value ie)], Arithm [Entity (Value je)])))
+                Complex ie, Complex je)))
 
           | _ -> failwith "Runtime error: assignment to unassignable object"
         );
@@ -157,51 +162,50 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
       | String se ->
         (* A string alone is printed, an application of string function is not *)
         (match se, eval_str p se with
-            | Str_content _, Str_content sl ->
-              (line_feed ();
-              clear_line !writing_index;
-              let len = List.length sl in
-              (if len > 21 then
-                (let (slk,slnk) = split_k sl (len-21) in
-                locate_no_refresh (List.rev slnk) 0 !writing_index;
-                line_feed ();
-                locate_no_refresh (List.rev slk) 0 !writing_index)
-              else
-                locate_no_refresh sl 0 !writing_index);
-              tdraw ren;
-              val_seen := true;
-              if (i <= n-2 && code.(i+1) = End
-                || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
-                && !prog_goback = []
-                then (* End of the program *)
-                  (if code.(i+1) = Disp
-                    then disp p ren writing_index;
-                  quit win ren true (* Quit after the string *))
-                else if i<n-1 && code.(i+1) = Disp
-                  then
-                    (disp p ren writing_index;
-                    aux (i+2))
-                  else aux (i+1))
+          | Str_content _, Str_content sl ->
+            (line_feed ();
+            clear_line !writing_index;
+            let len = List.length sl in
+            (if len >= 21 then
+              (let (slk,slnk) = split_k sl (len-21) in
+              locate_no_refresh (List.rev slnk) 0 !writing_index;
+              line_feed ();
+              locate_no_refresh (List.rev slk) 0 !writing_index)
+            else
+              locate_no_refresh sl 0 !writing_index);
+            tdraw ren;
+            val_seen := true;
+            if (i <= n-2 && code.(i+1) = End
+              || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
+              && !prog_goback = []
+              then (* End of the program *)
+                (if code.(i+1) = Disp
+                  then disp p ren writing_index;
+                quit win ren true (* Quit after the string *))
+              else if i<n-1 && code.(i+1) = Disp then
+                (disp p ren writing_index;
+                aux (i+2))
+              else aux (i+1))
 
-            | _, Str_content sl -> (* Uninteresting case, prints a "Done" *)
-              (* To be redone when we take care of the Dones *)
-              (line_feed ();
-              clear_line !writing_index;
-              locate_no_refresh ["e"; "n"; "o"; "D"] 0 !writing_index;
-              tdraw ren;
-              if (i <= n-2 && code.(i+1) = End
-                || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
-                && !prog_goback = []
-                then (* End of the program *)
-                  (if code.(i+1) = Disp
-                    then disp p ren writing_index;
-                  quit win ren true (* Quit after the string *))
-                else if i<n-1 && code.(i+1) = Disp then
-                  (disp p ren writing_index;
-                  aux (i+2))
-                else aux (i+1))
-            | _, Num_expr _ -> failwith "Runtime error: string expression has numerical value"
-            | _  -> failwith "Runtime error: wrong type in string expression evaluation")
+          | _, Str_content sl -> (* Uninteresting case, prints a "Done" *)
+            (* To be redone when we take care of the Dones *)
+            (line_feed ();
+            clear_line !writing_index;
+            locate_no_refresh ["e"; "n"; "o"; "D"] 0 !writing_index;
+            tdraw ren;
+            if (i <= n-2 && code.(i+1) = End
+              || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
+              && !prog_goback = []
+              then (* End of the program *)
+                (if code.(i+1) = Disp
+                  then disp p ren writing_index;
+                quit win ren true (* Quit after the string *))
+              else if i<n-1 && code.(i+1) = Disp then
+                (disp p ren writing_index;
+                aux (i+2))
+              else aux (i+1))
+          | _, Num_expr _ -> failwith "Runtime error: string expression has numerical value"
+          | _  -> failwith "Runtime error: wrong type in string expression evaluation")
           
       | Locate (e1, e2, se) ->
         let z1 = eval_num p e1 in
@@ -226,19 +230,19 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         val_seen := true;
         if (i <= n-2 && code.(i+1) = End
           || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
-          && !prog_goback = []
-          then (* End of the program *)
+          && !prog_goback = [] then
+            (* End of the program *)
             (if code.(i+1) = Disp
               then disp p ren writing_index;
             quit win ren true (* Quit after the string *))
-          else if i<n-1 && code.(i+1) = Disp
-          then
+          else if i<n-1 && code.(i+1) = Disp then
             (disp p ren writing_index;
             aux (i+2))
           else aux (i+1))
 
       | Function "CLRTEXT" ->
         (clear_text ();
+        tdraw ren;
         writing_index := -1;
         val_seen := false;
         aux (i+1))
@@ -280,11 +284,22 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
       
       | Prog name ->
         (prog_goback := (i+1)::!prog_goback;
-        try
-          let j = List.assoc name proglist in
-          aux j
-        with
-          | Not_found -> failwith ("Runtime error: Prog "^name^" not found"))
+        let j =
+          try
+            (* Debug *
+            print_string "Prog looked for: ";
+            print_endline name;
+            List.iter (fun (s,k) -> (print_char '('; String.iter (fun c -> print_int (Char.code c); print_char ' ') s; print_string ", index = "; print_int k; print_string ") ")) proglist;
+            print_newline ();
+            print_string "name = ";
+            String.iter (fun c -> print_int (Char.code c); print_char ' ') name;
+            print_newline ();
+            ****)
+            List.assoc name proglist
+          with
+            | Not_found -> failwith ("Runtime error: Prog \""^name^"\" not found")
+        in
+        aux j)
       
       | AssignStr (se, si) ->
         let sl =
@@ -299,12 +314,14 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         let t = eval_list p le in
         let ni = get_val_numexpr p n in
         if is_int ni then
-          p.list.((int_of_complex ni)-1) <- t
+          (p.list.((int_of_complex ni)-1) <- t;
+          aux (i+1))
         else failwith "Runtime error: wrong index for list assignment"
 
       | AssignMat (me, mi) ->
         let m = eval_mat p me in
-        p.mat.(mi-1) <- m
+        (p.mat.(mi) <- m;
+        aux (i+1)) 
 
       | AssignMult (e, vi1, vi2) ->
         let z = eval_num p e in
@@ -334,15 +351,21 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   
   (try
     let key_check_domain = Domain.spawn launch_key_check in
-    let entry_index = List.assoc entry_point proglist in
+    let entry_index =
+      try
+        List.assoc entry_point proglist
+      with
+        | Not_found -> failwith ("No program named \""^entry_point^"\"")
+    in
     aux entry_index;
+    print_endline "--- End of the execution ---";
     exit_key_check := true;
     Domain.join key_check_domain
   with
-    | Not_found -> print_endline ("No program named "^entry_point)
     | Runtime_interruption
     | Window_Closed -> print_endline "--- Runtime interruption ---"
-    | Failure s -> print_endline s);
+    | Failure s -> print_endline s
+    | Not_found -> print_endline "Runtime error: Not_found");
   exit_key_check := true;
   close_graph win;
   Sdl.quit ();;

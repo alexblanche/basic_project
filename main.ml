@@ -6,6 +6,7 @@
 #use "topfind"
 #require "sdl2"
 #require "sdl2_ttf"
+#require "unix"
 
 (* Initialization *)
 #use "initialization/graphics/graphic_parameters.ml"

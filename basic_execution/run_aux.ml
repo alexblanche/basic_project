@@ -6,26 +6,39 @@ exception Runtime_interruption;;
 (* Assigns the value x to the variable v *)
 let assign_var (p : parameters) (x : entity) (v : variable) : unit =
   match x,v with
-    | Value z, Var vi -> 
-      (p.var.(vi) <- z.re;
-      p.var.(vi+29) <- z.im)
+    | Value z, Var vi ->
+      if vi >= 0 && vi <= 28 then
+        (p.var.(vi) <- z.re;
+        p.var.(vi+29) <- z.im)
+      else failwith "Runtime error: Incorrect index of a variable during assignment"
 
     | Value z,
-      ListIndex (Value a, Arithm [Entity (Value i)])
+      ListIndex (Value a, Complex k)
+    | Value z,
+      ListIndex (Value a, Arithm [Entity (Value k)])
       ->
-      (let t = p.list.(int_of_complex a) in
-      let iint = int_of_complex i in
-      t.(iint) <- z.re;
-      t.(iint + (Array.length t)/2) <- z.im)
+      let ai = int_of_complex a in
+      let ki = int_of_complex k in
+      if ai >= 0 && ai <= 19 then
+        (let t = p.list.(ai-1) in
+        if ki >= 1 && ki <= (Array.length t)/2 then
+          (t.(ki-1) <- z.re;
+          t.(ki-1 + (Array.length t)/2) <- z.im)
+        else failwith "Runtime error: Incorrect list index during assignment to list index")
+      else failwith "Runtime error: Incorrect list during assignment to list index"
 
     | Value z,
-      MatIndex (ai, Arithm [Entity (Value i)], Arithm [Entity (Value j)])
+      MatIndex (ai, Complex j, Complex k)
+    | Value z,
+      MatIndex (ai, Arithm [Entity (Value j)], Arithm [Entity (Value k)])
       ->
       (let m = p.mat.(ai) in
-      let iint = int_of_complex i in
-      let jint = int_of_complex j in
-      m.(iint).(jint) <- z.re;
-      m.(iint + (Array.length m)/2).(jint) <- z.im)
+      let ji = int_of_complex j in
+      let ki = int_of_complex k in
+      if ji >= 1 && ji <= (Array.length m)/2 && ki >= 1 && ki <= Array.length m.(0) then
+        (m.(ji-1).(ki-1) <- z.re;
+        m.(ji-1 + (Array.length m)/2).(ki-1) <- z.im)
+      else failwith "Runtime error: Incorrect matrix index assignment to mat index")
     
     | _ -> failwith "Runtime error: wrong value in assignment"
 

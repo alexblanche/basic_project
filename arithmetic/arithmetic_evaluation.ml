@@ -120,13 +120,13 @@ let rec get_val_numexpr (p : parameters) (n : entity) : complex =
       let z = eval_num p e in
       (if not (is_int z)
         then failwith "get_val_numexpr: access to List from an index that is not an integer";
-      get_list_val p.list (int_of_complex (get_val_numexpr p a) - 1) (int_of_complex z))
+      get_list_val p.list (int_of_complex (get_val_numexpr p a) - 1) (int_of_complex z - 1))
     | Variable (MatIndex (ai,e1,e2)) ->
       let z1 = eval_num p e1 in
       let z2 = eval_num p e2 in
       (if not ((is_int z1) && (is_int z2))
         then failwith "get_val_numexpr: access to Mat from an index that is not an integer";
-      get_mat_val p.mat ai (int_of_complex z1) (int_of_complex z2))
+      get_mat_val p.mat ai (int_of_complex z1 - 1) (int_of_complex z2 - 1))
     | Variable Random -> complex_of_float (Random.float 1.)
     | _ -> failwith "get_val_numexpr: entity is a list or matrix"
 

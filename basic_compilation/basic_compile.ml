@@ -43,7 +43,6 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           (* The beginning of lexlist is not an expression *)
           (false, -1, [])
 
-        (* To be combined with the case below *)
         | _, "ASSIGN"::t' ->
           (match expr_type, t' with
             | Numerical, [v] ->
@@ -370,7 +369,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         (let len_t = List.length t in
         let len_lex = List.length lexlist in
         print_endline "---------------------------------------";
-        print_endline ("Compilation error in program "^name);
+        print_endline ("Compilation error in program \""^name^"\"");
         print_endline error_message;
         print_newline ();
         print_around lexlist (len_lex - len_t);

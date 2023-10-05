@@ -3,7 +3,7 @@
 #use "tests/tests_compilation.ml"
 
 (* Empty project_content *)
-let (p : project_content) =
+let empty_projcont () : project_content = 
   {
     prog = [];
     list = Array.make 26 (true, [||]);
@@ -15,7 +15,7 @@ let (p : project_content) =
 
 (* Display *)
 let run_prog1 () =
-  run p (
+  run (empty_projcont ()) (
     [|
       Expr (Arithm [Entity (Value {re = 1.; im = 0.})], Numerical);
       Disp;
@@ -41,7 +41,7 @@ let run_prog1 () =
 
 (* Variables *)
 let run_prog2 () =
-  run p (
+  run (empty_projcont ()) (
     [|
       Assign (Arithm [Entity (Value {re = 8.; im = 0.})], (Var 0)); (* 8 -> A DISP *)
       Disp;
@@ -57,7 +57,7 @@ let run_prog2 () =
 
 (* For, QMark *)
 let run_prog3 () =
-  run p (
+  run (empty_projcont ()) (
     [|
       For (0, (* For 3-1 -> A To 8 Step 2 *)
         Arithm [Entity (Value {re = 3.; im = 0.}); Op "MINUS"; Entity (Value {re = 1.; im = 0.})],
@@ -82,7 +82,7 @@ let run_prog3 () =
 
 (* Subroutine calls *)
 let run_prog4 () =
-  run p (prog4 ()) "MAIN";;
+  run (empty_projcont ()) (prog4 ()) "MAIN";;
 
 (* Test Locate *)
 (* run p ([|
@@ -107,7 +107,7 @@ let run_prog5 () =
         ]
       )]
   in
-  run p prog5 "main";;
+  run (empty_projcont ()) prog5 "main";;
 
 (* Result: about 10^8 operations (empty For Next) in 6 to 10s *)
 (* With Locate, program runs 3 times faster than the calculator... *)
@@ -115,7 +115,7 @@ let run_prog5 () =
 
 (* Getkey *)
 let run_prog_getkey () =
-  run p (prog_getkey ()) "main";;
+  run (empty_projcont ()) (prog_getkey ()) "main";;
 
 (* Speed of a For loop *)
 let run_prog6 () =
@@ -132,7 +132,7 @@ let run_prog6 () =
         ]
       )]
   in
-  run p prog6 "main";;
+  run (empty_projcont ()) prog6 "main";;
   (* 22s in the emulator, 37s in the calculator *)
 
 (* Test of IMPL => *)
@@ -147,7 +147,22 @@ let run_prog7 () =
         ]
       )]
   in
-  run p prog7 "main";;
+  run (empty_projcont ()) prog7 "main";;
 
 let run_prog_if () =
-  run p (prog_if ()) "main";;
+  run (empty_projcont ()) (prog_if ()) "main";;
+
+(*******************************************)
+
+(* Debug of Timeless *)
+let run_prog_assign_list () =
+  let prog_assign_list =
+    compile
+      [("main",
+        ["5"; "ASSIGN"; "DIM"; "LIST"; "9"; "EOL";
+        "1"; "2"; "ASSIGN"; "LIST"; "9"; "LSQBRACKET"; "4"; "EOL";
+        "LIST"; "9"; "LSQBRACKET"; "4"; "DISP"
+        ]
+      )]
+  in
+  (prog_assign_list, run (empty_projcont ()) prog_assign_list "main");;

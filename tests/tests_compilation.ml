@@ -38,7 +38,14 @@ let prog3 () = compile
   )];;
 
 let prog4 () = compile
-  [("MAIN",
+  [("AUX1",
+    [
+      "QUOTE"; "W"; "E"; "L"; "C"; "O"; "M"; "E"; " "; "T"; "O"; " "; "A"; "U"; "X"; "1"; "QUOTE"; "DISP";
+      "QUOTE"; "S"; "E"; "E"; " "; "Y"; "O"; "U"; "!"; "QUOTE"; "DISP"
+    ]
+  );
+
+  ("MAIN",
     [
       "QUOTE"; "W"; "E"; "L"; "C"; "O"; "M"; "E"; " "; "T"; "O"; " "; "M"; "A"; "I"; "N"; "QUOTE"; "DISP";
       "PROG"; "QUOTE"; "A"; "U"; "X"; "1"; "QUOTE"; "EOL";
@@ -46,13 +53,6 @@ let prog4 () = compile
       "PROG"; "QUOTE"; "A"; "U"; "X"; "2"; "QUOTE"; "EOL";
       "QUOTE"; "B"; "A"; "C"; "K"; " "; "T"; "O"; " "; "M"; "A"; "I"; "N"; "QUOTE"; "DISP";
       "QUOTE"; "B"; "Y"; "E"; "!"; "QUOTE"; "DISP"
-    ]
-  );
-  
-  ("AUX1",
-    [
-      "QUOTE"; "W"; "E"; "L"; "C"; "O"; "M"; "E"; " "; "T"; "O"; " "; "A"; "U"; "X"; "1"; "QUOTE"; "DISP";
-      "QUOTE"; "S"; "E"; "E"; " "; "Y"; "O"; "U"; "!"; "QUOTE"; "DISP"
     ]
   );
   
