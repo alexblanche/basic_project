@@ -222,11 +222,10 @@ let wait_press_key (ren : Sdlrender.t) (text_graph : bool) (getkey_value : int):
 
 let wait_press (ren : Sdlrender.t) (text_graph : bool) : unit =
   while !getkey = 0 do
-    if !parameters_updated
-      then
-        if text_graph
-          then tdraw ren
-          else gdraw ren
+    if !parameters_updated then
+      if text_graph
+        then tdraw ren
+        else gdraw ren
     else if !exit_key_check
       then raise Window_Closed
   done;;

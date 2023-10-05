@@ -40,17 +40,23 @@ let unit_tests_lexer () =
       Entity (Variable (Var 0)); Op "MINUS"; Entity (Value {re = 4.; im = 0.}); Entity (Value {re = 0.; im = 1.})]);
     (["1"; "PLUS"; "ABS"; "LPAR"; "UMINUS"; "8"; "RPAR"; "ASSIGN"; "A"],
       [Entity (Value {re = 1.; im = 0.}); Op "PLUS"; Lunop "ABS"; Lpar; Lunop "UMINUS"; Entity (Value {re = 8.; im = 0.}); Rpar]);
-    (["1"; "PLUS"; "MAX"; "4"; "."; "5"; ","; "LPAR"; "7"; "TIMES"; "1"; "RPAR"; ","; "3"; "TIMES"; "2"; "RPAR";
+    (["1"; "PLUS"; "MAX"; "LBRACKET"; "4"; "."; "5"; ","; "LPAR"; "7"; "TIMES"; "1"; "RPAR"; ","; "3"; "TIMES"; "2"; "RBRACKET"; "RPAR";
       "TIMES"; "2"; "EOL"],
     [Entity (Value {re = 1.; im = 0.}); Op "PLUS";
       Function ("MAX",
-        [
-          Complex {re = 4.5; im = 0.};
-          Arithm [Lpar; Entity (Value {re = 7.; im = 0.}); Op "TIMES"; Entity (Value {re = 1.; im = 0.}); Rpar];
-          Arithm [Entity (Value {re = 3.; im = 0.}); Op "TIMES"; Entity (Value {re = 2.; im = 0.})]
+        [Arithm
+          [Entity
+            (ListContent
+              [|
+                Complex {re = 4.5; im = 0.};
+                Arithm [Lpar; Entity (Value {re = 7.; im = 0.}); Op "TIMES"; Entity (Value {re = 1.; im = 0.}); Rpar];
+                Arithm [Entity (Value {re = 3.; im = 0.}); Op "TIMES"; Entity (Value {re = 2.; im = 0.}) ]
+              |]
+            )
+          ]
         ]);
       Op "TIMES"; Entity (Value {re = 2.; im = 0.})
-      ]);
+    ]);
 
     (* List/Mat arithmetic *)
     (["2"; "TIMES"; "B"; "PLUS"; "LBRACKET"; "8"; ","; "8"; "PLUS"; "2"; ","; "A"; "RBRACKET"],
@@ -124,9 +130,9 @@ let unit_tests_eval_num () =
       (["2"; "TIMES"; "B"; "PLUS"; "A"], {re = 16.; im = 8.});
       (["2"; "B"; "PLUS"; "3"; "A"; "MINUS"; "4"; "CPLXI"], {re = 36.; im = 4.});
       (["1"; "PLUS"; "ABS"; "LPAR"; "UMINUS"; "8"; "RPAR"; "ASSIGN"; "A"], {re = 9.; im = 0.});
-      (["1"; "PLUS"; "MAX"; "4"; "."; "5"; ","; "LPAR"; "7"; "TIMES"; "1"; "RPAR"; ","; "3"; "TIMES"; "2"; "RPAR";
+      (["1"; "PLUS"; "MAX"; "LBRACKET"; "4"; "."; "5"; ","; "LPAR"; "7"; "TIMES"; "1"; "RPAR"; ","; "3"; "TIMES"; "2"; "RPAR"; "RBRACKET";
       "TIMES"; "2"; "EOL"], {re = 15.; im = 0.});
-      (["LIST"; "1"; "LSQBRACKET"; "2"; "MINUS"; "1"; "RSQBRACKET"], {re = 2.; im = 1.})
+      (["LIST"; "1"; "LSQBRACKET"; "2"; "MINUS"; "1"; "RSQBRACKET"], {re = 5.; im = 3.})
     ];
     print_endline "--------------------------------------------";
     print_endline "Tests_arithmetic, eval_num: all tests passed";

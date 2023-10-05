@@ -1,5 +1,36 @@
 (* Entity functions *)
 
+(* Auxiliary functions *)
+
+let max_t (t : complex array) : complex =
+  let n = Array.length t in
+  if n = 0
+    then failwith "Function error: Max expects a non-empty list";
+  let rec aux m i =
+    if i = n then
+      m
+    else
+      if t.(i) > m
+        then aux t.(i) (i+1)
+        else aux m (i+1)
+  in
+  aux t.(0) 1;;
+
+let min_t (t : complex array) : complex =
+  let n = Array.length t in
+  if n = 0
+    then failwith "Function error: Max expects a non-empty list";
+  let rec aux m i =
+    if i = n then
+      m
+    else
+      if t.(i) < m
+        then aux t.(i) (i+1)
+        else aux m (i+1)
+  in
+  aux t.(0) 1;;
+
+
 (* Hash table containing all the entity functions *)
 let entity_func_table =
   let (entity_func_list : (string * (entity list -> entity)) list) = [
@@ -164,6 +195,66 @@ let entity_func_table =
                 (Array.init (Array.length t)
                   (fun i -> Complex (complex_of_float (tre.(i) /. sum))))
           | _ -> failwith "Function error: Percent has arity 1 and only accepts lists of real numbers"
+      in f)
+    );
+
+    ("MAX",
+      (let f nl =
+        match nl with
+          | [ListContent t] ->
+            let ct =
+              Array.map
+              (function
+                | (Complex z) -> z
+                | _ -> failwith "Function error: Max has arity 1 or 2 and only accepts lists")
+              t
+            in
+            Value (max_t ct)
+          | [ListContent t1; ListContent t2] ->
+            let n1 = Array.length t1 in
+            if n1 = Array.length t2
+              then failwith "Function error: Max expects two lists of the same size";
+            ListContent
+              (Array.init
+                n1
+                (fun i ->
+                  match t1.(i), t2.(i) with
+                    | Complex z1, Complex z2 ->
+                      if z1 >= z2
+                        then Complex z1
+                        else Complex z2
+                    | _ -> failwith "Max: wrong type"))
+          | _ -> failwith "Function error: Max has arity 1 or 2 and only accepts lists"
+      in f)
+    );
+
+    ("MIN",
+      (let f nl =
+        match nl with
+          | [ListContent t] ->
+            let ct =
+              Array.map
+              (function
+                | (Complex z) -> z
+                | _ -> failwith "Function error: Min has arity 1 or 2 and only accepts lists")
+              t
+            in
+            Value (min_t ct)
+          | [ListContent t1; ListContent t2] ->
+            let n1 = Array.length t1 in
+            if n1 = Array.length t2
+              then failwith "Function error: Min expects two lists of the same size";
+            ListContent
+              (Array.init
+                n1
+                (fun i ->
+                  match t1.(i), t2.(i) with
+                    | Complex z1, Complex z2 ->
+                      if z1 <= z2
+                        then Complex z1
+                        else Complex z2
+                    | _ -> failwith "Min: wrong type"))
+          | _ -> failwith "Function error: Min has arity 1 or 2 and only accepts lists"
       in f)
     );
     ]
