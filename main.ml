@@ -68,14 +68,13 @@ let play (file_name : string) (entry_point : string) : unit =
 (*
 To do next:
   - Implement the entry point menu
-  - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
   - Implement all the "main" functions from the to do list
   (goal: make Timeless run at this point)
   
   - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
-  - Slow down the execution with Unix.sleepf (tests needed for text and graphic display)
   - Draw a calculator and link it to Getkey (by clicking on keys)
     (key pressed on the keyboard highlight keys of the calculator interface)
+  - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
 
 In the distant future:
   - Redo the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."

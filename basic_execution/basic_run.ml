@@ -41,12 +41,12 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   let rec aux (i : int) : unit =
 
     (* debug *)
-    print_endline (string_of_int i);
+    (* print_endline (string_of_int i); *)
 
     (* Pause for 1/798s *)
     (* Overridden by Press on Tab *)
     if !key_pressed <> Tab then
-    Unix.sleepf 0.001253133;
+      Unix.sleepf 0.001253133;
 
     (* End of the execution *)
     if i >= n then
@@ -209,7 +209,9 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
       | Locate (e1, e2, se) ->
         let z1 = eval_num p e1 in
         let z2 = eval_num p e2 in
-        (if not
+        (if !key_pressed <> Tab then
+          Unix.sleepf 0.013;
+        if not
           ((is_int z1) && (is_int z2)
           && (z1.re >= 1.) && (z1.re <= 21.)
           && (z2.re >= 1.) && (z2.re <= 7.))
@@ -359,8 +361,3 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   exit_key_check := true;
   close_graph win;
   Sdl.quit ();;
-
-(* To do:
-  - Slow down execution
-    An empty for loop executes 798 rounds in 1s,
-    for specific functions (mainly display), measurements are needed *)

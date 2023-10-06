@@ -152,10 +152,10 @@ and get_val_matexpr (p : parameters) (n : entity) : num_expr array array =
   match n with
     | MatContent em ->
       let (r,c) = get_mat_dim p.mat n in
-      (if r=0 || c=0
-        then failwith "get_val_matexpr: the matrix is empty";
+      (* (if r=0 || c=0
+        then failwith "get_val_matexpr: the matrix is empty"; *)
       let m = Array.make_matrix r c QMark in
-      for i = 0 to r-1 do
+      (for i = 0 to r-1 do
         for j = 0 to c-1 do
           m.(i).(j) <- Complex (eval_num p em.(i).(j))
         done
