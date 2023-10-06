@@ -331,6 +331,7 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
     (* Add to a queue *)
     (* Case of omitted multiplication operator *)
     | (Entity x1)::(Entity _)::_, _
+    | (Entity x1):: Lpar ::_, _
     | (Entity x1)::(Lunop _)::_, _
     | (Entity x1)::(Function _)::_, _ -> shunting_yard p ((Op "TIMES")::List.tl alist) (x1::output_q) op_q
     (* Normal number case *)

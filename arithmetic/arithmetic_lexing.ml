@@ -430,7 +430,16 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
 
         (* Unary and binary operators *)
         else if List.exists (fun (op,_) -> s=op) op_list then
-          aux ((Op s)::acc) expr_type t
+          (* One exception: Op "MINUS" should be parsed as Lunop "UMINUS" if not preceded by an entity  *)
+          if s = "MINUS" then
+            (match acc with
+              | []
+              | Lpar :: _
+              | Lunop _ :: _
+              | Function _ :: _ -> aux ((Lunop "UMINUS")::acc) expr_type t
+              | _ -> aux ((Op "MINUS")::acc) expr_type t)
+          else aux ((Op s)::acc) expr_type t
+          
         else if List.mem s lop_list then
           aux ((Lunop s)::acc) expr_type t
         else if List.mem s rop_list then

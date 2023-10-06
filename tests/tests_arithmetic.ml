@@ -135,6 +135,11 @@ let unit_tests_eval_num () =
       "TIMES"; "2"; "EOL"], {re = 15.; im = 0.});
       (["LIST"; "1"; "LSQBRACKET"; "2"; "MINUS"; "1"; "RSQBRACKET"], {re = 5.; im = 3.});
       (["2"; "EQUAL"; "REP"; "2"; "AND"; "1"], {re = 1.; im = 0.});
+      (["MINUS"; "1"], {re = -1.; im = 0.});
+      (["2"; "TIMES"; "UMINUS"; "1"], {re = -2.; im = 0.});
+      (["2"; "LPAR"; "1"; "PLUS"; "1"], {re = 4.; im = 0.});
+      (["LPAR"; "1"; "PLUS"; "1"; "RPAR"; "MINUS"; "1"], {re = 1.; im = 0.});
+      
 
       (* Tests for precedence *)
       (* All these expressions distinguish operators of different precedence *)
