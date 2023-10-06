@@ -156,10 +156,10 @@ let aux_extract_str (lexlist : string list) : string list * string list =
   let rec aux acc l =
     match l with
       | "QUOTE" :: t -> (acc, t)
-      | s::"QUOTE"::t ->
-        if s = "\092" (* anti-slash *)
-          then aux ("\034"::acc) t (* The quote is kept *)
-          else (s::acc, t)
+      | "\092"::s::t -> (* anti-slash *)
+        if s = "QUOTE" || s = "\092"
+          then aux (s::acc) t (* The quote or anti-slash is kept *)
+          else aux acc (s::t)
       | s :: t -> aux (s::acc) t
       | [] -> failwith "aux_extract_str: the string is not closed properly"
   in

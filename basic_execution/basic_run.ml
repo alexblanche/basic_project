@@ -169,11 +169,13 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             clear_line !writing_index;
             let len = List.length sl in
             (if len >= 21 then
-              display_long_string sl
+              if len < 147 (* 21*7 *)
+                then display_long_string sl
+                else display_extra_long_string sl
             else
               locate_no_refresh sl 0 !writing_index);
             tdraw ren;
-            val_seen := true;
+            val_seen := false;
             if (i <= n-2 && code.(i+1) = End
               || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
               && !prog_goback = []
@@ -186,7 +188,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
                 aux (i+2))
               else aux (i+1))
 
-          | _, Str_content sl -> (* Uninteresting case, prints a "Done" *)
+          | _, Str_content sl ->
+            (* Uninteresting case, prints a "Done" *)
             (* To be redone when we take care of the Dones *)
             (line_feed ();
             clear_line !writing_index;
