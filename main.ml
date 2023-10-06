@@ -66,15 +66,28 @@ let play (file_name : string) (entry_point : string) : unit =
 *)
 
 (*
+Milestone:
+  - TIMELESS (2012 text version) WORKS!!! (perfectly!)
+Next steps (by order of difficulty):
+  - RUN & JUMP, SUPER RUN & JUMP, ACE COMBAT, TIMELESS REMIX, CLONELAB, AIRWOLF
+
 To do next:
-  - Implement the entry point menu
-  - Implement all the "main" functions from the to do list
-  (goal: make Timeless run at this point)
+  - Implement special functions (in which not all the arguments are evaluated before passing them to the function),
+    including SEQ (also, FMIN, SOLVE, DOVERDX...)
+    -> The special function evaluator has p as parameter (unlike the evaluator of arithmetic and entity functions),
+       so PxlTest fits here
+  - Keep implementing the "main" functions
+  - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
+  - Implement: "ABC" -> List 1[0]
   
-  - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
+  Menus:
+  - Implement the entry point menu
   - Draw a calculator and link it to Getkey (by clicking on keys)
     (key pressed on the keyboard highlight keys of the calculator interface)
-  - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
+  
+  Graphic display:
+  - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
+  - Integrate gdraw alongside tdraw
 
 In the distant future:
   - Redo the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."
@@ -82,7 +95,6 @@ In the distant future:
   - Code the "ABC"?->X without skipping a line
   - Complete the list of encodings, with the Catalog
   - Implement the fraction display (5 FRACSIGN 3 displays as a pair of int separated by FRACSIGN)
-  - Implement as many functions as possible (from the to do list)
   - Implement the menu in the QMark entry menu, to access all functions
   - Improve the side by side interface, by allowing changing the conversion window when clicking
 *)

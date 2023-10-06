@@ -296,6 +296,23 @@ let run_prog_print () =
          "QUOTE"; "EOL";
          "FOR"; "1"; "ASSIGN"; "X"; "TO"; "7"; "9"; "8"; "EOL";
          "NEXT"; "EOL";
+         "QUOTE"; "A"; "QUOTE"; "EOL";
+         "FOR"; "1"; "ASSIGN"; "X"; "TO"; "7"; "9"; "8"; "EOL";
+         "NEXT"; "EOL";
+         
+
+         "CLRTEXT"; "EOL";
+         "QUOTE";
+            "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A";
+            "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B";
+            "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C";
+            "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A";
+            "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B";
+            "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C"; "C";
+            "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A";
+         "QUOTE"; "EOL";
+         "FOR"; "1"; "ASSIGN"; "X"; "TO"; "7"; "9"; "8"; "EOL";
+         "NEXT"; "EOL";
          "QUOTE"; "A"; "QUOTE"; "EOL"
         ]
       )]
