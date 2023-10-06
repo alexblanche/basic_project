@@ -111,8 +111,9 @@ let unit_tests_eval_num () =
   let check i (slist, expected) =
     let (expr, _, _) = extract_expr slist in
     let z = eval_num p expr in
-    if is_not_zero (Complex.sub z expected)
-      then raise (Test_failed i)
+    if is_not_zero (Complex.sub z expected) then
+      (print_endline (String.concat " " slist);
+      raise (Test_failed i))
       (* else print_endline ("Test "^(string_of_int i)^" passed") *)
   in
   try
@@ -135,12 +136,55 @@ let unit_tests_eval_num () =
       (["LIST"; "1"; "LSQBRACKET"; "2"; "MINUS"; "1"; "RSQBRACKET"], {re = 5.; im = 3.});
 
       (* Tests for precedence *)
-      (* Test 13 *) (["2"; "PLUS"; "2"; "TIMES"; "3"], {re = 8.; im = 0.});
-      (["2"; "OR"; "2"; "INTDIV"; "3"], {re = 1.; im = 0.});
-      (["2"; "PLUS"; "2"; "INTDIV"; "3"], {re = 2.; im = 0.});
-      (["8"; "AND"; "9"; "INTDIV"; "3"], {re = 1.; im = 0.});
-      (["2"; "PLUS"; "2"; "OR"; "3"], {re = 1.; im = 0.});
-      (["2"; "PLUS"; "2"; "AND"; "3"], {re = 1.; im = 0.});
+      (* All these expressions distinguish operators of different precedence *)
+      (* For every A op1 B op2 C, it was checked that (A op1 B) op2 C
+        has a different value than A op1 (B op2 C),
+        and the conclusion is stated in the comment on the right *)
+      (["2"; "PLUS"; "2"; "TIMES"; "3"], {re = 8.; im = 0.}); (* TIMES <= PLUS *)
+      (["2"; "OR"; "2"; "INTDIV"; "3"], {re = 1.; im = 0.}); (* INTDIV <= OR *)
+      (["2"; "PLUS"; "2"; "INTDIV"; "3"], {re = 2.; im = 0.}); (* INTDIV <= PLUS *)
+      (["2"; "INTDIV"; "1"; "TIMES"; "2"], {re = 4.; im = 0.}); (* INTDIV <= TIMES *)
+      (["1"; "2"; "INTDIV"; "3"; "POWER"; "2"], {re = 1.; im = 0.}); (* POWER <= INTDIV *)
+      (["1"; "2"; "RMDR"; "3"; "POWER"; "2"], {re = 3.; im = 0.}); (* POWER <= RMDR *)
+      (["8"; "AND"; "9"; "INTDIV"; "3"], {re = 1.; im = 0.}); (* INTDIV <= AND *)
+      (["2"; "PLUS"; "2"; "OR"; "3"], {re = 1.; im = 0.}); (* PLUS <= OR *)
+      (["2"; "PLUS"; "2"; "AND"; "3"], {re = 1.; im = 0.}); (* PLUS <= AND *)
+      (["2"; "PLUS"; "6"; "DIVIDED"; "3"], {re = 4.; im = 0.}); (* PLUS <= DIVIDED *)
+      (["2"; "PLUS"; "6"; "POWER"; "3"], {re = 218.; im = 0.}); (* POWER <= PLUS *)
+      (["2"; "TIMES"; "6"; "POWER"; "3"], {re = 432.; im = 0.}); (* POWER <= TIMES *)
+      (["2"; "INTDIV"; "5"; "RMDR"; "3"], {re = 0.; im = 0.}); (* INTDIV = RMDR *)
+      (["1"; "2"; "RMDR"; "7"; "INTDIV"; "3"], {re = 1.; im = 0.});
+      (["2"; "DIVIDED"; "6"; "TIMES"; "3"], {re = 1.; im = 0.}); (* DIVIDED = TIMES *)
+      (["2"; "MINUS"; "1"; "PLUS"; "3"], {re = 4.; im = 0.}); (* MINUS is left-associative *)
+      (["2"; "PLUS"; "1"; "LEQ"; "3"], {re = 1.; im = 0.}); (* PLUS <= LEQ *)
+      (["2"; "PLUS"; "1"; "EQUAL"; "3"], {re = 1.; im = 0.}); (* PLUS <= EQUAL *)
+      (["2"; "RMDR"; "3"; "TIMES"; "2"], {re = 4.; im = 0.}); (* RMDR <= TIMES *)
+      (["1"; "LESS"; "3"; "GREATER"; "0"], {re = 1.; im = 0.}); (* LESS = GREATER *)
+      (["1"; "GREATER"; "3"; "LESS"; "0"], {re = 0.; im = 0.});
+      (["1"; "EQUAL"; "3"; "GREATER"; "0"], {re = 0.; im = 0.}); (* GREATER = EQUAL *)
+      (["3"; "GREATER"; "3"; "EQUAL"; "8"], {re = 0.; im = 0.});
+      (["1"; "OR"; "1"; "AND"; "0"], {re = 1.; im = 0.}); (* AND <= OR *)
+      (["0"; "AND"; "0"; "OR"; "1"], {re = 1.; im = 0.}); (* AND <= OR *)
+      (["1"; "AND"; "3"; "EQUAL"; "0"], {re = 0.; im = 0.}); (* EQUAL <= AND *)
+      (["1"; "OR"; "3"; "EQUAL"; "0"], {re = 1.; im = 0.}); (* EQUAL <= OR *)
+      (["1"; "XOR"; "0"; "OR"; "1"], {re = 1.; im = 0.}); (* OR = XOR *)
+      (["1"; "OR"; "1"; "XOR"; "1"], {re = 0.; im = 0.});
+      
+
+      
+
+    
+
+      (* 
+            POWER
+        << (INTDIV, RMDR)
+        << (TIMES, DIVIDED)
+        << (PLUS, MINUS)
+        << (LEQ, LESS, GEQ, GREATER, EQUAL, DIFFERENT)
+        << AND
+        << (OR, XOR)
+     *)
+
     ];
     print_endline "--------------------------------------------";
     print_endline "Tests_arithmetic, eval_num: all tests passed";

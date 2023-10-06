@@ -451,7 +451,7 @@ let op_list = [
   ("AND", 5);
   ("OR", 6);
   ("INTDIV", 1); ("RMDR", 1);
-  ("XOR", 8)
+  ("XOR", 6)
   ];;
 
 (* All precedences were checked on a Casio calculator
@@ -460,8 +460,8 @@ let op_list = [
     << (TIMES, DIVIDED)
     << (PLUS, MINUS)
     << (LEQ, LESS, GEQ, GREATER, EQUAL, DIFFERENT)
-    << (AND, OR)
-    << (XOR)
+    << AND
+    << (OR, XOR)
 *)
 
 
