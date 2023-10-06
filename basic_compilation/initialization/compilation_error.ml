@@ -72,3 +72,13 @@ let print_around (lexlist : string list) (i : int) : unit =
       print_endline "<<<";
       print_five t' 0)
     | [] -> ();;
+
+(* Prints the error message and the 5 lines before and after the line where the compilation error occured *)
+let print_error_info (lexlist : string list) (name : string) (len_t : int) (error_message : string) : unit =
+  let len_lex = List.length lexlist in
+  print_endline "---------------------------------------";
+  print_endline ("Compilation error in program \""^name^"\"");
+  print_endline error_message;
+  print_newline ();
+  print_around lexlist (len_lex - len_t);
+  print_endline "---------------------------------------";;

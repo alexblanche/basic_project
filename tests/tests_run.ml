@@ -187,3 +187,27 @@ let run_prog_locate () =
       )]
   in
   run (empty_projcont ()) prog "main";;
+
+let run_prog_eval () =
+  let prog =
+    compile
+      [("main",
+        [
+         "1"; "AND"; "1"; "DISP";
+         "2"; "ASSIGN"; "D"; "EOL";
+         "3"; "ASSIGN"; "THETA"; "EOL";
+         "QUOTE"; "D"; "QUOTE"; "EOL";
+            "D"; "DISP";
+         "QUOTE"; "REP"; "D"; "QUOTE"; "EOL";
+            "REP"; "D"; "DISP";
+         "QUOTE"; "THETA"; "QUOTE"; "EOL";
+            "THETA"; "DISP";
+         "QUOTE"; "D"; "EQUAL"; "REP"; "D"; "QUOTE"; "EOL";
+            "D"; "EQUAL"; "REP"; "D"; "DISP";
+         "QUOTE"; "THETA"; "DIFFERENT"; "CPLXI"; "QUOTE"; "EOL";
+            "THETA"; "DIFFERENT"; "CPLXI"; "DISP";
+         "QUOTE"; "D"; "EQUAL"; "REP"; "D"; "AND"; "THETA"; "DIFFERENT"; "CPLXI"; "QUOTE"; "EOL";
+         "D"; "EQUAL"; "REP"; "D"; "AND"; "THETA"; "DIFFERENT"; "CPLXI"; "DISP"]
+      )]
+  in
+  run (empty_projcont ()) prog "main";;

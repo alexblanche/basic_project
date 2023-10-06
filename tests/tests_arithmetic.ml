@@ -134,6 +134,7 @@ let unit_tests_eval_num () =
       (["1"; "PLUS"; "MAX"; "LBRACKET"; "4"; "."; "5"; ","; "LPAR"; "7"; "TIMES"; "1"; "RPAR"; ","; "3"; "TIMES"; "2"; "RPAR"; "RBRACKET";
       "TIMES"; "2"; "EOL"], {re = 15.; im = 0.});
       (["LIST"; "1"; "LSQBRACKET"; "2"; "MINUS"; "1"; "RSQBRACKET"], {re = 5.; im = 3.});
+      (["2"; "EQUAL"; "REP"; "2"; "AND"; "1"], {re = 1.; im = 0.});
 
       (* Tests for precedence *)
       (* All these expressions distinguish operators of different precedence *)

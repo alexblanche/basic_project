@@ -70,6 +70,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
               else fail lexlist i "Compilation error: Wrong multi-assignment (-> ~) of a variable"
             
             | Numerical, "LIST"::_::"LSQBRACKET"::_
+            (* All digits are specified, to avoid "List 1 EOL [[1,2][3,4]] -> Mat A" being parsed as "List _ _ [" *)
             | Numerical, "LIST"::_::"0"::"LSQBRACKET"::_
             | Numerical, "LIST"::_::"1"::"LSQBRACKET"::_
             | Numerical, "LIST"::_::"2"::"LSQBRACKET"::_
@@ -342,6 +343,16 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | [] -> i+1 (* Return value *)
   in
 
+  let rec aux_ignore_error (lexlist : string list) (name : string) (t : string list) (i : int) : int =
+    try
+      aux t i
+    with
+      | Compilation_error (t', j, error_message) ->
+        (print_error_info lexlist name (List.length t') error_message;
+        let (_, t'') = extract_line t' in
+        aux_ignore_error lexlist name t'' j)
+  in
+
   (* Called on all programs *)
   (* Compiles the program and returns the next index *)
   let compile_prog i (name,lexlist) =
@@ -355,39 +366,34 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
     (* Debug *)
     (* print_endline name; *)
 
-    try
-      (* Compilation of the program *)
-      let j = aux lexlist i in
+    (* Compilation of the program *)
+    let j =
+      if ignore_errors
+        then aux_ignore_error lexlist name lexlist i
+        else
+          try
+            aux lexlist i
+          with
+            | Compilation_error (t, i, error_message) ->
+              (* Handling of compilation error *)
+              (print_error_info lexlist name (List.length t) error_message;
+              failwith "Compilation aborted")
+    in
 
-      (* Post-treatment *)
+    (* Post-treatment *)
 
-      set code (j-1) End;
-      (* The Goto that were encountered before their labels are set. *)
-      List.iter (fun (a_j,k) -> set code k (Goto (mem.lblindex.(a_j)))) mem.gotoindex;
-      (* The missing IfEnd are closed. *)
-      (* Raises a Compilation_error exception if a keyword different from "if" or "else" is encountered,
-        or if mem.stack only contains "break" pointers *)
-      while mem.stack <> [] do
-        let _ = process_ifend (j-1) [] code mem in ()
-      done;
+    set code (j-1) End;
+    (* The Goto that were encountered before their labels are set. *)
+    List.iter (fun (a_j,k) -> set code k (Goto (mem.lblindex.(a_j)))) mem.gotoindex;
+    (* The missing IfEnd are closed. *)
+    (* Raises a Compilation_error exception if a keyword different from "if" or "else" is encountered,
+      or if mem.stack only contains "break" pointers *)
+    while mem.stack <> [] do
+      let _ = process_ifend (j-1) [] code mem in ()
+    done;
 
-      (* Next index *)
-      j
-    with
-      | Compilation_error (t, i, error_message) ->
-        (* Handling of compilation error *)
-        (let len_t = List.length t in
-        let len_lex = List.length lexlist in
-        print_endline "---------------------------------------";
-        print_endline ("Compilation error in program \""^name^"\"");
-        print_endline error_message;
-        print_newline ();
-        print_around lexlist (len_lex - len_t);
-        print_endline "---------------------------------------";
-        if ignore_errors then
-          (set code i End;
-          (i+1))
-        else failwith "Compilation aborted")
+    (* Next index *)
+    j
   in
 
   (* Compilation of all the programs in the project *)

@@ -323,14 +323,16 @@ and right_reduce (p : parameters) (output_q : entity list) (op_q : arithm list) 
 
 (* Shunting_yard algorithm: returns the value of the expression *)
 (* p is the parameter container, containing the variables, lists and matrices *)
-and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity list) (op_q : arithm list) : entity =
-  match (lexlist, op_q) with
+and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list) (op_q : arithm list) : entity =
+  match (alist, op_q) with
     (* End case *)
     | [], _ -> calculate p output_q op_q
 
     (* Add to a queue *)
     (* Case of omitted multiplication operator *)
-    | (Entity x1)::(Entity x2)::t, _ -> shunting_yard p ((Op "TIMES")::(Entity x2)::t) (x1::output_q) op_q
+    | (Entity x1)::(Entity _)::_, _
+    | (Entity x1)::(Lunop _)::_, _
+    | (Entity x1)::(Function _)::_, _ -> shunting_yard p ((Op "TIMES")::List.tl alist) (x1::output_q) op_q
     (* Normal number case *)
     | (Entity x)::t, _ -> shunting_yard p t (x::output_q) op_q
 
@@ -382,11 +384,11 @@ and shunting_yard (p : parameters) (lexlist : arithm list) (output_q : entity li
               | _ -> failwith ("Arithmetic parsing: Not enough operands for operator "^o2))
           else
             let noutq, nopq = right_reduce p output_q op_q in
-            shunting_yard p t noutq ((Op o1)::nopq)
+            shunting_yard p alist noutq nopq
         else shunting_yard p t output_q ((Op o1)::op_q)
     | (Op o)::t, (Lunop lo)::opqt ->
       let noutq, nopq = right_reduce p output_q op_q in
-      shunting_yard p t noutq ((Op o)::nopq)
+      shunting_yard p alist noutq nopq
     | (Op o)::t, _ -> shunting_yard p t output_q ((Op o)::op_q)
     
     (* Rpar *)

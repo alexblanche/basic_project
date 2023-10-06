@@ -285,15 +285,6 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         (prog_goback := (i+1)::!prog_goback;
         let j =
           try
-            (* Debug *
-            print_string "Prog looked for: ";
-            print_endline name;
-            List.iter (fun (s,k) -> (print_char '('; String.iter (fun c -> print_int (Char.code c); print_char ' ') s; print_string ", index = "; print_int k; print_string ") ")) proglist;
-            print_newline ();
-            print_string "name = ";
-            String.iter (fun c -> print_int (Char.code c); print_char ' ') name;
-            print_newline ();
-            ****)
             List.assoc name proglist
           with
             | Not_found -> failwith ("Runtime error: Prog \""^name^"\" not found")
