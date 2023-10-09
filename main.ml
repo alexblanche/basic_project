@@ -8,7 +8,7 @@
 #require "sdl2_ttf"
 #require "unix"
 
-(* Initialization *)
+(** Initialization **)
 #use "initialization/graphics/graphic_parameters.ml"
 #use "initialization/graphics/events.ml"
 #use "initialization/key_check.ml"
@@ -26,10 +26,12 @@
 
 #use "g1m_read_write/g1m_reader.ml"
 
-(* Compilation *)
+(** Compilation **)
+(* Arithmetic *)
 #use "arithmetic/definitions/arithmetic_def.ml"
 #use "arithmetic/definitions/entity_functions.ml"
 #use "arithmetic/definitions/string_func.ml"
+#use "arithmetic/definitions/special_functions.ml"
 #use "arithmetic/arithmetic_lexing.ml"
 #use "arithmetic/arithmetic_evaluation.ml"
 
@@ -39,7 +41,7 @@
 #use "basic_compilation/process_commands.ml"
 #use "basic_compilation/basic_compile.ml"
 
-(* Emulation *)
+(** Emulation **)
 #use "initialization/graphics/graphics_lib.ml"
 #use "basic_execution/float_repr.ml"
 #use "basic_execution/basic_graphics.ml"

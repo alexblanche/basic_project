@@ -287,6 +287,41 @@ and eval_str (p : parameters) (se : string_expr) : string_expr =
     | Str_Func (fname, sel) ->
       apply_str_func p fname (List.map (fun se -> eval_str p se) sel)
 
+(* Special functions evaluation *)
+(* Each function has type basic_expr list -> entity *)
+and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) =
+  if fname = "SEQ" then
+    (match el with
+      | [e; Arithm [Entity (Variable (Var vi))]; Complex z1; Complex z2; Complex z3] ->
+        if z1.im = 0. && z2.im = 0. && z3.im = 0. then
+          let n = 1 + int_of_float ((z2.re -. z1.re)/.z3.re) in
+          let t = Array.make n QMark in
+          (p.var.(vi+29) <- 0.;
+          p.var.(vi) <- z1.re;
+          let i = ref 0 in
+          while (p.var.(vi) <= z2.re) do
+            t.(!i) <- Complex (eval_num p e);
+            p.var.(vi) <- p.var.(vi) +. z3.re;
+            incr i
+          done;
+          ListContent t)
+        else failwith "apply_special_func: wrong input for Seq"
+      | _ -> failwith "apply_special_func: wrong input for Seq")
+  else if fname = "PXLTEST" then
+    (match el with
+      | [Complex z1; Complex z2] ->
+        if is_int z1 && is_int z2
+          && z1.re >= 1. && z1.re <= 63.
+          && z2.re >= 1. && z2.re <= 127. then
+          let n1 = int_of_float z1.re in
+          let n2 = int_of_float z2.re in
+          Value (complex_of_bool (p.gscreen.(n1).(n2)))
+        else failwith "apply_special_func: wrong input for PxlTest" 
+      | _ -> failwith "apply_special_func: wrong input for PxlTest")
+  else failwith ("apply_special_func: unknown function "^fname)
+
+
+
 (* Final evaluation of the arithmetic formula *)
 (* p is the parameter container, containing the variables, lists and matrices *)
 and calculate (p : parameters) (outq : entity list) (opq : arithm list) : entity =
@@ -360,6 +395,25 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
         (match eval_str p (Str_Func (fname, sel)) with
           | Num_expr (Complex z) -> shunting_yard p t ((Value z)::output_q) op_q
           | _ -> failwith "Arithmetic parsing: wrong output type of string function")
+      (* Special function: num_expr list -> entity *)
+      (* Only the arguments for which the corresponding entry of eval_arg
+        is true are evaluated before being passed to the function *)
+      else if List.mem_assoc fname special_functions_list then
+        let eval_arg = List.assoc fname special_functions_list in
+        let n1 = List.length eval_arg in
+        let n2 = List.length el in
+        if n1 <> n2 then
+          failwith ("Arithmetic parsing: wrong arity for special function "^fname)
+        else
+          (let eval_el =
+            List.rev (List.rev_map2
+              (fun do_eval e ->
+                if do_eval
+                  then Complex (eval_num p e)
+                  else e)
+              eval_arg el)
+          in
+          shunting_yard p t ((apply_special_func p fname eval_el)::output_q) op_q)
       else
         failwith ("Arithmetic parsing: Unknown function "^fname))
 

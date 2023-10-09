@@ -318,3 +318,50 @@ let run_prog_print () =
       )]
   in
   run (empty_projcont ()) prog "main";;
+
+(********************************************************************)
+
+let run_end () =
+  let prog =
+    compile
+      [("main",
+        [
+         "1"; "PLUS"; "2"; "DISP";
+         "QUOTE"; "A"; "B"; "C"; "QUOTE"; "PLUS"; "QUOTE"; "D"; "E"; "F"; "QUOTE"
+        ]
+      )]
+  in
+  run (empty_projcont ()) prog "main";;
+
+let run_clrlist () =
+  let prog =
+    compile
+      [("main",
+        [
+         "LBRACKET"; "1"; ","; "2"; "ASSIGN"; "LIST"; "2"; "EOL";
+         "DIM"; "LIST"; "1"; "DISP";
+         "DIM"; "LIST"; "2"; "DISP";
+         "CLRLIST"; "EOL";
+         "DIM"; "LIST"; "1"; "DISP";
+         "DIM"; "LIST"; "2"; "DISP";
+        ]
+      )]
+  in
+  run (empty_projcont ()) prog "main";;
+
+let run_seq () =
+  let prog =
+    compile
+      [("main",
+        [
+         "SEQ"; "2"; "X"; ","; "X"; ","; "MINUS"; "0"; "."; "4"; ","; "5"; "."; "6"; ","; "1"; "."; "3"; "ASSIGN"; "LIST"; "1"; "EOL";
+         "QUOTE"; "DIM"; "COLON"; "QUOTE"; "COLON"; "DIM"; "LIST"; "1"; "DISP";
+         "LIST"; "1"; "LSQBRACKET"; "1"; "DISP";
+         "LIST"; "1"; "LSQBRACKET"; "2"; "DISP";
+         "LIST"; "1"; "LSQBRACKET"; "3"; "DISP";
+         "LIST"; "1"; "LSQBRACKET"; "4"; "DISP";
+         "LIST"; "1"; "LSQBRACKET"; "5"; "DISP";
+        ]
+      )]
+  in
+  run (empty_projcont ()) prog "main";;

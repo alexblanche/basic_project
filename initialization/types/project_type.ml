@@ -109,9 +109,8 @@ type parameters = {
   (* Display the axes if true *)
   mutable axes : bool;
 
-  (* Getkey *)
-  (* Obsolete: now a reference in key_check.ml *)
-  (* mutable getkey : int *)
+  (* Pointer to the gscreen *)
+  mutable gscreen : bool array array
 }
 
 
@@ -147,9 +146,8 @@ let empty_param () : parameters =
     (* Display the axes if true *)
     axes = false;
 
-    (* Getkey *)
-    (* Obsolete: now a reference in key_check.ml *)
-    (* getkey = 0 *)
+    (* pointer to the gscreen *)
+    gscreen = [||];
   };;
 
 (* Returns a new array with twice the size of t, with the elements of t as first elements

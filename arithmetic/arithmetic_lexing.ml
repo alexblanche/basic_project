@@ -28,6 +28,14 @@ let rec precedence (o1 : string) (o2 : string) : int =
   with
     | Not_found -> failwith ("precedence: Unkown operator "^o1);;
 
+(* List of the special functions *)
+(* For each function, the associated list gives the arity and indicates to the
+  arithmetic expression evaluator which arguments should be evaluated beforehand (true)
+  or passed as-is (false) *)
+  let special_functions_list =
+    [("SEQ", [false; false; true; true; true]);
+     ("PXLTEST", [true; true])];;
+
 (* Obsolete: will be reused to lex Custom Basic code *)
 (* Checks if the string starting at index i of string s is an operator *)
 (* let is_operator (s : string) (i : int) : bool =
@@ -458,8 +466,9 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
           in
           aux ((Function (s, checked_el))::acc) expr_type t'
 
-        (* Entity function *)
-        else if Hashtbl.mem entity_func_table s then
+        (* Entity/special function *)
+        else if Hashtbl.mem entity_func_table s
+          || List.mem_assoc s special_functions_list then
           let (el, t') = extract_list_content t in
           aux ((Function (s, List.map fst el))::acc) expr_type t'
         

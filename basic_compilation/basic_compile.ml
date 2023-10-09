@@ -320,13 +320,18 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         
       | "CLRLIST" :: a :: t'' ->
         let empty_list = Arithm [Entity (ListContent [||])] in
-        if is_var a || a = "ANS" then
+        if is_var a || a = "ANS" then (* ClrList A *)
           (set code i (AssignList (empty_list, Variable (Var (var_index a))));
           aux t'' (i+1))
-        else if is_digit a then
+        else if is_digit a then (* ClrList 11 *)
           let (vi,q) = read_int (a::t'') true in
           (set code i (AssignList (empty_list, Value (complex_of_int vi)));
           aux q (i+1))
+        else if a = "EOL" || a = "COLON" || a = "DISP" then (* ClrList (clears all lists)*)
+          (for j = 1 to 20 do
+            set code (i+j-1) (AssignList (empty_list, Value (complex_of_int j)))
+          done;
+          aux t'' (i+20))
         else fail lexlist i "Compilation error: Wrong index for ClrList"
 
       | "CLRMAT" :: a :: t'' ->
@@ -334,6 +339,11 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         if is_var a || a = "ANS" then
           (set code i (AssignMat (empty_mat, var_index a));
           aux t'' (i+1))
+        else if a = "EOL" || a = "COLON" || a = "DISP" then (* ClrMat (clears all matrices)*)
+          (for j = 0 to 19 do
+            set code (i+j) (AssignMat (empty_mat, j))
+          done;
+          aux t'' (i+20))
         else fail lexlist i "Compilation error: Wrong index for ClrMat"
 
       (* Errors *)

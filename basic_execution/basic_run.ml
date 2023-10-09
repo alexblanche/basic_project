@@ -36,6 +36,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   escape_activated := true;
   getkey := 0;
   key_pressed := Unknown;
+  p.gscreen <- gscreen;
 
   (** Main looping function **)
   let rec aux (i : int) : unit =
@@ -193,7 +194,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             (* To be redone when we take care of the Dones *)
             (line_feed ();
             clear_line !writing_index;
-            locate_no_refresh ["e"; "n"; "o"; "D"] 0 !writing_index;
+            locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
             tdraw ren;
             if (i <= n-2 && code.(i+1) = End
               || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
@@ -309,8 +310,11 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         let t = eval_list p le in
         let ni = get_val_numexpr p n in
         if is_int ni then
-          (p.list.((int_of_complex ni)-1) <- t;
-          aux (i+1))
+          let nii = int_of_complex ni in
+            if nii >= 0 && nii <= 19 then
+              (p.list.(nii-1) <- t;
+              aux (i+1))
+            else failwith "Runtime error: index out of bounds for list assignment"
         else failwith "Runtime error: wrong index for list assignment"
 
       | AssignMat (me, mi) ->
