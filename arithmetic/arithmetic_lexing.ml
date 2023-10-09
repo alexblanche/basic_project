@@ -446,6 +446,7 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
               | []
               | Lpar :: _
               | Lunop _ :: _
+              | Op _ :: _
               | Function _ :: _ -> aux ((Lunop "UMINUS")::acc) expr_type t
               | _ -> aux ((Op "MINUS")::acc) expr_type t)
           else aux ((Op s)::acc) expr_type t

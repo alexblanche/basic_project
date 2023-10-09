@@ -139,6 +139,8 @@ let unit_tests_eval_num () =
       (["2"; "TIMES"; "UMINUS"; "1"], {re = -2.; im = 0.});
       (["2"; "LPAR"; "1"; "PLUS"; "1"], {re = 4.; im = 0.});
       (["LPAR"; "1"; "PLUS"; "1"; "RPAR"; "MINUS"; "1"], {re = 1.; im = 0.});
+      (["LPAR"; "MINUS"; "1"; "PLUS"; "1"; "RPAR"; "MINUS"; "1"], {re = -1.; im = 0.});
+      (["1"; "MINUS"; "1"; "PLUS"; "MINUS"; "1"], {re = -1.; im = 0.});
       
 
       (* Tests for precedence *)
@@ -176,11 +178,6 @@ let unit_tests_eval_num () =
       (["1"; "XOR"; "0"; "OR"; "1"], {re = 1.; im = 0.}); (* OR = XOR *)
       (["1"; "OR"; "1"; "XOR"; "1"], {re = 0.; im = 0.});
       
-
-      
-
-    
-
       (* 
             POWER
         << (INTDIV, RMDR)

@@ -365,3 +365,41 @@ let run_seq () =
       )]
   in
   run (empty_projcont ()) prog "main";;
+
+(* Debug for a condition in the PAC-MAN game *)
+let run_test_cond () =
+  let e = Arithm
+   [Lunop "NOT";
+    Lpar;
+      Entity (Value {re = 0.; im = 0.});
+      Op "OR";
+      Lpar;
+          Entity (Value {re = 1.; im = 0.});
+          Op "AND";
+          Entity (Variable (Var 3));
+          Op "EQUAL";
+          Lunop "UMINUS"; Entity (Value {Complex.re = 1.; im = 0.});
+      Rpar;
+    Rpar]
+  in
+  eval_num
+    (let p = empty_param () in
+    p.var.(3) <- 1.;
+    p.var.(23) <- 5.;
+    p.var.(24) <- 3.;
+    p.list.(2) <-
+      [|2.; 5.; 3.; 4.; 1.; 2.; 8.; 7.;
+        0.; 0.; 0.; 0.; 0.; 0.; 0.; 0.|];
+    p)
+    e;;
+
+let run_prog_minus () =
+  let prog =
+    compile
+      [("main",
+        [
+         "NOT"; "LPAR"; "1"; "OR"; "LPAR"; "1"; "AND"; "1"; "EQUAL"; "MINUS"; "1"; "DISP"
+        ]
+      )]
+  in prog;;
+  (* run (empty_projcont ()) prog "main";; *)
