@@ -140,7 +140,13 @@ let func_table =
         match l with
           | [z] ->
             if z.im = 0.
-              then complex_of_float (float_of_int (int_of_float z.re))
+              (* Going through string_of_float loses a bit of the precision,
+                 in order to avoid the 1.99999999999999978 case *)
+              then
+                complex_of_int
+                  (int_of_float
+                    (float_of_string
+                      (string_of_float z.re)))
               else
                 {re = float_of_int (int_of_float z.re);
                  im = float_of_int (int_of_float z.im)}

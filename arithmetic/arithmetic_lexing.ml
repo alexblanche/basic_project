@@ -208,7 +208,8 @@ let rec extract_list_index (t : string list) : arithm * (string list) =
           | "IMPL"::_
           | "ASSIGN"::_
           | ","::_
-          | "DISP"::_ -> (x, t''')
+          | "DISP"::_
+          | [] -> (x, t''')
           | _ -> failwith "extract_list_index: Syntax error, List '[' not properly closed")
     | _ -> failwith "extract_list_index: Syntax error, List should be followed by '['"
 
@@ -236,14 +237,15 @@ and extract_mat_index (t : string list) : arithm * (string list) =
           else
             let x = Entity (Variable (MatIndex (ai, e1, e2))) in
             (match t5 with
-            | "RSQBRACKET"::q -> (x, q)
-            | "EOL"::_
-            | "COLON"::_
-            | "IMPL"::_
-            | "ASSIGN"::_
-            | ","::_
-            | "DISP"::_ -> (x, t5)
-            | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
+              | "RSQBRACKET"::q -> (x, q)
+              | "EOL"::_
+              | "COLON"::_
+              | "IMPL"::_
+              | "ASSIGN"::_
+              | ","::_
+              | "DISP"::_
+              | [] -> (x, t5)
+              | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
         | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
     | _ -> failwith "extract_mat_index: Syntax error, Mat should be followed by '['"
 

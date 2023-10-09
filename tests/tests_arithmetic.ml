@@ -188,6 +188,9 @@ let unit_tests_eval_num () =
         << (OR, XOR)
      *)
 
+    (* Tests for higher precedence of omitted multiplication *)
+    (["INT"; "0"; "."; "5"; "A"], {re = 5.; im = 0.});
+
     ];
     print_endline "--------------------------------------------";
     print_endline "Tests_arithmetic, eval_num: all tests passed";
