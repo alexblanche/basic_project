@@ -49,7 +49,7 @@ let store_ans (var : float array) (z : complex) : unit =
   var.(28) <- z.re;
   var.(57) <- z.im;;
 
-(* Converts as string in reverse string list type to reverse symbol list*)
+(* Converts as string in reverse string list type to reverse symbol list *)
 (* text = true if the string is about to be printed in text mode, and false if in graphic mode *)
 let rev_lexlist_to_rev_symblist (lexlist : string list) (text : bool) : string list =
   let l =

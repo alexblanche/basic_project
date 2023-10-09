@@ -425,6 +425,8 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
           aux ((Entity (Value {re = Float.pi; im = 0.}))::acc) expr_type t
         else if s = "GETKEY" then
           aux ((Entity (Variable Getkey))::acc) expr_type t
+        else if s = "RAN" then
+          aux ((Entity (Variable Random))::acc) expr_type t
 
         (* Parentheses *)
         else if s = "LPAR" then

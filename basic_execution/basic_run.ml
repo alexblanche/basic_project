@@ -311,7 +311,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         let ni = get_val_numexpr p n in
         if is_int ni then
           let nii = int_of_complex ni in
-            if nii >= 0 && nii <= 19 then
+            if nii >= 1 && nii <= 20 then
               (p.list.(nii-1) <- t;
               aux (i+1))
             else failwith "Runtime error: index out of bounds for list assignment"

@@ -57,7 +57,7 @@ let entity_func_table =
       (let f nl =
         match nl with
           | [ListContent t] ->
-            Value (complex_of_int ((Array.length t)/2))
+            Value (complex_of_int (Array.length t))
           | [MatContent m] ->
             let row = Array.length m in
             if row = 0

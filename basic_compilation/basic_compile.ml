@@ -301,7 +301,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "ISZ" :: t
       | "DSZ" :: t ->
         (* Compiled as V + 1 -> V or V - 1 -> V *)
-        (fail_if_not_eol lexlist i;
+        (fail_if_not_eol t i;
         let isz = List.hd lexlist = "ISZ" in
         match t with
           | v :: t' ->

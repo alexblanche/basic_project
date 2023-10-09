@@ -263,8 +263,27 @@ let process_goto i t code mem =
 
 (* Prog *)
 let process_prog i t code mem =
-  let (sl, t') = aux_extract_str t in
-  let s = String.concat "" (List.rev sl) in
+  let (lexl, t') = aux_extract_str t in
+  let sl =
+    List.rev_map
+      (fun lex ->
+        if String.length lex = 1 &&
+          (lex >= "0" && lex <= "9"
+          || lex >= "A" && lex <= "Z"
+          || lex = " "
+          || lex = "."
+          || lex = "\126" (* Tilde *)
+          || lex = "\039" (* ' *))
+          then lex
+        else
+          try
+            List.assoc lex
+              [("PLUS", "\137"); ("MINUS", "\153"); ("TIMES", "\169"); ("DIVIDED", "\185"); ("QUOTE", "\034")]
+          with
+            | Not_found -> fail t i "Compilation error: Incorrect character in Prog name")
+      lexl
+  in
+  let s = String.concat "" sl in
   match t' with
     | "EOL"::t''
     | "COLON"::t'' ->
