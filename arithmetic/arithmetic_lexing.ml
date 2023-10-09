@@ -209,6 +209,7 @@ let rec extract_list_index (t : string list) : arithm * (string list) =
           | "ASSIGN"::_
           | ","::_
           | "DISP"::_
+          | "STEP"::_
           | [] -> (x, t''')
           | _ -> failwith "extract_list_index: Syntax error, List '[' not properly closed")
     | _ -> failwith "extract_list_index: Syntax error, List should be followed by '['"
@@ -244,6 +245,7 @@ and extract_mat_index (t : string list) : arithm * (string list) =
               | "ASSIGN"::_
               | ","::_
               | "DISP"::_
+              | "STEP"::_
               | [] -> (x, t5)
               | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
         | _ -> failwith "extract_mat_index: Syntax error, Mat '[' not properly closed")
