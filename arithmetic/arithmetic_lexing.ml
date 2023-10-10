@@ -35,6 +35,7 @@ let rec precedence (o1 : string) (o2 : string) : int =
   let special_functions_list =
     [("SEQ", [false; false; true; true; true]);
      ("PXLTEST", [true; true]);
+     ("MATTOLIST", [false; true]);
      ("SIGMAPAR", [false; false; true; true])];;
 
 (* Obsolete: will be reused to lex Custom Basic code *)

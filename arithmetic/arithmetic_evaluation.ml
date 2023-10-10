@@ -330,6 +330,14 @@ and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) 
           Value (complex_of_bool (p.gscreen.(n1).(n2)))
         else failwith "apply_special_func: wrong input for PxlTest" 
       | _ -> failwith "apply_special_func: wrong input for PxlTest")
+  else if fname = "MATTOLIST" then
+    (match el with
+      | [Arithm [Entity (Variable (Var vi))]; Complex z] ->
+        let j = int_of_complex z -1 in
+        let m = p.mat.(vi) in
+        let row = (Array.length m)/2 in
+        ListContent (Array.init row (fun i -> Complex (get_complex m.(i).(j) m.(i+row).(j))))
+      | _ -> failwith "apply_special_func: wrong input for MatToList") 
   else if fname = "SIGMAPAR" then
     (let arg_seq =
       if List.length el = 5

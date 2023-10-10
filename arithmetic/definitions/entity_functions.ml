@@ -294,6 +294,80 @@ let entity_func_table =
           | _ -> failwith "Function error: DeltaList has arity 1 and only accepts lists"
       in f)
     );
+
+    ("MEAN",
+      (let f nl =
+        match nl with
+          | [ListContent t] ->
+            let s =
+              Array.fold_left
+                (fun e1 e2 ->
+                  match e1,e2 with
+                    | Complex z1, Complex z2 -> Complex (Complex.add z1 z2)
+                    | _ -> failwith "Mean: wrong type")
+                (Complex (complex_of_float 0.)) t
+            in
+            (match s with
+              | Complex z -> Value (scal (1./.(float_of_int (Array.length t))) z)
+              | _ -> failwith "Mean: wrong type")
+          | [ListContent t1; ListContent t2] ->
+            let n1 = Array.length t1 in
+            if n1 = Array.length t2
+              then failwith "Function error: Mean expects two lists of the same size";
+            let weighted_sum =
+              let wsum = ref (complex_of_float 0.) in
+              Array.iter2
+                (fun e1 e2 ->
+                  match e1,e2 with
+                    | Complex z, Complex weight ->
+                      wsum := Complex.add !wsum (Complex.mul z weight)
+                    | _ -> failwith "Mean: wrong type")
+                t1 t2;
+              !wsum
+            in
+            let sum_w =
+              Array.fold_left
+                (fun s e ->
+                  match e with
+                    | Complex z ->
+                      if z.im = 0.
+                        then s +. z.re
+                        else failwith "Mean: the weights in the second list should be real numbers"
+                    | _ -> failwith "Mean: wrong type")
+                0. t2
+            in
+            Value (scal (1./.sum_w) weighted_sum)
+          | _ -> failwith "Function error: Mean has arity 1 or 2 and only accepts lists"
+      in f)
+    );
+
+    ("LISTTOMAT",
+      (let f nl =
+        let col = List.length nl in
+        let row =
+          match nl with
+            | (ListContent t)::_ -> Array.length t
+            | _ -> failwith "ListToMat: at least one argument is expected"
+        in
+        let m = Array.make_matrix row col (Complex (complex_of_float 0.)) in
+        let rec aux nl i =
+          match nl with
+            | (ListContent t)::nt ->
+              let n = Array.length t in
+              (if n <> row
+                then failwith "ListToMat: the arguments should be lists of the same size"
+              else
+                for j = 0 to n-1 do
+                  m.(j).(i) <- t.(j)
+                done;
+                aux nt (i+1))
+            | [] -> ()
+            | _ -> failwith "ListToMat: wrong type"
+        in
+        aux nl 0;
+        MatContent m
+      in f)
+    );
     ]
   in
   let t = Hashtbl.create (5 + List.length entity_func_list) in
