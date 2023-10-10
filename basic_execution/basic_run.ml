@@ -103,9 +103,18 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
               disp p ren writing_index;
               aux (i+2))
             else aux (i+1))
-          | ListExpr (* TO DO: list_expr, mat_expr *)
-          | _ -> aux (i+1))
-        
+          (* Just storing in List Ans/Mat Ans *)
+          (* Display is not treated yet *)
+          | ListExpr ->
+            (p.list.(27) <- eval_list p (Arithm al);
+            if i<n-1 && code.(i+1) = Disp then
+              aux (i+2) (* Display to be treated here *)
+            else aux (i+1))
+          | _ ->
+            (p.mat.(27) <- eval_mat p (Arithm al);
+            if i<n-1 && code.(i+1) = Disp then
+              aux (i+2) (* Display to be treated here *)
+            else aux (i+1)))
           
       | Assign (QMark, v) -> (* to do: treat list/mat assignment *)
         let (e, expr_type) = qmark win ren in

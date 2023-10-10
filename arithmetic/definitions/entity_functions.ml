@@ -257,6 +257,43 @@ let entity_func_table =
           | _ -> failwith "Function error: Min has arity 1 or 2 and only accepts lists"
       in f)
     );
+
+    ("CUML",
+      (let f nl =
+        match nl with
+          | [ListContent t] ->
+            let st = Array.make (Array.length t) t.(0) in
+            let _ =
+              let i = ref 0 in
+              Array.fold_left
+                (fun zs e ->
+                  match e with
+                    | Complex ze ->
+                      let zs' = Complex.add zs ze in
+                      (st.(!i) <- Complex zs';
+                      incr i;
+                      zs')
+                    | _ -> failwith "Cuml: wrong type")
+                (complex_of_float 0.) t
+            in
+            ListContent st
+          | _ -> failwith "Function error: Cuml has arity 1 and only accepts lists"
+      in f)
+    );
+
+    ("DELTALIST",
+      (let f nl =
+        match nl with
+          | [ListContent t] ->
+            let n = Array.length t in
+            ListContent (Array.init (n-1)
+              (fun i ->
+                match t.(i+1), t.(i) with
+                  | Complex zi1, Complex zi -> Complex (Complex.sub zi1 zi)
+                  | _ -> failwith "DeltaList: wrong type"))
+          | _ -> failwith "Function error: DeltaList has arity 1 and only accepts lists"
+      in f)
+    );
     ]
   in
   let t = Hashtbl.create (5 + List.length entity_func_list) in

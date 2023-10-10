@@ -96,6 +96,10 @@ type parameters = {
   (* Strings: an array of 20 strings, stored as lists of lexemes in reverse order *)
   str : (string list) array;
 
+  (* List _[0]: contain strings *)
+  listzero : (string list) array;
+
+
   (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
   mutable polar : bool;
 
@@ -123,15 +127,20 @@ let empty_param () : parameters =
       as real part in the 29 first cells, and imaginary part in the next 29 *)
     var = Array.make (2*29) 0.;
 
-    list = Array.make 26 [||];
+    (* Lists 1 to 26 + List Ans *)
+    list = Array.make 27 [||];
 
-    mat = Array.make 26 [||];
+    (* Mat A to Z + Mat Ans *)
+    mat = Array.make 27 [||];
 
     pict = Array.make 20 (0,[||]);
 
     capt = Array.make 20 [||];
 
     str = Array.make 20 [];
+
+    (* List _[0]: contain strings *)
+    listzero = Array.make 20 [];
     
     (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
     polar = false;

@@ -82,6 +82,7 @@ let get_mat_val (tmat : float array array array) (a : int) (i1 : int) (i2 : int)
   get_complex m.(i1).(i2) m.(i1+n/2).(i2);;
 
 (* Returns the length of n when n is an entity of type list *)
+(*
 let get_list_length (var : float array) (tlist : float array array) (n : entity) : int =
   match n with
     | ListContent t -> Array.length t
@@ -89,7 +90,7 @@ let get_list_length (var : float array) (tlist : float array array) (n : entity)
       Array.length (get_list tlist (int_of_complex z - 1))
     | VarList (Variable (Var vi)) ->
       Array.length (get_list tlist (int_of_complex (get_var_val var vi) - 1))
-    | _ -> failwith "get_list_length: n is not a list";;
+    | _ -> failwith "get_list_length: n is not a list";; *)
 
 (* Returns the dimensions of n when n is an entity of type matrix *)
 let get_mat_dim (tmat : float array array array) (n : entity) : int * int =
@@ -105,7 +106,7 @@ let get_mat_dim (tmat : float array array array) (n : entity) : int * int =
       if n = 0
         then (0,0)
         else (n/2, Array.length m.(0))
-    | _ -> failwith "get_list_length: n is not a matrix";;
+    | _ -> failwith "get_mat_dim: n is not a matrix";;
 
 
 (* All evaluation functions are mutually recursive *)
@@ -326,6 +327,22 @@ and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) 
           Value (complex_of_bool (p.gscreen.(n1).(n2)))
         else failwith "apply_special_func: wrong input for PxlTest" 
       | _ -> failwith "apply_special_func: wrong input for PxlTest")
+  else if fname = "SIGMAPAR" then
+    (let arg_seq =
+      if List.length el = 5
+        then el
+        else (* Case of omitted "Step" parameter: 1 by default *)
+          (* Omitting the "Step" is allowed for Sigmapar but not Seq (weird) *)
+          List.rev (Complex {re = 1.; im = 0.}::(List.rev el))
+    in
+    match apply_special_func p "SEQ" arg_seq with
+      | ListContent t ->
+        let sum_list = Arithm [Function ("SUM", [Arithm [Entity (ListContent t)]])] in
+        let z = eval_num p sum_list in
+        Value z
+      | _ ->
+        failwith "apply_special_func: wrong output of function Seq in
+          internal computation of function Sigma")
   else failwith ("apply_special_func: unknown function "^fname)
 
 
@@ -410,16 +427,28 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
         let eval_arg = List.assoc fname special_functions_list in
         let n1 = List.length eval_arg in
         let n2 = List.length el in
-        if n1 <> n2 then
+        if n2 < n1 then
           failwith ("Arithmetic parsing: wrong arity for special function "^fname)
         else
-          (let eval_el =
+          (let eval_arg_full =
+            if n2 > n1
+              then
+                (* Case of more arguments than specified:
+                  they are accepted as they may be optional parameters *)
+                (* In this case, complete with some true *)
+                List.rev
+                  (List.rev_append
+                    (Array.to_list (Array.make (n2-n1) true))
+                    (List.rev eval_arg))
+              else eval_arg
+          in 
+          let eval_el =
             List.rev (List.rev_map2
               (fun do_eval e ->
                 if do_eval
                   then Complex (eval_num p e)
                   else e)
-              eval_arg el)
+              eval_arg_full el)
           in
           shunting_yard p t ((apply_special_func p fname eval_el)::output_q) op_q)
       else

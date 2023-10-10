@@ -34,7 +34,8 @@ let rec precedence (o1 : string) (o2 : string) : int =
   or passed as-is (false) *)
   let special_functions_list =
     [("SEQ", [false; false; true; true; true]);
-     ("PXLTEST", [true; true])];;
+     ("PXLTEST", [true; true]);
+     ("SIGMAPAR", [false; false; true; true])];;
 
 (* Obsolete: will be reused to lex Custom Basic code *)
 (* Checks if the string starting at index i of string s is an operator *)

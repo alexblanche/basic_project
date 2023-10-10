@@ -67,16 +67,12 @@ let play (file_name : string) (entry_point : string) : unit =
 *)
 
 (*
-Milestone:
-  - TIMELESS (2012 text version) WORKS!!! (perfectly!)
+Games that work:
+  - TIMELESS, PAC-MAN, RUN & JUMP, 
 Next steps (by order of difficulty):
-  - RUN & JUMP, SUPER RUN & JUMP, ACE COMBAT, TIMELESS REMIX, CLONELAB, AIRWOLF
+  - SUPER RUN & JUMP, ACE COMBAT, TIMELESS REMIX, CLONELAB, AIRWOLF
 
 To do next:
-  - Implement special functions (in which not all the arguments are evaluated before passing them to the function),
-    including SEQ (also, FMIN, SOLVE, DOVERDX...)
-    -> The special function evaluator has p as parameter (unlike the evaluator of arithmetic and entity functions),
-       so PxlTest fits here
   - Keep implementing the "main" functions
   - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
   - Implement: "ABC" -> List 1[0]
