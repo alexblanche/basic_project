@@ -294,17 +294,26 @@ and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) 
     (match el with
       | [e; Arithm [Entity (Variable (Var vi))]; Complex z1; Complex z2; Complex z3] ->
         if z1.im = 0. && z2.im = 0. && z3.im = 0. then
-          let n = 1 + int_of_float ((z2.re -. z1.re)/.z3.re) in
-          let t = Array.make n QMark in
-          (p.var.(vi+29) <- 0.;
-          p.var.(vi) <- z1.re;
-          let i = ref 0 in
-          while (p.var.(vi) <= z2.re) do
-            t.(!i) <- Complex (eval_num p e);
-            p.var.(vi) <- p.var.(vi) +. z3.re;
-            incr i
-          done;
-          ListContent t)
+          let coef = (z2.re -. z1.re)/.z3.re in
+          let n = 1 + true_int_of_float coef in
+          if coef < 0. then
+            failwith "apply_special_func: wrong input for Seq"
+          else
+            let asc = z2.re > z1.re in
+            let t = Array.make n QMark in
+            (p.var.(vi+29) <- 0.;
+            print_int n; print_newline ();
+            p.var.(vi) <- z1.re;
+            let i = ref 0 in
+            while
+              (if asc
+                then p.var.(vi) <= z2.re
+                else p.var.(vi) >= z2.re) do
+              t.(!i) <- Complex (eval_num p e);
+              p.var.(vi) <- p.var.(vi) +. z3.re;
+              incr i
+            done;
+            ListContent t)
         else failwith "apply_special_func: wrong input for Seq"
       | _ -> failwith "apply_special_func: wrong input for Seq")
   else if fname = "PXLTEST" then
@@ -313,8 +322,8 @@ and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) 
         if is_int z1 && is_int z2
           && z1.re >= 1. && z1.re <= 63.
           && z2.re >= 1. && z2.re <= 127. then
-          let n1 = int_of_float z1.re in
-          let n2 = int_of_float z2.re in
+          let n1 = true_int_of_float z1.re in
+          let n2 = true_int_of_float z2.re in
           Value (complex_of_bool (p.gscreen.(n1).(n2)))
         else failwith "apply_special_func: wrong input for PxlTest" 
       | _ -> failwith "apply_special_func: wrong input for PxlTest")

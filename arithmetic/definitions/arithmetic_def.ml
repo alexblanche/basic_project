@@ -125,8 +125,8 @@ let func_table =
         match l with
           | [z1; z2] ->
             if is_int z1 && is_int z2 then
-              let i1 = int_of_float z1.re in
-              let i2 = int_of_float z2.re in
+              let i1 = true_int_of_float z1.re in
+              let i2 = true_int_of_float z2.re in
               if i1 >= 0
                 then complex_of_int (i1 mod i2)
                 else complex_of_int (i2 + (i1 mod i2))
@@ -140,16 +140,11 @@ let func_table =
         match l with
           | [z] ->
             if z.im = 0.
-              (* Going through string_of_float loses a bit of the precision,
-                 in order to avoid the 1.99999999999999978 case *)
               then
-                complex_of_int
-                  (int_of_float
-                    (float_of_string
-                      (string_of_float z.re)))
+                complex_of_int (true_int_of_float z.re)
               else
-                {re = float_of_int (int_of_float z.re);
-                 im = float_of_int (int_of_float z.im)}
+                {re = float_of_int (true_int_of_float z.re);
+                 im = float_of_int (true_int_of_float z.im)}
           | _ -> failwith "Function error: Int has arity 1"
       in f)
     );
@@ -160,8 +155,8 @@ let func_table =
           | [z] ->
             let intg x =
               if x >= 0.
-                then float_of_int (int_of_float x)
-                else float_of_int (int_of_float x - 1)
+                then float_of_int (true_int_of_float x)
+                else float_of_int (true_int_of_float x - 1)
             in
             if z.im = 0.
               then complex_of_float (intg z.re)
@@ -177,10 +172,10 @@ let func_table =
         match l with
           | [z] ->
             if z.im = 0.
-              then complex_of_float (z.re -. float_of_int (int_of_float z.re))
+              then complex_of_float (z.re -. float_of_int (true_int_of_float z.re))
               else
-                {re = z.re -. float_of_int (int_of_float z.re);
-                 im = z.im -. float_of_int (int_of_float z.im)}
+                {re = z.re -. float_of_int (true_int_of_float z.re);
+                 im = z.im -. float_of_int (true_int_of_float z.im)}
           | _ -> failwith "Function error: Frac has arity 1"
       in f)
     );
@@ -521,14 +516,14 @@ let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
     *)
     | "INTDIV" ->
       if is_int z1 && is_int z2 then
-        let i1 = int_of_float z1.re in
-        let i2 = int_of_float z2.re in
+        let i1 = true_int_of_float z1.re in
+        let i2 = true_int_of_float z2.re in
         complex_of_int (i1 / i2)
       else failwith "apply_op: Intdiv only accepts integer arguments"
     | "RMDR" ->
       if is_int z1 && is_int z2 then
-        let i1 = int_of_float z1.re in
-        let i2 = int_of_float z2.re in
+        let i1 = true_int_of_float z1.re in
+        let i2 = true_int_of_float z2.re in
         if i1 >= 0 (* tested for both signs i1, i2 *)
           then complex_of_int (i1 mod i2)
           else complex_of_int ((abs i2) + (i1 mod i2))
@@ -542,7 +537,7 @@ let apply_rop_single (ro : string) (z : complex) : complex =
   match ro with
     | "EXCLAMATIONMARK" ->
       if is_int z
-        then complex_of_int (fact (int_of_float z.re))
+        then complex_of_int (fact (true_int_of_float z.re))
         else failwith "apply_rop: Factorial only accepts integer arguments"
     | "POWER2" ->
       if z.im = 0.

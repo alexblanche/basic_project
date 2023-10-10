@@ -62,18 +62,18 @@ let apply_str_func (p : parameters) (fname : string) (sel : string_expr list) : 
     | "STRLEFT", [Str_content sl; Num_expr (Complex z)] ->
       if is_int z && z.re >= 0. then
         (* last_k, because the string in Str_content is stored in reverse order *)
-        Str_content (last_k sl (int_of_float z.re))
+        Str_content (last_k sl (true_int_of_float z.re))
       else failwith "String evaluation error: StrLeft expects one string and a non-negative integer as arguments" 
 
     | "STRRIGHT", [Str_content sl; Num_expr (Complex z)] ->
       if is_int z && z.re >= 0. then
-        Str_content (first_k sl (int_of_float z.re))
+        Str_content (first_k sl (true_int_of_float z.re))
       else failwith "String evaluation error: StrRight expects one string and a non-negative integer as arguments"
 
     | "STRMID", [Str_content sl; Num_expr (Complex z1); Num_expr (Complex z2)] ->
       if is_int z1 && is_int z2 && z1.re >= 0. && z2.re >= 0. then
-        let i1 = int_of_float z1.re in
-        let i2 = int_of_float z2.re in
+        let i1 = true_int_of_float z1.re in
+        let i2 = true_int_of_float z2.re in
         let n = List.length sl in
         Str_content (last_k (first_k sl (n+1-i1)) i2)
       else failwith "String evaluation error: StrMid expects one string and two non-negative integers as arguments"
@@ -84,7 +84,7 @@ let apply_str_func (p : parameters) (fname : string) (sel : string_expr list) : 
     | "STRROTATE", [Str_content sl; Num_expr (Complex z)] ->
       if is_int z then
         let n = List.length sl in
-        let i = int_of_float z.re in
+        let i = true_int_of_float z.re in
         let j = if i>=0 then i mod n else n + (i mod n) in
         Str_content (List.rev_append (List.rev (last_k sl j)) (first_k sl (n-j)))
       else failwith "String evaluation error: StrRotate expects one string and an integer as arguments"
@@ -92,7 +92,7 @@ let apply_str_func (p : parameters) (fname : string) (sel : string_expr list) : 
     | "STRSHIFT", [Str_content sl; Num_expr (Complex z)] ->
       if is_int z then
         let n = List.length sl in
-        let i = int_of_float z.re in
+        let i = true_int_of_float z.re in
         let shift_sl =
           if i < 0
             then List.rev_append (List.rev (last_k sl (n+i))) (create_sl (min (-i) n) " ")

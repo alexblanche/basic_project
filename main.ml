@@ -31,7 +31,6 @@
 #use "arithmetic/definitions/arithmetic_def.ml"
 #use "arithmetic/definitions/entity_functions.ml"
 #use "arithmetic/definitions/string_func.ml"
-#use "arithmetic/definitions/special_functions.ml"
 #use "arithmetic/arithmetic_lexing.ml"
 #use "arithmetic/arithmetic_evaluation.ml"
 

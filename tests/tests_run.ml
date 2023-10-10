@@ -354,13 +354,18 @@ let run_seq () =
     compile
       [("main",
         [
-         "SEQ"; "2"; "X"; ","; "X"; ","; "MINUS"; "0"; "."; "4"; ","; "5"; "."; "6"; ","; "1"; "."; "3"; "ASSIGN"; "LIST"; "1"; "EOL";
+         (* "SEQ"; "2"; "X"; ","; "X"; ","; "MINUS"; "0"; "."; "4"; ","; "5"; "."; "6"; ","; "1"; "."; "3"; "ASSIGN"; "LIST"; "1"; "EOL"; *)
+         "SEQ"; "2"; "X"; ","; "X"; ","; "8"; "."; "7"; ","; "MINUS"; "0"; "."; "1"; ","; "MINUS"; "1"; "."; "1"; "ASSIGN"; "LIST"; "1"; "EOL";
          "QUOTE"; "DIM"; "COLON"; "QUOTE"; "COLON"; "DIM"; "LIST"; "1"; "DISP";
          "LIST"; "1"; "LSQBRACKET"; "1"; "DISP";
          "LIST"; "1"; "LSQBRACKET"; "2"; "DISP";
          "LIST"; "1"; "LSQBRACKET"; "3"; "DISP";
          "LIST"; "1"; "LSQBRACKET"; "4"; "DISP";
          "LIST"; "1"; "LSQBRACKET"; "5"; "DISP";
+         "LIST"; "1"; "LSQBRACKET"; "6"; "DISP";
+         "LIST"; "1"; "LSQBRACKET"; "7"; "DISP";
+         "LIST"; "1"; "LSQBRACKET"; "8"; "DISP";
+         "LIST"; "1"; "LSQBRACKET"; "9"; "DISP";
         ]
       )]
   in

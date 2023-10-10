@@ -2,6 +2,20 @@
 
 type complex = Complex.t;;
 
+(** Recoding the int_of_float conversion **)
+(* Going through string_of_float to lose some precision, and
+  avoid the 1.99999999999978 case *)
+
+(*** In case it still does not work, I should recode all the
+    operations manually with fractions ***)
+
+let true_int_of_float (x : float) : int =
+  let r = Float.rem x 1. in
+  if r > 0.99999 || r < -0.99999
+    then int_of_float (float_of_string (string_of_float x))
+    else int_of_float x;;
+
+
 (** Conversions **)
 
 (* Returns the complex number x + i*y *)
@@ -18,7 +32,7 @@ let complex_of_int (n : int) : complex =
 
 (* Converts the real part of complex z to an int *)
 let int_of_complex (z : complex) : int =
-  Float.to_int z.re;;
+  true_int_of_float z.re;;
 
 
 (** Boolean evaluation **)
