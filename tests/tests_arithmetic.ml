@@ -85,7 +85,11 @@ let unit_tests_lexer () =
           );
         Op "PLUS";
         Entity (Value {re = 0.; im = 0.})
-      ])
+      ]);
+
+    (["STRLEN"; "STR"; "1"; "RPAR"; "MINUS"; "1"],
+      [Function ("STRLEN", [StringExpr (Str_access 0)]); Op "MINUS";
+      Entity (Value {Complex.re = 1.; im = 0.})])
     ];
     print_endline "-----------------------------------------";
     print_endline "Tests_arithmetic, lexer: all tests passed";

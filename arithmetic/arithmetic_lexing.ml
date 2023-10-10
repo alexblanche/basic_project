@@ -386,7 +386,7 @@ and extract_string_expr (lexlist : string list) : string_expr * string list =
               (ListIndexZero a, t'')
             | _ -> failwith "extract_string_expr: wrong index of list index zero")
       | s :: t ->
-        if List.mem s string_func_list then
+        if List.mem s string_func_list && not (List.mem s numerical_string_functions) then
           let (args, t') = aux_extract_str_args t in
           (Str_Func (s, args), t')
         else
@@ -459,8 +459,7 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
               | []
               | Lpar :: _
               | Lunop _ :: _
-              | Op _ :: _
-              | Function _ :: _ -> aux ((Lunop "UMINUS")::acc) expr_type t
+              | Op _ :: _ -> aux ((Lunop "UMINUS")::acc) expr_type t
               | _ -> aux ((Op "MINUS")::acc) expr_type t)
           else aux ((Op s)::acc) expr_type t
           
@@ -555,11 +554,8 @@ and extract_expr (lexlist : string list) : basic_expr * expression_type * (strin
 
         (* String functions (with numerical return value) *)
         else if List.mem s numerical_string_functions then
-          let (se, t') = extract_string_expr (s::t) in
-          (match se with
-            | Str_Func (_, sel) ->
-              aux ((Function (s, List.map (fun se -> StringExpr se) sel))::acc) expr_type t'
-            | _ -> failwith "extract_expr: error in lexing of string function")
+          let (sel, t') = aux_extract_str_args t in
+          aux ((Function (s, List.map (fun se -> StringExpr se) sel))::acc) expr_type t'
         
         (* End of the expression *)
         else (acc, expr_type, l)
