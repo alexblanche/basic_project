@@ -43,7 +43,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   let rec aux (i : int) : unit =
 
     (* debug *)
-    (* print_endline (string_of_int i); *)
+    print_endline (string_of_int i);
 
     (* Pause for 1/798s *)
     (* Overridden by Press on Tab *)
@@ -317,7 +317,10 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
           | Str_access j -> p.str.(j) <- sl
           | ListIndexZero a ->
             let vala = get_val_numexpr p a in
-            p.listzero.(int_of_complex vala - 1) <- sl
+            let ai = int_of_complex vala - 1 in
+            (p.listzero.(ai) <- sl;
+            if Array.length p.list.(ai) = 0 then
+              p.list.(ai) <- [|0.;0.|])
           | _ -> failwith "Runtime error: wrong string in string assignment");
         aux (i+1))
 
@@ -326,10 +329,10 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         let ni = get_val_numexpr p n in
         if is_int ni then
           let nii = int_of_complex ni in
-            if nii >= 1 && nii <= 20 then
-              (p.list.(nii-1) <- t;
-              aux (i+1))
-            else failwith "Runtime error: index out of bounds for list assignment"
+          if nii >= 1 && nii <= 26 then
+            (p.list.(nii-1) <- t;
+            aux (i+1))
+          else failwith "Runtime error: index out of bounds for list assignment"
         else failwith "Runtime error: wrong index for list assignment"
 
       | AssignMat (me, mi) ->
