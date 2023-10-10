@@ -141,7 +141,9 @@ let unit_tests_eval_num () =
       (["LPAR"; "1"; "PLUS"; "1"; "RPAR"; "MINUS"; "1"], {re = 1.; im = 0.});
       (["LPAR"; "MINUS"; "1"; "PLUS"; "1"; "RPAR"; "MINUS"; "1"], {re = -1.; im = 0.});
       (["1"; "MINUS"; "1"; "PLUS"; "MINUS"; "1"], {re = -1.; im = 0.});
-      
+      (["4"; "DIFFERENT"; "4"; "MINUS"; "1"; "AND"; "0"], {re = 0.; im = 0.});
+      (["0"; "EQUAL"; "0"; "PLUS"; "1"; "AND"; "0"], {re = 0.; im = 0.});
+      (["2"; "TIMES"; "2"; "POWER"; "3"; "PLUS"; "1"], {re = 17.; im = 0.});
 
       (* Tests for precedence *)
       (* All these expressions distinguish operators of different precedence *)

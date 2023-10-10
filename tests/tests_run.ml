@@ -408,3 +408,14 @@ let run_prog_minus () =
       )]
   in prog;;
   (* run (empty_projcont ()) prog "main";; *)
+
+let run_cond_list () =
+  let prog =
+    compile
+      [("main",
+        [
+            "4"; "DIFFERENT"; "4"; "MINUS"; "1"; "AND"; "0"
+        ]
+      )]
+  in (prog, run (empty_projcont ()) prog "main");;
+      

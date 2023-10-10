@@ -37,6 +37,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   getkey := 0;
   key_pressed := Unknown;
   p.gscreen <- gscreen;
+  
 
   (** Main looping function **)
   let rec aux (i : int) : unit =

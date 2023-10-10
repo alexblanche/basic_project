@@ -302,7 +302,6 @@ and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) 
             let asc = z2.re > z1.re in
             let t = Array.make n QMark in
             (p.var.(vi+29) <- 0.;
-            print_int n; print_newline ();
             p.var.(vi) <- z1.re;
             let i = ref 0 in
             while
@@ -444,7 +443,7 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
           then
             (match output_q with
               | x2::x1::outq ->
-                shunting_yard p t ((apply_op p o2 x1 x2)::outq) ((Op o1)::opqt)
+                shunting_yard p alist ((apply_op p o2 x1 x2)::outq) opqt
               | _ -> failwith ("Arithmetic parsing: Not enough operands for operator "^o2))
           else
             let noutq, nopq = right_reduce p output_q op_q in
