@@ -189,8 +189,18 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           (true, i+1, t))
         | _, "ASSIGN"::"STR"::t' ->
           let (vi,t'') = read_int t' true in
-          (set code i (AssignStr (se, vi-1));
+          (set code i (AssignStr (se, Str_access (vi-1)));
           (true, i+1, t''))
+        (* Assignment of a string expression to List _[0]
+          ("0" stated explicitly, an expression of value 0 is not accepted by calculators) *)
+        | _, "ASSIGN"::"LIST"::_::"LSQBRACKET"::"0"::_
+        | _, "ASSIGN"::"LIST"::_::_::"LSQBRACKET"::"0"::_ ->
+          let (li,t'') = extract_list_index (List.tl (List.tl t)) in
+          (match li with
+            | Entity (Variable (ListIndex (a, _))) ->
+              (set code i (AssignStr (se, ListIndexZero a));
+              (true, i+1, t''))
+            | _ -> fail lexlist i "Compilation error: Wrong assignment (->) of a string to index 0 of a list")
         | _, "QMARK"::"ASSIGN"::_ -> (* "ABC"?->X *)
           (set code i (String se);
           (true, i+1, t))

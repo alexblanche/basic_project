@@ -287,6 +287,9 @@ and eval_str (p : parameters) (se : string_expr) : string_expr =
     | Str_access si -> Str_content p.str.(si)
     | Str_Func (fname, sel) ->
       apply_str_func p fname (List.map (fun se -> eval_str p se) sel)
+    | ListIndexZero a ->
+      let vala = get_val_numexpr p a in
+      Str_content p.listzero.(int_of_complex vala - 1)
 
 (* Special functions evaluation *)
 (* Each function has type basic_expr list -> entity *)

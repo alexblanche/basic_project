@@ -377,6 +377,13 @@ and extract_string_expr (lexlist : string list) : string_expr * string list =
         if String.length a = 1 && a >= "0" && a <= "9"
           then (Str_access ((Char.code a.[0])-48-1), [])
           else failwith "extract_string_expr: wrong index for string access"
+      | "LIST" :: _ :: "LSQBRACKET" :: "0" :: _
+      | "LIST" :: _ :: _ :: "LSQBRACKET" :: "0" :: _ ->
+        let (li,t'') = extract_list_index (List.tl l) in
+        (match li with
+            | Entity (Variable (ListIndex (a, _))) ->
+              (ListIndexZero a, t'')
+            | _ -> failwith "extract_string_expr: wrong index of list index zero")
       | s :: t ->
         if List.mem s string_func_list then
           let (args, t') = aux_extract_str_args t in

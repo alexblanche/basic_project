@@ -140,7 +140,7 @@ let empty_param () : parameters =
     str = Array.make 20 [];
 
     (* List _[0]: contain strings *)
-    listzero = Array.make 20 [];
+    listzero = Array.make 26 [];
     
     (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
     polar = false;

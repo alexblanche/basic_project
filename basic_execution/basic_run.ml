@@ -311,9 +311,14 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         let sl =
           match eval_str p se with
             | Str_content s -> s
-            | _ -> failwith ("Runtime error: wrong type in string assignment")
+            | _ -> failwith ("Runtime error: wrong input type in string assignment")
         in
-        (p.str.(si) <- sl;
+        ((match si with
+          | Str_access j -> p.str.(j) <- sl
+          | ListIndexZero a ->
+            let vala = get_val_numexpr p a in
+            p.listzero.(int_of_complex vala - 1) <- sl
+          | _ -> failwith "Runtime error: wrong string in string assignment");
         aux (i+1))
 
       | AssignList (le, n) ->

@@ -74,8 +74,6 @@ Next steps (by order of difficulty):
 
 To do next:
   - Keep implementing the "main" functions
-  - Implement List Ans and Mat Ans (analog to Ans for list_expr and mat_expr)
-  - Implement: "ABC" -> List 1[0]
   
   Menus:
   - Implement the entry point menu

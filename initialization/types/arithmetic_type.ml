@@ -63,6 +63,7 @@ string_expr =
   | Str_content of string list (* explicit definition of a string *)
   | Str_access of int (* Str i *)
   | Str_Func of string * string_expr list (* Function applied to several string_expr objects *)
+  | ListIndexZero of entity (* List x[0] *)
 
 and
 

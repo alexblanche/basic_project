@@ -39,7 +39,9 @@ type command =
   | AssignList of list_expr * entity (* 2+3*{1,2,3} -> List A *)
   (* Matrices and Strings do not accept variables *)
   | AssignMat of mat_expr * int (* 5*[[1,2][3,4]] -> Mat A *)
-  | AssignStr of string_expr * int (* s -> Str i *)
+  | AssignStr of string_expr * string_expr
+    (* AssignStr(se, Str_access i): se -> Str i,
+      AssignStr(se, ListIndexZero e): se -> List e[0] *)
   
   (* Jumps *)
   | Goto of int (* Jump to line l on the array *)
