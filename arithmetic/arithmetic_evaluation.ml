@@ -254,22 +254,24 @@ and apply_op (p : parameters) (o : string) (n1 : entity) (n2 : entity) : entity 
       )
 
 (* Left unary operators *)
-and apply_lop (p : parameters) (lo : string) (n : entity) : entity =
-  match entity_type n with
-    | Numerical -> Value (apply_lop_single lo (get_val_numexpr p n))
-    | ListExpr ->
-      let et = get_val_listexpr p n in (* (Complex complex) array *)
-      ListContent (Array.map (fun x -> Complex (apply_lop_single lo (eval_num p x))) et)
-    | _ ->
-      let em = get_val_matexpr p n in (* (Complex complex) array array *)
-      let (r,c) = get_mat_dim p.mat n in
-      let m = Array.make_matrix r c QMark in
-      (for i = 0 to r-1 do
-        for j = 0 to c-1 do
-          m.(i).(j) <- Complex (apply_lop_single lo (eval_num p em.(i).(j)))
-        done
-      done;
-      MatContent m)
+and apply_lop (p : parameters) (lo : string) (n : entity) (a : bool) : entity =
+  if a then
+    match entity_type n with
+      | Numerical -> Value (apply_lop_single lo (get_val_numexpr p n))
+      | ListExpr ->
+        let et = get_val_listexpr p n in (* (Complex complex) array *)
+        ListContent (Array.map (fun x -> Complex (apply_lop_single lo (eval_num p x))) et)
+      | _ ->
+        let em = get_val_matexpr p n in (* (Complex complex) array array *)
+        let (r,c) = get_mat_dim p.mat n in
+        let m = Array.make_matrix r c QMark in
+        (for i = 0 to r-1 do
+          for j = 0 to c-1 do
+            m.(i).(j) <- Complex (apply_lop_single lo (eval_num p em.(i).(j)))
+          done
+        done;
+        MatContent m)
+  else apply_entity_func lo [eval_entity p (Arithm [Entity n])]
 
 (* Right unary operators *)
 and apply_rop (p : parameters) (ro : string) (n : entity) : entity =
@@ -376,7 +378,7 @@ and calculate (p : parameters) (outq : entity list) (opq : arithm list) : entity
     (* Right parentheses may be omitted at the end of expressions in Casio Basic *)
     | _, Lpar::opqt -> calculate p outq opqt
     | x2::x1::t, (Op o)::opqt -> calculate p ((apply_op p o x1 x2)::t) opqt
-    | x::t, (Lunop lo)::opqt -> calculate p ((apply_lop p lo x)::t) opqt
+    | x::t, (Lunop (lo, a))::opqt -> calculate p ((apply_lop p lo x a)::t) opqt
     | [x], [] ->
       (match x with
         (* Numbers *)
@@ -399,8 +401,8 @@ and right_reduce (p : parameters) (output_q : entity list) (op_q : arithm list) 
         then (output_q, op_q)
         else right_reduce p ((apply_op p o x1 x2)::outq) opqt
     | _, (Op o)::_ -> failwith ("reduce: Not enough operands for operator "^o)
-    | x::outq, (Lunop lo)::opqt ->
-        right_reduce p ((apply_lop p lo x)::outq) opqt
+    | x::outq, (Lunop (lo, a))::opqt ->
+        right_reduce p ((apply_lop p lo x a)::outq) opqt
     | _ -> failwith "reduce: Syntax error"
 
 (* Shunting_yard algorithm: returns the value of the expression *)
@@ -479,7 +481,7 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
     | Lpar::t, _ -> shunting_yard p t output_q (Lpar::op_q)
     
     (* Lunop *)
-    | (Lunop lo)::t, _ -> shunting_yard p t output_q ((Lunop lo)::op_q)
+    | (Lunop loa)::t, _ -> shunting_yard p t output_q ((Lunop loa)::op_q)
 
     (* Runop *)
     | (Runop ro)::t, _ ->
@@ -500,7 +502,7 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
             let noutq, nopq = right_reduce p output_q op_q in
             shunting_yard p alist noutq nopq
         else shunting_yard p t output_q ((Op o1)::op_q)
-    | (Op o)::t, (Lunop lo)::opqt ->
+    | (Op _)::t, (Lunop _)::opqt ->
       let noutq, nopq = right_reduce p output_q op_q in
       shunting_yard p alist noutq nopq
     | (Op o)::t, _ -> shunting_yard p t output_q ((Op o)::op_q)
@@ -511,8 +513,8 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
         | _, Lpar::opqt -> shunting_yard p t output_q opqt
 
         (* Operator evaluation *)
-        | x::outq, (Lunop lo)::opqt ->
-          shunting_yard p (Rpar::t) ((apply_lop p lo x)::outq) opqt
+        | x::outq, (Lunop (lo, a))::opqt ->
+          shunting_yard p (Rpar::t) ((apply_lop p lo x a)::outq) opqt
         | x2::x1::outq, (Op o)::opqt ->
           shunting_yard p (Rpar::t) ((apply_op p o x1 x2)::outq) opqt
         | _, (Op o)::opqt -> failwith ("Arithmetic parsing: Not enough operands for operator "^o)

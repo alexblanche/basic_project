@@ -17,21 +17,21 @@ let empty_projcont () : project_content =
 let run_prog1 () =
   run (empty_projcont ()) (
     [|
-      Expr (Arithm [Entity (Value {re = 1.; im = 0.})], Numerical);
+      Expr (Arithm [Entity (Value {re = 1.; im = 0.})]);
       Disp;
       String (Str_content ["D"; "C"; "B"; "A"]);
       Disp;
-      Expr (Arithm [Entity (Value {re = 2.; im = 0.})], Numerical);
+      Expr (Arithm [Entity (Value {re = 2.; im = 0.})]);
       Disp;
-      Expr (Arithm [Entity (Value {re = 1.; im = 2.})], Numerical);
+      Expr (Arithm [Entity (Value {re = 1.; im = 2.})]);
       Disp;
-      Expr (Arithm [Entity (Value {re = 123456789012.; im = 2222.})], Numerical);
+      Expr (Arithm [Entity (Value {re = 123456789012.; im = 2222.})]);
       Disp;
-      Expr (Arithm [Entity (Value {re = 123456789012.; im = 22222.})], Numerical);
+      Expr (Arithm [Entity (Value {re = 123456789012.; im = 22222.})]);
       Disp;
       String (Str_content ["H"; "G"; "F"; "E"]);
       Disp; 
-      Expr (Arithm [Entity (Value {re = 5.; im = 0.})], Numerical);
+      Expr (Arithm [Entity (Value {re = 5.; im = 0.})]);
       Disp;
       End
     |]
@@ -47,7 +47,7 @@ let run_prog2 () =
       Disp;
       Assign (Arithm [Entity (Value {re = 10.; im = 0.})], (Var 1)); (* 10 -> B DISP *)
       Disp;
-      Expr (Arithm [Entity (Variable (Var 0)); Op "TIMES"; Entity (Variable (Var 1))], Numerical); (* A*B DISP *)
+      Expr (Arithm [Entity (Variable (Var 0)); Op "TIMES"; Entity (Variable (Var 1))]); (* A*B DISP *)
       Disp;
       End
     |]
@@ -65,7 +65,7 @@ let run_prog3 () =
         Arithm [Entity (Value {re = 2.; im = 0.})],
         7);
       Assign (QMark, Var 1); (* ? -> B *)
-      Expr (Arithm [Entity (Variable (Var 1)); Op "TIMES"; Entity (Value {re = 2.; im = 0.})], Numerical); (* B*2 DISP *)
+      Expr (Arithm [Entity (Variable (Var 1)); Op "TIMES"; Entity (Value {re = 2.; im = 0.})]); (* B*2 DISP *)
       Disp;
       Locate (Arithm [Entity (Value {re = 10.; im = 0.})],
         Arithm [Entity (Value {re = 5.; im = 0.})],
@@ -379,7 +379,7 @@ let run_seq () =
 (* Debug for a condition in the PAC-MAN game *)
 let run_test_cond () =
   let e = Arithm
-   [Lunop "NOT";
+   [Lunop ("NOT", true);
     Lpar;
       Entity (Value {re = 0.; im = 0.});
       Op "OR";
@@ -388,7 +388,7 @@ let run_test_cond () =
           Op "AND";
           Entity (Variable (Var 3));
           Op "EQUAL";
-          Lunop "UMINUS"; Entity (Value {Complex.re = 1.; im = 0.});
+          Lunop ("UMINUS", true); Entity (Value {Complex.re = 1.; im = 0.});
       Rpar;
     Rpar]
   in

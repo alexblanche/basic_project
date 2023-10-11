@@ -380,3 +380,8 @@ let apply_entity_func (fname : string) (nl : entity list) : entity =
     (Hashtbl.find entity_func_table fname) nl
   with
     | Not_found -> failwith ("apply_entity_func: Function "^fname^" undefined");;
+
+(* Entity functions that have arity 1 and work as left unary operators *)
+let entity_lop_list =
+  ["DIM"; "TRN"; "IDENTITY"; "SUM";
+  "PROD"; "CUML"; "PERCENT"; "DELTALIST"];;

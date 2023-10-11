@@ -24,6 +24,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   let last_val = ref ({re = 0.; im = 0.} : complex) in
   (* val_seen: to decide whether to print "Done" or last_val at the end of the execution *)
   let val_seen = ref false in
+  (* string_seen: to decide whether to print "Done" or not at the end of the execution *)
+  let string_seen = ref false in
 
   (* Initialization of the graphic window and graphic parameters *)
   let (win, ren) = open_graphic () in
@@ -38,12 +40,15 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   key_pressed := Unknown;
   p.gscreen <- gscreen;
   
+  let end_execution () =
+    quit_print win ren !val_seen !last_val p.polar !string_seen
+  in
 
   (** Main looping function **)
   let rec aux (i : int) : unit =
 
     (* debug *)
-    print_endline (string_of_int i);
+    (* print_endline (string_of_int i); *)
 
     (* Pause for 1/798s *)
     (* Overridden by Press on Tab *)
@@ -52,7 +57,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
     (* End of the execution *)
     if i >= n then
-      quit_print win ren !val_seen !last_val p.polar
+      end_execution ()
     else if !exit_key_check then
       raise Window_Closed
     else
@@ -78,7 +83,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
           then aux j
           else aux (i+1)
       
-      | Expr (Complex z, _) ->
+      | Expr (Complex z) ->
         (store_ans p.var z;
         last_val := z;
         val_seen := true;
@@ -90,7 +95,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             aux (i+2))
           else aux (i+1))
       
-      | Expr (Arithm al, _) ->
+      | Expr (Arithm al) ->
         (match eval_entity p (Arithm al) with
           | Value z ->
             (store_ans p.var z;
@@ -120,13 +125,12 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         | _ -> failwith "Runtime error: wrong output type of eval_entity")
           
       | Assign (QMark, v) -> (* to do: treat list/mat assignment *)
-        let (e, expr_type) = qmark win ren in
-        (match expr_type with
-          | Numerical ->
-            let z = eval_num p e in
+        let e = qmark win ren in
+        (match eval_entity p e with
+          | Value z ->
             assign_var p (Value z) v;
             aux (i+1)
-          | ListExpr (* TO DO: list_expr, mat_expr *)
+          (* TO DO: list_expr, mat_expr *)
           | _ -> aux (i+1))
 
       | Assign (e, v) ->
@@ -176,7 +180,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
       
       | String se ->
         (* A string alone is printed, an application of string function is not *)
-        (match se, eval_str p se with
+        (string_seen := true;
+        match se, eval_str p se with
           | Str_content _, Str_content s ->
             (let sl = rev_lexlist_to_rev_symblist s true in
             line_feed ();
@@ -263,6 +268,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         tdraw ren;
         writing_index := -1;
         val_seen := false;
+        string_seen := false;
         aux (i+1))
       
       | For (vi, e1, e2, e3, inext) ->
@@ -357,11 +363,11 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
           | j::t ->
             (prog_goback := t;
             aux j)
-          | [] -> quit_print win ren !val_seen !last_val p.polar)
+          | [] -> end_execution ())
 
       | Function "STOP" ->
         (* Hard stop: ends the execution without returning to the calling program *)
-        quit_print win ren !val_seen !last_val p.polar
+        end_execution ()
 
       (* Ignored commands *)
       | Disp -> aux (i+1)

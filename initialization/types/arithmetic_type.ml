@@ -3,10 +3,6 @@
 (* Integration of list/matrix arithmetic:
   Separate num_expr, list_expr and mat_expr at lexing time,
   each made up of a basic_expr containing some variables List _, Mat _, {...} and [[][]]
-  
-  The output type of the lexing function is the following:
-  type expression_type = Numerical | ListExpr | MatExpr
-  type expression = basic_expr * expression_type
 
   There are three evaluation functions, one for each input (and output type)
   eval (num_expr -> complex)
@@ -51,7 +47,11 @@ arithm =
   | Lpar (* ( *) | Rpar (* ) *)
   | Op of string (* Binary operator *)
   | Runop of string (* Right unary operator *)
-  | Lunop of string (* Left unary operator *)
+  | Lunop of (string * bool)
+    (* Left unary operator,
+      the boolean is true if it is an arithmetic function
+      (so the operator must be applied to each term of a list),
+      false if it is an entity function (it should be applied to the whole list) *)
   | Function of string * (basic_expr list) (* Function and list of arguments *)
   | Comma (* , *)
 

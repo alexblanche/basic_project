@@ -30,7 +30,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | _ -> ()); *)
 
     (* Expression handling *)
-    let (e, expr_type, t) =
+    let (e, t) =
       try
         extract_expr lexlist
       with
@@ -44,22 +44,22 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           (false, -1, [])
 
         | _, "ASSIGN"::t' ->
-          (match expr_type, t' with
-            | Numerical, [v] ->
+          (match t' with
+            | [v] ->
               (if is_var v then
                 (set code i (Assign (e, Var (var_index v)));
                 (true, i+1, []))
               else fail lexlist i "Compilation: Wrong assignment (->) of a variable")
-            | _, v::"EOL"::t''
-            | _, v::"COLON"::t''
-            | _, v::"DISP"::t'' ->
-              if is_var v && expr_type = Numerical then
+            | v::"EOL"::t''
+            | v::"COLON"::t''
+            | v::"DISP"::t'' ->
+              if is_var v then
                 (set code i (Assign (e, Var (var_index v)));
                 (true, i+1, List.tl t'))
               else
                 fail lexlist i "Compilation error: Wrong assignment (->) of a variable"
             (* e -> X~Z *)
-            | Numerical, v1::"\126"::v2::t'' ->
+            | v1::"\126"::v2::t'' ->
               if is_var v1 && is_var v2 then
                 let vi1 = var_index v1 in
                 let vi2 = var_index v2 in
@@ -69,18 +69,18 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 else fail lexlist i "Compilation error: Wrong order in multiple assignment (~)"
               else fail lexlist i "Compilation error: Wrong multi-assignment (-> ~) of a variable"
             
-            | Numerical, "LIST"::_::"LSQBRACKET"::_
+            | "LIST"::_::"LSQBRACKET"::_
             (* All digits are specified, to avoid "List 1 EOL [[1,2][3,4]] -> Mat A" being parsed as "List _ _ [" *)
-            | Numerical, "LIST"::_::"0"::"LSQBRACKET"::_
-            | Numerical, "LIST"::_::"1"::"LSQBRACKET"::_
-            | Numerical, "LIST"::_::"2"::"LSQBRACKET"::_
-            | Numerical, "LIST"::_::"3"::"LSQBRACKET"::_
-            | Numerical, "LIST"::_::"4"::"LSQBRACKET"::_
-            | Numerical, "LIST"::_::"5"::"LSQBRACKET"::_
-            | Numerical, "LIST"::_::"6"::"LSQBRACKET"::_
-            | Numerical, "LIST"::_::"7"::"LSQBRACKET"::_
-            | Numerical, "LIST"::_::"8"::"LSQBRACKET"::_
-            | Numerical, "LIST"::_::"9"::"LSQBRACKET"::_ ->
+            | "LIST"::_::"0"::"LSQBRACKET"::_
+            | "LIST"::_::"1"::"LSQBRACKET"::_
+            | "LIST"::_::"2"::"LSQBRACKET"::_
+            | "LIST"::_::"3"::"LSQBRACKET"::_
+            | "LIST"::_::"4"::"LSQBRACKET"::_
+            | "LIST"::_::"5"::"LSQBRACKET"::_
+            | "LIST"::_::"6"::"LSQBRACKET"::_
+            | "LIST"::_::"7"::"LSQBRACKET"::_
+            | "LIST"::_::"8"::"LSQBRACKET"::_
+            | "LIST"::_::"9"::"LSQBRACKET"::_ ->
               let (li,t'') = extract_list_index (List.tl t') in
               (match li with
                 | Entity (Variable lx) ->
@@ -88,7 +88,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                   (true, i+1, t''))
                 | _ -> fail lexlist i "Compilation error: Wrong assignment (->) of a list element")
 
-            | Numerical, "MAT"::_::"LSQBRACKET"::_ ->
+            | "MAT"::_::"LSQBRACKET"::_ ->
               let (mi,t'') = extract_mat_index (List.tl t') in
               (match mi with
                 | Entity (Variable mx) ->
@@ -96,8 +96,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                   (true, i+1, t''))
                 | _ -> fail lexlist i "Compilation error: Wrong assignment (->) of a matrix element")
 
-            | ListExpr, "LIST"::a::t''
-            | Numerical, "LIST"::a::t'' ->
+            | "LIST"::a::t'' ->
               (* Numerical is allowed, because entity functions have unspecified output type *)
               if is_var a || a = "ANS" then
                 (set code i (AssignList (e, Variable (Var (var_index a))));
@@ -108,15 +107,14 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 (true, i+1, q))
               else fail lexlist i "Compilation error: wrong list index"
 
-            | MatExpr, "MAT"::a::t''
-            | Numerical, "MAT"::a::t'' ->
+            | "MAT"::a::t'' ->
               (* Numerical is allowed, because entity functions have unspecified output type *)
               if is_var a && a <> "SMALLR" && a <> "THETA" || a = "ANS" then
                 (set code i (AssignMat (e, var_index a));
                 (true, i+1, t''))
               else fail lexlist i "extract_mat_index: wrong matrix index"
             
-            | Numerical, "DIM"::"LIST"::a::t'' ->
+            | "DIM"::"LIST"::a::t'' ->
               let dim_expr = Arithm [Function ("Init", [e])] in
               if is_var a || a = "ANS" then
                 (set code i (AssignList (dim_expr, Variable (Var (var_index a))));
@@ -127,8 +125,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 (true, i+1, q))
               else fail lexlist i "Compilation error: wrong list index in dimension assignment"
 
-            | ListExpr, "DIM"::"MAT"::a::t''
-            | Numerical, "DIM"::"MAT"::a::t'' ->
+            | "DIM"::"MAT"::a::t'' ->
               (* Numerical is allowed, because entity functions have unspecified output type *)
               let dim_expr = Arithm [Function ("Init", [e])] in
               if is_var a || a = "ANS" then
@@ -136,11 +133,6 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 (true, i+1, t''))
               else fail lexlist i "Compilation error: wrong matrix index in dimension assignment"
 
-            (* Errors *)
-            | ListExpr, "MAT"::_
-            | MatExpr, "LIST"::_
-            | ListExpr, _::_
-            | MatExpr, _::_ -> fail lexlist i "Compilation error: incompatible types during assignment"
             | _ -> fail lexlist i "Compilation error: Syntax error during assignment"
           )
         
@@ -168,7 +160,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         | _, "DISP"::_
         | _, [] ->
           (* Simple expression *)
-          (set code i (Expr (e, expr_type)); 
+          (set code i (Expr e); 
           (true, i+1, t))
 
         | _ -> fail lexlist i "Compilation error: Syntax error after an expression"

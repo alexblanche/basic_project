@@ -7,11 +7,12 @@ let unit_tests_lexer () =
   let check i (slist, expected) =
     (* print_string ("Test "^(string_of_int i)^"... "); *)
     match extract_expr slist with
-      | (Arithm alist), _, _ ->
-        if alist <> expected
-          then raise (Test_failed i)
+      | (Arithm alist), _ ->
+        if alist <> expected then
+          (print_endline (String.concat " " slist);
+          raise (Test_failed i))
           (* else print_endline "Done." *)
-      | Complex z, _, _ -> raise (Test_failed i)
+      | Complex z, _ -> raise (Test_failed i)
       | _ -> failwith ("Test "^(string_of_int i)^": QMark is not supported for these tests")
   in
   try
@@ -23,13 +24,13 @@ let unit_tests_lexer () =
       Entity (Value {re = 3.5; im = 0.}); Rpar; Op "POWER"; Lpar; Entity (Value {re = 5.; im = 0.});
       Op "MINUS"; Entity (Value {re = 3.; im = 0.}); Rpar]);
     (["ABS"; "LPAR"; "LPAR"; "3"; "."; "RPAR"; "RPAR"; "EXCLAMATIONMARK"],
-      [Lunop "ABS"; Lpar; Lpar; Entity (Value {re = 3.; im = 0.}); Rpar; Rpar; Runop "EXCLAMATIONMARK"]);
+      [Lunop ("ABS", true); Lpar; Lpar; Entity (Value {re = 3.; im = 0.}); Rpar; Rpar; Runop "EXCLAMATIONMARK"]);
     (["2"; "POWER"; "2"; "POWER"; "2"; "POWER"; "2"],
       [Entity (Value {re = 2.; im = 0.}); Op "POWER"; Entity (Value {re = 2.; im = 0.});
       Op "POWER"; Entity (Value {re = 2.; im = 0.}); Op "POWER"; Entity (Value {re = 2.; im = 0.})]);
     (["ABS"; "ABS"; "ABS"; "5"; "."; "EXCLAMATIONMARK"],
-      [Lunop "ABS"; Lunop "ABS"; Lunop "ABS"; Entity (Value {re = 5.; im = 0.}); Runop "EXCLAMATIONMARK"]);
-    (["LPAR"; "ABS"; "5"; "."; "RPAR"], [Lpar; Lunop "ABS"; Entity (Value {re = 5.; im = 0.}); Rpar]);
+      [Lunop ("ABS", true); Lunop ("ABS", true); Lunop ("ABS", true); Entity (Value {re = 5.; im = 0.}); Runop "EXCLAMATIONMARK"]);
+    (["LPAR"; "ABS"; "5"; "."; "RPAR"], [Lpar; Lunop ("ABS", true); Entity (Value {re = 5.; im = 0.}); Rpar]);
     (["1"; "PLUS"; "2"; "TIMES"; "CPLXI"],
       [Entity (Value {re = 1.; im = 0.}); Op "PLUS"; Entity (Value {re = 2.; im = 0.}); Op "TIMES";
       Entity (Value {re = 0.; im = 1.})]);
@@ -39,7 +40,7 @@ let unit_tests_lexer () =
       [Entity (Value {re = 2.; im = 0.}); Entity (Variable (Var 1)); Op "PLUS"; Entity (Value {re = 3.; im = 0.});
       Entity (Variable (Var 0)); Op "MINUS"; Entity (Value {re = 4.; im = 0.}); Entity (Value {re = 0.; im = 1.})]);
     (["1"; "PLUS"; "ABS"; "LPAR"; "UMINUS"; "8"; "RPAR"; "ASSIGN"; "A"],
-      [Entity (Value {re = 1.; im = 0.}); Op "PLUS"; Lunop "ABS"; Lpar; Lunop "UMINUS"; Entity (Value {re = 8.; im = 0.}); Rpar]);
+      [Entity (Value {re = 1.; im = 0.}); Op "PLUS"; Lunop ("ABS", true); Lpar; Lunop ("UMINUS", true); Entity (Value {re = 8.; im = 0.}); Rpar]);
     (["1"; "PLUS"; "MAX"; "LBRACKET"; "4"; "."; "5"; ","; "LPAR"; "7"; "TIMES"; "1"; "RPAR"; ","; "3"; "TIMES"; "2"; "RBRACKET"; "RPAR";
       "TIMES"; "2"; "EOL"],
     [Entity (Value {re = 1.; im = 0.}); Op "PLUS";
@@ -89,7 +90,22 @@ let unit_tests_lexer () =
 
     (["STRLEN"; "STR"; "1"; "RPAR"; "MINUS"; "1"],
       [Function ("STRLEN", [StringExpr (Str_access 0)]); Op "MINUS";
-      Entity (Value {Complex.re = 1.; im = 0.})])
+      Entity (Value {Complex.re = 1.; im = 0.})]);
+
+    (["LBRACKET"; "1"; "TIMES"; "2"],
+      [Entity
+        (ListContent
+          [|Arithm
+            [Entity (Value {Complex.re = 1.; im = 0.});
+            Op "TIMES";
+            Entity (Value {Complex.re = 2.; im = 0.})]
+          |]
+        )
+      ]);
+
+    (["DIM"; "LIST"; "2"; "5"; "EQUAL"; "1"],
+      [Lunop ("DIM", false); Entity (VarList (Value {Complex.re = 25.; im = 0.}));
+        Op "EQUAL"; Entity (Value {Complex.re = 1.; im = 0.})]);
     ];
     print_endline "-----------------------------------------";
     print_endline "Tests_arithmetic, lexer: all tests passed";
@@ -113,7 +129,7 @@ let unit_tests_eval_num () =
   p.list.(0) <- [| 5.; 2.; 3.; 1. |];
 
   let check i (slist, expected) =
-    let (expr, _, _) = extract_expr slist in
+    let (expr, _) = extract_expr slist in
     let z = eval_num p expr in
     if is_not_zero (Complex.sub z expected) then
       (print_endline (String.concat " " slist);
@@ -217,17 +233,19 @@ let unit_tests_eval_list_mat () =
   p.mat.(2) <- [|[|4.; 5.|]; [|6.; 8.|]; [|0.; 0.|]; [|0.; 0.|]|];
 
   let check i (slist, expected) =
-    let (expr, expr_type, _) = extract_expr slist in
+    let (expr, _) = extract_expr slist in
     match expr with
       | Arithm al ->
         let equal =
-          (match shunting_yard p al [] [], expr_type, expected with
-            | ListContent t, ListExpr, ListContent tex -> t = tex
-            | MatContent m, MatExpr, MatContent mex -> m = mex
-            | _ -> raise (Test_failed i))
+          (match shunting_yard p al [] [], expected with
+            | ListContent t, ListContent tex -> t = tex
+            | MatContent m, MatContent mex -> m = mex
+            | Value z, Value zex -> z = zex
+            | _ -> false)
         in
-        if not equal
-          then (raise (Test_failed i))
+        if not equal then
+          (print_endline (String.concat " " slist);
+          raise (Test_failed i))
           (* else print_endline ("Test "^(string_of_int i)^" passed") *)
       | _ -> failwith "Unexpected QMark or Complex"
     
@@ -258,7 +276,16 @@ let unit_tests_eval_list_mat () =
         "MAT"; "C"],
         MatContent
           [|[|Complex {re = 6.; im = 0.}; Complex {re = 6.; im = 0.}|];
-            [|Complex {re = 10.; im = 0.}; Complex {re = 13.; im = 0.}|]|])
+            [|Complex {re = 10.; im = 0.}; Complex {re = 13.; im = 0.}|]|]);
+
+      (["LBRACKET"; "8"; ","; "2"; "EQUAL"; "2"],
+        ListContent [|Complex {re = 8.; im = 0.}; Complex {re = 1.; im = 0.};|]);
+
+      (["LBRACKET"; "8"; ","; "2"; "RBRACKET"; "EQUAL"; "2"],
+        ListContent [|Complex {re = 0.; im = 0.}; Complex {re = 1.; im = 0.};|]);
+
+      (["DIM"; "LIST"; "2"; "EQUAL"; "3"],
+        Value {re = 1.; im = 0.});
     ];
     print_endline "-------------------------------------------------";
     print_endline "Tests_arithmetic, eval_list_mat: all tests passed";

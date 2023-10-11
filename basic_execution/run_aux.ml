@@ -86,15 +86,14 @@ let quit (win : Sdlwindow.t) (ren : Sdlrender.t) (text_graph : bool) : unit =
   close_graph win;;
 
 (* Prints the value of Ans if val_seen, "Done" otherwise, then quits *)
-let quit_print (win : Sdlwindow.t) (ren : Sdlrender.t) (val_seen : bool) (value : complex) (polar : bool) : unit =
-  if val_seen
-    then
-      (line_feed ();
-      print_number value polar;
-      tdraw ren)
-    else
-      (clear_text ();
-      locate ren ["e"; "n"; "o"; "D"] 17 0); (* "Done" *)
+let quit_print (win : Sdlwindow.t) (ren : Sdlrender.t) (val_seen : bool) (value : complex) (polar : bool) (string_seen : bool) : unit =
+  if val_seen then
+    (line_feed ();
+    print_number value polar;
+    tdraw ren)
+  else if not string_seen then
+    (clear_text ();
+    locate ren ["e"; "n"; "o"; "D"] 17 0); (* "Done" *)
   quit win ren true;;
 
 

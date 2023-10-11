@@ -25,7 +25,7 @@ type command =
   | Empty (* Empty command, to complete the basic_code array *)
 
   (* Expressions, strings and text display *)
-  | Expr of basic_expr * expression_type (* Arithmetic expression *)
+  | Expr of basic_expr (* Arithmetic expression *)
   | String of string_expr
   | Locate of num_expr * num_expr * string_expr
     (* Locate (e1, e2, c): Locate function, prints c (string or result of an expression)
