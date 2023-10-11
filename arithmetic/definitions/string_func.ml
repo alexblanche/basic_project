@@ -83,7 +83,7 @@ let apply_str_func (p : parameters) (fname : string) (sel : string_expr list) : 
       if is_int z && z.re >= 0. then
         let n = List.length sl in
         let i = true_int_of_float z.re in
-        Str_content (first_k sl (min (n-i+1) 0))
+        Str_content (first_k sl (max (n-i+1) 0))
       else failwith "String evaluation error: StrRight expects one string and a non-negative integer as arguments"
 
     | "STRINV", [Str_content sl] ->

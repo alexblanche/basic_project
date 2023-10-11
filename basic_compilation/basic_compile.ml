@@ -167,7 +167,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         | _, "COLON"::_
         | _, "DISP"::_
         | _, [] ->
-          (set code i (Expr (e, Numerical)); (* Simple expression *) (* To do: implement list_expr and mat_expr *)
+          (* Simple expression *)
+          (set code i (Expr (e, expr_type)); 
           (true, i+1, t))
 
         | _ -> fail lexlist i "Compilation error: Syntax error after an expression"

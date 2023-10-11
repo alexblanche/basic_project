@@ -90,10 +90,9 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             aux (i+2))
           else aux (i+1))
       
-      | Expr (Arithm al, expr_type) ->
-        (match expr_type with
-          | Numerical ->
-            let z = eval_num p (Arithm al) in
+      | Expr (Arithm al, _) ->
+        (match eval_entity p (Arithm al) with
+          | Value z ->
             (store_ans p.var z;
             last_val := z;
             val_seen := true;
@@ -103,18 +102,22 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
               disp p ren writing_index;
               aux (i+2))
             else aux (i+1))
-          (* Just storing in List Ans/Mat Ans *)
-          (* Display is not treated yet *)
-          | ListExpr ->
-            (p.list.(27) <- eval_list p (Arithm al);
-            if i<n-1 && code.(i+1) = Disp then
-              aux (i+2) (* Display to be treated here *)
-            else aux (i+1))
-          | _ ->
-            (p.mat.(27) <- eval_mat p (Arithm al);
-            if i<n-1 && code.(i+1) = Disp then
-              aux (i+2) (* Display to be treated here *)
-            else aux (i+1)))
+
+        (* Just storing in List Ans/Mat Ans *)
+        (* Display is not treated yet *)
+        | ListContent t ->
+          (p.list.(26) <- numexpr_to_float_array t;
+          if i<n-1 && code.(i+1) = Disp then
+            aux (i+2) (* Display to be treated here *)
+          else aux (i+1))
+
+        | MatContent m ->
+          (p.mat.(26) <- numexpr_to_float_matrix m;
+          if i<n-1 && code.(i+1) = Disp then
+            aux (i+2) (* Display to be treated here *)
+          else aux (i+1))
+        
+        | _ -> failwith "Runtime error: wrong output type of eval_entity")
           
       | Assign (QMark, v) -> (* to do: treat list/mat assignment *)
         let (e, expr_type) = qmark win ren in

@@ -88,12 +88,12 @@ type expression_type = Numerical | ListExpr | MatExpr
 (** Accessors **)
 
 (* Returns the value of List a *)
-let get_list (tlist : float array array) (a : int) : float array =
-  tlist.(a);;
+(* let get_list (tlist : float array array) (a : int) : float array =
+  tlist.(if a = 28 then 26 else a);; *)
 
 (* Returns the value of Mat a *)
 let get_mat (tmat : float array array array) (a : int) : float array array =
-  tmat.(a);;
+  tmat.(if a = 28 then 26 else a);;
 
 (* Returns the type of the entity, as an expression_type constructor *)
 let entity_type (n : entity) : expression_type =

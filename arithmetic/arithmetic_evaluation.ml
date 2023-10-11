@@ -77,7 +77,7 @@ let get_list_val (tlist : float array array) (a : int) (i : int) : complex =
 
 (* Returns the value of Mat a[i1][i2] *)
 let get_mat_val (tmat : float array array array) (a : int) (i1 : int) (i2 : int) : complex =
-  let m = tmat.(a) in
+  let m = tmat.(if a = 28 then 26 else a) in
   let n = Array.length m in
   get_complex m.(i1).(i2) m.(i1+n/2).(i2);;
 
@@ -117,6 +117,11 @@ let rec get_val_numexpr (p : parameters) (n : entity) : complex =
     | Value z -> z
     | Variable (Var i) -> get_var_val p.var i
     | Variable Getkey -> complex_of_int !getkey
+    | Variable (ListIndex (Variable (Var 28), e)) ->
+      let z = eval_num p e in
+      (if not (is_int z)
+        then failwith "get_val_numexpr: access to List from an index that is not an integer";
+      get_list_val p.list 26 (int_of_complex z - 1))
     | Variable (ListIndex (a,e)) ->
       let z = eval_num p e in
       (if not (is_int z)
@@ -141,7 +146,11 @@ and get_val_listexpr (p : parameters) (n : entity) : num_expr array =
         then failwith "get_val_list: access to List from an index that is not an integer";
       float_to_numexpr_array p.list.(int_of_complex z - 1))
     | VarList (Variable (Var vi)) ->
-      let z = get_var_val p.var vi in
+      let z =
+        if vi = 28 (* Ans *)
+          then complex_of_float 27. (* Index of List Ans *)
+          else get_var_val p.var vi (* List _ *)
+      in
       (if not (is_int z)
         then failwith "get_val_list: access to List from an index that is not an integer";
       float_to_numexpr_array p.list.(int_of_complex z - 1))
@@ -163,7 +172,9 @@ and get_val_matexpr (p : parameters) (n : entity) : num_expr array array =
       done;
       m)
     | VarMat ai ->
-      float_to_numexpr_matrix p.mat.(ai)
+      if ai = 28 (* Ans *)
+        then float_to_numexpr_matrix p.mat.(26) (* Index of Mat Ans *)
+        else float_to_numexpr_matrix p.mat.(ai)
     | _ -> failwith "get_val_listexpr: entity is a number or a matrix"
 
 (** Application of the operators to an entity **)
@@ -293,7 +304,7 @@ and eval_str (p : parameters) (se : string_expr) : string_expr =
 
 (* Special functions evaluation *)
 (* Each function has type basic_expr list -> entity *)
-and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) =
+and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) : entity =
   if fname = "SEQ" then
     (match el with
       | [e; Arithm [Entity (Variable (Var vi))]; Complex z1; Complex z2; Complex z3] ->
@@ -334,7 +345,7 @@ and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) 
     (match el with
       | [Arithm [Entity (Variable (Var vi))]; Complex z] ->
         let j = int_of_complex z -1 in
-        let m = p.mat.(vi) in
+        let m = p.mat.(if vi = 28 then 26 else vi) in (* Mat Ans is stored at position 26 *)
         let row = (Array.length m)/2 in
         ListContent (Array.init row (fun i -> Complex (get_complex m.(i).(j) m.(i+row).(j))))
       | _ -> failwith "apply_special_func: wrong input for MatToList") 

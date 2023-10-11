@@ -355,21 +355,26 @@ let run_seq () =
       [("main",
         [
          (* "SEQ"; "2"; "X"; ","; "X"; ","; "MINUS"; "0"; "."; "4"; ","; "5"; "."; "6"; ","; "1"; "."; "3"; "ASSIGN"; "LIST"; "1"; "EOL"; *)
-         "SEQ"; "2"; "X"; ","; "X"; ","; "8"; "."; "7"; ","; "MINUS"; "0"; "."; "1"; ","; "MINUS"; "1"; "."; "1"; "ASSIGN"; "LIST"; "1"; "EOL";
-         "QUOTE"; "DIM"; "COLON"; "QUOTE"; "COLON"; "DIM"; "LIST"; "1"; "DISP";
-         "LIST"; "1"; "LSQBRACKET"; "1"; "DISP";
-         "LIST"; "1"; "LSQBRACKET"; "2"; "DISP";
-         "LIST"; "1"; "LSQBRACKET"; "3"; "DISP";
-         "LIST"; "1"; "LSQBRACKET"; "4"; "DISP";
-         "LIST"; "1"; "LSQBRACKET"; "5"; "DISP";
+         (* "SEQ"; "2"; "X"; ","; "X"; ","; "8"; "."; "7"; ","; "MINUS"; "0"; "."; "1"; ","; "MINUS"; "1"; "."; "1"; "ASSIGN"; "LIST"; "1"; "EOL"; *)
+         (* "SEQ"; "X"; ","; "X"; ","; "1"; ","; "9"; ","; "1"; "ASSIGN"; "LIST"; "1"; "EOL"; *)
+         "LSQBRACKET"; "LSQBRACKET"; "1"; ","; "8"; "8"; "8"; "RSQBRACKET"; "LSQBRACKET"; "3"; ","; "9"; "9"; "9"; "RSQBRACKET"; "RSQBRACKET"; "EOL";
+         "MATTOLIST"; "ANS"; ","; "2"; "RPAR"; "EOL";
+         (* "LBRACKET"; "1"; ","; "2"; ","; "3"; ","; "4"; "4"; "4"; "EOL"; *)
+         "QUOTE"; "DIM"; "COLON"; "QUOTE"; "COLON"; "DIM"; "LIST"; "ANS"; "DISP";
+         "LIST"; "ANS"; "LSQBRACKET"; "1"; "DISP";
+         "LIST"; "ANS"; "LSQBRACKET"; "2"; "DISP";
+         (* "LIST"; "ANS"; "LSQBRACKET"; "3"; "DISP";
+         "LIST"; "ANS"; "LSQBRACKET"; "4"; "DISP"; *)
+         (* "LIST"; "1"; "LSQBRACKET"; "5"; "DISP";
          "LIST"; "1"; "LSQBRACKET"; "6"; "DISP";
          "LIST"; "1"; "LSQBRACKET"; "7"; "DISP";
          "LIST"; "1"; "LSQBRACKET"; "8"; "DISP";
-         "LIST"; "1"; "LSQBRACKET"; "9"; "DISP";
+         "LIST"; "1"; "LSQBRACKET"; "9"; "DISP"; *)
         ]
       )]
   in
-  run (empty_projcont ()) prog "main";;
+  (* prog;; *)
+  (prog, run (empty_projcont ()) prog "main");;
 
 (* Debug for a condition in the PAC-MAN game *)
 let run_test_cond () =
@@ -418,4 +423,19 @@ let run_cond_list () =
         ]
       )]
   in (prog, run (empty_projcont ()) prog "main");;
-      
+
+let run_str_mid () =
+  let prog =
+    compile
+      [("main",
+        [
+          "LOCATE"; "3"; ","; "5"; ","; "STRMID"; "QUOTE"; "0"; "1"; "2"; "3"; "4"; "5"; "6"; "QUOTE"; ","; "5"; "RPAR"; "DISP";
+          "STRMID";
+            "QUOTE"; "A"; "B"; "C"; "D"; "E"; "F"; "G"; "H"; "I"; "J"; "K"; "L"; "M";
+              "N"; "O"; "P"; "Q"; "R"; "S"; "T"; "U"; "V"; "W"; "X"; "Y"; "Z"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0";  "QUOTE"; ",";
+              "5"; "RPAR"; "ASSIGN"; "STR"; "1"; "EOL";
+          (* "STRLEFT"; "QUOTE"; "A"; "B"; "C"; "D"; "E"; "F"; "QUOTE"; ","; "2"; "RPAR"; "ASSIGN"; "STR"; "1"; "EOL"; *)
+          "LOCATE"; "3"; ","; "3"; ","; "STR"; "1"; "DISP";
+        ]
+      )]
+  in run (empty_projcont ()) prog "main";;
