@@ -42,10 +42,13 @@
 
 (** Emulation **)
 #use "initialization/graphics/graphics_lib.ml"
-#use "basic_execution/float_repr.ml"
-#use "basic_execution/basic_graphics.ml"
-#use "basic_execution/run_aux.ml"
-#use "basic_execution/qmark.ml"
+#use "basic_execution/initialization/float_repr.ml"
+#use "basic_execution/graphic_functions/general.ml"
+#use "basic_execution/graphic_functions/text_mode.ml"
+#use "basic_execution/graphic_functions/graphic_mode.ml"
+#use "basic_execution/auxiliary/run_aux.ml"
+#use "basic_execution/auxiliary/qmark.ml"
+#use "basic_execution/auxiliary/execute_graphic_commands.ml"
 #use "basic_execution/basic_run.ml"
 
 (* Tests *)

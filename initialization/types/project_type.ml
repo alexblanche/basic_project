@@ -114,7 +114,10 @@ type parameters = {
   mutable axes : bool;
 
   (* Pointer to the gscreen *)
-  mutable gscreen : bool array array
+  mutable gscreen : bool array array;
+
+  (* Background picture *)
+  mutable bgpict : int
 }
 
 
@@ -157,6 +160,9 @@ let empty_param () : parameters =
 
     (* pointer to the gscreen *)
     gscreen = [||];
+
+    (* Index of the background picture *)
+    bgpict = -1;
   };;
 
 (* Returns a new array with twice the size of t, with the elements of t as first elements

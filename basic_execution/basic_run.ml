@@ -27,6 +27,9 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   (* string_seen: to decide whether to print "Done" or not at the end of the execution *)
   let string_seen = ref false in
 
+  (* text_screen = true if the text screen is currently displayed, false if it is the graphic screen *)
+  let text_screen = ref true in
+
   (* Initialization of the graphic window and graphic parameters *)
   let (win, ren) = open_graphic () in
   set_color ren black;
@@ -82,56 +85,6 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         if is_not_zero (eval_num p e)
           then aux j
           else aux (i+1)
-      
-      | Expr (Complex z) ->
-        (store_ans p.var z;
-        last_val := z;
-        val_seen := true;
-        if i<n-1 && code.(i+1) = Disp
-          then
-            (line_feed ();
-            print_number z p.polar;
-            disp p ren writing_index;
-            aux (i+2))
-          else aux (i+1))
-      
-      | Expr (Arithm al) ->
-        (match eval_entity p (Arithm al) with
-          | Value z ->
-            (store_ans p.var z;
-            last_val := z;
-            val_seen := true;
-            if i<n-1 && code.(i+1) = Disp then
-              (line_feed ();
-              print_number z p.polar;
-              disp p ren writing_index;
-              aux (i+2))
-            else aux (i+1))
-
-        (* Just storing in List Ans/Mat Ans *)
-        (* Display is not treated yet *)
-        | ListContent t ->
-          (p.list.(26) <- numexpr_to_float_array t;
-          if i<n-1 && code.(i+1) = Disp then
-            aux (i+2) (* Display to be treated here *)
-          else aux (i+1))
-
-        | MatContent m ->
-          (p.mat.(26) <- numexpr_to_float_matrix m;
-          if i<n-1 && code.(i+1) = Disp then
-            aux (i+2) (* Display to be treated here *)
-          else aux (i+1))
-        
-        | _ -> failwith "Runtime error: wrong output type of eval_entity")
-          
-      | Assign (QMark, v) -> (* to do: treat list/mat assignment *)
-        let e = qmark win ren in
-        (match eval_entity p e with
-          | Value z ->
-            assign_var p (Value z) v;
-            aux (i+1)
-          (* TO DO: list_expr, mat_expr *)
-          | _ -> aux (i+1))
 
       | Assign (e, v) ->
         let z = eval_num p e in
@@ -170,13 +123,59 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
           | _ -> failwith "Runtime error: assignment to unassignable object"
         );
-        if i<n-1 && code.(i+1) = Disp
-          then
-            (line_feed ();
-            print_number z p.polar;
-            disp p ren writing_index;
-            aux (i+2))
+        if i<n-1 && code.(i+1) = Disp then
+          (text_screen := true;
+          line_feed ();
+          print_number z p.polar;
+          disp p ren writing_index;
+          aux (i+2))
+        else aux (i+1))
+
+      | Graphic g ->
+        (apply_graphic g;
+        aux (i+1))
+      
+      | Expr (Complex z) ->
+        (store_ans p.var z;
+        last_val := z;
+        val_seen := true;
+        if i<n-1 && code.(i+1) = Disp then
+          (text_screen := true;
+          line_feed ();
+          print_number z p.polar;
+          disp p ren writing_index;
+          aux (i+2))
+        else aux (i+1))
+      
+      | Expr (Arithm al) ->
+        (match eval_entity p (Arithm al) with
+          | Value z ->
+            (store_ans p.var z;
+            last_val := z;
+            val_seen := true;
+            if i<n-1 && code.(i+1) = Disp then
+              (text_screen := true;
+              line_feed ();
+              print_number z p.polar;
+              disp p ren writing_index;
+              aux (i+2))
+            else aux (i+1))
+
+        (* Just storing in List Ans/Mat Ans *)
+        (* Display is not treated yet *)
+        | ListContent t ->
+          (p.list.(26) <- numexpr_to_float_array t;
+          if i<n-1 && code.(i+1) = Disp then
+            aux (i+2) (* Display to be treated here *)
           else aux (i+1))
+
+        | MatContent m ->
+          (p.mat.(26) <- numexpr_to_float_matrix m;
+          if i<n-1 && code.(i+1) = Disp then
+            aux (i+2) (* Display to be treated here *)
+          else aux (i+1))
+        
+        | _ -> failwith "Runtime error: wrong output type of eval_entity")
       
       | String se ->
         (* A string alone is printed, an application of string function is not *)
@@ -184,6 +183,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         match se, eval_str p se with
           | Str_content _, Str_content s ->
             (let sl = rev_lexlist_to_rev_symblist s true in
+            text_screen := true;
             line_feed ();
             clear_line !writing_index;
             let len = List.length sl in
@@ -210,21 +210,17 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
           | _, Str_content sl ->
             (* Uninteresting case, prints a "Done" *)
             (* To be redone when we take care of the Dones *)
-            (line_feed ();
-            clear_line !writing_index;
-            locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
-            tdraw ren;
-            if (i <= n-2 && code.(i+1) = End
-              || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
-              && !prog_goback = []
-              then (* End of the program *)
-                (if code.(i+1) = Disp
-                  then disp p ren writing_index;
-                quit win ren true (* Quit after the string *))
-              else if i<n-1 && code.(i+1) = Disp then
+            if i<n-1 && (code.(i+1) = Disp
+              || (code.(i+1) = End && !prog_goback = [])) then
+              (text_screen := true;
+              line_feed ();
+              clear_line !writing_index;
+              locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
+              tdraw ren;
+              if code.(i+1) = Disp then
                 (disp p ren writing_index;
-                aux (i+2))
-              else aux (i+1))
+                aux (i+1)
+              else quit win ren true (* Quit after the string *)))
           | _, Num_expr _ -> failwith "Runtime error: string expression has numerical value"
           | _  -> failwith "Runtime error: wrong type in string expression evaluation")
           
@@ -239,6 +235,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
           && (z2.re >= 1.) && (z2.re <= 7.))
           then failwith "Runtime error: wrong arguments for Locate";
         (* The coordinates in Casio Basic are between 1 and 21 *)
+        text_screen := true;
         let sl =
           match eval_str p se with
             | Str_content s -> rev_lexlist_to_rev_symblist s true
@@ -265,6 +262,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
       | Function "CLRTEXT" ->
         (clear_text ();
+        text_screen := true;
         tdraw ren;
         writing_index := -1;
         val_seen := false;
@@ -357,6 +355,15 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
           assign_var p (Value z) (Var vi)
         done;
         aux (i+1))
+
+      | Assign (QMark, v) -> (* to do: treat list/mat assignment *)
+        let e = qmark win ren in
+        (match eval_entity p e with
+          | Value z ->
+            assign_var p (Value z) v;
+            aux (i+1)
+          (* TO DO: list_expr, mat_expr *)
+          | _ -> aux (i+1))
 
       | End ->
         (match !prog_goback with

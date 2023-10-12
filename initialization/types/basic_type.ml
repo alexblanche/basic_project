@@ -15,7 +15,7 @@ type graphic =
   | PlotOff of num_expr * num_expr
   | Fline of num_expr * num_expr * num_expr * num_expr
   | GraphicText of num_expr * num_expr * (string list)
-  | Graphic_Function of string (* Other graphic functions *)
+  | Graphic_Function of string * (num_expr list) (* Other graphic functions *)
 
 (* Type for Basic commands *)
 type command =

@@ -349,6 +349,55 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           aux t'' (i+20))
         else fail lexlist i "Compilation error: Wrong index for ClrMat"
 
+      | "PLOTON" :: t
+      | "PLOTOFF" :: t
+      | "PLOTCHG" ->
+        let lex = List.hd lexlist in
+        let suffix = String.sub lex 4 (String.length lex - 4) in
+        let (el, t') = extract_list_content t in
+        (match el with
+          | [ex; ey] ->
+            (set code i
+              (Graphic (Graphic_Function (lex, [ex, ey])));
+            aux t' (i+1))
+          | _ ->
+            fail t i
+              ("Compilation error: Plot"^(String.capitalize_ascii suffix)^" expects two parameters"))
+      
+      | "FLINE" :: t ->
+        let (el, t') = extract_list_content t in
+        (match el with
+          | [ex1; ey1; ex2; ey2] ->
+            (set code i (Graphic (Fline (ex1, ey1, ex2, ey2)));
+            aux t' (i+1))
+          | _ -> fail t i "Compilation error: PlotOn expects two parameters")
+
+      | "PXLON" :: t
+      | "PXLOFF" :: t
+      | "PXLCHG" ->
+        let lex = List.hd lexlist in
+        let suffix = String.sub lex 3 (String.length lex - 3) in
+        let (el, t') = extract_list_content t in
+        (match el with
+          | [ex; ey] ->
+            (set code i
+              (Graphic (Graphic_Function (lex, [ex, ey])));
+            aux t' (i+1))
+          | _ ->
+            fail t i
+              ("Compilation error: Pxl"^(String.capitalize_ascii suffix)^" expects two parameters"))
+
+      | "VIEWWINDOW" :: t ->
+        let (el, t') = extract_list_content t in
+        (match el with
+          | [exmin; exmax; exstep; eymin; eymax; eystep] ->
+            (set code i (Graphic (ViewWindow (exmin, exmax, exstep, eymin, eymax, eystep))));
+            aux t' (i+1)
+          | _ ->
+            fail t i "Compilation error: ViewWindow expects six parameters")
+        
+      
+
       (* Errors *)
       | lex :: _ -> fail lexlist i ("Compilation error: Unexpected command "^(String.escaped lex))
 

@@ -76,18 +76,24 @@ let rev_lexlist_to_rev_symblist (lexlist : string list) (text : bool) : string l
   List.rev l;;
 
 (* Wait for Enter key to be pressed, then closes the graphic window *)
-(* text_graph is true iff the text screen is displayed (as opposed to the graphic screen) *)
-let quit (win : Sdlwindow.t) (ren : Sdlrender.t) (text_graph : bool) : unit =
+(* text_screen is true iff the text screen is displayed (as opposed to the graphic screen) *)
+let quit (win : Sdlwindow.t) (ren : Sdlrender.t) (text_screen : bool) : unit =
   (try
-    wait_release ren text_graph;
-    wait_enter ren text_graph
+    wait_release ren text_screen;
+    wait_enter ren text_screen
   with
     | Window_Closed -> ());
   close_graph win;;
 
 (* Prints the value of Ans if val_seen, "Done" otherwise, then quits *)
 let quit_print (win : Sdlwindow.t) (ren : Sdlrender.t) (val_seen : bool) (value : complex) (polar : bool) (string_seen : bool) : unit =
-  if val_seen then
+  if not text_screen then
+    (wait_release ren false;
+    wait_enter ren false;
+    clear_line !writing_index;
+    locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
+    tdraw ren)
+  else if val_seen then
     (line_feed ();
     print_number value polar;
     tdraw ren)
