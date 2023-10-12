@@ -132,7 +132,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         else aux (i+1))
 
       | Graphic g ->
-        (apply_graphic g;
+        (apply_graphic ren p g;
         aux (i+1))
       
       | Expr (Complex z) ->

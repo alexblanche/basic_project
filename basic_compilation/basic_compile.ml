@@ -395,8 +395,32 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
             aux t' (i+1)
           | _ ->
             fail t i "Compilation error: ViewWindow expects six parameters")
-        
       
+      | "CLS" :: t
+      | "BGNONE" :: t
+      | "AXESON" :: t
+      | "AXESOFF" :: t ->
+        (set code i (Graphic (Graphic_Function (List.hd lexlist, [])));
+        aux t (i+1))
+
+      | "RCLPICT" :: t
+      | "STOPICT" :: t
+      | "BGPICT" :: t
+      | "SLNORMAL" :: t
+      | "SLTHICK" :: t
+      | "SLBROKEN" :: t
+      | "SLDOT" :: t
+      | "DRAWSTAT" :: t
+        ->
+        let (e, t') = read_expr t true in
+        (match e with
+          | Complex z ->
+            if is_int z && z.re >= 1. && z.im <= 20. then
+              (set code i (Graphic (Graphic_Function (List.hd lexlist, [Complex z])));
+              aux t (i+1))
+            else fail t i "Compilation error: Wrong index for Pict command")
+          | _ -> fail t i "Compilation error: Wrong index for Pict command"
+        
 
       (* Errors *)
       | lex :: _ -> fail lexlist i ("Compilation error: Unexpected command "^(String.escaped lex))
