@@ -351,14 +351,14 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
       | "PLOTON" :: t
       | "PLOTOFF" :: t
-      | "PLOTCHG" ->
+      | "PLOTCHG" :: t ->
         let lex = List.hd lexlist in
         let suffix = String.sub lex 4 (String.length lex - 4) in
         let (el, t') = extract_list_content t in
         (match el with
           | [ex; ey] ->
             (set code i
-              (Graphic (Graphic_Function (lex, [ex, ey])));
+              (Graphic (Graphic_Function (lex, [ex; ey])));
             aux t' (i+1))
           | _ ->
             fail t i
@@ -374,14 +374,14 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
       | "PXLON" :: t
       | "PXLOFF" :: t
-      | "PXLCHG" ->
+      | "PXLCHG" :: t ->
         let lex = List.hd lexlist in
         let suffix = String.sub lex 3 (String.length lex - 3) in
         let (el, t') = extract_list_content t in
         (match el with
           | [ex; ey] ->
             (set code i
-              (Graphic (Graphic_Function (lex, [ex, ey])));
+              (Graphic (Graphic_Function (lex, [ex; ey])));
             aux t' (i+1))
           | _ ->
             fail t i
@@ -399,28 +399,37 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "CLS" :: t
       | "BGNONE" :: t
       | "AXESON" :: t
-      | "AXESOFF" :: t ->
+      | "AXESOFF" :: t
+      | "SLNORMAL" :: t
+      | "SLTHICK" :: t
+      | "SLBROKEN" :: t
+      | "SLDOT" :: t
+      | "DRAWSTAT" :: t ->
         (set code i (Graphic (Graphic_Function (List.hd lexlist, [])));
         aux t (i+1))
 
       | "RCLPICT" :: t
       | "STOPICT" :: t
       | "BGPICT" :: t
-      | "SLNORMAL" :: t
-      | "SLTHICK" :: t
-      | "SLBROKEN" :: t
-      | "SLDOT" :: t
-      | "DRAWSTAT" :: t
         ->
-        let (e, t') = read_expr t true in
+        let (e, t') = extract_expr t in
         (match e with
           | Complex z ->
             if is_int z && z.re >= 1. && z.im <= 20. then
               (set code i (Graphic (Graphic_Function (List.hd lexlist, [Complex z])));
               aux t (i+1))
-            else fail t i "Compilation error: Wrong index for Pict command")
-          | _ -> fail t i "Compilation error: Wrong index for Pict command"
+            else fail t i "Compilation error: Wrong index for Pict command"
+          | _ -> fail t i "Compilation error: Wrong index for Pict command")
         
+      | "HORIZONTAL" :: t
+      | "VERTICAL" :: t
+        ->
+        let (e, t') = extract_expr t in
+        (match e with
+          | Complex z ->
+            (set code i (Graphic (Graphic_Function (List.hd lexlist, [Complex z])));
+            aux t (i+1))
+          | _ -> fail t i "Compilation error: Wrong index for Horizontal/Vertical")
 
       (* Errors *)
       | lex :: _ -> fail lexlist i ("Compilation error: Unexpected command "^(String.escaped lex))

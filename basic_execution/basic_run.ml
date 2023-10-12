@@ -32,19 +32,26 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
   (* Initialization of the graphic window and graphic parameters *)
   let (win, ren) = open_graphic () in
-  set_color ren black;
-  clear_text ();
-  wipe gscreen;
-  writing_index := -1;
+  
   exit_key_check := false;
   parameters_updated := true;
   escape_activated := true;
   getkey := 0;
   key_pressed := Unknown;
+  
+  set_color ren black;
+  clear_text ();
+  writing_index := -1;
+
+  wipe gscreen;
   p.gscreen <- gscreen;
+  p.bgpict <- -1;
+  p.xmin <- 1.; p.xmax <- 127.; p.xstep <- 0.;
+  p.ymin <- 1.; p.ymax <- 63.; p.ystep <- 0.;
+  p.axeson <- false;
   
   let end_execution () =
-    quit_print win ren !val_seen !last_val p.polar !string_seen
+    quit_print win ren !val_seen !last_val p.polar !string_seen !text_screen
   in
 
   (** Main looping function **)
@@ -219,8 +226,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
               tdraw ren;
               if code.(i+1) = Disp then
                 (disp p ren writing_index;
-                aux (i+1)
-              else quit win ren true (* Quit after the string *)))
+                aux (i+1))
+              else quit win ren true (* Quit after the string *))
           | _, Num_expr _ -> failwith "Runtime error: string expression has numerical value"
           | _  -> failwith "Runtime error: wrong type in string expression evaluation")
           
@@ -357,8 +364,9 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         aux (i+1))
 
       | Assign (QMark, v) -> (* to do: treat list/mat assignment *)
+        (text_screen := true;
         let e = qmark win ren in
-        (match eval_entity p e with
+        match eval_entity p e with
           | Value z ->
             assign_var p (Value z) v;
             aux (i+1)

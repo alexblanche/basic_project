@@ -104,7 +104,7 @@ let plotoff (ren : Sdlrender.t) (m : bool array array) (grid : bool) (i : int) (
 
 
 (* Traces an horizontal line between pixel (i1,j) and (i2,j) (i1 is the leftmost pixel) *)
-let horitzontal_line (ren : Sdlrender.t) (m : bool array array) (i1 : int) (i2 : int) (j : int) =
+let horizontal_line (ren : Sdlrender.t) (m : bool array array) (i1 : int) (i2 : int) (j : int) =
 	fill_rect ren (!margin_h + !size*i1) (!margin_v + !size*j) ((i2-i1+1) * !size) !size;
 	for i = i1 to i2 do
 		m.(j).(i) <- true
@@ -166,7 +166,7 @@ let bresenham_loop_18 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 
 			e := !e - sdj*ddj;
 			incr i
 		done;
-		horitzontal_line ren m !ibeg !i !j;
+		horizontal_line ren m !ibeg !i !j;
 		j := !j + sdj;
 		e:= !e + ddi;
 		incr i
@@ -199,7 +199,7 @@ let bresenham_loop_45 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 
 			e := !e + sdj*ddj;
 			decr i
 		done;
-		horitzontal_line ren m !i !ibeg !j;
+		horizontal_line ren m !i !ibeg !j;
 		j := !j + sdj;
 		e:= !e + ddi;
 		decr i
@@ -265,12 +265,12 @@ let bresenham (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (
 		| true,_,true,_,_,_,_,_ 	-> ploton ren m i1 j1 (* single point *)
 		| true,_,_,true,_,_,_,_ 	-> vertical_line ren m i1 j1 j2 (* vertical ascending *)
 		| true,_,_,_,_,_,_,_ 			-> vertical_line ren m i1 j2 j1 (* vertical descending *)
-		| _,true,true,_,_,_,_,_ 	-> horitzontal_line ren m i1 i2 j1 (* horizontal right *)
+		| _,true,true,_,_,_,_,_ 	-> horizontal_line ren m i1 i2 j1 (* horizontal right *)
 		| _,true,_,true,true,_,_,_ -> bresenham_loop_18 ren m i1 j1 i2 j2 (* 1st octant *)
 		| _,true,_,true,_,_,_,_ 	-> bresenham_loop_23 ren m i1 j1 i2 j2 (* 2nd octant *)
 		| _,true,_,_,_,true,_,_ 	-> bresenham_loop_18 ren m i1 j1 i2 j2 (* 8th octant *)
 		| _,true,_,_,_,_,_,_ 			-> bresenham_loop_67 ren m i1 j1 i2 j2 (* 7th octant *)
-		| _,_,true,_,_,_,_,_ 			-> horitzontal_line ren m i2 i1 j1 (* horitzontal left *)
+		| _,_,true,_,_,_,_,_ 			-> horizontal_line ren m i2 i1 j1 (* horizontal left *)
 		| _,_,_,true,_,_,true,_ 	-> bresenham_loop_45 ren m i1 j1 i2 j2 (* 4th octant *)
 		| _,_,_,true,_,_,_,_ 			-> bresenham_loop_23 ren m i1 j1 i2 j2 (* 3rd octant *)
 		| _,_,_,_,_,_,_,true 			-> bresenham_loop_45 ren m i1 j1 i2 j2 (* 5th octant *)

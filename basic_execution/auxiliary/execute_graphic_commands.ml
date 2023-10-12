@@ -3,10 +3,10 @@
 let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
   match g with
     | Fline (ex1, ey1, ex2, ey2) ->
-      let zx1 = eval_num p ex in
-      let zy1 = eval_num p ey in
-      let zx2 = eval_num p ex in
-      let zy2 = eval_num p ey in
+      let zx1 = eval_num p ex1 in
+      let zy1 = eval_num p ey1 in
+      let zx2 = eval_num p ex2 in
+      let zy2 = eval_num p ey2 in
       let (a1,b1) = rescale p zx1.re zy1.re in
       let (a2,b2) = rescale p zx2.re zy2.re in
       (bresenham ren gscreen a1 b1 a2 b2;
@@ -20,7 +20,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
           m.(j).(i) <- gscreen.(j).(i)
         done
       done;
-      p.pict.(int_of_complex z - 1) <- m)
+      p.pict.(int_of_complex z - 1) <- (2048,m))
     | PlotOn (ex, ey) ->
       let zx = eval_num p ex in
       let zy = eval_num p ey in
@@ -31,11 +31,11 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
       let zx = eval_num p ex in
       let zy = eval_num p ey in
       let (a,b) = rescale p zx.re zy.re in
-      (plotoff ren gscreen a b;
+      (plotoff ren gscreen false a b;
       gdraw ren)
     | Graphic_Function ("CLS", _) ->
       wipe gscreen
-    | ViewWindow ex1, ex2, esx, ey1, ey2, esy ->
+    | ViewWindow (ex1, ex2, esx, ey1, ey2, esy) ->
       (p.xmin <- eval_num p ex1;
       p.xmax <- eval_num p ex2;
       p.xstep <- eval_num p esx;
@@ -48,5 +48,13 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
     | Graphic_Function ("BGPICT", [Complex z]) ->
       p.bgpict <- int_of_complex z - 1
     | Graphic_Function ("BGNONE", _) -> p.bgpict <- -1
+    | Graphic_Function ("HORIZONTAL", [Complex z]) ->
+      let (_, b) = rescale p 0. z.re in
+      (bresenham ren gscreen 1 b 127 b;
+      gdraw ren)
+    | Graphic_Function ("VERTICAL", [Complex z]) ->
+      let (a, _) = rescale p z.re 0. in
+      (bresenham ren gscreen a 1 a 63;
+      gdraw ren)
 ;;
 

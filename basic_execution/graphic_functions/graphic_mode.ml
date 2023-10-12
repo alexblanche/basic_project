@@ -32,8 +32,8 @@ let gdraw (ren : Sdlrender.t) : unit =
 let rescale (p : parameters) (x : float) (y : float) : int * int =
   let ax = (x -. p.xmin) /. (p.xmax -. p.xmin) in
   let ay = (y -. p.ymin) /. (p.ymax -. p.ymin) in
-  (1 + true_int_of_float (ax *. 127),
-   1 + true_int_of_float (ay *. 63));;
+  (1 + true_int_of_float (ax *. 127.),
+   1 + true_int_of_float (ay *. 63.));;
 
 (* Draws a horizontal line in the current system of coordinates at ordinate y *)
 let draw_horizontal_line (ren : Sdlrender.t) (p : parameters) (y : float) : unit =
@@ -64,8 +64,8 @@ let draw_axes (ren : Sdlrender.t) (p : parameters) : unit =
     let nb_step_yminus = true_int_of_float (p.ymin /. p.ystep) in
     let step_yplus = Array.init nb_step_yplus (fun i -> (float_of_int i)*.p.ystep) in
     let step_yminus = Array.init nb_step_yminus (fun i -> (float_of_int (-i))*.p.ystep) in
-    (Array.iter (fun y -> let (i,j) = rescale p 0. y in ploton ren gscreen (i+1) y) step_yplus;
-    Array.iter (fun y -> let (i,j) = rescale p 0. y in ploton ren gscreen (i+1) y) step_yminus);;
+    (Array.iter (fun y -> let (i,j) = rescale p 0. y in ploton ren gscreen (i+1) j) step_yplus;
+    Array.iter (fun y -> let (i,j) = rescale p 0. y in ploton ren gscreen (i+1) j) step_yminus);;
 
 (* Auxiliary function to draw_pict *)
 (* Adds to rects the rectangles needed to draw line j of the picture stored in matrix m,
@@ -84,7 +84,7 @@ let aux_draw_line (m : bool array array) (j : int) (imin : int) (imax : int) (re
             ~pos:(!margin_h + !size * !ibeg, !margin_v + !size * j)
             ~dims:((i - 1 - !ibeg) * !size, !size))
           ::!rects;
-        !ibeg := -1)
+        ibeg := -1)
   done;
   if !ibeg <> -1 then
     rects :=
@@ -114,7 +114,7 @@ let draw_pict_offset (ren : Sdlrender.t) (p : parameters) (pict : int) (wanted_s
       let actual_j = (j + offset_j) mod 64 in
       aux_draw_line m actual_j offset_i 127 rects;
       aux_draw_line m ((actual_j + 1) mod 64) 0 (offset_i-1) rects;
-    done
+    done;
   let remainder = 8 * (actual_size mod 16) in
   if remainder <> 0 then
     let offset_rem = offset_i + remainder - 1 in

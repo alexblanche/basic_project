@@ -72,7 +72,6 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
       loop ns x)
   in
 
-  text_screen := true;
   line_feed ();
   clear_line !writing_index;
   locate_no_refresh ["?"] 0 !writing_index;

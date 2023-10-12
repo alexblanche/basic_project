@@ -117,7 +117,9 @@ type parameters = {
   mutable gscreen : bool array array;
 
   (* Background picture *)
-  mutable bgpict : int
+  mutable bgpict : int;
+  (* Axes are displayed *)
+  mutable axeson : bool;
 }
 
 
@@ -163,6 +165,8 @@ let empty_param () : parameters =
 
     (* Index of the background picture *)
     bgpict = -1;
+    (* Axes are displayed *)
+    axeson = false;
   };;
 
 (* Returns a new array with twice the size of t, with the elements of t as first elements
