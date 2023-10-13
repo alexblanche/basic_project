@@ -124,7 +124,7 @@ type parameters = {
   mutable style : style;
 
   (* Sgph [0|1|2] [DrawOn | DrawOff], [Scatter | XyLine], List i1, List i2, [Dot | Square | Cross] *)
-  mutable sgph : (bool * ds_style * int * int * ds_mark) array;
+  mutable sgph : (bool * drawstat_style * int * int * drawstat_mark) array;
 }
 
 
@@ -173,7 +173,7 @@ let empty_param () : parameters =
     (* Axes are displayed *)
     axeson = false;
     (* Style *)
-    style = Normal;
+    style = StyleNormal;
 
     (* DrawStat parameters *)
     sgph =

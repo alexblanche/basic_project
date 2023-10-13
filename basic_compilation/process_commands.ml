@@ -309,22 +309,80 @@ let process_locate i t code mem =
     | Failure _ -> fail t i "Compilation error: Syntax error in Locate command";;
 
 (* DrawStat setup *)
-(* let process_sgph i lexlist code mem =
+let process_sgph i lexlist code mem : int * string list =
   let (lexl, t') = extract_line lexlist in
   let data =
     match lexl with
       | "EOL" :: q
       | "COLON" :: q
       | "DISP" :: q -> List.rev q
+      | _ -> List.rev lexl
+  in
+  let (sgphi, d2) =
+    match data with (* DRAWON, XYLINE, LIST 3, LIST 4, 1, DOT *)
+      | "SGPH1" :: q -> (0, q)
+      | "SGPH2" :: q -> (1, q)
+      | "SGPH3" :: q -> (2, q)
       | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command"
   in
-  match data with DRAWON, XYLINE, LIST 3, LIST 4, 1, DOT
-    | mark :: _ :: list2 :: list1 :: style :: drawon :: sgphi ->
-    | _ :: list2 :: list1 :: style :: drawon :: sgphi ->
-    | list2 :: list1 :: style :: drawon :: sgphi ->
-    | list1 :: style :: drawon :: sgphi ->
-    | style :: drawon :: sgphi ->
-    | drawon :: sgphi ->
-    | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command";; *)
+  let (drawon, d3) =
+    match d2 with
+      | "DRAWON" :: q -> (true, q)
+      | "DRAWOFF" :: q -> (false, q)
+      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command"
+  in
+  let (stop, style, d4) =
+    match d3 with
+      | "," :: "SCATTER" :: q -> (false, Scatter, q)
+      | "," :: "XYLINE" :: q -> (false, XYLine, q)
+      | [] -> (true, Scatter, [])
+      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command"
+  in
+  (if stop then
+    set code i (Graphic (Drawstat_Setup (sgphi, drawon, None, None, None, None)))
+  else
+  
+  let aux_get_list_index d =
+    match d with
+      | "," :: "LIST" :: a :: t ->
+        if is_digit a then
+          let (li, q) = read_int (a::t) true in
+          (false, Value (complex_of_int li), q)
+        else if is_var a then
+          (false, Variable (Var (var_index a)), t)
+        else
+          fail lexlist i "Compilation error: Syntax error in Sgph command"
+      | [] -> (true, Value (complex_of_float 0.), [])
+      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command"
+  in
+  let (stop, list1, d5) = aux_get_list_index d4 in
+  if stop then
+    set code i (Graphic (Drawstat_Setup (sgphi, drawon, Some style, None, None, None)))
+  else
+  
+  let (stop, list2, d6) = aux_get_list_index d5 in
+  if stop then
+    set code i (Graphic (Drawstat_Setup (sgphi, drawon, Some style, Some list1, None, None)))
+  else
 
-(* To do *)
+  let (stop, mark) =
+    match d6 with 
+      | [_; "DOT"] -> (false, DSMDot)
+      | [_; "SQUARE"] -> (false, DSMSquare)
+      | [_; "CROSS"] -> (false, DSMCross)
+      | [] -> (true, DSMDot)
+      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command"
+  in
+
+  if stop then
+    set code i (Graphic (Drawstat_Setup (sgphi, drawon, Some style, Some list1, Some list2, None)))
+  else
+    set code i (Graphic (Drawstat_Setup (sgphi, drawon, Some style, Some list1, Some list2, Some mark)))
+  );
+
+  let tail =
+    match lexl with
+      | "DISP" :: _ -> "DISP"::t'
+      | _ -> t'
+  in
+  (i+1, tail);;

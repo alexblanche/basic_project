@@ -85,6 +85,26 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
           p.ystep <- ystepval.re;
           draw_window ren p)
 
+    | Drawstat_Setup (sgphi, drawon, style_opt, list1_opt, list2_opt, mark_opt) ->
+      let (curr_drawon, curr_style, curr_list1, curr_list2, curr_mark) = p.sgph.(sgphi) in
+      (match style_opt, list1_opt, list2_opt, mark_opt with
+        | None, None, None, None ->
+          p.sgph.(sgphi) <- (drawon, curr_style, curr_list1, curr_list2, curr_mark)
+        | Some style, None, None, None ->
+          p.sgph.(sgphi) <- (drawon, style, curr_list1, curr_list2, curr_mark)
+        | Some style, Some list1, None, None ->
+          let z1 = eval_num p (Arithm [Entity list1]) in
+          p.sgph.(sgphi) <- (drawon, style, int_of_complex z1, curr_list2, curr_mark)
+        | Some style, Some list1, Some list2, None ->
+          let z1 = eval_num p (Arithm [Entity list1]) in
+          let z2 = eval_num p (Arithm [Entity list2]) in
+          p.sgph.(sgphi) <- (drawon, style, int_of_complex z1, int_of_complex z2, curr_mark)
+        | Some style, Some list1, Some list2, Some mark ->
+          let z1 = eval_num p (Arithm [Entity list1]) in
+          let z2 = eval_num p (Arithm [Entity list2]) in
+          p.sgph.(sgphi) <- (drawon, style, int_of_complex z1, int_of_complex z2, mark)
+        | _ -> failwith "Graphic error: wrong arguments for Sgph DrawStat setup")
+
     | Graphic_Function ("AXESON", _) -> p.axeson <- true
     | Graphic_Function ("AXESOFF", _) -> p.axeson <- false
     | Graphic_Function ("BGNONE", _) -> p.bgpict <- -1
