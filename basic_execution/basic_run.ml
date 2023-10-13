@@ -149,7 +149,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         else aux (i+1))
 
       | Graphic g ->
-        (apply_graphic ren p g;
+        (apply_graphic ren p g text_screen;
         aux (i+1))
       
       | Expr (Complex z) ->
@@ -386,7 +386,11 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
       (* Ignored commands *)
       | Disp ->
-        (disp p ren writing_index;
+        (if !text_screen
+          then disp p ren writing_index
+          else
+            (wait_release ren false;
+            wait_enter ren false);
         aux (i+1))
 
       | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))

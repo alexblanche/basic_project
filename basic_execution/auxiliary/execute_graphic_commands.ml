@@ -1,6 +1,6 @@
 (* Execution of the graphic commands *)
 
-let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
+let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_screen : bool ref) : unit =
   match g with
     | Fline (ex1, ey1, ex2, ey2, style) ->
       (* To do: implement styles *)
@@ -10,13 +10,15 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
       let zy2 = eval_num p ey2 in
       let (a1,b1) = rescale p zx1.re zy1.re in
       let (a2,b2) = rescale p zx2.re zy2.re in
-      (bresenham ren gscreen a1 b1 a2 b2;
+      (bresenham ren gscreen a1 (64-b1) a2 (64-b2);
+      text_screen := false;
       gdraw ren)
 
     | Graphic_Function ("RCLPICT", [e]) ->
       let z = eval_num p e in
       if is_int z && z.re >= 1. && z.im <= 20. then
-        draw_pict ren p (int_of_complex z - 1)
+        (text_screen := false;
+        draw_pict ren p (int_of_complex z - 1))
       else failwith "Graphic error: wrong index for RclPict command"
 
     | Graphic_Function ("STOPICT", [e]) ->
@@ -45,23 +47,29 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
         && (zx.re >= 1.) && (zx.re <= 127.)
         && (zy.re >= 1.) && (zy.re <= 63.))
         then failwith "Graphic error: wrong arguments for Text";
-      (match eval_str p se with
-        | Str_content s -> draw_text ren s (int_of_complex zx) (int_of_complex zy)
-        | Num_expr (Complex z) -> draw_number ren z p.polar (int_of_complex zx) (int_of_complex zy)
-        | _ -> failwith "Graphic error: wrong output type for string expression evaluation")
+      (text_screen := false;
+      let _ =
+        match eval_str p se with
+          | Str_content s -> draw_text ren s (int_of_complex zx) (int_of_complex zy)
+          | Num_expr (Complex z) -> draw_number ren z p.polar (int_of_complex zx) (int_of_complex zy)
+          | _ -> failwith "Graphic error: wrong output type for string expression evaluation"
+      in
+      gdraw ren)
 
     | PlotOn (ex, ey) ->
       let zx = eval_num p ex in
       let zy = eval_num p ey in
       let (a,b) = rescale p zx.re zy.re in
-      (ploton ren gscreen a b;
+      (ploton ren gscreen a (64-b);
+      text_screen := false;
       gdraw ren)
 
     | PlotOff (ex, ey) ->
       let zx = eval_num p ex in
       let zy = eval_num p ey in
       let (a,b) = rescale p zx.re zy.re in
-      (plotoff ren gscreen false a b;
+      (plotoff ren gscreen false a (64-b);
+      text_screen := false;
       gdraw ren)
 
     | Graphic_Function ("CLS", _) ->
@@ -111,10 +119,12 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
     | Graphic_Function ("HORIZONTAL", [Complex z]) ->
       let (_, b) = rescale p 0. z.re in
       (bresenham ren gscreen 1 b 127 b;
+      text_screen := false;
       gdraw ren)
     | Graphic_Function ("VERTICAL", [Complex z]) ->
       let (a, _) = rescale p z.re 0. in
       (bresenham ren gscreen a 1 a 63;
+      text_screen := false;
       gdraw ren)
     | Graphic_Function ("SLNORMAL", []) -> p.style <- StyleNormal
     | Graphic_Function ("SLTHICK", []) -> p.style <- StyleThick

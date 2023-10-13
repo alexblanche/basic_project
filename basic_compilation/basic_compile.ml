@@ -357,8 +357,15 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         let (el, t') = extract_list_content t in
         (match el with
           | [ex; ey] ->
+            let command =
+              match suffix with
+                | "ON" -> PlotOn (ex, ey)
+                | "OFF" -> PlotOff (ex, ey) 
+                | "CHG" -> Graphic_Function ("PLOTCHG", [ex; ey])
+                | _ -> fail lexlist i "Compilation error"
+            in
             (set code i
-              (Graphic (Graphic_Function (lex, [ex; ey])));
+              (Graphic command);
             aux t' (i+1))
           | _ ->
             fail t i

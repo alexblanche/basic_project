@@ -439,3 +439,33 @@ let run_str_mid () =
         ]
       )]
   in run (empty_projcont ()) prog "main";;
+
+(************************************************************)
+
+(** Tests for graphics **)
+
+let run_prog_graphic () =
+  let prog =
+    compile
+      [("main",
+        [
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "PLOTON"; "2"; "5"; ","; "1"; "0"; "EOL";
+          "PLOTON"; "3"; "5"; ","; "6"; "0"; "EOL";
+          "PLOTON"; "1"; "0"; "5"; ","; "1"; "0"; "EOL";
+          "FLINE"; "1"; "0"; ","; "1"; "0"; ","; "1"; "0"; "0"; ","; "5"; "0"; "DISP";
+          "TEXT"; "5"; "0"; "PLUS"; "2"; ","; "1"; "0"; ","; "QUOTE"; "A"; "B"; "C"; "D"; "QUOTE"; "DISP";
+          "QUOTE"; "S"; "T"; "O"; "P"; "QUOTE"; "DISP"
+        ]
+      )]
+  in prog, run (empty_projcont ()) prog "main";;
+
+let run_pict () =
+  let prog =
+    compile
+      [("main",
+        [
+          "RCLPICT"; "1"; "EOL";
+        ]
+      )]
+  in prog, run (empty_projcont ()) prog "main";;

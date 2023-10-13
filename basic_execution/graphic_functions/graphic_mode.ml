@@ -22,8 +22,10 @@ let gscreen = Array.make_matrix 64 128 false;;
 
 (** Graphic display **)
 let gdraw (ren : Sdlrender.t) : unit =
+  parameters_updated := false;
   print_mat ren gscreen false
-    (fun ren -> rect ren (!margin_h-1) (!margin_v-1) (!width+1) (!height+1));;
+    (fun ren -> (* rect ren (!margin_h-1) (!margin_v-1) (!width+1) (!height+1) *) ());
+  refresh ren;;
 
 (** Graphic functions **)
 
@@ -158,7 +160,12 @@ let text_aux (init_i : int) (j : int) (acc : Sdlrect.t list ref) (l : string lis
   let rec aux current_i l : int =
     match l with
       | s::lt ->
-        let t = Hashtbl.find repr_graph s in
+        let t =
+          try
+            Hashtbl.find repr_graph s
+          with
+            | Not_found -> Hashtbl.find repr_graph " "
+        in
         (* Each character is 5 pixels tall and between 1 and 5 pixels wide *)
         let len = (Array.length t)/5 in
         (* If there is room for one more character, continue,
@@ -168,7 +175,7 @@ let text_aux (init_i : int) (j : int) (acc : Sdlrect.t list ref) (l : string lis
             for x = 0 to len-1 do
               if t.(len*y + x) then
                 let px = current_i + x in
-                let py = j + 5 - y in
+                let py = j + y in
                 let r = fast_ploton px py in
                 (gscreen.(py).(px) <- true;
                 acc := r::!acc)
