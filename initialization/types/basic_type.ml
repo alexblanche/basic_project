@@ -8,15 +8,6 @@
   where l is the line where the Lbl A points to.
   - Conditionals (If) and loops (For, While, Do-LpWhile) are transformed with the Goto method. *)
 
-(* Graphic screen functions *)
-type graphic =
-  | ViewWindow of num_expr * num_expr * num_expr * num_expr * num_expr * num_expr
-  | PlotOn of num_expr * num_expr
-  | PlotOff of num_expr * num_expr
-  | Fline of num_expr * num_expr * num_expr * num_expr
-  | Text of num_expr * num_expr * string_expr
-  | Graphic_Function of string * (num_expr list) (* Other graphic functions *)
-
 (* Type for Basic commands *)
 type command =
 

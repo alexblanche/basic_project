@@ -23,11 +23,11 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
     (* if i >= 1000 then failwith "Max number of lines reached"; *)
 
     (* Debug *)
-    (* (try
+    (try
       let (line, _) = extract_line lexlist in
       print_endline ("i = "^(string_of_int i)^" -> "^(String.concat " " (List.rev (List.map String.escaped line))))
     with
-      | _ -> ()); *)
+      | _ -> ());
 
     (* Expression handling *)
     let (e, t) =
@@ -364,13 +364,26 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
             fail t i
               ("Compilation error: Plot"^(String.capitalize_ascii suffix)^" expects two parameters"))
       
-      | "FLINE" :: t ->
+      | "FLINE" :: t
+      | "SKETCHNORMAL" :: "FLINE" :: t
+      | "SKETCHTHICK" :: "FLINE" :: t
+      | "SKETCHBROKEN" :: "FLINE" :: t
+      | "SKETCHDOT" :: "FLINE" :: t ->
         let (el, t') = extract_list_content t in
+        let style =
+          (match List.hd lexlist with
+            | "FLINE" -> None
+            | "SKETCHNORMAL" -> Some Normal
+            | "SKETCHTHICK" -> Some Thick
+            | "SKETCHBROKEN" -> Some Broken
+            | "SKETCHDOT" -> Some Dot
+            | _ -> fail lexlist i "Compilation error: Style error")
+        in
         (match el with
           | [ex1; ey1; ex2; ey2] ->
-            (set code i (Graphic (Fline (ex1, ey1, ex2, ey2)));
+            (set code i (Graphic (Fline (ex1, ey1, ex2, ey2, style)));
             aux t' (i+1))
-          | _ -> fail t i "Compilation error: PlotOn expects two parameters")
+          | _ -> fail t i "Compilation error: Fline expects four parameters")
 
       | "PXLON" :: t
       | "PXLOFF" :: t
@@ -401,6 +414,9 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           | [e1; e2; StringExpr se], q ->
             (set code i (Graphic (Text (e1, e2, se)));
             aux q (i+1))
+          | [e1; e2; e3], q ->
+            (set code i (Graphic (Text (e1, e2, Num_expr e3)));
+            aux q (i+1))
           | _ ->
             fail t i "Compilation error: Text expects two numerical expressions
               and a string expression as parameters")
@@ -413,6 +429,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "SLTHICK" :: t
       | "SLBROKEN" :: t
       | "SLDOT" :: t
+      | "SWINDMAN" :: t
+      | "SWINDAUTO" :: t
       | "DRAWSTAT" :: t ->
         (set code i (Graphic (Graphic_Function (List.hd lexlist, [])));
         aux t (i+1))

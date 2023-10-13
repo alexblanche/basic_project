@@ -253,8 +253,16 @@ and extract_list_content (lexlist : string list) : basic_expr list * string list
   let rec aux acc l =
     match l with
       | ","::t ->
-        let (e, t') = extract_expr t in
-        aux (e::acc) t'
+        (match extract_expr t with
+          | Arithm [], _ ->
+            (* Not a numerical expression:
+              attempt at finding a string expression *)
+              (match extract_string_expr t with
+                | Num_expr (Arithm []), _ ->
+                  (* Not a string expression either *)
+                  failwith "extract_list_content: syntax error"
+                | se, t' -> aux ((StringExpr se)::acc) t')
+          | e, t' -> aux (e::acc) t')
       
       | "RPAR"::t
       | "RBRACKET"::t

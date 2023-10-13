@@ -120,6 +120,8 @@ type parameters = {
   mutable bgpict : int;
   (* Axes are displayed *)
   mutable axeson : bool;
+  (* Style of lines drawn *)
+  mutable style : style;
 }
 
 
@@ -167,6 +169,8 @@ let empty_param () : parameters =
     bgpict = -1;
     (* Axes are displayed *)
     axeson = false;
+    (* Style *)
+    style = Normal;
   };;
 
 (* Returns a new array with twice the size of t, with the elements of t as first elements

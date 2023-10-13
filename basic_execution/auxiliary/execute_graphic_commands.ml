@@ -2,7 +2,8 @@
 
 let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
   match g with
-    | Fline (ex1, ey1, ex2, ey2) ->
+    | Fline (ex1, ey1, ex2, ey2, style) ->
+      (* To do: implement styles *)
       let zx1 = eval_num p ex1 in
       let zy1 = eval_num p ey1 in
       let zx2 = eval_num p ex2 in
@@ -79,6 +80,10 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
       let (a, _) = rescale p z.re 0. in
       (bresenham ren gscreen a 1 a 63;
       gdraw ren)
+    | Graphic_Function ("SLNORMAL", []) -> p.style <- Normal
+    | Graphic_Function ("SLTHICK", []) -> p.style <- Thick
+    | Graphic_Function ("SLBROKEN", []) -> p.style <- Broken
+    | Graphic_Function ("SLDOT", []) -> p.style <- Dot
     | _ -> failwith "Runtime error: wrong parameters for a graphic command"
 ;;
 
