@@ -93,6 +93,16 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
           then aux j
           else aux (i+1)
 
+      | Assign (QMark, v) -> (* to do: treat list/mat assignment *)
+        (text_screen := true;
+        let e = qmark win ren in
+        match eval_entity p e with
+          | Value z ->
+            assign_var p (Value z) v;
+            aux (i+1)
+          (* TO DO: list_expr, mat_expr *)
+          | _ -> aux (i+1))
+
       | Assign (e, v) ->
         let z = eval_num p e in
         (last_val := z;
@@ -362,16 +372,6 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
           assign_var p (Value z) (Var vi)
         done;
         aux (i+1))
-
-      | Assign (QMark, v) -> (* to do: treat list/mat assignment *)
-        (text_screen := true;
-        let e = qmark win ren in
-        match eval_entity p e with
-          | Value z ->
-            assign_var p (Value z) v;
-            aux (i+1)
-          (* TO DO: list_expr, mat_expr *)
-          | _ -> aux (i+1))
 
       | End ->
         (match !prog_goback with

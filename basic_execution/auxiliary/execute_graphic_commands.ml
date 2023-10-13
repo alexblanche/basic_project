@@ -36,13 +36,23 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
     | Graphic_Function ("CLS", _) ->
       wipe gscreen
     | ViewWindow (ex1, ex2, esx, ey1, ey2, esy) ->
-      (p.xmin <- eval_num p ex1;
-      p.xmax <- eval_num p ex2;
-      p.xstep <- eval_num p esx;
-      p.ymin <- eval_num p ey1;
-      p.ymax <- eval_num p ey2;
-      p.ystep <- eval_num p esy;
-      draw_window ren)
+      let xminval = eval_num p ex1 in
+      let xmaxval = eval_num p ex2 in
+      let xstepval = eval_num p esx in
+      let yminval = eval_num p ey1 in
+      let ymaxval = eval_num p ey2 in
+      let ystepval = eval_num p esy in
+      if xminval.im <> 0. || xmaxval.im <> 0. || xstepval.im <> 0.
+        || yminval.im <> 0. || ymaxval.im <> 0. || ystepval.im <> 0.
+        then failwith "Graphic error: ViewWindow expects real arguments"
+        else
+          (p.xmin <- xminval.re;
+          p.xmax <- xmaxval.re;
+          p.xstep <- xstepval.re;
+          p.ymin <- yminval.re;
+          p.ymax <- ymaxval.re;
+          p.ystep <- ystepval.re;
+          draw_window ren p)
     | Graphic_Function ("AXESON", _) -> p.axeson <- true
     | Graphic_Function ("AXESOFF", _) -> p.axeson <- false
     | Graphic_Function ("BGPICT", [Complex z]) ->
@@ -56,5 +66,6 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
       let (a, _) = rescale p z.re 0. in
       (bresenham ren gscreen a 1 a 63;
       gdraw ren)
+    | _ -> failwith "Runtime error: wrong parameters for a graphic command"
 ;;
 
