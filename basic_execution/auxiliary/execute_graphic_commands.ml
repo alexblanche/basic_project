@@ -12,16 +12,31 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
       let (a2,b2) = rescale p zx2.re zy2.re in
       (bresenham ren gscreen a1 b1 a2 b2;
       gdraw ren)
-    | Graphic_Function ("RCLPICT", [Complex z]) ->
-      draw_pict ren p (int_of_complex z - 1)
-    | Graphic_Function ("STOPICT", [Complex z]) ->
-      let m = Array.make_matrix 64 128 false in
-      (for j = 0 to 63 do
-        for i = 0 to 127 do
-          m.(j).(i) <- gscreen.(j).(i)
-        done
-      done;
-      p.pict.(int_of_complex z - 1) <- (2048,m))
+
+    | Graphic_Function ("RCLPICT", [e]) ->
+      let z = eval_num p e in
+      if is_int z && z.re >= 1. && z.im <= 20. then
+        draw_pict ren p (int_of_complex z - 1)
+      else failwith "Graphic error: wrong index for RclPict command"
+
+    | Graphic_Function ("STOPICT", [e]) ->
+      let z = eval_num p e in
+      if is_int z && z.re >= 1. && z.im <= 20. then
+        let m = Array.make_matrix 64 128 false in
+        (for j = 0 to 63 do
+          for i = 0 to 127 do
+            m.(j).(i) <- gscreen.(j).(i)
+          done
+        done;
+        p.pict.(int_of_complex z - 1) <- (2048,m))
+      else failwith "Graphic error: wrong index for StoPict command"
+
+    | Graphic_Function ("BGPICT", [e]) ->
+      let z = eval_num p e in
+      if is_int z && z.re >= 1. && z.im <= 20. then
+        p.bgpict <- int_of_complex z - 1
+      else failwith "Graphic error: wrong index for BGPict command"
+
     | Text (ey, ex, se) ->
       let zy = eval_num p ey in
       let zx = eval_num p ex in
@@ -41,12 +56,14 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
       let (a,b) = rescale p zx.re zy.re in
       (ploton ren gscreen a b;
       gdraw ren)
+
     | PlotOff (ex, ey) ->
       let zx = eval_num p ex in
       let zy = eval_num p ey in
       let (a,b) = rescale p zx.re zy.re in
       (plotoff ren gscreen false a b;
       gdraw ren)
+
     | Graphic_Function ("CLS", _) ->
       wipe gscreen
     | ViewWindow (ex1, ex2, esx, ey1, ey2, esy) ->
@@ -67,10 +84,9 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
           p.ymax <- ymaxval.re;
           p.ystep <- ystepval.re;
           draw_window ren p)
+
     | Graphic_Function ("AXESON", _) -> p.axeson <- true
     | Graphic_Function ("AXESOFF", _) -> p.axeson <- false
-    | Graphic_Function ("BGPICT", [Complex z]) ->
-      p.bgpict <- int_of_complex z - 1
     | Graphic_Function ("BGNONE", _) -> p.bgpict <- -1
     | Graphic_Function ("HORIZONTAL", [Complex z]) ->
       let (_, b) = rescale p 0. z.re in
@@ -80,10 +96,13 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
       let (a, _) = rescale p z.re 0. in
       (bresenham ren gscreen a 1 a 63;
       gdraw ren)
-    | Graphic_Function ("SLNORMAL", []) -> p.style <- Normal
-    | Graphic_Function ("SLTHICK", []) -> p.style <- Thick
-    | Graphic_Function ("SLBROKEN", []) -> p.style <- Broken
-    | Graphic_Function ("SLDOT", []) -> p.style <- Dot
-    | _ -> failwith "Runtime error: wrong parameters for a graphic command"
+    | Graphic_Function ("SLNORMAL", []) -> p.style <- StyleNormal
+    | Graphic_Function ("SLTHICK", []) -> p.style <- StyleThick
+    | Graphic_Function ("SLBROKEN", []) -> p.style <- StyleBroken
+    | Graphic_Function ("SLDOT", []) -> p.style <- StyleDot
+
+    (* Errors or functionalities not implemented yet *)
+    | Graphic_Function _ -> ()
+    (* | _ -> failwith "Runtime error: wrong parameters for a graphic command" *)
 ;;
 

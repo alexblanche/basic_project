@@ -281,6 +281,9 @@ let process_prog i t code mem =
     | "COLON"::t'' ->
       (set code i (Prog s);
       ((i+1),t''))
+    | "DISP"::_ ->
+      (set code i (Prog s);
+      ((i+1),t'))
     | [] ->
       (set code i (Prog s);
       ((i+1),[]))
@@ -304,3 +307,24 @@ let process_locate i t code mem =
     (i+1,t')
   with
     | Failure _ -> fail t i "Compilation error: Syntax error in Locate command";;
+
+(* DrawStat setup *)
+(* let process_sgph i lexlist code mem =
+  let (lexl, t') = extract_line lexlist in
+  let data =
+    match lexl with
+      | "EOL" :: q
+      | "COLON" :: q
+      | "DISP" :: q -> List.rev q
+      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command"
+  in
+  match data with DRAWON, XYLINE, LIST 3, LIST 4, 1, DOT
+    | mark :: _ :: list2 :: list1 :: style :: drawon :: sgphi ->
+    | _ :: list2 :: list1 :: style :: drawon :: sgphi ->
+    | list2 :: list1 :: style :: drawon :: sgphi ->
+    | list1 :: style :: drawon :: sgphi ->
+    | style :: drawon :: sgphi ->
+    | drawon :: sgphi ->
+    | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command";; *)
+
+(* To do *)

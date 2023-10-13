@@ -23,11 +23,11 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
     (* if i >= 1000 then failwith "Max number of lines reached"; *)
 
     (* Debug *)
-    (try
+    (* (try
       let (line, _) = extract_line lexlist in
       print_endline ("i = "^(string_of_int i)^" -> "^(String.concat " " (List.rev (List.map String.escaped line))))
     with
-      | _ -> ());
+      | _ -> ()); *)
 
     (* Expression handling *)
     let (e, t) =
@@ -373,10 +373,10 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         let style =
           (match List.hd lexlist with
             | "FLINE" -> None
-            | "SKETCHNORMAL" -> Some Normal
-            | "SKETCHTHICK" -> Some Thick
-            | "SKETCHBROKEN" -> Some Broken
-            | "SKETCHDOT" -> Some Dot
+            | "SKETCHNORMAL" -> Some StyleNormal
+            | "SKETCHTHICK" -> Some StyleThick
+            | "SKETCHBROKEN" -> Some StyleBroken
+            | "SKETCHDOT" -> Some StyleDot
             | _ -> fail lexlist i "Compilation error: Style error")
         in
         (match el with
@@ -421,7 +421,14 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
             fail t i "Compilation error: Text expects two numerical expressions
               and a string expression as parameters")
       
+      | "SGPH1" :: t
+      | "SGPH2" :: t
+      | "SGPH3" :: t ->
+        let (j,t') = process_sgph i lexlist code mem in
+        aux t' j
+      
       | "CLS" :: t
+      | "DRAWSTAT" :: t
       | "BGNONE" :: t
       | "AXESON" :: t
       | "AXESOFF" :: t
@@ -431,32 +438,45 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "SLDOT" :: t
       | "SWINDMAN" :: t
       | "SWINDAUTO" :: t
-      | "DRAWSTAT" :: t ->
+      | "LABELON" :: t
+      | "LABELOFF" :: t
+      | "GRIDON" :: t
+      | "GRIDOFF" :: t
+      | "COORDON" :: t
+      | "COORDOFF" :: t ->
         (set code i (Graphic (Graphic_Function (List.hd lexlist, [])));
         aux t (i+1))
 
       | "RCLPICT" :: t
       | "STOPICT" :: t
-      | "BGPICT" :: t
-        ->
+      | "BGPICT" :: t ->
         let (e, t') = extract_expr t in
         (match e with
-          | Complex z ->
-            if is_int z && z.re >= 1. && z.im <= 20. then
-              (set code i (Graphic (Graphic_Function (List.hd lexlist, [Complex z])));
-              aux t (i+1))
-            else fail t i "Compilation error: Wrong index for Pict command"
+          | Arithm [Entity (Variable (Var _))]
+          | Complex _ ->
+            (set code i (Graphic (Graphic_Function (List.hd lexlist, [e])));
+            aux t (i+1))
           | _ -> fail t i "Compilation error: Wrong index for Pict command")
         
       | "HORIZONTAL" :: t
       | "VERTICAL" :: t
+      | "GRAPHYEQ" :: t
+      | "GRAPHS" :: t
+      | "GRAPHYG" :: t
+      | "GRAPHYL" :: t
+      | "GRAPHYGEQ" :: t
+      | "GRAPHYLEQ" :: t
+      | "GRAPHREQ" :: t
+      | "GRAPHXYEQ" :: t
+      | "GRAPHXEQ" :: t
+      | "GRAPHXG" :: t
+      | "GRAPHXL" :: t
+      | "GRAPHXGEQ" :: t
+      | "GRAPHXLEQ" :: t
         ->
         let (e, t') = extract_expr t in
-        (match e with
-          | Complex z ->
-            (set code i (Graphic (Graphic_Function (List.hd lexlist, [Complex z])));
-            aux t (i+1))
-          | _ -> fail t i "Compilation error: Wrong index for Horizontal/Vertical")
+        (set code i (Graphic (Graphic_Function (List.hd lexlist, [e])));
+        aux t (i+1))
 
       (* Errors *)
       | lex :: _ -> fail lexlist i ("Compilation error: Unexpected command "^(String.escaped lex))

@@ -122,6 +122,9 @@ type parameters = {
   mutable axeson : bool;
   (* Style of lines drawn *)
   mutable style : style;
+
+  (* Sgph [0|1|2] [DrawOn | DrawOff], [Scatter | XyLine], List i1, List i2, [Dot | Square | Cross] *)
+  mutable sgph : (bool * ds_style * int * int * ds_mark) array;
 }
 
 
@@ -171,6 +174,12 @@ let empty_param () : parameters =
     axeson = false;
     (* Style *)
     style = Normal;
+
+    (* DrawStat parameters *)
+    sgph =
+      [| (false, XYLine, (-1), (-1), DSMDot);
+         (false, XYLine, (-1), (-1), DSMDot);
+         (false, XYLine, (-1), (-1), DSMDot) |];
   };;
 
 (* Returns a new array with twice the size of t, with the elements of t as first elements
