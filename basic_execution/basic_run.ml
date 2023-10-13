@@ -385,7 +385,9 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         end_execution ()
 
       (* Ignored commands *)
-      | Disp -> aux (i+1)
+      | Disp ->
+        (disp p ren writing_index;
+        aux (i+1))
 
       | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
   in

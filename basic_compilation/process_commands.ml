@@ -216,50 +216,42 @@ let process_lpwhile i t code mem =
 (* Lbl, Goto *)
 
 (* Lbl *)
-(* "LBL" is immediately followed by a, then eol in the original list of lexemes *)
+(* Authorized Goto indices: 0..9, A..Z, r, theta *)
 let process_lbl i t code mem =
   match t with
-    | a::t' ->
-      if not (is_var a)
-        then fail t i "Compilation error: Wrong Lbl index"
-      else
-        let t'' =
-          match t' with
-            | eol::q ->
-              if eol <> "EOL" && eol <> "COLON"
-                then fail t i "Compilation error: Syntax error, a Lbl is supposed to be followed by EOL"
-                else q
-            | [] -> []
-        in
-        let a_index = var_index a in
-        if mem.lblindex.(a_index) <> -1
-          then (i,t'')
-          else
-            (mem.lblindex.(a_index) <- i;
-            (i,t''))
-    | _ -> fail t i "Compilation error: Missing an Lbl index";;
+    | a :: "EOL" :: _
+    | a :: "COLON" :: _
+    | a :: "DISP" :: _
+    | [a] ->
+      let a_index =
+        if is_digit a then Char.code a.[0] - 48
+        else if is_var a then var_index a + 10
+        else fail t i "Compilation error: Wrong Lbl index"
+      in
+      (* In Casio Basic, only the first occurrence of a Lbl is considered *)
+      if mem.lblindex.(a_index) = -1 then
+        mem.lblindex.(a_index) <- i;
+      (i, List.tl t)
+    | _ -> fail t i "Compilation error: Syntax error in Goto index";;
 
 (* Goto *)
+(* Authorized Goto indices: 0..9, A..Z, r, theta *)
 let process_goto i t code mem =
   match t with
-    | a::t' ->
-      if not (is_var a)
-        then fail t i "Compilation error: Wrong Goto index"
-      else
-        let t'' =
-          match t' with
-            | eol::q ->
-              if eol <> "EOL" && eol <> "COLON"
-                then fail t i "Compilation error: Syntax error, a Goto is supposed to be followed by EOL"
-                else q
-            | [] -> []
-        in
-        let a_index = var_index a in
-        (if mem.lblindex.(a_index) <> -1
-          then set code i (Goto (mem.lblindex.(a_index)))
-          else mem.gotoindex <- (a_index,i)::mem.gotoindex;
-        ((i+1),t''))
-    | _ -> fail t i "Compilation error: Missing a Goto index";;
+    | a :: "EOL" :: _
+    | a :: "COLON" :: _
+    | a :: "DISP" :: _
+    | [a] ->
+      let a_index =
+        if is_digit a then Char.code a.[0] - 48
+        else if is_var a then var_index a + 10
+        else fail t i "Compilation error: Wrong Goto index"
+      in
+      (if mem.lblindex.(a_index) <> -1
+        then set code i (Goto (mem.lblindex.(a_index)))
+        else mem.gotoindex <- (a_index, i)::mem.gotoindex;
+      (i+1, List.tl t))
+    | _ -> fail t i "Compilation error: Syntax error in Goto index";;
 
 (* Prog *)
 let process_prog i t code mem =

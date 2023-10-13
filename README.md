@@ -21,6 +21,8 @@ In this project I aim at developing tools related to Casio calculators. The targ
 ### To launch the emulator:
 
 For convenience during development, the project is currently interpreted. It will be converted to compiled at a later date, but the main.ml program is temporarily used to launch all the subprograms.
+The program requires the library [OCamlSDL2](https://github.com/fccm/OCamlSDL2) in its latest version (as of october 2023) and [OCamlSDL2_TTF](https://github.com/fccm/OCamlSDL2_TTF).
+
 To launch a Casio program in G1M or G2M format:
 ```
 $ ocaml

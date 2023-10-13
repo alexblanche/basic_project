@@ -6,7 +6,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
   let mem =
     {
       stack = [];
-      lblindex = Array.make 28 (-1);
+      lblindex = Array.make 38 (-1);
       gotoindex = [];
       progindex = [];
     }
@@ -452,7 +452,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
   (* Compiles the program and returns the next index *)
   let compile_prog i (name,lexlist) =
     mem.progindex <- (name,i)::mem.progindex;
-    for k = 0 to 27 do
+    for k = 0 to Array.length mem.lblindex - 1 do
       mem.lblindex.(k) <- -1
     done;
     mem.gotoindex <- [];
