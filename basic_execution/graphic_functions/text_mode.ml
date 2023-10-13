@@ -89,7 +89,7 @@ let locate_no_refresh (slist : string list) (i : int) (j : int) : unit =
 
 (* Auxiliary loop to fast_locate:
   for k = bound downto i do (print the character at position k) done *)
-let rec fast_locate_aux (ren : Sdlrender.t) (i : int) (j : int) (acc : Sdlrect.t list ref) (l : string list) (k : int) =
+let rec fast_locate_aux (i : int) (j : int) (acc : Sdlrect.t list ref) (l : string list) (k : int) =
   if k >= i then
     match l with
       | s::lt ->
@@ -102,7 +102,7 @@ let rec fast_locate_aux (ren : Sdlrender.t) (i : int) (j : int) (acc : Sdlrect.t
               acc := r::!acc
           done
         done;
-        fast_locate_aux ren i j acc lt (k-1))
+        fast_locate_aux i j acc lt (k-1))
       | [] -> ();;
 
 (* Fast version of Locate, but does not need to refresh the whole screen *)
@@ -122,7 +122,7 @@ let locate (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : unit 
 
   (* Display of the characters *)
   let acc = ref [] in
-  fast_locate_aux ren i j acc (skip_k (n+i-21) slist) bound;
+  fast_locate_aux i j acc (skip_k (n+i-21) slist) bound;
   Sdlrender.fill_rects ren (Array.of_list !acc);
   refresh ren;;
 
@@ -147,21 +147,25 @@ let print_number (z : complex) (polar : bool) : unit =
         | a::t ->
           (let len_a = List.length a in
           locate_no_refresh a (21-len_a) !writing_index;
-          let pos = ref (21-total_length+len_a) in
           line_feed ();
-          List.iter
-            (fun sl ->
-              locate_no_refresh sl !pos !writing_index;
-              pos := !pos + List.length sl)
-            t)
+          let _ =
+            List.fold_left
+              (fun pos sl ->
+                locate_no_refresh sl pos !writing_index;
+                pos + List.length sl)
+              (21 - total_length + len_a) t
+          in ())
         | [] -> ())
     else
-      (let pos = ref (21-total_length) in
-      List.iter
-        (fun sl ->
-          locate_no_refresh sl !pos !writing_index;
-          pos := !pos + List.length sl)
-        z_repr_l);;
+      let _ =
+        List.fold_left
+          (fun pos sl ->
+            locate_no_refresh sl pos !writing_index;
+            pos + List.length sl)
+          (21-total_length)
+          z_repr_l
+      in ();;
+
 
 (* Prints the "- DISP -" on the tscreen at line j *)
 let print_disp (j : int) : unit =

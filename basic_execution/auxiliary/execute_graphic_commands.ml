@@ -21,6 +21,19 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) : unit =
         done
       done;
       p.pict.(int_of_complex z - 1) <- (2048,m))
+    | Text (ey, ex, se) ->
+      let zy = eval_num p ey in
+      let zx = eval_num p ex in
+      if not
+        ((is_int zx) && (is_int zy)
+        && (zx.re >= 1.) && (zx.re <= 127.)
+        && (zy.re >= 1.) && (zy.re <= 63.))
+        then failwith "Graphic error: wrong arguments for Text";
+      (match eval_str p se with
+        | Str_content s -> draw_text ren s (int_of_complex zx) (int_of_complex zy)
+        | Num_expr (Complex z) -> draw_number ren z p.polar (int_of_complex zx) (int_of_complex zy)
+        | _ -> failwith "Graphic error: wrong output type for string expression evaluation")
+
     | PlotOn (ex, ey) ->
       let zx = eval_num p ex in
       let zy = eval_num p ey in

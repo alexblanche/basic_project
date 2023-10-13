@@ -13,7 +13,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
   in
 
   (* To be passed as an argument later *)
-  let ignore_errors = true in
+  let ignore_errors = false in
 
   (* Looping function *)
   
@@ -395,6 +395,15 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
             aux t' (i+1)
           | _ ->
             fail t i "Compilation error: ViewWindow expects six parameters")
+
+      | "TEXT" :: t ->
+        (match extract_list_content t with
+          | [e1; e2; StringExpr se], q ->
+            (set code i (Graphic (Text (e1, e2, se)));
+            aux q (i+1))
+          | _ ->
+            fail t i "Compilation error: Text expects two numerical expressions
+              and a string expression as parameters")
       
       | "CLS" :: t
       | "BGNONE" :: t

@@ -149,3 +149,76 @@ let draw_window (ren : Sdlrender.t) (p : parameters) : unit =
     draw_axes ren p;
   if p.bgpict <> -1 then
     draw_pict_offset ren p (p.bgpict) 1024 0;;
+
+(** Text display **)
+
+(* Auxiliary loop to fast_locate:
+  for k = bound downto i do (print the character at position k) done *)
+let text_aux (init_i : int) (j : int) (acc : Sdlrect.t list ref) (l : string list) : int =
+  let rec aux current_i l : int =
+    match l with
+      | s::lt ->
+        let t = Hashtbl.find repr_graph s in
+        (* Each character is 5 pixels tall and between 1 and 5 pixels wide *)
+        let len = (Array.length t)/5 in
+        (* If there is room for one more character, continue,
+          else return the current abscissa *)
+        if current_i + len <= 128 then
+          (for y = 0 to 4 do
+            for x = 0 to len-1 do
+              if t.(len*y + x) then
+                let px = current_i + x in
+                let py = j + 5 - y in
+                let r = fast_ploton px py in
+                (gscreen.(py).(px) <- true;
+                acc := r::!acc)
+            done
+          done;
+          aux (current_i + len + 1) lt)
+        else current_i
+      | [] -> current_i
+  in
+  aux init_i l;;
+
+(* Text display function *)
+(* Prints the string s (stored as a list of lexemes in reverse order) in the gscreen at position i,j *)
+let draw_text (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : unit =
+  (* Computation of the pixels to be printed *)
+  (* acc contains the rectangles passed to the renderer to be filled *)
+  let acc = ref [] in
+  let iend = text_aux i j acc (List.rev slist) in
+
+  (* White rectangle to cover the area we write in *)
+  set_color ren white;
+  let white_r = Sdlrect.make2
+    ~pos:(!margin_h + !size*i - 1, !margin_v + !size*j)
+    ~dims:(!size*(iend - i + 1), 6 * !size)
+  in
+  Sdlrender.fill_rect ren white_r;
+  set_color ren black;
+
+  (* Display of the characters *)
+  Sdlrender.fill_rects ren (Array.of_list !acc);;
+
+
+(* Draws the number z (of type complex) on the graphic screen *)
+(* polar = true if the complex is to be printed in polar form, false in a+ib form *)
+let draw_number (ren : Sdlrender.t) (z : complex) (polar : bool) (i : int) (j : int) : unit =
+  if z.im = 0. then
+    let z_repr = float_to_casio z.re in
+    draw_text ren (str_to_rev_symblist_simple z_repr) i j
+  else
+    let z_repr_l =
+      if polar
+        then complex_to_casio_polar z
+        else if z.re = 0.
+          then [[]; []; str_to_rev_symblist_simple (float_to_casio z.im); ["\127\080"]]
+          else complex_to_casio_aib z
+    in
+    (* Concatenation of all four parts of z_repr_l into the whole string in reverse order *)
+    let sl = List.fold_left (fun s l -> List.rev_append l s) [] z_repr_l in
+    draw_text ren sl i j;;
+
+
+  
+        
