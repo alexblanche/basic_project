@@ -10,32 +10,35 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let zy2 = eval_num p ey2 in
       let (a1,b1) = rescale p zx1.re zy1.re in
       let (a2,b2) = rescale p zx2.re zy2.re in
-      (bresenham ren gscreen a1 (64-b1) a2 (64-b2);
-      text_screen := false;
-      gdraw ren)
+      if a1 >= 1 && a1 <= 127 && a2 >= 1 && a2 <= 127
+        && b1 >= 1 && b1 <= 63 && b2 >= 1 && b2 <= 63 then
+        (bresenham ren gscreen a1 (64-b1) a2 (64-b2);
+        text_screen := false;
+        refresh ren)
 
     | Graphic_Function ("RCLPICT", [e]) ->
       let z = eval_num p e in
-      if is_int z && z.re >= 1. && z.im <= 20. then
+      if is_int z && z.re >= 1. && z.re <= 20. then
         (text_screen := false;
-        draw_pict ren p (int_of_complex z - 1))
+        draw_pict ren p (int_of_complex z - 1);
+        refresh ren)
       else failwith "Graphic error: wrong index for RclPict command"
 
     | Graphic_Function ("STOPICT", [e]) ->
       let z = eval_num p e in
-      if is_int z && z.re >= 1. && z.im <= 20. then
+      if is_int z && z.re >= 1. && z.re <= 20. then
         let m = Array.make_matrix 64 128 false in
         (for j = 0 to 63 do
           for i = 0 to 127 do
             m.(j).(i) <- gscreen.(j).(i)
           done
         done;
-        p.pict.(int_of_complex z - 1) <- (2048,m))
+        p.pict.(int_of_complex z - 1) <- (2048, m))
       else failwith "Graphic error: wrong index for StoPict command"
 
     | Graphic_Function ("BGPICT", [e]) ->
       let z = eval_num p e in
-      if is_int z && z.re >= 1. && z.im <= 20. then
+      if is_int z && z.re >= 1. && z.re <= 20. then
         p.bgpict <- int_of_complex z - 1
       else failwith "Graphic error: wrong index for BGPict command"
 
@@ -45,7 +48,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       if not
         ((is_int zx) && (is_int zy)
         && (zx.re >= 1.) && (zx.re <= 127.)
-        && (zy.re >= 1.) && (zy.re <= 63.))
+        && (zy.re >= 1.) && (zy.re <= 58.))
         then failwith "Graphic error: wrong arguments for Text";
       (text_screen := false;
       let _ =
@@ -54,23 +57,25 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
           | Num_expr (Complex z) -> draw_number ren z p.polar (int_of_complex zx) (int_of_complex zy)
           | _ -> failwith "Graphic error: wrong output type for string expression evaluation"
       in
-      gdraw ren)
+      refresh ren)
 
     | PlotOn (ex, ey) ->
       let zx = eval_num p ex in
       let zy = eval_num p ey in
       let (a,b) = rescale p zx.re zy.re in
-      (ploton ren gscreen a (64-b);
-      text_screen := false;
-      gdraw ren)
+      if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
+        (ploton ren gscreen a (64-b);
+        text_screen := false;
+        refresh ren)
 
     | PlotOff (ex, ey) ->
       let zx = eval_num p ex in
       let zy = eval_num p ey in
       let (a,b) = rescale p zx.re zy.re in
-      (plotoff ren gscreen false a (64-b);
-      text_screen := false;
-      gdraw ren)
+      if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
+        (plotoff ren gscreen false a (64-b);
+        text_screen := false;
+        refresh ren)
 
     | Graphic_Function ("CLS", _) ->
       wipe gscreen
@@ -113,19 +118,29 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
           p.sgph.(sgphi) <- (drawon, style, int_of_complex z1, int_of_complex z2, mark)
         | _ -> failwith "Graphic error: wrong arguments for Sgph DrawStat setup")
 
-    | Graphic_Function ("AXESON", _) -> p.axeson <- true
-    | Graphic_Function ("AXESOFF", _) -> p.axeson <- false
+    | Graphic_Function ("AXESON", _) ->
+      (if not p.axeson then
+        (draw_window ren p;
+        refresh ren);
+      p.axeson <- true)
+    | Graphic_Function ("AXESOFF", _) ->
+      (if p.axeson then
+        (draw_window ren p;
+        refresh ren);
+      p.axeson <- true)
     | Graphic_Function ("BGNONE", _) -> p.bgpict <- -1
     | Graphic_Function ("HORIZONTAL", [Complex z]) ->
       let (_, b) = rescale p 0. z.re in
-      (bresenham ren gscreen 1 b 127 b;
-      text_screen := false;
-      gdraw ren)
+      if b >= 1 && b <= 63 then
+        (bresenham ren gscreen 1 b 127 b;
+        text_screen := false;
+        gdraw ren)
     | Graphic_Function ("VERTICAL", [Complex z]) ->
       let (a, _) = rescale p z.re 0. in
-      (bresenham ren gscreen a 1 a 63;
-      text_screen := false;
-      gdraw ren)
+      if a >= 1 && a <= 127 then
+        (bresenham ren gscreen a 1 a 63;
+        text_screen := false;
+        gdraw ren)
     | Graphic_Function ("SLNORMAL", []) -> p.style <- StyleNormal
     | Graphic_Function ("SLTHICK", []) -> p.style <- StyleThick
     | Graphic_Function ("SLBROKEN", []) -> p.style <- StyleBroken

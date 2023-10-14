@@ -138,8 +138,9 @@ let draw_pict (ren : Sdlrender.t) (p : parameters) (pict : int) : unit =
   let rec aux (i : int) (bytes_left : int) : unit =
     let (pict_size, m) = p.pict.(pict) in
     let wanted_size = min bytes_left pict_size in
-    draw_pict_offset ren p pict wanted_size (2048 - bytes_left);
-    if pict_size < bytes_left then
+    if wanted_size <> 0 then
+      draw_pict_offset ren p pict wanted_size (2048 - bytes_left);
+    if pict_size < bytes_left && pict < 20 then
       aux (next_pict_index pict) (bytes_left - pict_size)
   in
   aux pict 2048;;
@@ -150,7 +151,7 @@ let draw_window (ren : Sdlrender.t) (p : parameters) : unit =
   if p.axeson then
     draw_axes ren p;
   if p.bgpict <> -1 then
-    draw_pict_offset ren p (p.bgpict) 1024 0;;
+    draw_pict_offset ren p p.bgpict 1024 0;;
 
 (** Text display **)
 
@@ -199,7 +200,7 @@ let draw_text (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : un
   set_color ren white;
   let white_r = Sdlrect.make2
     ~pos:(!margin_h + !size*i - 1, !margin_v + !size*j)
-    ~dims:(!size*(iend - i + 1), 6 * !size)
+    ~dims:(!size*(iend - i), 6 * !size - 1)
   in
   Sdlrender.fill_rect ren white_r;
   set_color ren black;

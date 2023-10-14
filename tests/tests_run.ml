@@ -6,8 +6,8 @@
 let empty_projcont () : project_content = 
   {
     prog = [];
-    list = Array.make 26 (true, [||]);
-    mat = Array.make 26 (true, [||]);
+    list = Array.make 27 (true, [||]);
+    mat = Array.make 27 (true, [||]);
     pict = Array.make 20 (0, [||]);
     capt = Array.make 20 [||];
     str = Array.make 20 "";
@@ -454,18 +454,57 @@ let run_prog_graphic () =
           "PLOTON"; "3"; "5"; ","; "6"; "0"; "EOL";
           "PLOTON"; "1"; "0"; "5"; ","; "1"; "0"; "EOL";
           "FLINE"; "1"; "0"; ","; "1"; "0"; ","; "1"; "0"; "0"; ","; "5"; "0"; "DISP";
-          "TEXT"; "5"; "0"; "PLUS"; "2"; ","; "1"; "0"; ","; "QUOTE"; "A"; "B"; "C"; "D"; "QUOTE"; "DISP";
+          "TEXT"; "4"; "4"; ","; "5"; "0"; ","; "QUOTE"; "F"; "F"; "F"; "F"; "QUOTE"; "EOL";
+          "TEXT"; "1"; ","; "1"; ","; "QUOTE"; "A"; "B"; "C"; "D"; "QUOTE"; "EOL";
+          "TEXT"; "5"; "8"; ","; "1"; "1"; "6"; ","; "1"; "0"; "TIMES"; "5"; "3"; "2"; "DISP";
           "QUOTE"; "S"; "T"; "O"; "P"; "QUOTE"; "DISP"
         ]
       )]
-  in prog, run (empty_projcont ()) prog "main";;
+  in run (empty_projcont ()) prog "main";;
 
 let run_pict () =
   let prog =
     compile
       [("main",
         [
-          "RCLPICT"; "1"; "EOL";
+          "RCLPICT"; "4"; "EOL";
         ]
       )]
-  in prog, run (empty_projcont ()) prog "main";;
+  in
+  let p =
+    let par = empty_projcont () in
+    let m = Array.make_matrix 64 128 false in
+    for i = 10 to 100 do
+      m.(i/2).(i) <- true;
+      m.(63-i/2).(i+10) <- true
+    done;
+    par.pict.(3) <- (2048, m);
+    par
+  in 
+  run p prog "main";;
+
+let run_window () =
+  let prog =
+    compile
+      [("main",
+        [ "AXESON"; "EOL";
+          "VIEWWINDOW"; "MINUS"; "1"; "0"; ","; "1"; "0"; ","; "1"; ","; "MINUS"; "5"; ","; "5"; ","; "1"; "EOL";
+          "PLOTON"; "2"; ","; "1"; "EOL";
+          "TEXT"; "5"; "0"; "PLUS"; "2"; ","; "1"; "0"; ","; "QUOTE"; "A"; "B"; "C"; "D"; "QUOTE"; "EOL";
+          "TEXT"; "1"; "0"; "PLUS"; "2"; ","; "1"; "0"; ","; "1"; "0"; "TIMES"; "5"; "3"; "2"; "DISP";
+        ]
+      )]
+  in run (empty_projcont ()) prog "main";;
+
+let run_bounds () =
+  let prog =
+    compile
+      [("main",
+        [
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "PLOTON"; "1"; ","; "3"; "EOL";
+          "PLOTON"; "3"; ","; "3"; "EOL";
+          "FLINE"; "1"; ","; "1"; ","; "3"; ","; "1"; "DISP";
+        ]
+      )]
+  in run (empty_projcont ()) prog "main";;

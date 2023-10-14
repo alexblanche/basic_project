@@ -16,8 +16,8 @@
 #use "initialization/file_readers/bmp_reader.ml"
 
 #use "initialization/types/complex.ml"
-#use "initialization/types/arithmetic_type.ml"
-#use "initialization/types/graphic_type.ml"
+#use "initialization/types/arithmetic_types.ml"
+#use "initialization/types/graphic_types.ml"
 #use "initialization/types/basic_type.ml"
 #use "initialization/encodings/locate_format.ml"
 #use "initialization/types/project_type.ml"

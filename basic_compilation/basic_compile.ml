@@ -462,7 +462,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           | Arithm [Entity (Variable (Var _))]
           | Complex _ ->
             (set code i (Graphic (Graphic_Function (List.hd lexlist, [e])));
-            aux t (i+1))
+            aux t' (i+1))
           | _ -> fail t i "Compilation error: Wrong index for Pict command")
         
       | "HORIZONTAL" :: t

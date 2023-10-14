@@ -299,7 +299,7 @@ let print_bg (ren : Sdlrender.t) (grid : bool) (bg : Sdlrender.t -> unit) : unit
 	
 	(* frame *)
 	set_color ren black;
-	rect ren !margin_h !margin_v (!width+1) (!height+1);
+	rect ren (!margin_h-1) (!margin_v-1) (!width+1) (!height+1);
 	
 	(* Additional background *)
 	bg ren;;
