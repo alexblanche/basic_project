@@ -90,6 +90,7 @@ let quit_print (win : Sdlwindow.t) (ren : Sdlrender.t) (val_seen : bool) (value 
   if not text_screen then
     (wait_release ren false;
     wait_enter ren false;
+    line_feed ();
     clear_line !writing_index;
     locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
     tdraw ren)

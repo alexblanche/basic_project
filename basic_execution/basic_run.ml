@@ -384,11 +384,11 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         (* Hard stop: ends the execution without returning to the calling program *)
         end_execution ()
 
-      (* Ignored commands *)
+      (* Disp that was not handled by a string *)
       | Disp ->
         (if !text_screen
           then disp p ren writing_index
-          else
+          else if i<n-1 && code.(i+1) <> End then
             (wait_release ren false;
             wait_enter ren false);
         aux (i+1))

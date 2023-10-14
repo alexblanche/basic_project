@@ -34,8 +34,8 @@ let gdraw (ren : Sdlrender.t) : unit =
 let rescale (p : parameters) (x : float) (y : float) : int * int =
   let ax = (x -. p.xmin) /. (p.xmax -. p.xmin) in
   let ay = (y -. p.ymin) /. (p.ymax -. p.ymin) in
-  (1 + true_int_of_float (ax *. 127.),
-   1 + true_int_of_float (ay *. 63.));;
+  (1 + true_int_of_float (ax *. 126.),
+   1 + true_int_of_float (ay *. 62.));;
 
 (* Draws a horizontal line in the current system of coordinates at ordinate y *)
 let draw_horizontal_line (ren : Sdlrender.t) (p : parameters) (y : float) : unit =
@@ -171,7 +171,7 @@ let text_aux (init_i : int) (j : int) (acc : Sdlrect.t list ref) (l : string lis
         let len = (Array.length t)/5 in
         (* If there is room for one more character, continue,
           else return the current abscissa *)
-        if current_i + len <= 128 then
+        if current_i + len <= 127 then
           (for y = 0 to 4 do
             for x = 0 to len-1 do
               if t.(len*y + x) then
