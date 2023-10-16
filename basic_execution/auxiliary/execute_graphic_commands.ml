@@ -14,14 +14,14 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         && b1 >= 1 && b1 <= 63 && b2 >= 1 && b2 <= 63 then
         (bresenham ren gscreen a1 (64-b1) a2 (64-b2);
         text_screen := false;
-        refresh ren)
+        refresh_update ren p)
 
     | Graphic_Function ("RCLPICT", [e]) ->
       let z = eval_num p e in
       if is_int z && z.re >= 1. && z.re <= 20. then
         (text_screen := false;
         draw_pict ren p (int_of_complex z - 1);
-        refresh ren)
+        refresh_update ren p)
       else failwith "Graphic error: wrong index for RclPict command"
 
     | Graphic_Function ("STOPICT", [e]) ->
@@ -39,7 +39,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
     | Graphic_Function ("BGPICT", [e]) ->
       let z = eval_num p e in
       if is_int z && z.re >= 1. && z.re <= 20. then
-        p.bgpict <- int_of_complex z - 1
+        (p.bgpict <- int_of_complex z - 1;
+        background_changed := true)
       else failwith "Graphic error: wrong index for BGPict command"
 
     | Text (ey, ex, se) ->
@@ -57,7 +58,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
           | Num_expr (Complex z) -> draw_number ren z p.polar (int_of_complex zx) (int_of_complex zy)
           | _ -> failwith "Graphic error: wrong output type for string expression evaluation"
       in
-      refresh ren)
+      refresh_update ren p)
 
     | PlotOn (ex, ey) ->
       let zx = eval_num p ex in
@@ -66,7 +67,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
         (ploton ren gscreen a (64-b);
         text_screen := false;
-        refresh ren)
+        refresh_update ren p)
 
     | PlotOff (ex, ey) ->
       let zx = eval_num p ex in
@@ -75,10 +76,11 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
         (plotoff ren gscreen false a (64-b);
         text_screen := false;
-        refresh ren)
+        refresh_update ren p)
 
     | Graphic_Function ("CLS", _) ->
       wipe gscreen
+
     | ViewWindow (ex1, ex2, esx, ey1, ey2, esy) ->
       let xminval = eval_num p ex1 in
       let xmaxval = eval_num p ex2 in
@@ -96,7 +98,9 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
           p.ymin <- yminval.re;
           p.ymax <- ymaxval.re;
           p.ystep <- ystepval.re;
-          draw_window ren p)
+          draw_window ren p;
+          background_changed := true)
+          (* No refresh: the will be refreshed when the first object will be drawn *)
 
     | Drawstat_Setup (sgphi, drawon, style_opt, list1_opt, list2_opt, mark_opt) ->
       let (curr_drawon, curr_style, curr_list1, curr_list2, curr_mark) = p.sgph.(sgphi) in
@@ -119,16 +123,16 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         | _ -> failwith "Graphic error: wrong arguments for Sgph DrawStat setup")
 
     | Graphic_Function ("AXESON", _) ->
-      (if not p.axeson then
-        (draw_window ren p;
-        refresh ren);
+      (background_changed := true;
       p.axeson <- true)
     | Graphic_Function ("AXESOFF", _) ->
-      (if p.axeson then
-        (draw_window ren p;
-        refresh ren);
+      (background_changed := true;
       p.axeson <- true)
-    | Graphic_Function ("BGNONE", _) -> p.bgpict <- -1
+    
+    | Graphic_Function ("BGNONE", _) ->
+      (background_changed := true;
+      p.bgpict <- -1)
+
     | Graphic_Function ("HORIZONTAL", [Complex z]) ->
       let (_, b) = rescale p 0. z.re in
       if b >= 1 && b <= 63 then
@@ -147,7 +151,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
     | Graphic_Function ("SLDOT", []) -> p.style <- StyleDot
 
     (* Errors or functionalities not implemented yet *)
-    | Graphic_Function _ -> ()
+    | Graphic_Function (s, _) -> (print_endline ("Runtime warning: ignored command "^s))
     (* | _ -> failwith "Runtime error: wrong parameters for a graphic command" *)
 ;;
 

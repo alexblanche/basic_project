@@ -490,13 +490,25 @@ let run_window () =
     compile
       [("main",
         [ "AXESON"; "EOL";
-          "VIEWWINDOW"; "MINUS"; "1"; "0"; ","; "1"; "0"; ","; "1"; ","; "MINUS"; "5"; ","; "5"; ","; "1"; "EOL";
-          "PLOTON"; "2"; ","; "1"; "EOL";
-          "TEXT"; "5"; "0"; "PLUS"; "2"; ","; "1"; "0"; ","; "QUOTE"; "A"; "B"; "C"; "D"; "QUOTE"; "EOL";
-          "TEXT"; "1"; "0"; "PLUS"; "2"; ","; "1"; "0"; ","; "1"; "0"; "TIMES"; "5"; "3"; "2"; "DISP";
+          (* "BGPICT"; "4"; "EOL"; *)
+          "VIEWWINDOW"; "MINUS"; "2"; ","; "1"; "8"; ","; "1"; ","; "MINUS"; "9"; ","; "1"; ","; "1"; "EOL";
+          "PLOTON"; "2"; ","; "1"; "DISP";
+          (* "TEXT"; "5"; "0"; "PLUS"; "2"; ","; "1"; "0"; ","; "QUOTE"; "A"; "B"; "C"; "D"; "QUOTE"; "EOL";
+          "TEXT"; "1"; "0"; "PLUS"; "2"; ","; "1"; "0"; ","; "1"; "0"; "TIMES"; "5"; "3"; "2"; "DISP"; *)
         ]
       )]
-  in run (empty_projcont ()) prog "main";;
+  in
+  let p =
+    let par = empty_projcont () in
+    (* let m = Array.make_matrix 64 128 false in
+    for i = 2 to 100 do
+      m.(i/2).(1+i) <- true;
+      m.(63-i/2).(1+i+10) <- true
+    done;
+    par.pict.(3) <- (2048, m); *)
+    par
+  in 
+  run p prog "main";;
 
 let run_bounds () =
   let prog =

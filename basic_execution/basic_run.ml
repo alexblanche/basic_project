@@ -51,6 +51,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   p.xmin <- 1.; p.xmax <- 127.; p.xstep <- 0.;
   p.ymin <- 1.; p.ymax <- 63.; p.ystep <- 0.;
   p.axeson <- false;
+  background_changed := false;
   
   let end_execution () =
     quit_print win ren !val_seen !last_val p.polar !string_seen !text_screen
