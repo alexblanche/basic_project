@@ -84,7 +84,7 @@ let aux_draw_line (m : bool array array) (j : int) (imin : int) (imax : int) (re
         (rects :=
           (Sdlrect.make2
             ~pos:(!margin_h + !size * !ibeg, !margin_v + !size * j)
-            ~dims:((i - 1 - !ibeg) * !size, !size))
+            ~dims:((i - !ibeg) * !size, !size))
           ::!rects;
         ibeg := -1)
   done;
@@ -92,7 +92,7 @@ let aux_draw_line (m : bool array array) (j : int) (imin : int) (imax : int) (re
     rects :=
       (Sdlrect.make2
         ~pos:(!margin_h + !size * !ibeg, !margin_v + !size * j)
-        ~dims:((imax - 1 - !ibeg) * !size, !size))
+        ~dims:((imax - !ibeg) * !size, !size))
       ::!rects;;
 
 (* Draws the picture pict (0..19) on screen *)
@@ -107,7 +107,7 @@ let draw_pict_offset (ren : Sdlrender.t) (p : parameters) (pict : int) (wanted_s
   let rects = ref [] in
   let offset_i = offset mod 128 in
   let offset_j = offset / 64 in
-  if offset = 0 then
+  (if offset = 0 then
     for j = 0 to nb_lines - 1 do
       aux_draw_line m j 0 127 rects
     done
@@ -116,14 +116,14 @@ let draw_pict_offset (ren : Sdlrender.t) (p : parameters) (pict : int) (wanted_s
       let actual_j = (j + offset_j) mod 64 in
       aux_draw_line m actual_j offset_i 127 rects;
       aux_draw_line m ((actual_j + 1) mod 64) 0 (offset_i-1) rects;
-    done;
+    done);
   let remainder = 8 * (actual_size mod 16) in
   if remainder <> 0 then
-    let offset_rem = offset_i + remainder - 1 in
+    (let offset_rem = offset_i + remainder - 1 in
     let actual_nj = (nb_lines + offset_j) mod 64 in
     (aux_draw_line m actual_nj offset_i (min 127 offset_rem) rects;
     if offset_rem > 127 then
-      aux_draw_line m ((actual_nj + 1) mod 64) 0 (offset_rem - 128) rects);
+      aux_draw_line m ((actual_nj + 1) mod 64) 0 (offset_rem - 128) rects));
   Sdlrender.fill_rects ren (Array.of_list !rects);;
 
 (* Auxiliary function that returns the next picture in reader order *)
@@ -136,7 +136,7 @@ let next_pict_index (i : int) : int =
 (* General RlcPict function, handles the cascading effect of compressed pictures *)
 let draw_pict (ren : Sdlrender.t) (p : parameters) (pict : int) : unit =
   let rec aux (i : int) (bytes_left : int) : unit =
-    let (pict_size, m) = p.pict.(pict) in
+    let (pict_size, _) = p.pict.(pict) in
     let wanted_size = min bytes_left pict_size in
     if wanted_size <> 0 then
       draw_pict_offset ren p pict wanted_size (2048 - bytes_left);

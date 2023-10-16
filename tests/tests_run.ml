@@ -475,13 +475,14 @@ let run_pict () =
   let p =
     let par = empty_projcont () in
     let m = Array.make_matrix 64 128 false in
-    for i = 10 to 100 do
-      m.(i/2).(i) <- true;
-      m.(63-i/2).(i+10) <- true
+    for i = 2 to 100 do
+      m.(i/2).(1+i) <- true;
+      m.(63-i/2).(1+i+10) <- true
     done;
     par.pict.(3) <- (2048, m);
     par
   in 
+  (* new_param p;; *)
   run p prog "main";;
 
 let run_window () =

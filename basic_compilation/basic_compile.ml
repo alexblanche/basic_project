@@ -13,7 +13,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
   in
 
   (* To be passed as an argument later *)
-  let ignore_errors = false in
+  let ignore_errors = true in
 
   (* Looping function *)
   
