@@ -44,6 +44,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   writing_index := -1;
 
   wipe gscreen;
+  wipe bgscreen;
+  p.bgscreen <- bgscreen;
   p.gscreen <- gscreen;
   p.bgpict <- -1;
   p.xmin <- 1.; p.xmax <- 127.; p.xstep <- 0.;

@@ -110,10 +110,9 @@ type parameters = {
   mutable ymin : float;
   mutable ymax : float;
   mutable ystep : float;
-  (* Display the axes if true *)
-  mutable axes : bool;
 
-  (* Pointer to the gscreen *)
+  (* Pointers to the bgscreen and the gscreen *)
+  mutable bgscreen : bool array array;
   mutable gscreen : bool array array;
 
   (* Background picture *)
@@ -162,10 +161,9 @@ let empty_param () : parameters =
     ymin = 1.;
     ymax = 63.;
     ystep = 0.;
-    (* Display the axes if true *)
-    axes = false;
 
-    (* pointer to the gscreen *)
+    (* Pointers to the bgscreen and the gscreen *)
+    bgscreen = [||];
     gscreen = [||];
 
     (* Index of the background picture *)

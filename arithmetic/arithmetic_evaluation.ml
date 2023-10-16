@@ -340,7 +340,9 @@ and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) 
           && z2.re >= 1. && z2.re <= 127. then
           let n1 = true_int_of_float z1.re in
           let n2 = true_int_of_float z2.re in
-          Value (complex_of_bool (p.gscreen.(n1).(n2)))
+          Value
+            (complex_of_bool
+              (p.gscreen.(n1).(n2) || p.bgscreen.(n1).(n2)))
         else failwith "apply_special_func: wrong input for PxlTest" 
       | _ -> failwith "apply_special_func: wrong input for PxlTest")
   else if fname = "MATTOLIST" then

@@ -17,15 +17,11 @@
 (* repr_graph: hash table of the visual representation of the characters in graphic mode *)
 let repr_graph = visualgraph ();;
 
-(* gscreen: content of the graphic screen *)
+(* bgscreen: background of the graphic screen (axes and BGPict) *)
+let bgscreen = Array.make_matrix 64 128 false;;
+(* gscreen: content of the graphic screen (everything but axes and BGPict) *)
 let gscreen = Array.make_matrix 64 128 false;;
 
-(** Graphic display **)
-let gdraw (ren : Sdlrender.t) : unit =
-  parameters_updated := false;
-  print_mat ren gscreen false
-    (fun ren -> (* rect ren (!margin_h-1) (!margin_v-1) (!width+1) (!height+1) *) ());
-  refresh ren;;
 
 (** Graphic functions **)
 
@@ -51,32 +47,32 @@ let draw_horizontal_line (ren : Sdlrender.t) (p : parameters) (x : float) : unit
 (* Draws the scales (one plot per xstep, ystep on each axis) *)
 let draw_axes (ren : Sdlrender.t) (p : parameters) : unit =
   let (i, j) = rescale p 0. 0. in
-  horizontal_line ren gscreen 1 127 j;
-  vertical_line ren gscreen 1 63 i;
+  horizontal_line ren bgscreen 1 127 j;
+  vertical_line ren bgscreen 1 63 i;
   (* Scales *)
   if not (is_zero_float p.xstep) then
     let nb_step_xplus  = true_int_of_float (p.xmax /. p.xstep) in
     let nb_step_xminus = true_int_of_float (p.xmin /. p.xstep) in
     let step_xplus = Array.init nb_step_xplus (fun i -> (float_of_int i)*.p.xstep) in
     let step_xminus = Array.init nb_step_xminus (fun i -> (float_of_int (-i))*.p.xstep) in
-    (Array.iter (fun x -> let (i,j) = rescale p x 0. in ploton ren gscreen i (j+1)) step_xplus;
-    Array.iter (fun x -> let (i,j) = rescale p x 0. in ploton ren gscreen i (j+1)) step_xminus);
+    (Array.iter (fun x -> let (i,j) = rescale p x 0. in ploton ren bgscreen i (j+1)) step_xplus;
+    Array.iter (fun x -> let (i,j) = rescale p x 0. in ploton ren bgscreen i (j+1)) step_xminus);
   if not (is_zero_float p.ystep) then
     let nb_step_yplus  = true_int_of_float (p.ymax /. p.ystep) in
     let nb_step_yminus = true_int_of_float (p.ymin /. p.ystep) in
     let step_yplus = Array.init nb_step_yplus (fun i -> (float_of_int i)*.p.ystep) in
     let step_yminus = Array.init nb_step_yminus (fun i -> (float_of_int (-i))*.p.ystep) in
-    (Array.iter (fun y -> let (i,j) = rescale p 0. y in ploton ren gscreen (i+1) j) step_yplus;
-    Array.iter (fun y -> let (i,j) = rescale p 0. y in ploton ren gscreen (i+1) j) step_yminus);;
+    (Array.iter (fun y -> let (i,j) = rescale p 0. y in ploton ren bgscreen (i+1) j) step_yplus;
+    Array.iter (fun y -> let (i,j) = rescale p 0. y in ploton ren bgscreen (i+1) j) step_yminus);;
 
 (* Auxiliary function to draw_pict *)
 (* Adds to rects the rectangles needed to draw line j of the picture stored in matrix m,
   between the abscissas imin and imax included *)
-let aux_draw_line (m : bool array array) (j : int) (imin : int) (imax : int) (rects : Sdlrect.t list ref) : unit =
+let aux_draw_line (screen : bool array array) (m : bool array array) (j : int) (imin : int) (imax : int) (rects : Sdlrect.t list ref) : unit =
   let ibeg = ref (-1) in
   for i = imin to imax do
     if m.(j).(i) then
-      (gscreen.(j).(i) <- true;
+      (screen.(j).(i) <- true;
       if !ibeg = (-1) then
         ibeg := i)
     else
@@ -100,8 +96,7 @@ let aux_draw_line (m : bool array array) (j : int) (imin : int) (imax : int) (re
   8 pixels per bytes, 16 bytes per line,
   1024 = normal picture, < 16 = less than one line *)
 (* Each line is shifted by the given offset (0..64*128-1) *)
-let draw_pict_offset (ren : Sdlrender.t) (p : parameters) (pict : int) (wanted_size : int) (offset : int) : unit =
-  let (pict_size, m) = p.pict.(pict) in
+let draw_pict_offset (ren : Sdlrender.t) (p : parameters) (screen : bool array array) (pict_size : int) (wanted_size : int) (offset : int) (m : bool array array) : unit =
   let actual_size = min 1024 (min pict_size wanted_size) in
   let nb_lines = actual_size / 16 in
   let rects = ref [] in
@@ -109,21 +104,21 @@ let draw_pict_offset (ren : Sdlrender.t) (p : parameters) (pict : int) (wanted_s
   let offset_j = offset / 64 in
   (if offset = 0 then
     for j = 0 to nb_lines - 1 do
-      aux_draw_line m j 0 127 rects
+      aux_draw_line screen m j 0 127 rects
     done
   else
     for j = 0 to nb_lines - 1 do
       let actual_j = (j + offset_j) mod 64 in
-      aux_draw_line m actual_j offset_i 127 rects;
-      aux_draw_line m ((actual_j + 1) mod 64) 0 (offset_i-1) rects;
+      aux_draw_line screen m actual_j offset_i 127 rects;
+      aux_draw_line screen m ((actual_j + 1) mod 64) 0 (offset_i-1) rects;
     done);
   let remainder = 8 * (actual_size mod 16) in
   if remainder <> 0 then
     (let offset_rem = offset_i + remainder - 1 in
     let actual_nj = (nb_lines + offset_j) mod 64 in
-    (aux_draw_line m actual_nj offset_i (min 127 offset_rem) rects;
+    (aux_draw_line screen m actual_nj offset_i (min 127 offset_rem) rects;
     if offset_rem > 127 then
-      aux_draw_line m ((actual_nj + 1) mod 64) 0 (offset_rem - 128) rects));
+      aux_draw_line screen m ((actual_nj + 1) mod 64) 0 (offset_rem - 128) rects));
   Sdlrender.fill_rects ren (Array.of_list !rects);;
 
 (* Auxiliary function that returns the next picture in reader order *)
@@ -136,10 +131,10 @@ let next_pict_index (i : int) : int =
 (* General RlcPict function, handles the cascading effect of compressed pictures *)
 let draw_pict (ren : Sdlrender.t) (p : parameters) (pict : int) : unit =
   let rec aux (i : int) (bytes_left : int) : unit =
-    let (pict_size, _) = p.pict.(pict) in
+    let (pict_size, m) = p.pict.(pict) in
     let wanted_size = min bytes_left pict_size in
     if wanted_size <> 0 then
-      draw_pict_offset ren p pict wanted_size (2048 - bytes_left);
+      draw_pict_offset ren p gscreen pict_size wanted_size (2048 - bytes_left) m;
     if pict_size < bytes_left && pict < 20 then
       aux (next_pict_index pict) (bytes_left - pict_size)
   in
@@ -147,11 +142,19 @@ let draw_pict (ren : Sdlrender.t) (p : parameters) (pict : int) : unit =
 
 (* Draws the window in the current coordinates system *)
 let draw_window (ren : Sdlrender.t) (p : parameters) : unit =
-  wipe gscreen;
+  wipe bgscreen;
   if p.axeson then
     draw_axes ren p;
   if p.bgpict <> -1 then
-    draw_pict_offset ren p p.bgpict 1024 0;;
+    let (bgpict_size, m) = p.pict.(p.bgpict) in
+    draw_pict_offset ren p bgscreen bgpict_size 1024 0 m;;
+
+(** Graphic display **)
+let gdraw (ren : Sdlrender.t) : unit =
+  parameters_updated := false;
+  draw_pict_offset ren p bgscreen 1024 1024 0 bgscreen;
+  draw_pict_offset ren p bgscreen 1024 1024 0 gscreen;
+  refresh ren;;
 
 (** Text display **)
 
