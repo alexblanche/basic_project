@@ -58,19 +58,26 @@ let draw_horizontal_line (ren : Sdlrender.t) (p : parameters) (x : float) : unit
 (* Draws the scales (one plot per xstep, ystep on each axis) *)
 let draw_axes (ren : Sdlrender.t) (p : parameters) : unit =
   let (i, j) = rescale p 0. 0. in
-  if j >= 1 && j <= 63 then
-    horizontal_line ren bgscreen 1 127 (63-j+1);
-  if i >= 2 && i <= 127 then 
-    vertical_line ren bgscreen (i-1) 1 63;
+  let i_axis = i - 1 in
+  let j_axis = 64 - j in
+  (if j_axis >= 1 && j_axis <= 63 then
+    horizontal_line ren bgscreen 1 127 j_axis);
+  (if i_axis >= 1 && i_axis <= 127 then
+    vertical_line ren bgscreen i_axis 1 63);
   (* Scales *)
   (* Horizontal scales *)
   if not (is_zero_float p.xstep) then
-    let nb_step_xplus  = true_int_of_float (Float.abs (p.xmax /. p.xstep)) in
+    (let nb_step_xplus  = true_int_of_float (Float.abs (p.xmax /. p.xstep)) in
     let nb_step_xminus = true_int_of_float (Float.abs (p.xmin /. p.xstep)) in
     let step_xplus = Array.init nb_step_xplus (fun i -> (float_of_int (i+1))*.p.xstep) in
     let step_xminus = Array.init nb_step_xminus (fun i -> (float_of_int (-i-1))*.p.xstep) in
     let j = rescale_y p 0. in
-    let correctj = min (max 1 (63-j)) 63 in
+    let correctj =
+      let temp_j = min (max 1 (63-j)) 63 in
+      if temp_j = j_axis
+        then (if temp_j = 1 then 2 else temp_j - 1)
+        else temp_j
+    in
     (Array.iter
       (fun x ->
         let i = rescale_x p x in
@@ -82,16 +89,21 @@ let draw_axes (ren : Sdlrender.t) (p : parameters) : unit =
         let i = rescale_x p x in
         if i >= 1 && i <= 127
           then ploton ren bgscreen i correctj)
-      step_xminus);
+      step_xminus));
 
   (* Vertical scales *)
   if not (is_zero_float p.ystep) then
-    let nb_step_yplus  = true_int_of_float (Float.abs (p.ymax /. p.ystep)) in
+    (let nb_step_yplus  = true_int_of_float (Float.abs (p.ymax /. p.ystep)) in
     let nb_step_yminus = true_int_of_float (Float.abs (p.ymin /. p.ystep)) in
     let step_yplus = Array.init nb_step_yplus (fun j -> (float_of_int (j+1))*.p.ystep) in
     let step_yminus = Array.init nb_step_yminus (fun j -> (float_of_int (-j-1))*.p.ystep) in
     let i = rescale_x p 0. in
-    let correcti = min (max 1 i) 127 in
+    let correcti =
+      let temp_i = min (max 1 i) 127 in
+      if temp_i = i_axis
+        then (if temp_i = 1 then 2 else temp_i - 1)
+        else temp_i
+    in
     (Array.iter
       (fun y ->
         let j = rescale_y p y in
@@ -103,7 +115,7 @@ let draw_axes (ren : Sdlrender.t) (p : parameters) : unit =
         let j = rescale_y p y in
         if j >= 1 && j <= 63
           then ploton ren bgscreen correcti (64-j))
-      step_yminus);;
+      step_yminus));;
 
 (* Auxiliary function to draw_pict *)
 (* Adds to rects the rectangles needed to draw line j of the picture stored in matrix m,
@@ -196,8 +208,8 @@ let draw_window (ren : Sdlrender.t) (p : parameters) : unit =
 (* If the background parameters were modified, redraws the window,
   then refreshed the renderer *)
 let refresh_update (ren : Sdlrender.t) (p : parameters) : unit =
-  if !background_changed then
-    (clear_graph ren;
+  (if !background_changed then
+    clear_graph ren;
     draw_frame ren;
     draw_window ren p;
     draw_pict_offset ren gscreen 1024 1024 0 gscreen;

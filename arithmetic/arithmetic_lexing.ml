@@ -101,17 +101,31 @@ let read_int (lexlist : string list) (pos : bool) : int * (string list) =
               (-res, t')
         else aux 0 lexlist;;
 
+(* Returns the number of zeroes encountered in the list of lexemes lexlist,
+   and returns the tail of this list *)
+let extract_zeroes (lexlist : string list) : int * (string list) =
+  let rec aux n l =
+    match l with
+      | "0" :: t -> aux (n+1) t
+      | _ :: _ -> (n, l)
+      | [] -> (n, [])
+  in
+  aux 0 lexlist;;
+
 (* Reads the next float in the list of lexemes lexlist
   Returns the float and the tail of the list of lexemes after the float *)
 let read_float (lexlist : string list) : float * (string list) =
   let (int_part, t) = read_int lexlist false in
-  let (dec_part, t') =
+  let (dec_part, nb_zeroes, t') =
     match t with
       | dot::q ->
         if dot = "."
-          then read_int q true
-          else (0, t)
-      | [] -> (0, [])
+          then
+            let (nb_z, q') = extract_zeroes q in
+            let (d, t') = read_int q' true in
+            (d, nb_z, t')
+          else (0, 0, t)
+      | [] -> (0, 0, [])
   in
   let (exp_part, t'') =
     match t' with
@@ -127,7 +141,7 @@ let read_float (lexlist : string list) : float * (string list) =
   let decs =
     if dec_part = 0
       then ""
-      else ("."^string_of_int dec_part)
+      else ("."^(String.make nb_zeroes '0')^string_of_int dec_part)
   in
   let exps =
     if exp_part = 0

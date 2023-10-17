@@ -55,6 +55,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       if zy.re <= 58. then
         (text_screen := false;
         let _ =
+          (* Exception to the treatment of other drawing commands,
+             because a Text is also used to erase some pixels *)
           clear_graph ren;
           draw_frame ren;
           draw_window ren p;
@@ -65,6 +67,9 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
             | _ -> failwith "Graphic error: wrong output type for string expression evaluation"
         in
         refresh ren)
+
+    (* | Graphic_Function "DRAWSTAT" ->
+       *)
 
     | PlotOn (ex, ey) ->
       let zx = eval_num p ex in

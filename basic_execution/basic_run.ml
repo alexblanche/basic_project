@@ -391,11 +391,15 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
       (* Disp that was not handled by a string *)
       | Disp ->
-        (if !text_screen
+        ((if !text_screen
           then disp p ren writing_index
-          else if i<n-1 && code.(i+1) <> End then
-            (wait_release ren false;
-            wait_enter ren false);
+          else
+            (line_feed ();
+            clear_line !writing_index;
+            locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
+            if i<n-1 && code.(i+1) <> End then
+              (wait_release ren false;
+              wait_enter ren false)));
         aux (i+1))
 
       | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
