@@ -68,8 +68,17 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         in
         refresh ren)
 
-    (* | Graphic_Function "DRAWSTAT" ->
-       *)
+    | Graphic_Function ("DRAWSTAT", _) ->
+      (Array.iter
+        (fun (don, st, li1, li2, mk) ->
+          if don then
+            let l1 = get_val_list p (VarList (Value (complex_of_int li1))) in
+            let l2 = get_val_list p (VarList (Value (complex_of_int li2))) in
+            let pair_l = List.rev_map2 (fun x y -> (x,y)) l1 l2 in
+            aux_drawstat pair_l st mk)
+        p.sgph;
+      text_screen := false;
+      refresh_update ren p)
 
     | PlotOn (ex, ey) ->
       (* let _ = print_endline "PLOT" in *)
