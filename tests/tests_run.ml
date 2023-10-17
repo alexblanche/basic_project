@@ -559,3 +559,31 @@ let run_vw () =
       )]
   (* in prog ;;  *)
   in run (empty_projcont ()) prog "main";;
+
+let run_drawstat () =
+  let prog =
+    compile
+      [("main",
+        [
+          "AXESON"; "EOL";
+          "VIEWWINDOW"; "MINUS"; "5"; ","; "2"; ","; "0"; "."; "5"; ","; "MINUS"; "2"; ","; "8"; ","; "0"; "."; "5"; "EOL";
+          "LBRACKET"; "MINUS"; "4"; ","; "MINUS"; "1"; ","; "MINUS"; "2"; ","; "MINUS"; "3"; ","; "MINUS"; "1"; "RBRACKET"; "ASSIGN"; "LIST"; "1"; "EOL";
+          "LBRACKET"; "1"; ","; "3"; ","; "7"; ","; "5"; ","; "1"; "RBRACKET"; "ASSIGN"; "LIST"; "2"; "EOL";
+          "SGPH1"; "DRAWON"; ","; "XYLINE"; ","; "LIST"; "1"; ","; "LIST"; "2"; ","; "1"; ","; "DOT"; "EOL";
+          "DRAWSTAT"; "DISP";
+
+          "CLS"; "EOL";
+          "SGPH1"; "DRAWON"; ","; "XYLINE"; ","; "LIST"; "1"; ","; "LIST"; "2"; ","; "1"; ","; "CROSS"; "EOL";
+          "DRAWSTAT"; "DISP";
+
+          "CLS"; "EOL";
+          "SGPH1"; "DRAWON"; ","; "XYLINE"; ","; "LIST"; "1"; ","; "LIST"; "2"; ","; "1"; ","; "SQUARE"; "EOL";
+          "DRAWSTAT"; "DISP";
+
+          "CLS"; "EOL";
+          "SGPH1"; "DRAWON"; ","; "SCATTER"; ","; "LIST"; "1"; ","; "LIST"; "2"; ","; "1"; ","; "SQUARE"; "EOL";
+          "DRAWSTAT"; "DISP";
+        ]
+      )]
+  (* in prog ;;  *)
+  in run (empty_projcont ()) prog "main";;

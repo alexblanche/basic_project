@@ -50,6 +50,7 @@
 #use "basic_execution/graphic_functions/wait_press.ml"
 #use "basic_execution/auxiliary/run_aux.ml"
 #use "basic_execution/auxiliary/qmark.ml"
+#use "basic_execution/auxiliary/graphic_commands_aux.ml"
 #use "basic_execution/auxiliary/execute_graphic_commands.ml"
 #use "basic_execution/basic_run.ml"
 

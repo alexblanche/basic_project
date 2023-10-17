@@ -72,10 +72,17 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       (Array.iter
         (fun (don, st, li1, li2, mk) ->
           if don then
-            let l1 = get_val_list p (VarList (Value (complex_of_int li1))) in
-            let l2 = get_val_list p (VarList (Value (complex_of_int li2))) in
-            let pair_l = List.rev_map2 (fun x y -> (x,y)) l1 l2 in
-            aux_drawstat pair_l st mk)
+            let l1 = get_val_listexpr p (VarList (Value (complex_of_int li1))) in
+            let l2 = get_val_listexpr p (VarList (Value (complex_of_int li2))) in
+            let pair_l = ref [] in
+            Array.iter2
+              (fun x y ->
+                let zi = eval_num p x in
+                let zj = eval_num p y in
+                let i,j = rescale p zi.re zj.re in
+                pair_l := (i,j) :: !pair_l)
+              l1 l2;
+            trace_drawstat ren !pair_l st mk)
         p.sgph;
       text_screen := false;
       refresh_update ren p)

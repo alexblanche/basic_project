@@ -323,20 +323,20 @@ let process_sgph i lexlist code mem : int * string list =
       | "SGPH1" :: q -> (0, q)
       | "SGPH2" :: q -> (1, q)
       | "SGPH3" :: q -> (2, q)
-      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command"
+      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command (Sgph index)"
   in
   let (drawon, d3) =
     match d2 with
       | "DRAWON" :: q -> (true, q)
       | "DRAWOFF" :: q -> (false, q)
-      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command"
+      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command (Drawon/Drawoff)"
   in
   let (stop, style, d4) =
     match d3 with
       | "," :: "SCATTER" :: q -> (false, Scatter, q)
       | "," :: "XYLINE" :: q -> (false, XYLine, q)
       | [] -> (true, Scatter, [])
-      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command"
+      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command (Style)"
   in
   (if stop then
     set code i (Graphic (Drawstat_Setup (sgphi, drawon, None, None, None, None)))
@@ -351,9 +351,9 @@ let process_sgph i lexlist code mem : int * string list =
         else if is_var a then
           (false, Variable (Var (var_index a)), t)
         else
-          fail lexlist i "Compilation error: Syntax error in Sgph command"
+          fail lexlist i "Compilation error: Syntax error in Sgph command (List index)"
       | [] -> (true, Value (complex_of_float 0.), [])
-      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command"
+      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command (List)"
   in
   let (stop, list1, d5) = aux_get_list_index d4 in
   if stop then
@@ -366,12 +366,12 @@ let process_sgph i lexlist code mem : int * string list =
   else
 
   let (stop, mark) =
-    match d6 with 
-      | [_; "DOT"] -> (false, DSMDot)
-      | [_; "SQUARE"] -> (false, DSMSquare)
-      | [_; "CROSS"] -> (false, DSMCross)
+    match List.rev d6 with 
+      | "DOT" :: _ -> (false, DSMDot)
+      | "SQUARE" :: _ -> (false, DSMSquare)
+      | "CROSS" :: _ -> (false, DSMCross)
       | [] -> (true, DSMDot)
-      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command"
+      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command (Mark)"
   in
 
   if stop then
