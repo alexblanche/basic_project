@@ -83,8 +83,10 @@ let fill_rect (ren : Sdlrender.t) (a : int) (b : int) (w : int) (h : int) =
 
 (* Fills the pixel i,j of the screen with the current color *)
 let ploton (ren : Sdlrender.t) (m : bool array array) (i : int) (j : int) =
-	fill_rect ren (!margin_h + !size*i) (!margin_v + !size*j) !size !size;
-	m.(j).(i) <- true;;
+	if i >= 0 && i <= 127 && j >= 0 && j <= 63 then
+		(fill_rect ren (!margin_h + !size*i) (!margin_v + !size*j) !size !size;
+		m.(j).(i) <- true)
+	else print_endline ("Runtime warning: PlotOn on out of screen parameters ("^(string_of_int i)^", "^(string_of_int j)^")");;
 
 (* Same without writing in a matrix *)
 let ploton_no_writing (ren : Sdlrender.t) (i : int) (j : int) =
@@ -279,6 +281,10 @@ let bresenham (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (
 
 (** Graphical interface **)
 
+(* Draws the frame around the screen *)
+let draw_frame (ren : Sdlrender.t) : unit =
+	rect ren (!margin_h-1) (!margin_v-1) (!width+1) (!height+1);;
+
 (* Prints the background and the grid *)
 let print_bg (ren : Sdlrender.t) (grid : bool) (bg : Sdlrender.t -> unit) : unit =
 	(* grid *)
@@ -299,7 +305,7 @@ let print_bg (ren : Sdlrender.t) (grid : bool) (bg : Sdlrender.t -> unit) : unit
 	
 	(* frame *)
 	set_color ren black;
-	rect ren (!margin_h-1) (!margin_v-1) (!width+1) (!height+1);
+	draw_frame ren;
 	
 	(* Additional background *)
 	bg ren;;

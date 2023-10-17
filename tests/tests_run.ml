@@ -525,3 +525,32 @@ let run_bounds () =
         ]
       )]
   in run (empty_projcont ()) prog "main";;
+
+let run_vw () =
+  let prog =
+    compile
+      [("main",
+        [
+          "VIEWWINDOW"; "MINUS"; "5"; ","; "2"; ","; "0"; "."; "5"; ","; "MINUS"; "2"; ","; "8"; ","; "0"; "."; "5"; "EOL";
+          "AXESON"; "EOL";
+          "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "5"; ","; "2"; ","; "0"; "."; "5"; ","; "MINUS"; "2"; ","; "8"; ","; "0"; "."; "5"; "QUOTE"; "EOL";
+          "PLOTON"; "0"; "."; "1"; ","; "1"; "EOL";
+          "PLOTON"; "0"; "."; "1"; ","; "MINUS"; "1"; "DISP";
+
+          "CLS"; "EOL";
+          "VIEWWINDOW"; "MINUS"; "8"; ","; "MINUS"; "2"; ","; "1"; ","; "0"; ","; "8"; ","; "1"; "EOL";
+          "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "8"; ","; "MINUS"; "2"; ","; "1"; ","; "0"; ","; "8"; ","; "1"; "QUOTE"; "EOL";
+          "PLOTON"; "1"; ","; "1"; "DISP";
+          
+          "CLS"; "EOL";
+          "VIEWWINDOW"; "MINUS"; "5"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "0"; ","; "1"; "EOL";
+          "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "5"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "0"; ","; "1"; "QUOTE"; "EOL";
+          "PLOTON"; "1"; ","; "1"; "DISP";
+
+          "CLS"; "EOL";
+          "VIEWWINDOW"; "MINUS"; "5"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "0"; "."; "1"; ","; "1"; "EOL";
+          "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "5"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "0"; "."; "1"; ","; "1"; "QUOTE"; "EOL";
+          "PLOTON"; "1"; ","; "1"; "DISP";
+        ]
+      )]
+  in run (empty_projcont ()) prog "main";;

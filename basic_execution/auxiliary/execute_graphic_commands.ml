@@ -49,16 +49,22 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       if not
         ((is_int zx) && (is_int zy)
         && (zx.re >= 1.) && (zx.re <= 127.)
-        && (zy.re >= 1.) && (zy.re <= 58.))
+        && (zy.re >= 1.) && (zy.re <= 63.))
         then failwith "Graphic error: wrong arguments for Text";
-      (text_screen := false;
-      let _ =
-        match eval_str p se with
-          | Str_content s -> draw_text ren s (int_of_complex zx) (int_of_complex zy)
-          | Num_expr (Complex z) -> draw_number ren z p.polar (int_of_complex zx) (int_of_complex zy)
-          | _ -> failwith "Graphic error: wrong output type for string expression evaluation"
-      in
-      refresh_update ren p)
+      
+      if zy.re <= 58. then
+        (text_screen := false;
+        let _ =
+          clear_graph ren;
+          draw_frame ren;
+          draw_window ren p;
+          background_changed := false;
+          match eval_str p se with
+            | Str_content s -> draw_text ren (rev_lexlist_to_rev_symblist s false) (int_of_complex zx) (int_of_complex zy)
+            | Num_expr (Complex z) -> draw_number ren z p.polar (int_of_complex zx) (int_of_complex zy)
+            | _ -> failwith "Graphic error: wrong output type for string expression evaluation"
+        in
+        refresh ren)
 
     | PlotOn (ex, ey) ->
       let zx = eval_num p ex in
@@ -79,7 +85,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         refresh_update ren p)
 
     | Graphic_Function ("CLS", _) ->
-      wipe gscreen
+      (wipe gscreen;
+      background_changed := true)
 
     | ViewWindow (ex1, ex2, esx, ey1, ey2, esy) ->
       let xminval = eval_num p ex1 in

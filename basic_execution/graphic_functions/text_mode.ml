@@ -49,7 +49,7 @@ let tdraw (ren : Sdlrender.t) : unit =
     done
   done;
   clear_graph ren;
-  rect ren (!margin_h-1) (!margin_v-1) (!width+1) (!height+1);
+  draw_frame ren;
   Sdlrender.fill_rects ren (Array.of_list !acc);
   refresh ren;;
 

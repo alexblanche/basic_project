@@ -30,12 +30,16 @@ let background_changed = ref true;;
 
 (* Converts the coordinates x,y, in the system {xmin, xmax, ymin, ymax}, to a pixel in {1, 127, 1, 63} *)
 let rescale_x (p : parameters) (x : float) : int =
-  let ax = (x -. p.xmin) /. (p.xmax -. p.xmin) in
-  1 + true_int_of_float (ax *. 126.);;
+  let ax = 126. *. (x -. p.xmin) /. (p.xmax -. p.xmin) -. 0.5 in
+  if ax >= 0.
+    then true_int_of_float ax + 2
+    else true_int_of_float ax + 1;;
 
 let rescale_y (p : parameters) (y : float) : int =
-  let ay = (y -. p.ymin) /. (p.ymax -. p.ymin) in
-  1 + true_int_of_float (ay *. 62.);;
+  let ay = 62. *. (y -. p.ymin) /. (p.ymax -. p.ymin) -. 0.5 in
+  if ay >= 0.
+    then true_int_of_float ay + 2
+    else true_int_of_float ay + 1;;
 
 let rescale (p : parameters) (x : float) (y : float) : int * int =
   (rescale_x p x, rescale_y p y);;
@@ -55,28 +59,51 @@ let draw_horizontal_line (ren : Sdlrender.t) (p : parameters) (x : float) : unit
 let draw_axes (ren : Sdlrender.t) (p : parameters) : unit =
   let (i, j) = rescale p 0. 0. in
   if j >= 1 && j <= 63 then
-    horizontal_line ren bgscreen 1 127 j;
-  if i >= 1 && i <= 127 then 
-    vertical_line ren bgscreen i 1 63;
+    horizontal_line ren bgscreen 1 127 (63-j+1);
+  if i >= 2 && i <= 127 then 
+    vertical_line ren bgscreen (i-1) 1 63;
   (* Scales *)
+  (* Horizontal scales *)
   if not (is_zero_float p.xstep) then
     let nb_step_xplus  = true_int_of_float (Float.abs (p.xmax /. p.xstep)) in
     let nb_step_xminus = true_int_of_float (Float.abs (p.xmin /. p.xstep)) in
-    let step_xplus = Array.init nb_step_xplus (fun i -> (1. +. float_of_int i)*.p.xstep) in
-    let step_xminus = Array.init nb_step_xminus (fun i -> (-1. +. float_of_int (-i))*.p.xstep) in
+    let step_xplus = Array.init nb_step_xplus (fun i -> (float_of_int (i+1))*.p.xstep) in
+    let step_xminus = Array.init nb_step_xminus (fun i -> (float_of_int (-i-1))*.p.xstep) in
     let j = rescale_y p 0. in
-    let correctj = min (max 1 (j+1)) 63 in
-    (Array.iter (fun x -> let i = rescale_x p x in ploton ren bgscreen i correctj) step_xplus;
-    Array.iter (fun x -> let i = rescale_x p x in ploton ren bgscreen i correctj) step_xminus);
+    let correctj = min (max 1 (63-j)) 63 in
+    (Array.iter
+      (fun x ->
+        let i = rescale_x p x in
+        if i >= 1 && i <= 127
+          then ploton ren bgscreen i correctj)
+      step_xplus;
+    Array.iter
+      (fun x ->
+        let i = rescale_x p x in
+        if i >= 1 && i <= 127
+          then ploton ren bgscreen i correctj)
+      step_xminus);
+
+  (* Vertical scales *)
   if not (is_zero_float p.ystep) then
     let nb_step_yplus  = true_int_of_float (Float.abs (p.ymax /. p.ystep)) in
     let nb_step_yminus = true_int_of_float (Float.abs (p.ymin /. p.ystep)) in
-    let step_yplus = Array.init nb_step_yplus (fun i -> (1. +. float_of_int i)*.p.ystep) in
-    let step_yminus = Array.init nb_step_yminus (fun i -> (-1. +. float_of_int (-i))*.p.ystep) in
+    let step_yplus = Array.init nb_step_yplus (fun j -> (float_of_int (j+1))*.p.ystep) in
+    let step_yminus = Array.init nb_step_yminus (fun j -> (float_of_int (-j-1))*.p.ystep) in
     let i = rescale_x p 0. in
-    let correcti = min (max 1 (i+1)) 127 in
-    (Array.iter (fun y -> let j = rescale_y p y in ploton ren bgscreen correcti j) step_yplus;
-    Array.iter (fun y -> let j = rescale_y p y in ploton ren bgscreen correcti j) step_yminus);;
+    let correcti = min (max 1 i) 127 in
+    (Array.iter
+      (fun y ->
+        let j = rescale_y p y in
+        if j >= 1 && j <= 63
+          then ploton ren bgscreen correcti (64-j))
+      step_yplus;
+    Array.iter
+      (fun y ->
+        let j = rescale_y p y in
+        if j >= 1 && j <= 63
+          then ploton ren bgscreen correcti (64-j))
+      step_yminus);;
 
 (* Auxiliary function to draw_pict *)
 (* Adds to rects the rectangles needed to draw line j of the picture stored in matrix m,
@@ -170,7 +197,10 @@ let draw_window (ren : Sdlrender.t) (p : parameters) : unit =
   then refreshed the renderer *)
 let refresh_update (ren : Sdlrender.t) (p : parameters) : unit =
   if !background_changed then
-    (draw_window ren p;
+    (clear_graph ren;
+    draw_frame ren;
+    draw_window ren p;
+    draw_pict_offset ren gscreen 1024 1024 0 gscreen;
     background_changed := false);
   refresh ren;;
 
@@ -178,7 +208,7 @@ let refresh_update (ren : Sdlrender.t) (p : parameters) : unit =
 let gdraw (ren : Sdlrender.t) : unit =
   parameters_updated := false;
   draw_pict_offset ren bgscreen 1024 1024 0 bgscreen;
-  draw_pict_offset ren bgscreen 1024 1024 0 gscreen;
+  draw_pict_offset ren gscreen 1024 1024 0 gscreen;
   refresh ren;;
 
 
@@ -229,7 +259,7 @@ let draw_text (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : un
   set_color ren white;
   let white_r = Sdlrect.make2
     ~pos:(!margin_h + !size*i - 1, !margin_v + !size*j)
-    ~dims:(!size*(iend - i), 6 * !size - 1)
+    ~dims:(!size*(iend - i) + 1, 6 * !size - 1)
   in
   Sdlrender.fill_rect ren white_r;
   set_color ren black;
