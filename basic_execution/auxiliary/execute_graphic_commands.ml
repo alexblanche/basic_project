@@ -72,28 +72,31 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
        *)
 
     | PlotOn (ex, ey) ->
+      (* let _ = print_endline "PLOT" in *)
       let zx = eval_num p ex in
       let zy = eval_num p ey in
       let (a,b) = rescale p zx.re zy.re in
-      if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
-        (ploton ren gscreen a (64-b);
-        text_screen := false;
-        refresh_update ren p)
+      ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
+        ploton ren gscreen a (64-b));
+      text_screen := false;
+      refresh_update ren p)
 
     | PlotOff (ex, ey) ->
       let zx = eval_num p ex in
       let zy = eval_num p ey in
       let (a,b) = rescale p zx.re zy.re in
-      if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
-        (plotoff ren gscreen false a (64-b);
-        text_screen := false;
-        refresh_update ren p)
+      ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
+        plotoff ren gscreen false a (64-b));
+      text_screen := false;
+      refresh_update ren p)
 
     | Graphic_Function ("CLS", _) ->
+      (* (print_endline "CLS"; *)
       (wipe gscreen;
       background_changed := true)
 
     | ViewWindow (ex1, ex2, esx, ey1, ey2, esy) ->
+      (* let _ = print_endline "VIEWWINDOW" in *)
       let xminval = eval_num p ex1 in
       let xmaxval = eval_num p ex2 in
       let xstepval = eval_num p esx in
@@ -135,6 +138,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         | _ -> failwith "Graphic error: wrong arguments for Sgph DrawStat setup")
 
     | Graphic_Function ("AXESON", _) ->
+      (* (print_endline "AXESON"; *)
       (background_changed := true;
       p.axeson <- true)
     | Graphic_Function ("AXESOFF", _) ->

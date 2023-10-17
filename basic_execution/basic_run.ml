@@ -62,6 +62,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
     (* debug *)
     (* print_endline (string_of_int i); *)
+    (* print_endline (if !background_changed then "background_changed = true" else "background_changed = false"); *)
 
     (* Pause for 1/798s *)
     (* Overridden by Press on Tab *)
@@ -391,13 +392,16 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
       (* Disp that was not handled by a string *)
       | Disp ->
+        (* (print_endline "In the DISP..."; *)
         ((if !text_screen
           then disp p ren writing_index
           else
             (line_feed ();
             clear_line !writing_index;
             locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
+            (* refresh_update ren p; *)
             if i<n-1 && code.(i+1) <> End then
+              (* (print_endline "Waiting..."; *)
               (wait_release ren false;
               wait_enter ren false)));
         aux (i+1))

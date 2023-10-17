@@ -209,16 +209,20 @@ let draw_window (ren : Sdlrender.t) (p : parameters) : unit =
   then refreshed the renderer *)
 let refresh_update (ren : Sdlrender.t) (p : parameters) : unit =
   (if !background_changed then
-    clear_graph ren;
+    (* (print_endline "Updating..."; *)
+    (clear_graph ren;
     draw_frame ren;
     draw_window ren p;
     draw_pict_offset ren gscreen 1024 1024 0 gscreen;
-    background_changed := false);
+    background_changed := false));
+  (* print_endline "Refreshing..."; *)
   refresh ren;;
 
 (** Graphic display **)
 let gdraw (ren : Sdlrender.t) : unit =
   parameters_updated := false;
+  clear_graph ren;
+  draw_frame ren;
   draw_pict_offset ren bgscreen 1024 1024 0 bgscreen;
   draw_pict_offset ren gscreen 1024 1024 0 gscreen;
   refresh ren;;
