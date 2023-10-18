@@ -13,10 +13,15 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         && b1 >= 1 && b1 <= 63 && b2 >= 1 && b2 <= 63 then
         (let rect_l = bresenham true gscreen a1 (64-b1) a2 (64-b2) in
         let rect_t =
-          match syle with
+          let st =
+            match style with
+              | None -> p.style
+              | Some s -> s
+          in
+          match st with
             | StyleNormal -> Array.of_list rect_l
-            | StyleThick -> (* Not yet implemented *) Array.of_list (List.rev_map (fun r -> r) rect_l) (* Temporary *)
-            | StyleDot -> Array.of_list (dot_erase_half rect_l)
+            | StyleThick -> Array.of_list (List.rev_map thicken rect_l)
+            | StyleDot -> Array.of_list (dot_line rect_l a1 b1 a2 b2)
             | StyleBroken -> (* Not yet implemented *) Array.of_list rect_l (* Temporary *)
         in
         Sdlrender.fill_rects ren rect_t;
