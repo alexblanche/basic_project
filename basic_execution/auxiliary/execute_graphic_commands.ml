@@ -3,7 +3,6 @@
 let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_screen : bool ref) : unit =
   match g with
     | Fline (ex1, ey1, ex2, ey2, style) ->
-      (* To do: implement styles *)
       let zx1 = eval_num p ex1 in
       let zy1 = eval_num p ey1 in
       let zx2 = eval_num p ex2 in
@@ -12,7 +11,14 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let (a2,b2) = rescale p zx2.re zy2.re in
       if a1 >= 1 && a1 <= 127 && a2 >= 1 && a2 <= 127
         && b1 >= 1 && b1 <= 63 && b2 >= 1 && b2 <= 63 then
-        (let rect_t = Array.of_list (bresenham true gscreen a1 (64-b1) a2 (64-b2)) in
+        (let rect_l = bresenham true gscreen a1 (64-b1) a2 (64-b2) in
+        let rect_t =
+          match syle with
+            | StyleNormal -> Array.of_list rect_l
+            | StyleThick -> (* Not yet implemented *) Array.of_list (List.rev_map (fun r -> r) rect_l) (* Temporary *)
+            | StyleDot -> Array.of_list (dot_erase_half rect_l)
+            | StyleBroken -> (* Not yet implemented *) Array.of_list rect_l (* Temporary *)
+        in
         Sdlrender.fill_rects ren rect_t;
         refresh_update ren p !text_screen;
         text_screen := false)

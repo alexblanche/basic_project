@@ -314,7 +314,3 @@ let draw_number (ren : Sdlrender.t) (z : complex) (polar : bool) (i : int) (j : 
     (* Concatenation of all four parts of z_repr_l into the whole string in reverse order *)
     let sl = List.fold_left (fun s l -> List.rev_append l s) [] z_repr_l in
     draw_text ren sl i j;;
-
-
-  
-        

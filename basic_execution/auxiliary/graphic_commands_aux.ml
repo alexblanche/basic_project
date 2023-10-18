@@ -42,3 +42,34 @@ let trace_drawstat (ren : Sdlrender.t) (l : (int * int) list) (style : drawstat_
           l
   in
   ();;
+
+(** Styles implementation **)
+
+(* Returns a rectangle of 2 pixels wide and tall, with lower right corner
+   being the pixel of coordinates (i,j) (used for Thick style) *)
+let thick_style_square (i : int) (j : int) : Sdlrect.t =
+  let ni = max (i-1) 1 in
+  let nj = max (j-1) 1 in
+  Sdlrect.make
+    ~pos:(!margin_h + !size * ni, !margin_v + !size * nj)
+    ~dims:((i-ni+1) * !size, (j-nj+1) * !size);;
+
+(* To do: thick convert a horizontal line to thick horizontal line, same vertical,
+   then general convert function plot -> thick plot, h/v line -> thick h/v line,
+   then List.rev_map it *)
+
+  
+(* Erases one out of two elements of the list l, starting by the first
+   if the length of l is odd, and the second one if the length is even
+  Returns the list in reverse order *)
+(* The obvious polymorphism is removed to help the OCaml compiler generate a faster machine code *)
+let dot_erase_half (l : Sdlrect.t list) : Sdlrect.t list =
+  let (_, a) =
+    List.fold_left
+      (fun (erase, acc) x ->
+        if erase
+          then (false, acc)
+          else (true, x::acc))
+      ((List.length l) mod 2 = 1, []) l
+  in
+  a;;

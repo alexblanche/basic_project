@@ -162,7 +162,18 @@ let rectangle (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (
 		done
 	done;;
 
-(* Bresenham algorithm *)
+(* Reverse rectangle function: returns the coordinates of the pixels that generate
+	a ploton rectangle or horizontal or vertical line *)
+(* Returns (i,j,w,h), where (i,j) is the pixel (0..127, 0..63) at the top left of the rectangle,
+	w and h are the width and height in number of pixels *)
+let pixels_of_rectangle (rect : Sdlrect.t) : int * int * int * int =
+	let i = (rect.x - !margin_h) / !size in
+	let j = (rect.y - !margin_v) / !size in
+	let w = rect.w / !size in
+	let h = rect.h / !size in
+	(i, j, w, h);;
+
+(** Bresenham algorithm **)
 
 (* Each function returns a list of rectangles, that should be plotted by the calling function *)
 (* If write is true, each plot is written in the matrix m as true *)
