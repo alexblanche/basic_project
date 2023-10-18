@@ -10,8 +10,11 @@ let trace_drawstat (ren : Sdlrender.t) (l : (int * int) list) (style : drawstat_
             let (_, rect_l) =
               List.fold_left
                 (fun ((ia,ja), rect_l) (ib,jb) ->
-                  ((ib,jb), List.rev_append (bresenham true gscreen ia (64-ja) ib (64-jb)) rect_l)) (ij,[]) t
-            in Sdlrender.fill_rects ren (Array.of_list rect_l))
+                  ((ib,jb),
+                  List.rev_append (bresenham true gscreen ia (64-ja) ib (64-jb)) rect_l)) 
+                (ij,[]) t
+            in
+            Sdlrender.fill_rects ren (Array.of_list rect_l))
       | Scatter -> ()
   in
   let _ =

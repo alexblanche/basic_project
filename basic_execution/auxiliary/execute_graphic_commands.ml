@@ -14,15 +14,15 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         && b1 >= 1 && b1 <= 63 && b2 >= 1 && b2 <= 63 then
         (let rect_t = Array.of_list (bresenham true gscreen a1 (64-b1) a2 (64-b2)) in
         Sdlrender.fill_rects ren rect_t;
-        text_screen := false;
-        refresh_update ren p)
+        refresh_update ren p !text_screen;
+        text_screen := false)
 
     | Graphic_Function ("RCLPICT", [e]) ->
       let z = eval_num p e in
       if is_int z && z.re >= 1. && z.re <= 20. then
-        (text_screen := false;
-        draw_pict ren p (int_of_complex z - 1);
-        refresh_update ren p)
+        (draw_pict ren p (int_of_complex z - 1);
+        refresh_update ren p !text_screen;
+        text_screen := false)
       else failwith "Graphic error: wrong index for RclPict command"
 
     | Graphic_Function ("STOPICT", [e]) ->
@@ -44,6 +44,17 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         background_changed := true)
       else failwith "Graphic error: wrong index for BGPict command"
 
+    | Graphic_Function ("RCLCAPT", [e]) ->
+      let z = eval_num p e in
+      if is_int z && z.re >= 1. && z.re <= 20. then
+        (clear_graph ren;
+        draw_frame ren;
+        draw_single_pict_no_writing ren p.capt.(int_of_complex z - 1);
+        refresh ren;
+        disp_graphic ren true;
+        background_changed := true)
+      else failwith "Graphic error: wrong index for RclCapt command"
+
     | Text (ey, ex, se) ->
       let zy = eval_num p ey in
       let zx = eval_num p ex in
@@ -58,10 +69,11 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         let _ =
           (* Exception to the treatment of other drawing commands,
              because a Text is also used to erase some pixels *)
-          clear_graph ren;
-          draw_frame ren;
-          draw_window ren p;
-          background_changed := false;
+          if !background_changed then
+            (clear_graph ren;
+            draw_frame ren;
+            draw_window ren p;
+            background_changed := false);
           match eval_str p se with
             | Str_content s -> draw_text ren (rev_lexlist_to_rev_symblist s false) (int_of_complex zx) (int_of_complex zy)
             | Num_expr (Complex z) -> draw_number ren z p.polar (int_of_complex zx) (int_of_complex zy)
@@ -85,8 +97,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
               l1 l2;
             trace_drawstat ren !pair_l st mk)
         p.sgph;
-      text_screen := false;
-      refresh_update ren p)
+      refresh_update ren p !text_screen;
+      text_screen := false)
 
     | PlotOn (ex, ey) ->
       (* let _ = print_endline "PLOT" in *)
@@ -95,8 +107,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let (a,b) = rescale p zx.re zy.re in
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
         ploton ren gscreen a (64-b));
-      text_screen := false;
-      refresh_update ren p)
+      refresh_update ren p !text_screen;
+      text_screen := false)
 
     | PlotOff (ex, ey) ->
       let zx = eval_num p ex in
@@ -104,8 +116,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let (a,b) = rescale p zx.re zy.re in
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
         plotoff ren gscreen false a (64-b));
-      text_screen := false;
-      refresh_update ren p)
+      refresh_update ren p !text_screen;
+      text_screen := false)
 
     | Graphic_Function ("CLS", _) ->
       (* (print_endline "CLS"; *)
@@ -155,7 +167,6 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         | _ -> failwith "Graphic error: wrong arguments for Sgph DrawStat setup")
 
     | Graphic_Function ("AXESON", _) ->
-      (* (print_endline "AXESON"; *)
       (background_changed := true;
       p.axeson <- true)
     | Graphic_Function ("AXESOFF", _) ->
@@ -170,15 +181,15 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let b = rescale_y p z.re in
       if b >= 1 && b <= 63 then
         (horizontal_line ren gscreen 1 127 b;
-        text_screen := false;
-        gdraw ren)
+        refresh_update ren p !text_screen;
+        text_screen := false)
 
     | Graphic_Function ("VERTICAL", [Complex z]) ->
       let a = rescale_x p z.re in
       if a >= 1 && a <= 127 then
         (vertical_line ren gscreen a 1 63;
-        text_screen := false;
-        gdraw ren)
+        refresh_update ren p !text_screen;
+        text_screen := false)
 
     | Graphic_Function ("SLNORMAL", []) -> p.style <- StyleNormal
     | Graphic_Function ("SLTHICK", []) -> p.style <- StyleThick

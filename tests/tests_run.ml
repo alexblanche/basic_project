@@ -458,6 +458,9 @@ let run_prog_graphic () =
           "TEXT"; "1"; ","; "1"; ","; "QUOTE"; "A"; "B"; "C"; "D"; "QUOTE"; "EOL";
           "TEXT"; "4"; "8"; ","; "1"; "1"; "6"; ","; "1"; "0"; "TIMES"; "5"; "3"; "2"; "EOL";
           "TEXT"; "5"; "8"; ","; "1"; "1"; "7"; ","; "1"; "0"; "TIMES"; "5"; "3"; "2"; "DISP";
+          "FLINE"; "1"; "0"; ","; "3"; "0"; ","; "1"; "2"; "7"; ","; "4"; "0"; "DISP";
+          "QUOTE"; "T"; "E"; "X"; "T"; "QUOTE"; "DISP";
+          "PLOTON"; "1"; ","; "1"; "DISP";
           "QUOTE"; "S"; "T"; "O"; "P"; "QUOTE"; "DISP"
         ]
       )]
@@ -481,8 +484,7 @@ let run_pict () =
     done;
     par.pict.(3) <- (2048, m);
     par
-  in 
-  (* new_param p;; *)
+  in
   run p prog "main";;
 
 let run_window () =
@@ -537,23 +539,23 @@ let run_vw () =
 
           "CLS"; "EOL";
           "VIEWWINDOW"; "MINUS"; "5"; ","; "2"; ","; "0"; "."; "5"; ","; "MINUS"; "2"; ","; "8"; ","; "0"; "."; "5"; "EOL";
-          (* "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "5"; ","; "2"; ","; "0"; "."; "5"; ","; "MINUS"; "2"; ","; "8"; ","; "0"; "."; "5"; "QUOTE"; "EOL"; *)
+          "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "5"; ","; "2"; ","; "0"; "."; "5"; ","; "MINUS"; "2"; ","; "8"; ","; "0"; "."; "5"; "QUOTE"; "EOL";
           "PLOTON"; "0"; "."; "1"; ","; "1"; "EOL";
           "PLOTON"; "0"; "."; "1"; ","; "MINUS"; "1"; "DISP";
 
           "CLS"; "EOL";
           "VIEWWINDOW"; "MINUS"; "8"; ","; "MINUS"; "2"; ","; "1"; ","; "0"; ","; "8"; ","; "1"; "EOL";
-          (* "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "8"; ","; "MINUS"; "2"; ","; "1"; ","; "0"; ","; "8"; ","; "1"; "QUOTE"; "EOL"; *)
+          "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "8"; ","; "MINUS"; "2"; ","; "1"; ","; "0"; ","; "8"; ","; "1"; "QUOTE"; "EOL";
           "PLOTON"; "1"; ","; "1"; "DISP";
           
           "CLS"; "EOL";
           "VIEWWINDOW"; "MINUS"; "5"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "0"; ","; "1"; "EOL";
-          (* "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "5"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "0"; ","; "1"; "QUOTE"; "EOL"; *)
+          "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "5"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "0"; ","; "1"; "QUOTE"; "EOL";
           "PLOTON"; "1"; ","; "1"; "DISP";
 
           "CLS"; "EOL";
           "VIEWWINDOW"; "MINUS"; "5"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "0"; "."; "1"; ","; "1"; "EOL";
-          (* "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "5"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "0"; "."; "1"; ","; "1"; "QUOTE"; "EOL"; *)
+          "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "5"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "0"; "."; "1"; ","; "1"; "QUOTE"; "EOL";
           "PLOTON"; "1"; ","; "1"; "DISP";
         ]
       )]
@@ -587,3 +589,43 @@ let run_drawstat () =
       )]
   (* in prog ;;  *)
   in run (empty_projcont ()) prog "main";;
+
+let run_bgpict () =
+  let prog =
+    compile
+      [("main",
+        [
+          "VIEWWINDOW"; "MINUS"; "0"; "."; "0"; "1"; ","; "0"; "."; "0"; "1"; ","; "0"; "."; "0"; "0"; "5"; ","; "MINUS"; "1"; ","; "1"; ","; "0"; "."; "2"; "EOL";
+          "AXESON"; "EOL";
+          "BGPICT"; "4";
+          "PLOTON"; "0"; "."; "0"; "0"; "5"; ","; "0"; "."; "5"; "EOL"; "DISP";
+
+          "CLS"; "EOL";
+          "VIEWWINDOW"; "MINUS"; "5"; ","; "2"; ","; "0"; "."; "5"; ","; "MINUS"; "2"; ","; "8"; ","; "0"; "."; "5"; "EOL";
+          "TEXT"; "3"; "0"; ","; "1"; "0"; ","; "QUOTE"; "MINUS"; "5"; ","; "2"; ","; "0"; "."; "5"; ","; "MINUS"; "2"; ","; "8"; ","; "0"; "."; "5"; "QUOTE"; "EOL";
+          "PLOTON"; "0"; "."; "1"; ","; "1"; "EOL";
+          "PLOTON"; "0"; "."; "1"; ","; "MINUS"; "1"; "DISP";
+
+          "RCLCAPT"; "8"; "DISP";
+          "FLINE"; "1"; ","; "6"; ","; "2"; ","; "6"; "."; "5"; "EOL"
+        ])]
+  in
+  let p =
+    let par = empty_projcont () in
+    let m = Array.make_matrix 64 128 false in
+    for i = 2 to 100 do
+      m.(i/2).(1+i) <- true;
+      m.(63-i/2).(1+i+10) <- true
+    done;
+    par.pict.(3) <- (2048, m);
+    let c = Array.make_matrix 64 128 false in
+    for i = 2 to 100 do
+      c.(10).(i) <- true;
+      c.(50).(i/2) <- true;
+      c.(50).(i/2 + 60) <- true
+    done;
+    par.capt.(7) <- c;
+    par
+  in
+  run p prog "main";;
+

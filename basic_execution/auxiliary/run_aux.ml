@@ -103,8 +103,9 @@ let quit_print (win : Sdlwindow.t) (ren : Sdlrender.t) (val_seen : bool) (value 
     locate ren ["e"; "n"; "o"; "D"] 17 0); (* "Done" *)
   quit win ren true;;
 
+(** Disp command **)
 
-(* Executes the Disp (black triangle) operation *)
+(* Executes the Disp (black triangle) operation in text mode *)
 let disp (p : parameters) (ren : Sdlrender.t) (writing_index : int ref) : unit =
   line_feed ();
   clear_line !writing_index;
@@ -115,6 +116,18 @@ let disp (p : parameters) (ren : Sdlrender.t) (writing_index : int ref) : unit =
   clear_line !writing_index;
   decr writing_index;
   tdraw ren;; (* Can the last tdraw be removed to speed up the execution? *)
+
+(* Executes the Disp in graphic mode *)
+let disp_graphic (ren : Sdlrender.t) (is_not_the_end : bool) : unit =
+  line_feed ();
+  clear_line !writing_index;
+  locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
+  if is_not_the_end then
+    (wait_release ren false;
+    wait_enter ren false);;
+
+
+(** Displaying of long strings **)
 
 (* Handles the display of strings of length 21 < len < 21*7 symbols *)
 let display_long_string (sl : string list) : unit =

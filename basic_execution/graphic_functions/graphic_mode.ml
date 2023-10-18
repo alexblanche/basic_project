@@ -120,38 +120,35 @@ let draw_axes (ren : Sdlrender.t) (p : parameters) : unit =
 (* Auxiliary function to draw_pict *)
 (* Adds to rects the rectangles needed to draw line j of the picture stored in matrix m,
   between the abscissas imin and imax included *)
-let aux_draw_line (screen : bool array array) (m : bool array array) (j : int) (imin : int) (imax : int) (rects : Sdlrect.t list ref) : unit =
+(* If write is true then each pixel is written in the matrix screen *)
+let aux_draw_line (write : bool) (screen : bool array array) (m : bool array array) (j : int) (imin : int) (imax : int) (rects : Sdlrect.t list ref) : unit =
   let ibeg = ref (-1) in
   for i = imin to imax do
     if m.(j).(i) then
-      (screen.(j).(i) <- true;
-      if !ibeg = (-1) then
+      (if !ibeg = (-1) then
         ibeg := i)
     else
       if !ibeg <> -1 then
-        (rects :=
-          (Sdlrect.make2
-            ~pos:(!margin_h + !size * !ibeg, !margin_v + !size * j)
-            ~dims:((i - !ibeg) * !size, !size))
-          ::!rects;
+        (rects := (horizontal_rect !ibeg (i-1) j)::!rects;
+        if write then
+          write_horizontal screen !ibeg (i-1) j;
         ibeg := -1)
   done;
   if !ibeg <> -1 then
-    rects :=
-      (Sdlrect.make2
-        ~pos:(!margin_h + !size * !ibeg, !margin_v + !size * j)
-        ~dims:((imax - !ibeg) * !size, !size))
-      ::!rects;;
+    (rects := (horizontal_rect !ibeg imax j)::!rects;
+    if write then
+      write_horizontal screen !ibeg imax j);;
 
 (* Draws the picture pict (0..19) on screen *)
 (* The first given number of bytes is drawn:
   8 pixels per bytes, 16 bytes per line,
   1024 = normal picture, < 16 = less than one line *)
 (* Each line is shifted by the given offset (0..64*128-1) *)
-(* For each pixel drawn, a "true" is placed in the corresponding cell
+(* If write is true, for each pixel drawn, a "true" is placed in the corresponding cell
    of the screen matrix (gscreen or bgscreen) *)
-let draw_pict_offset (ren : Sdlrender.t) (screen : bool array array)
+let draw_pict_offset (ren : Sdlrender.t) (write : bool) (screen : bool array array)
   (pict_size : int) (wanted_size : int) (offset : int) (m : bool array array) : unit =
+
   let actual_size = min 1024 (min pict_size wanted_size) in
   let nb_lines = actual_size / 16 in
   let rects = ref [] in
@@ -159,21 +156,21 @@ let draw_pict_offset (ren : Sdlrender.t) (screen : bool array array)
   let offset_j = offset / 64 in
   (if offset = 0 then
     for j = 0 to nb_lines - 1 do
-      aux_draw_line screen m j 0 127 rects
+      aux_draw_line write screen m j 0 127 rects
     done
   else
     for j = 0 to nb_lines - 1 do
       let actual_j = (j + offset_j) mod 64 in
-      aux_draw_line screen m actual_j offset_i 127 rects;
-      aux_draw_line screen m ((actual_j + 1) mod 64) 0 (offset_i-1) rects;
+      aux_draw_line write screen m actual_j offset_i 127 rects;
+      aux_draw_line write screen m ((actual_j + 1) mod 64) 0 (offset_i-1) rects;
     done);
   let remainder = 8 * (actual_size mod 16) in
   if remainder <> 0 then
     (let offset_rem = offset_i + remainder - 1 in
     let actual_nj = (nb_lines + offset_j) mod 64 in
-    (aux_draw_line screen m actual_nj offset_i (min 127 offset_rem) rects;
+    (aux_draw_line write screen m actual_nj offset_i (min 127 offset_rem) rects;
     if offset_rem > 127 then
-      aux_draw_line screen m ((actual_nj + 1) mod 64) 0 (offset_rem - 128) rects));
+      aux_draw_line write screen m ((actual_nj + 1) mod 64) 0 (offset_rem - 128) rects));
   Sdlrender.fill_rects ren (Array.of_list !rects);;
 
 (* Auxiliary function that returns the next picture in reader order *)
@@ -189,11 +186,23 @@ let draw_pict (ren : Sdlrender.t) (p : parameters) (pict : int) : unit =
     let (pict_size, m) = p.pict.(pict) in
     let wanted_size = min bytes_left pict_size in
     if wanted_size <> 0 then
-      draw_pict_offset ren gscreen pict_size wanted_size (2048 - bytes_left) m;
+      draw_pict_offset ren true gscreen pict_size wanted_size (2048 - bytes_left) m;
     if pict_size < bytes_left && pict < 20 then
       aux (next_pict_index pict) (bytes_left - pict_size)
   in
   aux pict 2048;;
+
+(* Draws a single picture mpict, without the cascading effect *)
+(* If write is true, it writes the content of the picture in the matrix screen *)
+(* The first 1024 bytes of the picture are drawn. *)
+let draw_single_pict (ren : Sdlrender.t) (write : bool) (screen : bool array array)
+  (mpict : bool array array) : unit =
+
+  draw_pict_offset ren write screen 1024 1024 0 mpict;;
+
+(* Same without writing *)
+let draw_single_pict_no_writing (ren : Sdlrender.t) (mpict : bool array array) : unit =
+  draw_single_pict ren false [||] mpict;;
 
 
 (* Draws the window in the current coordinates system *)
@@ -203,17 +212,17 @@ let draw_window (ren : Sdlrender.t) (p : parameters) : unit =
     draw_axes ren p;
   if p.bgpict <> -1 then
     let (bgpict_size, m) = p.pict.(p.bgpict) in
-    draw_pict_offset ren bgscreen bgpict_size 1024 0 m;;
+    draw_pict_offset ren true bgscreen bgpict_size 1024 0 m;;
 
 (* If the background parameters were modified, redraws the window,
   then refreshed the renderer *)
-let refresh_update (ren : Sdlrender.t) (p : parameters) : unit =
-  (if !background_changed then
+let refresh_update (ren : Sdlrender.t) (p : parameters) (text_screen : bool) : unit =
+  (if !background_changed || text_screen then
     (* (print_endline "Updating..."; *)
     (clear_graph ren;
     draw_frame ren;
     draw_window ren p;
-    draw_pict_offset ren gscreen 1024 1024 0 gscreen;
+    draw_single_pict_no_writing ren gscreen;
     background_changed := false));
   (* print_endline "Refreshing..."; *)
   refresh ren;;
@@ -223,8 +232,8 @@ let gdraw (ren : Sdlrender.t) : unit =
   parameters_updated := false;
   clear_graph ren;
   draw_frame ren;
-  draw_pict_offset ren bgscreen 1024 1024 0 bgscreen;
-  draw_pict_offset ren gscreen 1024 1024 0 gscreen;
+  draw_single_pict_no_writing ren bgscreen;
+  draw_single_pict_no_writing ren gscreen;
   refresh ren;;
 
 
@@ -274,7 +283,7 @@ let draw_text (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : un
   set_color ren white;
   let white_r = Sdlrect.make2
     ~pos:(!margin_h + !size*i - 1, !margin_v + !size*j)
-    ~dims:(!size*(iend - i) + 1, 6 * !size - 1)
+    ~dims:(!size*(iend - i) + 1, 6 * !size - 1) (** test if dims_y -> remove -1 or pos_y -> add -1 *)
   in
   Sdlrender.fill_rect ren white_r;
   set_color ren black;

@@ -456,14 +456,19 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
       | "RCLPICT" :: t
       | "STOPICT" :: t
-      | "BGPICT" :: t ->
+      | "BGPICT" :: t
+      | "RCLCAPT" :: t ->
         let (e, t') = extract_expr t in
-        (match e with
-          | Arithm [Entity (Variable (Var _))]
-          | Complex _ ->
-            (set code i (Graphic (Graphic_Function (List.hd lexlist, [e])));
-            aux t' (i+1))
-          | _ -> fail t i "Compilation error: Wrong index for Pict command")
+        (match List.hd lexlist, t' with
+          (* RclCapt is ignored if not followed by Disp.
+            If it is present in the compiled code, it means it must be displayed *)
+          | "RCLCAPT", "DISP"::q ->
+            (set code i (Graphic (Graphic_Function ("RCLCAPT", [e])));
+            aux q (i+1))
+          | "RCLCAPT", [] -> aux [] i
+          | s, _ ->
+            (set code i (Graphic (Graphic_Function (s, [e])));
+            aux t' (i+1)))
         
       | "HORIZONTAL" :: t
       | "VERTICAL" :: t
