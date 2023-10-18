@@ -339,25 +339,23 @@ let bresenham (write : bool) (m : bool array array)
 
 (* Draws the frame around the screen *)
 let draw_frame (ren : Sdlrender.t) : unit =
-	rect ren (!margin_h-1) (!margin_v-1) (!width+1) (!height+1);;
+	rect ren (!margin_h-1) (!margin_v-1) (!width+2) (!height+2);;
 
 (* Prints the background and the grid *)
 let print_bg (ren : Sdlrender.t) (grid : bool) (bg : Sdlrender.t -> unit) : unit =
 	(* grid *)
-	if grid
-		then
-			(set_color ren gray;
-			let y0, yh = !margin_v, !margin_v + !height - 1 in
-			for i=1 to 127 do
-				let x = !margin_h + !size*i -1 in
-				dline ren x y0 x yh
-			done;
-			let x0, xw = !margin_h, !margin_h + !width - 1 in
-			for j=1 to 63 do
-				let y = !margin_v + !size*j -1 in
-				dline ren x0 y xw y
-			done;
-			set_color ren black);
+	if grid then
+		(set_color ren gray;
+		let y0, yh = !margin_v, !margin_v + !height - 1 in
+		for i=1 to 127 do
+			let x = !margin_h + !size*i -1 in
+			dline ren x y0 x yh
+		done;
+		let x0, xw = !margin_h, !margin_h + !width - 1 in
+		for j=1 to 63 do
+			let y = !margin_v + !size*j -1 in
+			dline ren x0 y xw y
+		done);
 	
 	(* frame *)
 	set_color ren black;

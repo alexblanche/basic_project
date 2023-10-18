@@ -629,3 +629,17 @@ let run_bgpict () =
   in
   run p prog "main";;
 
+let run_frame () =
+  let prog =
+    compile
+      [("main",
+        [
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "TEXT"; "5"; "8"; ","; "0"; "2"; "5"; ","; "QUOTE"; "A"; "B"; "C"; "QUOTE"; "EOL";
+          "VERTICAL"; "3" ; "6"; "EOL";
+          "HORIZONTAL"; "6"; "3"; "DISP";
+          "TEXT"; "5"; "8"; ","; "0"; "2"; "5"; ","; "QUOTE"; "A"; "B"; "C"; "QUOTE"; "EOL";
+          "TEXT"; "5"; "8"; ","; "1"; "2"; "4"; ","; "QUOTE"; "A"; "B"; "C"; "QUOTE"; "EOL";
+        ]
+      )]
+  in run (empty_projcont ()) prog "main";;

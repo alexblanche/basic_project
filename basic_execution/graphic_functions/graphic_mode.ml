@@ -236,6 +236,11 @@ let gdraw (ren : Sdlrender.t) : unit =
   draw_single_pict_no_writing ren gscreen;
   refresh ren;;
 
+(* This method as a little problem: a text command erases some pixels,
+  but all other functions only write black pixels,
+  so when redrawing the bgscreen and the screen,
+  the erased pixels are not taken into account. *)
+
 
 (** Text display **)
 
@@ -283,7 +288,7 @@ let draw_text (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : un
   set_color ren white;
   let white_r = Sdlrect.make2
     ~pos:(!margin_h + !size*i - 1, !margin_v + !size*j)
-    ~dims:(!size*(iend - i) + 1, 6 * !size - 1) (** test if dims_y -> remove -1 or pos_y -> add -1 *)
+    ~dims:(!size*(iend - i) + 1, 6 * !size) (** test if dims_y -> remove -1 or pos_y -> add -1 *)
   in
   Sdlrender.fill_rect ren white_r;
   set_color ren black;

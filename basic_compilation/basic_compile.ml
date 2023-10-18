@@ -488,7 +488,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         ->
         let (e, t') = extract_expr t in
         (set code i (Graphic (Graphic_Function (List.hd lexlist, [e])));
-        aux t (i+1))
+        aux t' (i+1))
 
       (* Errors *)
       | lex :: _ -> fail lexlist i ("Compilation error: Unexpected command "^(String.escaped lex))
