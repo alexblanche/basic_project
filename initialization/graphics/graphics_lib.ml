@@ -81,22 +81,28 @@ let dline (ren : Sdlrender.t) (a : int) (b : int) (x : int) (y : int) =
 let fill_rect (ren : Sdlrender.t) (a : int) (b : int) (w : int) (h : int) =
 	Sdlrender.fill_rect ren (Sdlrect.make ~pos:(a,b) ~dims:(w,h));;
 
+(** PlotOn, PlotOff **)
+
+(* Returns the rectangle plotted by ploton *)
+let ploton_rect (i : int) (j : int) : Sdlrect.t =
+	Sdlrect.make ~pos:(!margin_h + !size*i, !margin_v + !size*j) ~dims:(!size, !size);;
+
 (* Fills the pixel i,j of the screen with the current color *)
-let ploton (ren : Sdlrender.t) (m : bool array array) (i : int) (j : int) =
+let ploton (ren : Sdlrender.t) (m : bool array array) (i : int) (j : int) : unit =
 	if i >= 0 && i <= 127 && j >= 0 && j <= 63 then
-		(fill_rect ren (!margin_h + !size*i) (!margin_v + !size*j) !size !size;
+		(Sdlrender.fill_rect ren (ploton_rect i j);
 		m.(j).(i) <- true)
 	else print_endline ("Runtime warning: PlotOn on out of screen parameters ("^(string_of_int i)^", "^(string_of_int j)^")");;
 
 (* Same without writing in a matrix *)
-let ploton_no_writing (ren : Sdlrender.t) (i : int) (j : int) =
-	fill_rect ren (!margin_h + !size*i) (!margin_v + !size*j) !size !size;;
+let ploton_no_writing (ren : Sdlrender.t) (i : int) (j : int) : unit =
+	Sdlrender.fill_rect ren (ploton_rect i j);;
 
 (* Fills the pixel i,j of the screen with white and reforms the grid *)
-let plotoff (ren : Sdlrender.t) (m : bool array array) (grid : bool) (i : int) (j : int) =
+let plotoff (ren : Sdlrender.t) (m : bool array array) (grid : bool) (i : int) (j : int) : unit =
 	if m.(j).(i) then
 		(set_color ren white;
-		fill_rect ren (!margin_h + !size*i) (!margin_v + !size*j) !size !size;
+		Sdlrender.fill_rect ren (ploton_rect i j);
 		m.(j).(i) <- false;
 		if grid then
 			(* reform the grid around the deleted pixel *)
@@ -104,30 +110,47 @@ let plotoff (ren : Sdlrender.t) (m : bool array array) (grid : bool) (i : int) (
 			rect ren (!margin_h + !size*i) (!margin_v + !size*j) (!size+1) (!size+1));
 		set_color ren black);;
 
+(** Horizontal, Vertical lines **)
 
-(* Traces an horizontal line between pixel (i1,j) and (i2,j) (i1 is the leftmost pixel) *)
-let horizontal_line (ren : Sdlrender.t) (m : bool array array) (i1 : int) (i2 : int) (j : int) =
-	fill_rect ren (!margin_h + !size*i1) (!margin_v + !size*j) ((i2-i1+1) * !size) !size;
+(* Returns the rectangle plotted by Horizontal *)
+let horizontal_rect (i1 : int) (i2 : int) (j : int) : Sdlrect.t =
+	Sdlrect.make ~pos:(!margin_h + !size*i1, !margin_v + !size*j) ~dims:((i2-i1+1) * !size, !size);;
+
+(* Returns the rectangle plotted by Vertical *)
+let vertical_rect (i : int) (j1 : int) (j2 : int) : Sdlrect.t =
+	Sdlrect.make ~pos:(!margin_h + !size*i, !margin_v + !size*j1) ~dims:(!size, (j2-j1+1) * !size);;
+
+(* Writes in the matrix m the pixels of the horizontal line *)
+let write_horizontal (m : bool array array) (i1 : int) (i2 : int) (j : int) : unit =
 	for i = i1 to i2 do
 		m.(j).(i) <- true
 	done;;
 
-(* Traces a vertical line between pixel (i,j1) and (i,j2) (j1 is the lowest pixel) *)
-let vertical_line (ren : Sdlrender.t) (m : bool array array) (i : int) (j1 : int) (j2 : int) =
-	fill_rect ren (!margin_h + !size*i) (!margin_v + !size*j1) !size ((j2-j1+1) * !size);
+(* Writes in the matrix m the pixels of the vertical line *)
+let write_vertical (m : bool array array) (i : int) (j1 : int) (j2 : int) : unit =
 	for j = j1 to j2 do
 		m.(j).(i) <- true
 	done;;
 
+(* Traces an horizontal line between pixel (i1,j) and (i2,j) (i1 is the leftmost pixel) *)
+let horizontal_line (ren : Sdlrender.t) (m : bool array array) (i1 : int) (i2 : int) (j : int) : unit =
+	Sdlrender.fill_rect ren (horizontal_rect i1 i2 j);
+	write_horizontal m i1 i2 j;;
+
+(* Traces a vertical line between pixel (i,j1) and (i,j2) (j1 is the lowest pixel) *)
+let vertical_line (ren : Sdlrender.t) (m : bool array array) (i : int) (j1 : int) (j2 : int) : unit =
+	Sdlrender.fill_rect ren (vertical_rect i j1 j2);
+	write_vertical m i j1 j2;;
+
 (* Traces a rectangle with lower-left cell (i1,j1) and upper-right cell (i2,j2) *)
-let rec rectangle_no_writing (ren : Sdlrender.t) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let rec rectangle_no_writing (ren : Sdlrender.t) (i1 : int) (j1 : int) (i2 : int) (j2 : int) : unit =
 	if i1 > i2 || j1 > j2
 		then rectangle_no_writing ren (min i1 i2) (min j1 j2) (max i1 i2) (max j1 j2)
 		else fill_rect ren (!margin_h + !size*i1) (!margin_v + !size*j1) ((i2-i1+1) * !size) ((j2-j1+1) * !size);;
 
 (* Traces a rectangle with lower-left cell (i1,j1) and upper-right cell (i2,j2)
 	and writes the pixel down in the matrix m *)
-let rectangle (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let rectangle (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) : unit =
 	rectangle_no_writing ren i1 j1 i2 j2;
 	let i0 = min i1 i2 in
 	let il = max i1 i2 in
@@ -141,8 +164,14 @@ let rectangle (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (
 
 (* Bresenham algorithm *)
 
+(* Each function returns a list of rectangles, that should be plotted by the calling function *)
+(* If write is true, each plot is written in the matrix m as true *)
+
 (* 1st and 8th octants *)
-let bresenham_loop_18 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let bresenham_loop_18 (write : bool) (m : bool array array)
+	(i1 : int) (j1 : int) (i2 : int) (j2 : int) : Sdlrect.t list =
+
+	let rect_l = ref [] in
 	let di = i2 - i1 in
 	let e = ref di in (* e>0 *)
 	let ddi = 2*di in
@@ -151,13 +180,6 @@ let bresenham_loop_18 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 
 		sdj = -1 : 8th octant *)
 	let sdj = if ddj > 0 then 1 else -1 in
 	let j = ref j1 in
-	(* for i = i1 to i2-1 do
-		ploton i !j;
-		e := !e - sdj*ddj;
-		if !e < 0 then
-			(j := !j + sdj;
-			e:= !e + ddi);
-	done; *)
 	let i = ref i1 in
 	(* We trace the horizontal segments in one call *)
 	let ibeg = ref i1 in
@@ -168,15 +190,22 @@ let bresenham_loop_18 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 
 			e := !e - sdj*ddj;
 			incr i
 		done;
-		horizontal_line ren m !ibeg !i !j;
+		rect_l := (horizontal_rect !ibeg !i !j)::!rect_l;
+		(if write then
+			write_horizontal m !ibeg !i !j);
 		j := !j + sdj;
 		e:= !e + ddi;
 		incr i
 	done;
-	ploton ren m i2 j2;;
+	(if write then
+		m.(j2).(i2) <- true);
+	(ploton_rect i2 j2)::!rect_l;;
 
 (* 4th and 5th octants *)
-let bresenham_loop_45 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let bresenham_loop_45 (write : bool) (m : bool array array)
+	(i1 : int) (j1 : int) (i2 : int) (j2 : int) : Sdlrect.t list =
+
+	let rect_l = ref [] in
 	let di = i2 - i1 in
 	let e = ref di in (* e<0 *)
 	let ddi = 2*di in
@@ -185,13 +214,6 @@ let bresenham_loop_45 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 
 		sdj = -1 : 5th octant *)
 	let sdj = if ddj > 0 then 1 else -1 in
 	let j = ref j1 in
-	(* for i = i1 downto i2+1 do
-		ploton i !j;
-		e := !e + sdj*ddj;
-		if !e >= 0 then
-			(j := !j + sdj;
-			e:= !e + ddi);
-	done; *)
 	let i = ref i1 in
 	let ibeg = ref i1 in
 	while !i > i2 do
@@ -201,15 +223,22 @@ let bresenham_loop_45 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 
 			e := !e + sdj*ddj;
 			decr i
 		done;
-		horizontal_line ren m !i !ibeg !j;
+		rect_l := (horizontal_rect !i !ibeg !j)::!rect_l;
+		(if write then
+			write_horizontal m !i !ibeg !j);
 		j := !j + sdj;
 		e:= !e + ddi;
 		decr i
 	done;
-	ploton ren m i2 j2;;
+	(if write then
+		m.(j2).(i2) <- true);
+	(ploton_rect i2 j2)::!rect_l;;
 
 (* 2nd and 3rd octants *)
-let bresenham_loop_23 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let bresenham_loop_23 (write : bool) (m : bool array array)
+	(i1 : int) (j1 : int) (i2 : int) (j2 : int) : Sdlrect.t list =
+
+	let rect_l = ref [] in
 	let dj = j2 - j1 in
 	let e = ref dj in (* e>0 *)
 	let ddi = 2*(i2-i1) in
@@ -227,15 +256,22 @@ let bresenham_loop_23 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 
 			e := !e - sdi*ddi;
 			incr j
 		done;
-		vertical_line ren m !i !jbeg !j;
+		rect_l := (vertical_rect !i !jbeg !j)::!rect_l;
+		(if write then
+			write_vertical m !i !jbeg !j);
 		i := !i + sdi;
 		e:= !e + ddj;
 		incr j
 	done;
-	ploton ren m i2 j2;;
+	(if write then
+		m.(j2).(i2) <- true);
+	(ploton_rect i2 j2)::!rect_l;;
 
 (* 6th and 7th octants *)
-let bresenham_loop_67 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let bresenham_loop_67 (write : bool) (m : bool array array)
+	(i1 : int) (j1 : int) (i2 : int) (j2 : int) : Sdlrect.t list =
+
+	let rect_l = ref [] in
 	let dj = j2 - j1 in
 	let e = ref dj in (* e<0 *)
 	let ddi = 2*(i2-i1) in
@@ -253,30 +289,50 @@ let bresenham_loop_67 (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 
 			e := !e + sdi*ddi;
 			decr j
 		done;
-		vertical_line ren m !i !j !jbeg;
+		rect_l := (vertical_rect !i !j !jbeg)::!rect_l;
+		(if write then
+			write_vertical m !i !j !jbeg);
 		i := !i + sdi;
 		e:= !e + ddj;
 		decr j
 	done;
-	ploton ren m i2 j2;;
+	(if write then
+		m.(j2).(i2) <- true);
+	(ploton_rect i2 j2)::!rect_l;;
 
-let bresenham (ren : Sdlrender.t) (m : bool array array) (i1 : int) (j1 : int) (i2 : int) (j2 : int) =
+let bresenham (write : bool) (m : bool array array)
+	(i1 : int) (j1 : int) (i2 : int) (j2 : int) : Sdlrect.t list =
 	let di = i2 - i1 in
 	let dj = j2 - j1 in
 	(match (di=0),(di>0),(dj=0),(dj>0),(di>=dj),(di>=(-dj)),(-di>dj),(di<=dj) with
-		| true,_,true,_,_,_,_,_ 	-> ploton ren m i1 j1 (* single point *)
-		| true,_,_,true,_,_,_,_ 	-> vertical_line ren m i1 j1 j2 (* vertical ascending *)
-		| true,_,_,_,_,_,_,_ 			-> vertical_line ren m i1 j2 j1 (* vertical descending *)
-		| _,true,true,_,_,_,_,_ 	-> horizontal_line ren m i1 i2 j1 (* horizontal right *)
-		| _,true,_,true,true,_,_,_ -> bresenham_loop_18 ren m i1 j1 i2 j2 (* 1st octant *)
-		| _,true,_,true,_,_,_,_ 	-> bresenham_loop_23 ren m i1 j1 i2 j2 (* 2nd octant *)
-		| _,true,_,_,_,true,_,_ 	-> bresenham_loop_18 ren m i1 j1 i2 j2 (* 8th octant *)
-		| _,true,_,_,_,_,_,_ 			-> bresenham_loop_67 ren m i1 j1 i2 j2 (* 7th octant *)
-		| _,_,true,_,_,_,_,_ 			-> horizontal_line ren m i2 i1 j1 (* horizontal left *)
-		| _,_,_,true,_,_,true,_ 	-> bresenham_loop_45 ren m i1 j1 i2 j2 (* 4th octant *)
-		| _,_,_,true,_,_,_,_ 			-> bresenham_loop_23 ren m i1 j1 i2 j2 (* 3rd octant *)
-		| _,_,_,_,_,_,_,true 			-> bresenham_loop_45 ren m i1 j1 i2 j2 (* 5th octant *)
-		| _ 											-> bresenham_loop_67 ren m i1 j1 i2 j2 (* 6th octant *));;
+		| true,_,true,_,_,_,_,_ 	-> (* single point *)
+			(if write
+				then m.(j1).(i1) <- true;
+			[ploton_rect i1 j1]) 
+		| true,_,_,true,_,_,_,_ 	-> (* vertical ascending *)
+			(if write
+				then write_vertical m i1 j1 j2;
+			[vertical_rect i1 j1 j2])
+		| true,_,_,_,_,_,_,_ 			-> (* vertical descending *)
+			(if write
+				then write_vertical m i1 j2 j1;
+			[vertical_rect i1 j2 j1])
+		| _,true,true,_,_,_,_,_ 	-> (* horizontal right *)
+			(if write
+				then write_horizontal m i1 i2 j1;
+			[horizontal_rect i1 i2 j1])
+		| _,true,_,true,true,_,_,_ -> bresenham_loop_18 write m i1 j1 i2 j2 (* 1st octant *)
+		| _,true,_,true,_,_,_,_ 	-> bresenham_loop_23 write m i1 j1 i2 j2 (* 2nd octant *)
+		| _,true,_,_,_,true,_,_ 	-> bresenham_loop_18 write m i1 j1 i2 j2 (* 8th octant *)
+		| _,true,_,_,_,_,_,_ 			-> bresenham_loop_67 write m i1 j1 i2 j2 (* 7th octant *)
+		| _,_,true,_,_,_,_,_ 			-> (* horizontal left *)
+			(if write
+				then write_horizontal m i2 i1 j1;
+			[horizontal_rect i2 i1 j1])
+		| _,_,_,true,_,_,true,_ 	-> bresenham_loop_45 write m i1 j1 i2 j2 (* 4th octant *)
+		| _,_,_,true,_,_,_,_ 			-> bresenham_loop_23 write m i1 j1 i2 j2 (* 3rd octant *)
+		| _,_,_,_,_,_,_,true 			-> bresenham_loop_45 write m i1 j1 i2 j2 (* 5th octant *)
+		| _ 											-> bresenham_loop_67 write m i1 j1 i2 j2 (* 6th octant *));;
 
 
 (** Graphical interface **)

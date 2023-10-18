@@ -29,9 +29,6 @@ let edit (grid : bool) (m : bool array array) : unit =
 	in
 	
 	let (win, ren) = config grid instr in
-
-	(* Unused matrix in which bresenham writes *)
-	let mblank = Array.make_matrix 64 128 false in
 	
 	(* line = true if we draw a line, false if we draw a rectangle *)
 	let line = ref true in
@@ -65,9 +62,11 @@ let edit (grid : bool) (m : bool array array) : unit =
 				if (i,j) <> !current_pixel
 					then
 						(print_mat ren m grid instr;
-						if !line
-							then bresenham ren mblank i0 j0 i j
-							else rectangle_no_writing ren i0 j0 i j;
+						(if !line then
+							let rect_t = Array.of_list (bresenham false [||] i0 j0 i j) in
+							Sdlrender.fill_rects ren rect_t
+						else
+							rectangle_no_writing ren i0 j0 i j);
 						refresh ren;
 						current_pixel := (i,j))
 			with
@@ -119,7 +118,9 @@ let edit (grid : bool) (m : bool array array) : unit =
 						(* Display of the final line/rectangle *)
 						print_mat ren m grid instr;
 						(if !line
-							then bresenham ren m i0 j0 ifi jfi
+							then
+								let rect_t = Array.of_list (bresenham true m i0 j0 ifi jfi) in
+								Sdlrender.fill_rects ren rect_t
 							else rectangle ren m i0 j0 ifi jfi);
 						refresh ren;
 						loop ()

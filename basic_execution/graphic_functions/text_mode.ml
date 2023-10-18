@@ -42,8 +42,7 @@ let tdraw (ren : Sdlrender.t) : unit =
         for y = 0 to 6 do
           for x = 0 to 4 do
             if t.(5*y+x) then
-              let r = fast_ploton (1+6*i+x) (8*j+y) in
-              acc := r::!acc
+              acc := (ploton_rect (1+6*i+x) (8*j+y))::!acc
           done
         done
     done
@@ -98,8 +97,7 @@ let rec fast_locate_aux (i : int) (j : int) (acc : Sdlrect.t list ref) (l : stri
         for y = 0 to 6 do
           for x = 0 to 4 do
             if t.(5*y+x) then
-              let r = fast_ploton (1+6*k+x) (8*j+y) in
-              acc := r::!acc
+              acc := (ploton_rect (1+6*k+x) (8*j+y))::!acc
           done
         done;
         fast_locate_aux i j acc lt (k-1))

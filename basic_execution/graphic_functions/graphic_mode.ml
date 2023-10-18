@@ -252,9 +252,8 @@ let text_aux (init_i : int) (j : int) (acc : Sdlrect.t list ref) (l : string lis
               if t.(len*y + x) then
                 let px = current_i + x in
                 let py = j + y in
-                let r = fast_ploton px py in
                 (gscreen.(py).(px) <- true;
-                acc := r::!acc)
+                acc := (ploton_rect px py)::!acc)
             done
           done;
           aux (current_i + len + 1) lt)

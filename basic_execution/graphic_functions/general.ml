@@ -14,7 +14,3 @@ let wipe (m : bool array array) : unit =
       m.(j).(i) <- false
     done;
   done;;
-
-(* Returns only the rectangle, so that sdlrender.fill_rects can be used instead of fill_rect *)
-let fast_ploton (i : int) (j : int) : Sdlrect.t =
-  Sdlrect.make2 ~pos:(!margin_h + !size*i, !margin_v + !size*j) ~dims:(!size, !size);;

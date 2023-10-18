@@ -12,7 +12,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let (a2,b2) = rescale p zx2.re zy2.re in
       if a1 >= 1 && a1 <= 127 && a2 >= 1 && a2 <= 127
         && b1 >= 1 && b1 <= 63 && b2 >= 1 && b2 <= 63 then
-        (bresenham ren gscreen a1 (64-b1) a2 (64-b2);
+        (let rect_t = Array.of_list (bresenham true gscreen a1 (64-b1) a2 (64-b2)) in
+        Sdlrender.fill_rects ren rect_t;
         text_screen := false;
         refresh_update ren p)
 
@@ -166,17 +167,19 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       p.bgpict <- -1)
 
     | Graphic_Function ("HORIZONTAL", [Complex z]) ->
-      let (_, b) = rescale p 0. z.re in
+      let b = rescale_y p z.re in
       if b >= 1 && b <= 63 then
-        (bresenham ren gscreen 1 b 127 b;
+        (horizontal_line ren gscreen 1 127 b;
         text_screen := false;
         gdraw ren)
+
     | Graphic_Function ("VERTICAL", [Complex z]) ->
-      let (a, _) = rescale p z.re 0. in
+      let a = rescale_x p z.re in
       if a >= 1 && a <= 127 then
-        (bresenham ren gscreen a 1 a 63;
+        (vertical_line ren gscreen a 1 63;
         text_screen := false;
         gdraw ren)
+
     | Graphic_Function ("SLNORMAL", []) -> p.style <- StyleNormal
     | Graphic_Function ("SLTHICK", []) -> p.style <- StyleThick
     | Graphic_Function ("SLBROKEN", []) -> p.style <- StyleBroken
