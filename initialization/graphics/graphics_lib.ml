@@ -179,6 +179,10 @@ let pixels_of_rectangle (rect : Sdlrect.t) : int * int * int * int =
 (* If write is true, each plot is written in the matrix m as true *)
 
 (* 1st and 8th octants *)
+(* For this case only: experimentally, in Basic Casio, the 1st and 8th octants are reversed
+	from the bresenham algorithm.
+	i,j are replaced by (i1+i2-i),(j1+j2-j)
+	This implementation seems pixel perfect (see tests/tests_run.ml). *)
 let bresenham_loop_18 (write : bool) (m : bool array array)
 	(i1 : int) (j1 : int) (i2 : int) (j2 : int) : Sdlrect.t list =
 
@@ -201,16 +205,16 @@ let bresenham_loop_18 (write : bool) (m : bool array array)
 			e := !e - sdj*ddj;
 			incr i
 		done;
-		rect_l := (horizontal_rect !ibeg !i !j)::!rect_l;
+		rect_l := (horizontal_rect (i1+i2 - !i) (i1+i2 - !ibeg) (j1+j2 - !j))::!rect_l;
 		(if write then
-			write_horizontal m !ibeg !i !j);
+			write_horizontal m (i1+i2 - !i) (i1+i2 - !ibeg) (j1+j2 - !j));
 		j := !j + sdj;
 		e:= !e + ddi;
 		incr i
 	done;
 	(if write then
-		m.(j2).(i2) <- true);
-	(ploton_rect i2 j2)::!rect_l;;
+		m.(j1).(i1) <- true);
+	(ploton_rect i1 j1)::!rect_l;;
 
 (* 4th and 5th octants *)
 let bresenham_loop_45 (write : bool) (m : bool array array)

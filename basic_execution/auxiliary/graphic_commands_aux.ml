@@ -89,25 +89,25 @@ let dot_erase (l : Sdlrect.t list) (k : int) : Sdlrect.t list =
 
 (* Converts the horizontal (if w > 1) or vertical (if h > 1) line into a list of rectangles *)
 (* If keep_first is true, the first pixel ((i,j)) is kept *)
-let dot_hv_line (i : int) (j : int) (w : int) (h : int) (keep_first : bool) : Sdlrect.t list =
+let dot_hv_line (i : int) (j : int) (w : int) (h : int) (keep_last : bool) : Sdlrect.t list =
   let rects = ref [] in
   (if w > 1 then
     (* Horizontal line *)
-    let x = ref (if keep_first then w-1 else w-2) in
+    let x = ref (if keep_last then w-1 else w-2) in
     while !x >= 0 do
       rects := (ploton_rect (i + !x) j) :: !rects;
       x := !x - 2
     done
   else if h > 1 then
     (* Vertical line *)
-    let y = ref (if keep_first then h-1 else h-2) in
+    let y = ref (if keep_last then h-1 else h-2) in
     while !y >= 0 do
       rects := (ploton_rect i (j + !y)) :: !rects;
       y := !y - 2
     done
   else
     (* Single plot *)
-    rects := (if keep_first then [ploton_rect i j] else []));
+    rects := (if keep_last then [ploton_rect i j] else []));
   !rects;;
 
 (* Converts the bresenham-generated line (i1,j1)-(i2,j2) into a dotted line
