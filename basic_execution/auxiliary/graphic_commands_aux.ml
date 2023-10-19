@@ -113,7 +113,7 @@ let dot_hv_line (i : int) (j : int) (w : int) (h : int) (keep_last : bool) : Sdl
 (* Converts the bresenham-generated line (i1,j1)-(i2,j2) into a dotted line
    (both in rectangle list form) *)
 let dot_line (l : Sdlrect.t list) (i1 : int) (j1 : int) (i2 : int) (j2 : int) (init_keep_last : bool): Sdlrect.t list =
-  let nb = max (i2-i1) (j2-j1) + 1 in
+  let nb = max (abs (i2-i1)) (abs (j2-j1)) + 1 in
   let (_, rect_l) =
     List.fold_left
       (fun (prev_keep_last, acc) r ->
