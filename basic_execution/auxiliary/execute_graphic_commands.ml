@@ -21,7 +21,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
           match st with
             | StyleNormal -> Array.of_list rect_l
             | StyleThick -> Array.of_list (List.rev_map thicken rect_l)
-            | StyleDot -> Array.of_list (dot_line rect_l a1 b1 a2 b2)
+            | StyleDot -> Array.of_list (dot_line rect_l a1 b1 a2 b2 (a2 > a1))
             | StyleBroken -> (* Not yet implemented *) Array.of_list rect_l (* Temporary *)
         in
         Sdlrender.fill_rects ren rect_t;
