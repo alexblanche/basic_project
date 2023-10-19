@@ -46,6 +46,8 @@ let trace_drawstat (ren : Sdlrender.t) (l : (int * int) list) (style : drawstat_
 
 (** Styles implementation **)
 
+(* Thick style *)
+
 (* Returns a rectangle of 2 pixels wide and tall, with lower right corner
    being the pixel of coordinates (i,j) (used for Thick style) *)
 let thick_style_square (i : int) (j : int) : Sdlrect.t =
@@ -69,25 +71,11 @@ let thicken (rect : Sdlrect.t) : Sdlrect.t =
   thicken_rect i j w h;;
 
 
-  
-(* Erases k-1 out of k elements of the list l, starting by the first
-   if the length of l is odd, and the second one if the length is even
-  Returns the list in reverse order *)
-(* The obvious polymorphism is removed to help the OCaml compiler generate a faster machine code *)
-let dot_erase (l : Sdlrect.t list) (k : int) : Sdlrect.t list =
-  let (_, a) =
-    List.fold_left
-      (fun (cpt, acc) x ->
-        if cpt<>0
-          then (cpt-1, acc)
-          else (k-1, x::acc))
-      ((List.length l) mod k, []) l
-  in
-  a;;
 
-(* Conversion to dotted line *)
+(* Dot style *)
 
-(* Converts the horizontal (if w > 1) or vertical (if h > 1) line into a list of rectangles *)
+(* Converts the horizontal (if w > 1) or vertical (if h > 1) line into a list of rectangles
+   and keeps one out of 2 of them *)
 (* If keep_first is true, the first pixel ((i,j)) is kept *)
 let dot_hv_line (i : int) (j : int) (w : int) (h : int) (keep_last : bool) : Sdlrect.t list =
   let rects = ref [] in
@@ -121,4 +109,55 @@ let dot_line (l : Sdlrect.t list) (i1 : int) (j1 : int) (i2 : int) (j2 : int) (i
         let keep_last = (if w > 1 then w mod 2 = 0 else h mod 2 = 0) = prev_keep_last in
         (keep_last, List.rev_append (dot_hv_line i j w h keep_last) acc))
       (init_keep_last && nb mod 2 = 0, []) l
+  in rect_l;;
+
+
+(* Broken style *)
+(* Not perfect, works on ~3/4 of the cases (see run_broken in tests/tests_run.ml) *)
+
+let broken_hv_line (i : int) (j : int) (w : int) (h : int) (index : int) : Sdlrect.t list * int =
+  let rects = ref [] in
+  (* print_string "index : ";
+  print_int index;
+  print_newline (); *)
+  if w > 1 then
+    (* Horizontal line *)
+    (let x = ref (w-1-index) in
+    while !x >= 0 do
+      (* print_string "ploton i + !x : ";
+      print_int (i + !x);
+      print_newline (); *)
+      rects := (ploton_rect (i + !x) j) :: !rects;
+      x := !x - 3
+    done;
+    (!rects, - !x))
+  else if h > 1 then
+    (* Vertical line *)
+    (let y = ref (h-1-index) in
+    while !y >= 0 do
+      (* print_string "ploton j + !y : ";
+      print_int (j + !y);
+      print_newline (); *)
+      rects := (ploton_rect i (j + !y)) :: !rects;
+      y := !y - 3
+    done;
+    (!rects, - !y))
+  else
+    (* Single plot *)
+    (rects := (if index = 0 then [ploton_rect i j] else []);
+    (!rects, 3));;
+
+(* Converts the bresenham-generated line (i1,j1)-(i2,j2) into a dotted line
+   (both in rectangle list form) *)
+let broken_line (l : Sdlrect.t list) (i1 : int) (j1 : int) (i2 : int) (j2 : int)
+  (init_index : int) : Sdlrect.t list =
+
+  (* let nb = max (abs (i2-i1)) (abs (j2-j1)) + 1 in *)
+  let (_, rect_l) =
+    List.fold_left
+      (fun (prev_index, acc) r ->
+        let (i,j,w,h) = pixels_of_rectangle r in
+        let (rectl, index) = broken_hv_line i j w h (prev_index-1) in
+        (index, List.rev_append rectl acc))
+      (1, []) l
   in rect_l;;

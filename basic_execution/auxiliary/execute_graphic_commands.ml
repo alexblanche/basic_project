@@ -24,7 +24,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
             | StyleDot ->
               (* keep_last = true for bresenham 18 and 23 *)
               Array.of_list (dot_line rect_l a1 b1 a2 b2 (a2 >= a1 && (b2 < b1 || b2+a1 < a2+b1)))
-            | StyleBroken -> (* Not yet implemented *) Array.of_list rect_l (* Temporary *)
+            | StyleBroken ->
+              Array.of_list (List.rev_map thicken (broken_line (List.rev rect_l) a1 b1 a2 b2 1))
         in
         Sdlrender.fill_rects ren rect_t;
         refresh_update ren p !text_screen;

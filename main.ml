@@ -85,12 +85,9 @@ To do next:
   - Implement the entry point menu
   - Draw a calculator and link it to Getkey (by clicking on keys)
     (key pressed on the keyboard highlight keys of the calculator interface)
-  
-  Graphic display:
-  - Code graphic functions (Cls, View-Window, F-line, all DrawStat-related functions...)
-  - Integrate gdraw alongside tdraw
 
 In the distant future:
+  - Perfect the "Broken" line-drawing style
   - Redo the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."
   - Treat the EOL/DISP in Strings vs Locate (EOL shows in Strings, syntax error in Locate. Disp shows in the Locate display, syntax error in String.)
   - Code the "ABC"?->X without skipping a line
