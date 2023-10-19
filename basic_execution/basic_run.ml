@@ -415,6 +415,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   with
     | Runtime_interruption
     | Window_Closed -> print_endline "--- Runtime interruption ---"
+    | Invalid_argument s
     | Failure s -> print_endline s
     | Not_found -> print_endline "Runtime error: Not_found");
   exit_key_check := true;

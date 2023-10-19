@@ -179,7 +179,7 @@ let pixels_of_rectangle (rect : Sdlrect.t) : int * int * int * int =
 (* If write is true, each plot is written in the matrix m as true *)
 
 (* 1st and 8th octants *)
-(* For this case only: experimentally, in Basic Casio, the 1st and 8th octants are reversed
+(* For 1st/8th and 2nd/3rd octants: experimentally, in Basic Casio, these lines are reversed
 	from the bresenham algorithm.
 	i,j are replaced by (i1+i2-i),(j1+j2-j)
 	This implementation seems pixel perfect (see tests/tests_run.ml). *)
@@ -191,30 +191,24 @@ let bresenham_loop_18 (write : bool) (m : bool array array)
 	let e = ref di in (* e>0 *)
 	let ddi = 2*di in
 	let ddj = 2*(j2 - j1) in
+	let i1pi2 = i1 + i2 in
+	let j1pj2 = j1 + j2 in
 	(* sdj = 1 : 1st octant
 		sdj = -1 : 8th octant *)
 	let sdj = if ddj > 0 then 1 else -1 in
 	let j = ref j1 in
-	let i = ref i1 in
-	(* We trace the horizontal segments in one call *)
 	let ibeg = ref i1 in
-	while !i < i2 do
-		ibeg := !i;
+	for i = i1 to i2 do
 		e := !e - sdj*ddj;
-		while !e>=0 && !i<>i2-1 do
-			e := !e - sdj*ddj;
-			incr i
-		done;
-		rect_l := (horizontal_rect (i1+i2 - !i) (i1+i2 - !ibeg) (j1+j2 - !j))::!rect_l;
-		(if write then
-			write_horizontal m (i1+i2 - !i) (i1+i2 - !ibeg) (j1+j2 - !j));
-		j := !j + sdj;
-		e:= !e + ddi;
-		incr i
+		if !e < 0 || i = i2 then
+			(rect_l := (horizontal_rect (i1pi2-i) (i1pi2 - !ibeg) (j1pj2 - !j))::!rect_l;
+			(if write then
+				write_horizontal m (i1pi2-i) (i1pi2 - !ibeg) (j1pj2 - !j));
+			j := !j + sdj;
+			e := !e + ddi;
+			ibeg := i+1)
 	done;
-	(if write then
-		m.(j1).(i1) <- true);
-	(ploton_rect i1 j1)::!rect_l;;
+	!rect_l;;
 
 (* 4th and 5th octants *)
 let bresenham_loop_45 (write : bool) (m : bool array array)
@@ -229,58 +223,47 @@ let bresenham_loop_45 (write : bool) (m : bool array array)
 		sdj = -1 : 5th octant *)
 	let sdj = if ddj > 0 then 1 else -1 in
 	let j = ref j1 in
-	let i = ref i1 in
 	let ibeg = ref i1 in
-	while !i > i2 do
-		ibeg := !i;
+	for i = i1 downto i2 do
 		e := !e + sdj*ddj;
-		while !e<0 && !i<>i2+1 do
-			e := !e + sdj*ddj;
-			decr i
-		done;
-		rect_l := (horizontal_rect !i !ibeg !j)::!rect_l;
-		(if write then
-			write_horizontal m !i !ibeg !j);
-		j := !j + sdj;
-		e:= !e + ddi;
-		decr i
+		if !e >= 0 || i = i2 then
+			(rect_l := (horizontal_rect i !ibeg !j)::!rect_l;
+			(if write then
+				write_horizontal m i !ibeg !j);
+			j := !j + sdj;
+			e := !e + ddi;
+			ibeg := i-1)
 	done;
-	(if write then
-		m.(j2).(i2) <- true);
-	(ploton_rect i2 j2)::!rect_l;;
+	!rect_l;;
 
 (* 2nd and 3rd octants *)
+(* Reversed, like bresenham_loop_18 *)
 let bresenham_loop_23 (write : bool) (m : bool array array)
 	(i1 : int) (j1 : int) (i2 : int) (j2 : int) : Sdlrect.t list =
 
 	let rect_l = ref [] in
 	let dj = j2 - j1 in
 	let e = ref dj in (* e>0 *)
-	let ddi = 2*(i2-i1) in
+	let ddi = 2*(i2 - i1) in
 	let ddj = 2*dj in
+	let i1pi2 = i1 + i2 in
+	let j1pj2 = j1 + j2 in
 	(* sdi = 1 : 2nd octant
 		sdi = -1 : 3rd octant *)
 	let sdi = if ddi > 0 then 1 else -1 in
 	let i = ref i1 in
-	let j = ref j1 in
 	let jbeg = ref j1 in
-	while !j < j2 do
-		jbeg := !j;
+	for j = j1 to j2 do
 		e := !e - sdi*ddi;
-		while !e>=0 && !j<>j2-1 do
-			e := !e - sdi*ddi;
-			incr j
-		done;
-		rect_l := (vertical_rect !i !jbeg !j)::!rect_l;
-		(if write then
-			write_vertical m !i !jbeg !j);
-		i := !i + sdi;
-		e:= !e + ddj;
-		incr j
+		if !e < 0 || j = j2 then
+			(rect_l := (vertical_rect (i1pi2 - !i) (j1pj2 - j) (j1pj2 - !jbeg))::!rect_l;
+			(if write then
+				write_vertical m (i1pi2 - !i) (j1pj2 - j) (j1pj2 - !jbeg));
+			i := !i + sdi;
+			e := !e + ddj;
+			jbeg := j+1)
 	done;
-	(if write then
-		m.(j2).(i2) <- true);
-	(ploton_rect i2 j2)::!rect_l;;
+	!rect_l;;
 
 (* 6th and 7th octants *)
 let bresenham_loop_67 (write : bool) (m : bool array array)
@@ -289,32 +272,26 @@ let bresenham_loop_67 (write : bool) (m : bool array array)
 	let rect_l = ref [] in
 	let dj = j2 - j1 in
 	let e = ref dj in (* e<0 *)
-	let ddi = 2*(i2-i1) in
+	let ddi = 2*(i2 - i1) in
 	let ddj = 2*dj in
 	(* sdi = -1 : 6th octant
 		sdi = 1 : 7th octant *)
 	let sdi = if ddi > 0 then 1 else -1 in
 	let i = ref i1 in
-	let j = ref j1 in
 	let jbeg = ref j1 in
-	while !j > j2 do
-		jbeg := !j;
+	for j = j1 downto j2 do
 		e := !e + sdi*ddi;
-		while !e<0 && !j<>j2+1 do
-			e := !e + sdi*ddi;
-			decr j
-		done;
-		rect_l := (vertical_rect !i !j !jbeg)::!rect_l;
-		(if write then
-			write_vertical m !i !j !jbeg);
-		i := !i + sdi;
-		e:= !e + ddj;
-		decr j
+		if !e >= 0 || j = j2 then
+			(rect_l := (vertical_rect !i j !jbeg)::!rect_l;
+			(if write then
+				write_vertical m !i j !jbeg);
+			i := !i + sdi;
+			e := !e + ddj;
+			jbeg := j-1)
 	done;
-	(if write then
-		m.(j2).(i2) <- true);
-	(ploton_rect i2 j2)::!rect_l;;
+	!rect_l;;
 
+(* General Bresenham function *)
 let bresenham (write : bool) (m : bool array array)
 	(i1 : int) (j1 : int) (i2 : int) (j2 : int) : Sdlrect.t list =
 	let di = i2 - i1 in

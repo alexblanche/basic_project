@@ -104,6 +104,9 @@ let launch_key_check () =
   (* Domain.at_exit (fun () -> print_endline "!!! Key check interruption !!!"); *)
   try
     key_check ()
+    (* print_endline "launch_key_check: exitting normally" *)
   with
-    | Window_Closed -> exit_key_check := true
+    | Window_Closed ->
+      (* (print_endline "launch_key_check: exitting through caught exception"; *)
+      exit_key_check := true
 ;;

@@ -112,13 +112,16 @@ let dot_hv_line (i : int) (j : int) (w : int) (h : int) (keep_last : bool) : Sdl
 
 (* Converts the bresenham-generated line (i1,j1)-(i2,j2) into a dotted line
    (both in rectangle list form) *)
+(* Bresenham returns the list of rectangles in this order:
+   [(i2,j2); (one rectangle not containing (i2,j2)); the other rectangles; (the rectangle containing i1,j1)]
+   EXCEPT for the 1st and 8th octants, who are weirdly reversed in Casio Basic *)
 let dot_line (l : Sdlrect.t list) (i1 : int) (j1 : int) (i2 : int) (j2 : int) : Sdlrect.t list =
   let (_, rect_l) =
     List.fold_left
       (fun (keep_first, acc) r ->
         let (i,j,w,h) = pixels_of_rectangle r in
         (* Trickery *)
-        ((if w > 1 then w mod 2 = 1 else h mod 2 = 1) = keep_first,
+        ((if w > 1 then w mod 2 = 0 else h mod 2 = 0) = keep_first,
         List.rev_append (dot_hv_line i j w h keep_first) acc))
       (true, []) l
   in rect_l;;
