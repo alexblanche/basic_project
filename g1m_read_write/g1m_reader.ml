@@ -225,7 +225,7 @@ let read_compr_pict (s : string) (istart : int) (nb_bytes : int) : bool array ar
   for i = 0 to nb_bytes - 1 do
     byte := Char.code s.[istart+i];
     for j = 7 downto 0 do
-      m.(63-i/16).(8*(i mod 16)+j) <- (!byte mod 2) = 1;
+      m.(i/16).(8*(i mod 16)+j) <- (!byte mod 2) = 1;
       byte := !byte/2
     done;
   done;

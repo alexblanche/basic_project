@@ -306,18 +306,6 @@ let func_table =
       in f)
     );
 
-    (* n-th root *)
-    ("NSQRT",
-      (let f (l : complex list) =
-        match l with
-          | [z; n] ->
-            if z.im = 0. && is_int n
-              then complex_of_float (Float.pow z.re (1./. n.re))
-              else Complex.pow z (complex_of_float (1./.n.re))
-          | _ -> failwith "Function error: Nsqrt has arity 2"
-      in f)
-    );
-
     (* Hyperbolic functions *)
     ("SINH",
       (let f (l : complex list) =
@@ -432,7 +420,7 @@ let lop_list = [
   "LN"; "LOG"; "SQRT";
   "SIN"; "COS"; "TAN"; "ARCSIN"; "ARCCOS"; "ARCTAN";
   "SINH"; "COSH"; "TAN"; "ARCSINH"; "ARCCOSH"; "ARCTANH";
-  "CURT"; "NSQRT"; "CONJG"
+  "CURT"; "CONJG"
   ];;
 
 (* List of handled right unary operators *)
@@ -445,18 +433,20 @@ let rop_list = [
 (* List of handled operators and their index of precedence (1 = greatest *)
 (* The operators are ordered by frequency in usual expresssions *)
 let op_list = [
-  ("PLUS", 3); ("MINUS", 3);
-  ("TIMES", 2); ("DIVIDED", 2);
+  ("PLUS", 4); ("MINUS", 4);
+  ("TIMES", 3); ("DIVIDED", 3);
   ("POWER", 0);
-  ("LEQ", 4); ("LESS", 4); ("GEQ", 4); ("GREATER", 4); ("EQUAL", 4); ("DIFFERENT", 4);
-  ("AND", 5);
-  ("OR", 6);
-  ("INTDIV", 1); ("RMDR", 1);
-  ("XOR", 6)
+  ("LEQ", 5); ("LESS", 5); ("GEQ", 5); ("GREATER", 5); ("EQUAL", 5); ("DIFFERENT", 5);
+  ("AND", 6);
+  ("OR", 7);
+  ("INTDIV", 2); ("RMDR", 2);
+  ("XOR", 7);
+  ("NSQRT", 1);
   ];;
 
 (* All precedences were checked on a Casio calculator
-        POWER
+       POWER
+    << NSQRT
     << (INTDIV, RMDR)
     << (TIMES, DIVIDED)
     << (PLUS, MINUS)
@@ -508,6 +498,7 @@ let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
     | "OR" -> complex_of_bool ((is_not_zero z1) || (is_not_zero z2))
     | "XOR" ->
       complex_of_bool ((is_not_zero z1) && (is_zero z2) || (is_zero z1) && (is_not_zero z2))
+      
   (* Others *)
 
     (* /!\
@@ -528,6 +519,12 @@ let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
           then complex_of_int (i1 mod i2)
           else complex_of_int ((abs i2) + (i1 mod i2))
       else failwith "apply_op: Rmdr only accepts integer arguments"
+
+    | "NSQRT" ->
+      (* n-th root *)
+      if z1.im = 0. && z2.im = 0.
+        then complex_of_float (Float.pow z2.re (1. /. z1.re))
+        else Complex.pow z2 (Complex.div {re = 1.; im = 0.} z1)
 
     | _ -> failwith ("apply_op: Unkown operator "^o);;
 

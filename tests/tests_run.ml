@@ -481,6 +481,7 @@ let run_pict () =
     let par = empty_projcont () in
     let m = Array.make_matrix 64 128 false in
     for i = 2 to 100 do
+      m.(5).(i) <- true;
       m.(i/2).(1+i) <- true;
       m.(63-i/2).(1+i+10) <- true
     done;
@@ -508,12 +509,12 @@ let run_window () =
   in
   let p =
     let par = empty_projcont () in
-    (* let m = Array.make_matrix 64 128 false in
+    let m = Array.make_matrix 64 128 false in
     for i = 2 to 100 do
       m.(i/2).(1+i) <- true;
       m.(63-i/2).(1+i+10) <- true
     done;
-    par.pict.(3) <- (2048, m); *)
+    par.pict.(3) <- (2048, m);
     par
   in 
   run p prog "main";;
@@ -623,6 +624,7 @@ let run_bgpict () =
     let par = empty_projcont () in
     let m = Array.make_matrix 64 128 false in
     for i = 2 to 100 do
+      m.(5).(i) <- true;
       m.(i/2).(1+i) <- true;
       m.(63-i/2).(1+i+10) <- true
     done;

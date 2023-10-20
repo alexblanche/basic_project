@@ -199,9 +199,14 @@ let unit_tests_eval_num () =
       (["1"; "OR"; "3"; "EQUAL"; "0"], {re = 1.; im = 0.}); (* EQUAL <= OR *)
       (["1"; "XOR"; "0"; "OR"; "1"], {re = 1.; im = 0.}); (* OR = XOR *)
       (["1"; "OR"; "1"; "XOR"; "1"], {re = 0.; im = 0.});
-      
+      (["2"; "POWER"; "2"; "NSQRT"; "8"; "1"], {re = 3.; im = 0.}); (* POWER <= NSQRT *)
+      (["2"; "TIMES"; "2"; "NSQRT"; "8"; "1"], {re = 18.; im = 0.}); (* NSQRT <= TIMES *)
+      (["2"; "INTDIV"; "2"; "NSQRT"; "8"; "1"], {re = 0.; im = 0.}); (* NSQRT <= INTDIV *)
+      (["2"; "RMDR"; "2"; "NSQRT"; "8"; "1"], {re = 2.; im = 0.}); (* NSQRT <= RMDR *)
+
       (* 
-            POWER
+           POWER
+        << NSQRT
         << (INTDIV, RMDR)
         << (TIMES, DIVIDED)
         << (PLUS, MINUS)

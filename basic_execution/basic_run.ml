@@ -61,15 +61,13 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   let rec aux (i : int) : unit =
 
     (* debug *)
-    (* print_endline (string_of_int i); *)
+    print_endline (string_of_int i);
     (* print_endline (if !background_changed then "background_changed = true" else "background_changed = false"); *)
 
     (* Pause for 1/798s *)
     (* Overridden by Press on Tab *)
     if !key_pressed <> Tab then
       Unix.sleepf 0.001253133;
-
-    
 
     (* End of the execution *)
     if i >= n then
