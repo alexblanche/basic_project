@@ -451,6 +451,7 @@ let run_prog_graphic () =
         [ (* First tests of ViewWindow, PlotOn, F-line, Text, going back and forth between
            the tscreen and the gscreen *)
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "VERTICAL"; "5"; "TIMES"; "1"; "0"; "EOL";
           "PLOTON"; "2"; "5"; ","; "1"; "0"; "EOL";
           "PLOTON"; "3"; "5"; ","; "6"; "0"; "EOL";
           "PLOTON"; "1"; "0"; "5"; ","; "1"; "0"; "EOL";
@@ -495,9 +496,13 @@ let run_window () =
         [ "AXESON"; "EOL";
           (* "BGPICT"; "4"; "EOL"; *)
           "VIEWWINDOW"; "MINUS"; "2"; ","; "1"; "8"; ","; "1"; ","; "MINUS"; "9"; ","; "1"; ","; "1"; "EOL";
-          "PLOTON"; "2"; ","; "1"; "DISP";
-          (* "TEXT"; "5"; "0"; "PLUS"; "2"; ","; "1"; "0"; ","; "QUOTE"; "A"; "B"; "C"; "D"; "QUOTE"; "EOL";
-          "TEXT"; "1"; "0"; "PLUS"; "2"; ","; "1"; "0"; ","; "1"; "0"; "TIMES"; "5"; "3"; "2"; "DISP"; *)
+          "PLOTON"; "2"; ","; "1"; "EOL";
+          "PXLON"; "5"; "0"; ","; "1"; "4"; "EOL";
+          "PXLOFF"; "5"; "0"; ","; "1"; "3"; "DISP";
+          "PXLCHG"; "5"; "0"; ","; "1"; "2"; "EOL";
+          "PXLCHG"; "4"; "4"; ","; "1"; "3"; "EOL";
+          "TEXT"; "5"; "0"; "PLUS"; "2"; ","; "1"; "4"; ","; "QUOTE"; "A"; "B"; "C"; "D"; "QUOTE"; "EOL";
+          "TEXT"; "1"; "0"; "PLUS"; "2"; ","; "1"; "0"; ","; "1"; "0"; "TIMES"; "5"; "3"; "2"; "DISP";
         ]
       )]
   in

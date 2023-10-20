@@ -236,18 +236,12 @@ let gdraw (ren : Sdlrender.t) : unit =
   draw_single_pict_no_writing ren gscreen;
   refresh ren;;
 
-(* This method as a little problem: a text command erases some pixels,
-  but all other functions only write black pixels,
-  so when redrawing the bgscreen and the screen,
-  the erased pixels are not taken into account. *)
-
-
 (** Text display **)
 
 (* Auxiliary loop to fast_locate:
   for k = bound downto i do (print the character at position k) done *)
-let text_aux (init_i : int) (j : int) (acc : Sdlrect.t list ref) (l : string list) : int =
-  let rec aux current_i l : int =
+let text_aux (init_i : int) (j : int) (acc : Sdlrect.t list ref) (l : string list) : int * (int * int) list =
+  let rec aux (current_i : int) (points : (int * int) list) (l : string list) : int * (int * int) list =
     match l with
       | s::lt ->
         let t =
@@ -261,20 +255,21 @@ let text_aux (init_i : int) (j : int) (acc : Sdlrect.t list ref) (l : string lis
         (* If there is room for one more character, continue,
           else return the current abscissa *)
         if current_i + len <= 127 then
-          (for y = 0 to 4 do
+          (let new_points = ref [] in
+          for y = 0 to 4 do
             for x = 0 to len-1 do
               if t.(len*y + x) then
                 let px = current_i + x in
                 let py = j + y in
-                (gscreen.(py).(px) <- true;
+                (new_points := (px,py) :: !new_points;
                 acc := (ploton_rect px py)::!acc)
             done
           done;
-          aux (current_i + len + 1) lt)
-        else current_i
-      | [] -> current_i
+          aux (current_i + len + 1) (List.rev_append !new_points points) lt)
+        else (current_i, points)
+      | [] -> (current_i, points)
   in
-  aux init_i l;;
+  aux init_i [] l;;
 
 (* Text display function *)
 (* Prints the string s (stored as a list of lexemes in reverse order) in the gscreen at position i,j *)
@@ -282,18 +277,27 @@ let draw_text (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : un
   (* Computation of the pixels to be printed *)
   (* acc contains the rectangles passed to the renderer to be filled *)
   let acc = ref [] in
-  let iend = text_aux i j acc (List.rev slist) in
+  let (iend, points) = text_aux i j acc (List.rev slist) in
 
   (* White rectangle to cover the area we write in *)
   set_color ren white;
   let white_r = Sdlrect.make2
-    ~pos:(!margin_h + !size*i - 1, !margin_v + !size*j)
-    ~dims:(!size*(iend - i) + 1, 6 * !size) (** test if dims_y -> remove -1 or pos_y -> add -1 *)
+    ~pos:(!margin_h + !size*i, !margin_v + !size*j)
+    ~dims:(!size*(iend - i), 6 * !size)
   in
   Sdlrender.fill_rect ren white_r;
-  set_color ren black;
+
+  (* Erasing the background of the text in the matrices *)
+  for a = i to iend-1 do
+    for b = j to j+5 do
+      bgscreen.(b).(a) <- false;
+      gscreen.(b).(a) <- false
+    done
+  done;
 
   (* Display of the characters *)
+  List.iter (fun (x,y) -> gscreen.(y).(x) <- true) points;
+  set_color ren black;
   Sdlrender.fill_rects ren (Array.of_list !acc);;
 
 

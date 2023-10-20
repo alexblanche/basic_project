@@ -137,8 +137,42 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let zy = eval_num p ey in
       let (a,b) = rescale p zx.re zy.re in
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
-        plotoff ren gscreen false a (64-b));
+        (plotoff ren gscreen false a (64-b);
+        if bgscreen.(64-b).(a) then
+          bgscreen.(64-b).(a) <- false));
+      gdraw ren;
+      text_screen := false)
+
+    | Graphic_Function ("PXLON", [ey; ex]) ->
+      let a = int_of_complex (eval_num p ex) in
+      let b = int_of_complex (eval_num p ey) in
+      ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
+        ploton ren gscreen a b);
       refresh_update ren p !text_screen;
+      text_screen := false)
+
+    | Graphic_Function ("PXLOFF", [ey; ex]) ->
+      let a = int_of_complex (eval_num p ex) in
+      let b = int_of_complex (eval_num p ey) in
+      ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
+        (plotoff ren gscreen false a b;
+        if bgscreen.(b).(a) then
+          bgscreen.(b).(a) <- false));
+      gdraw ren;
+      text_screen := false)
+
+    | Graphic_Function ("PXLCHG", [ey; ex]) ->
+      let a = int_of_complex (eval_num p ex) in
+      let b = int_of_complex (eval_num p ey) in
+      ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
+        if gscreen.(b).(a) then
+          (plotoff ren gscreen false a b;
+          if bgscreen.(b).(a) then
+            bgscreen.(b).(a) <- false)
+        else if bgscreen.(b).(a) then
+          plotoff ren bgscreen false a b
+        else ploton ren gscreen a b);
+      gdraw ren;
       text_screen := false)
 
     | Graphic_Function ("CLS", _) ->
@@ -199,14 +233,16 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       (background_changed := true;
       p.bgpict <- -1)
 
-    | Graphic_Function ("HORIZONTAL", [Complex z]) ->
+    | Graphic_Function ("HORIZONTAL", [e]) ->
+      let z = eval_num p e in
       let b = rescale_y p z.re in
       if b >= 1 && b <= 63 then
         (horizontal_line ren gscreen 1 127 b;
         refresh_update ren p !text_screen;
         text_screen := false)
 
-    | Graphic_Function ("VERTICAL", [Complex z]) ->
+    | Graphic_Function ("VERTICAL", [e]) ->
+      let z = eval_num p e in
       let a = rescale_x p z.re in
       if a >= 1 && a <= 127 then
         (vertical_line ren gscreen a 1 63;

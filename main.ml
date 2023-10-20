@@ -87,7 +87,6 @@ To do next:
     (key pressed on the keyboard highlight keys of the calculator interface)
 
 In the distant future:
-  - Perfect the "Broken" line-drawing style
   - Redo the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."
   - Treat the EOL/DISP in Strings vs Locate (EOL shows in Strings, syntax error in Locate. Disp shows in the Locate display, syntax error in String.)
   - Code the "ABC"?->X without skipping a line
