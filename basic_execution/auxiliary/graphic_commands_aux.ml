@@ -122,30 +122,32 @@ let broken_hv_line (i : int) (j : int) (w : int) (h : int) (index : int) : Sdlre
   print_newline (); *)
   if w > 1 then
     (* Horizontal line *)
-    (let x = ref (w-1-index) in
-    while !x >= 0 do
+    (let x = ref (i + w - index) in
+    while !x >= i do
       (* print_string "ploton i + !x : ";
       print_int (i + !x);
       print_newline (); *)
-      rects := (ploton_rect (i + !x) j) :: !rects;
+      rects := (ploton_rect !x j) :: !rects;
       x := !x - 3
     done;
-    (!rects, - !x))
+    (!rects, i - !x))
   else if h > 1 then
     (* Vertical line *)
-    (let y = ref (h-1-index) in
-    while !y >= 0 do
+    (let y = ref (j + h - index) in
+    while !y >= j do
       (* print_string "ploton j + !y : ";
       print_int (j + !y);
       print_newline (); *)
-      rects := (ploton_rect i (j + !y)) :: !rects;
+      rects := (ploton_rect i !y) :: !rects;
       y := !y - 3
     done;
-    (!rects, - !y))
+    (!rects, j - !y))
   else
     (* Single plot *)
-    (rects := (if index = 0 then [ploton_rect i j] else []);
-    (!rects, 3));;
+    if index = 1 then 
+      ([ploton_rect i j], 3)
+    else
+      ([], index-1);;
 
 (* Converts the bresenham-generated line (i1,j1)-(i2,j2) into a dotted line
    (both in rectangle list form) *)
@@ -157,7 +159,7 @@ let broken_line (l : Sdlrect.t list) (i1 : int) (j1 : int) (i2 : int) (j2 : int)
     List.fold_left
       (fun (prev_index, acc) r ->
         let (i,j,w,h) = pixels_of_rectangle r in
-        let (rectl, index) = broken_hv_line i j w h (prev_index-1) in
+        let (rectl, index) = broken_hv_line i j w h (if prev_index = 0 then 3 else prev_index) in
         (index, List.rev_append rectl acc))
-      (1, []) l
+      (init_index, []) l
   in rect_l;;

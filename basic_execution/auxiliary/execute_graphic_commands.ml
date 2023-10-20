@@ -22,10 +22,18 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
             | StyleNormal -> Array.of_list rect_l
             | StyleThick -> Array.of_list (List.rev_map thicken rect_l)
             | StyleDot ->
-              (* keep_last = true for bresenham 18 and 23 *)
-              Array.of_list (dot_line rect_l a1 b1 a2 b2 (a2 >= a1 && (b2 < b1 || b2+a1 < a2+b1)))
+              (* Condition for keep_last checked experimentally, see run_style tests/tests_run.ml *)
+              Array.of_list (dot_line rect_l a1 b1 a2 b2 (a2 >= a1 && (b2 < b1 || b2+a1 <= a2+b1)))
             | StyleBroken ->
-              Array.of_list (List.rev_map thicken (broken_line (List.rev rect_l) a1 b1 a2 b2 1))
+              (* Condition for index checked experimentally, see run_broken and run_broken2 tests/tests_run.ml *)
+              let nb = max (abs (a2-a1)) (abs (b2-b1)) + 1 in
+              let index =
+                if a2 > a1 && b2+a1 <= a2+b1
+                  || b2 < b1 && not (a2 < a1 && b1+a2 < a1+b2) 
+                  then 1
+                  else nb mod 3
+              in
+              Array.of_list (List.rev_map thicken (broken_line (List.rev rect_l) a1 b1 a2 b2 index))
         in
         Sdlrender.fill_rects ren rect_t;
         refresh_update ren p !text_screen;
