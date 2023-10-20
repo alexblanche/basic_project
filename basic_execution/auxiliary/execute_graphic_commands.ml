@@ -237,7 +237,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let z = eval_num p e in
       let b = rescale_y p z.re in
       if b >= 1 && b <= 63 then
-        (horizontal_line ren gscreen 1 127 b;
+        (horizontal_line ren gscreen 1 127 (64-b);
         refresh_update ren p !text_screen;
         text_screen := false)
 
@@ -253,6 +253,13 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
     | Graphic_Function ("SLTHICK", []) -> p.style <- StyleThick
     | Graphic_Function ("SLBROKEN", []) -> p.style <- StyleBroken
     | Graphic_Function ("SLDOT", []) -> p.style <- StyleDot
+
+    | Graphic_Function ("GRAPHYEQ" as s, [e])
+    | Graphic_Function ("GRAPHYG" as s, [e])
+    | Graphic_Function ("GRAPHYGEQ" as s, [e])
+    | Graphic_Function ("GRAPHYL" as s, [e])
+    | Graphic_Function ("GRAPHYLEQ" as s, [e]) ->
+      graphy ren p text_screen s e
 
     (* Errors or functionalities not implemented yet *)
     | Graphic_Function (s, _) -> (print_endline ("Runtime warning: ignored command "^s))

@@ -899,3 +899,29 @@ let run_diagonal () =
         ])]
   in
   run (empty_projcont ()) prog "main";;
+
+let run_graph () =
+  let prog =
+    compile
+      [("main",
+        [ (* Checking GraphY=, GraphY>=, GraphY>... *)
+          "VIEWWINDOW"; "MINUS"; "1"; "0"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "2"; "."; "5"; ","; "1"; "EOL";
+          "AXESON"; "EOL";
+
+          "HORIZONTAL"; "2"; "DISP";
+          
+          "CLS"; "EOL";
+          "GRAPHYEQ"; "MINUS"; "X"; "POWER2"; "PLUS"; "1"; "DISP";
+
+          "CLS"; "EOL";
+          "GRAPHYG"; "MINUS"; "X"; "POWER2"; "PLUS"; "1"; "DISP";
+          "CLS"; "EOL";
+          "GRAPHYGEQ"; "MINUS"; "X"; "POWER2"; "PLUS"; "1"; "DISP";
+
+          "CLS"; "EOL";
+          "GRAPHYL"; "MINUS"; "X"; "POWER2"; "PLUS"; "1"; "DISP";
+          "CLS"; "EOL";
+          "GRAPHYLEQ"; "MINUS"; "X"; "POWER2"; "PLUS"; "1"; "DISP";
+        ])]
+  in
+  run (empty_projcont ()) prog "main";;

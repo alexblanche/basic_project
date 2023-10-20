@@ -399,9 +399,9 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         let suffix = String.sub lex 3 (String.length lex - 3) in
         let (el, t') = extract_list_content t in
         (match el with
-          | [ex; ey] ->
+          | [_; _] (* [ey; ex] *) ->
             (set code i
-              (Graphic (Graphic_Function (lex, [ex; ey])));
+              (Graphic (Graphic_Function (lex, el)));
             aux t' (i+1))
           | _ ->
             fail t i
@@ -434,6 +434,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         let (j,t') = process_sgph i lexlist code mem in
         aux t' j
       
+      (* Implemented: *)
       | "CLS" :: t
       | "DRAWSTAT" :: t
       | "BGNONE" :: t
@@ -443,6 +444,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "SLTHICK" :: t
       | "SLBROKEN" :: t
       | "SLDOT" :: t
+      (* Ignored: *)
       | "SWINDMAN" :: t
       | "SWINDAUTO" :: t
       | "LABELON" :: t

@@ -163,3 +163,84 @@ let broken_line (l : Sdlrect.t list) (i1 : int) (j1 : int) (i2 : int) (j2 : int)
         (index, List.rev_append rectl acc))
       (init_index, []) l
   in rect_l;;
+
+
+(****************************************************************************)
+(** Graphs **)
+
+(** Graph Y (=, >=, <=, >, <) **)
+
+let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
+  (command : string) (e : num_expr) : unit =
+
+  refresh_update ren p !text_screen;
+  text_screen := false;
+  let t =
+    match command with
+    (* t mod 2 = 0 <=> EQ type
+       t <= 2 (and <> 0) <=> "greater than" type
+       t >= 3 <=> "less than" type *)
+      | "GRAPHYEQ" -> 0
+      | "GRAPHYG" -> 1
+      | "GRAPHYGEQ" -> 2
+      | "GRAPHYL" -> 3
+      | "GRAPHYLEQ" -> 4
+      | _ -> -1
+  in
+  let step = (p.xmax -. p.xmin) /. 126. in
+  (* xmin -> X *)
+  p.var.(23+29) <- 0.;
+  p.var.(23) <- p.xmin;
+  let z = eval_num p e in
+  let last_j = ref (rescale_y p z.re) in
+
+  for i = 1 to 127 do
+    let z = eval_num p e in
+    let j = rescale_y p z.re in
+    (if j >= 1 && j <= 63 then
+      (* normal line if =, >= or <=, dot line if > or < *)
+      let (jmin, jmax) =
+        if !last_j < j
+          then (max (!last_j + 1) 1, j)
+        else if !last_j > j
+          then (j, min (!last_j - 1) 63)
+        else (j, j)
+      in
+      (vertical_line ren gscreen i (64-jmax) (64-jmin);
+      (* Refreshing at each step in Casio Basic (if "=" mode) *)
+      if t mod 2 = 0 then
+        refresh ren)
+    else if !last_j >= 1 && !last_j <= 63 then
+      let (jmin, jmax) =
+        if j <= 0 then (1, max (!last_j - 1) 1) else (min (!last_j + 1) 63, 63)
+      in
+      (vertical_line ren gscreen i (64-jmax) (64-jmin);
+      (* Refreshing at each step in Casio Basic (if "=" mode) *)
+      if t mod 2 = 0 then
+        refresh ren)
+    );
+    last_j := j;
+    if t<>0 then
+      (if t<=2 (* > or >= *) then
+        (let acc = ref [] in
+        let parity = (i + 1) mod 2 in
+        for k = max (j+1) 1 to 63 do
+          if k mod 2 = parity then
+            acc := (ploton_rect i (64-k)) :: !acc
+        done;
+        Sdlrender.fill_rects ren (Array.of_list !acc);
+        refresh ren
+        )
+      else (* < or <= *)
+        (let acc = ref [] in
+        let parity = (i + 1) mod 2 in
+        for k = min (j-1) 63 downto 1 do
+          if k mod 2 = parity then
+            acc := (ploton_rect i (64-k)) :: !acc
+        done;
+        Sdlrender.fill_rects ren (Array.of_list !acc);
+        refresh ren
+        )
+      );
+    p.var.(23) <- p.var.(23) +. step
+  done;;
