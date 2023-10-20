@@ -36,6 +36,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
               Array.of_list (List.rev_map thicken (broken_line (List.rev rect_l) a1 b1 a2 b2 index))
         in
         Sdlrender.fill_rects ren rect_t;
+        if !key_pressed <> Tab then
+          Unix.sleepf 0.045;
         refresh_update ren p !text_screen;
         text_screen := false)
 

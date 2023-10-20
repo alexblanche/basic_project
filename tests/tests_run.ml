@@ -927,3 +927,18 @@ let run_graph () =
         ])]
   in
   run (empty_projcont ()) prog "main";;
+
+
+let run_timer () =
+  let prog =
+    compile
+      [("main",
+        [ (* Checking GraphY=, GraphY>=, GraphY>... *)
+          "VIEWWINDOW"; "MINUS"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "FOR"; "1"; "ASSIGN"; "A"; "TO"; "2"; "0"; "0"; "EOL";
+          "FLINE"; "1"; "0"; ","; "2"; "0"; ","; "1"; "1"; "0"; ","; "5"; "0"; "EOL";
+          "NEXT"; "EOL";
+          "QUOTE"; "A"; "QUOTE"; "EOL";
+        ])]
+  in
+  run (empty_projcont ()) prog "main";;
