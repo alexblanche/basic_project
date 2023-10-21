@@ -66,8 +66,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
     (* Pause for 1/798s *)
     (* Overridden by Press on Tab *)
-    if !key_pressed <> Tab then
-      Unix.sleepf 0.001253133;
+    if slowdown_condition () then
+      Unix.sleepf timer.general;
 
     (* End of the execution *)
     if i >= n then
@@ -248,9 +248,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
       | Locate (e1, e2, se) ->
         let z1 = eval_num p e1 in
         let z2 = eval_num p e2 in
-        (if !key_pressed <> Tab then
-          Unix.sleepf 0.013;
-        if not
+        (if not
           ((is_int z1) && (is_int z2)
           && (z1.re >= 1.) && (z1.re <= 21.)
           && (z2.re >= 1.) && (z2.re <= 7.))
@@ -269,6 +267,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         in
         locate ren sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
         val_seen := true;
+        if slowdown_condition () then
+          Unix.sleepf timer.locate;
         if (i <= n-2 && code.(i+1) = End
           || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
           && !prog_goback = [] then

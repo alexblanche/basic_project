@@ -36,9 +36,9 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
               Array.of_list (List.rev_map thicken (broken_line (List.rev rect_l) a1 b1 a2 b2 index))
         in
         Sdlrender.fill_rects ren rect_t;
-        if !key_pressed <> Tab then
-          Unix.sleepf 0.045;
         refresh_update ren p !text_screen;
+        if slowdown_condition () then
+          Unix.sleepf timer.fline;
         text_screen := false)
 
     | Graphic_Function ("RCLPICT", [e]) ->
@@ -76,7 +76,10 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         draw_single_pict_no_writing ren p.capt.(int_of_complex z - 1);
         refresh ren;
         disp_graphic ren true;
-        background_changed := true)
+        if not !text_screen then
+          gdraw ren
+        else 
+          background_changed := true)
       else failwith "Graphic error: wrong index for RclCapt command"
 
     | Text (ey, ex, se) ->
@@ -103,7 +106,9 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
             | Num_expr (Complex z) -> draw_number ren z p.polar (int_of_complex zx) (int_of_complex zy)
             | _ -> failwith "Graphic error: wrong output type for string expression evaluation"
         in
-        refresh ren)
+        refresh ren;
+        if slowdown_condition () then
+          Unix.sleepf timer.text)
 
     | Graphic_Function ("DRAWSTAT", _) ->
       (Array.iter
@@ -122,6 +127,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
             trace_drawstat ren !pair_l st mk)
         p.sgph;
       refresh_update ren p !text_screen;
+      if slowdown_condition () then
+        Unix.sleepf timer.drawstat;
       text_screen := false)
 
     | PlotOn (ex, ey) ->
@@ -132,6 +139,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
         ploton ren gscreen a (64-b));
       refresh_update ren p !text_screen;
+      if slowdown_condition () then
+        Unix.sleepf timer.plot;
       text_screen := false)
 
     | PlotOff (ex, ey) ->
@@ -143,6 +152,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         if bgscreen.(64-b).(a) then
           bgscreen.(64-b).(a) <- false));
       gdraw ren;
+      if slowdown_condition () then
+        Unix.sleepf timer.plot;
       text_screen := false)
 
     | Graphic_Function ("PXLON", [ey; ex]) ->
@@ -151,6 +162,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
         ploton ren gscreen a b);
       refresh_update ren p !text_screen;
+      if slowdown_condition () then
+        Unix.sleepf timer.plot;
       text_screen := false)
 
     | Graphic_Function ("PXLOFF", [ey; ex]) ->
@@ -161,6 +174,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         if bgscreen.(b).(a) then
           bgscreen.(b).(a) <- false));
       gdraw ren;
+      if slowdown_condition () then
+        Unix.sleepf timer.plot;
       text_screen := false)
 
     | Graphic_Function ("PXLCHG", [ey; ex]) ->
@@ -175,6 +190,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
           plotoff ren bgscreen false a b
         else ploton ren gscreen a b);
       gdraw ren;
+      if slowdown_condition () then
+        Unix.sleepf timer.plot;
       text_screen := false)
 
     | Graphic_Function ("CLS", _) ->
@@ -241,6 +258,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       if b >= 1 && b <= 63 then
         (horizontal_line ren gscreen 1 127 (64-b);
         refresh_update ren p !text_screen;
+        if slowdown_condition () then
+          Unix.sleepf timer.fline;
         text_screen := false)
 
     | Graphic_Function ("VERTICAL", [e]) ->
@@ -249,6 +268,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       if a >= 1 && a <= 127 then
         (vertical_line ren gscreen a 1 63;
         refresh_update ren p !text_screen;
+        if slowdown_condition () then
+          Unix.sleepf timer.fline;
         text_screen := false)
 
     | Graphic_Function ("SLNORMAL", []) -> p.style <- StyleNormal

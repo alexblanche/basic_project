@@ -44,6 +44,7 @@
 (** Emulation **)
 #use "initialization/graphics/graphics_lib.ml"
 #use "basic_execution/initialization/float_repr.ml"
+#use "basic_execution/initialization/timer.ml"
 #use "basic_execution/graphic_functions/general.ml"
 #use "basic_execution/graphic_functions/text_mode.ml"
 #use "basic_execution/graphic_functions/graphic_mode.ml"
