@@ -20,7 +20,7 @@ let timer =
   general  = 0.001253133;
   locate   = 0.013;
   fline    = 0.045;
-  plot     = 0.;
+  plot     = 0.04;
   drawstat = 0.;
-  text     = 0.;
+  text     = 0.08;
 };;

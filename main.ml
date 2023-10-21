@@ -76,8 +76,12 @@ let play (file_name : string) (entry_point : string) : unit =
 (*
 Games that work:
   - TIMELESS, PAC-MAN, RUN & JUMP, SUPER RUN & JUMP
+Games that mostly work:
+  - ACE COMBAT: bug spotted, when a missile is launched at an enemy at the right of the screen,
+  the missile misses and keeps going, creating an infinite loop
+  (both left and right missiles trigger the bug)
 Next steps (by order of difficulty):
-  - ACE COMBAT, TIMELESS REMIX, CLONELAB, AIRWOLF
+  - TIMELESS REMIX, CLONELAB, AIRWOLF
 
 To do next:
   - Keep implementing the "main" functions
@@ -88,7 +92,7 @@ To do next:
     (key pressed on the keyboard highlight keys of the calculator interface)
 
 In the distant future:
-  - Redo the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."
+  - Complete the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."
   - Treat the EOL/DISP in Strings vs Locate (EOL shows in Strings, syntax error in Locate. Disp shows in the Locate display, syntax error in String.)
   - Code the "ABC"?->X without skipping a line
   - Complete the list of encodings, with the Catalog
