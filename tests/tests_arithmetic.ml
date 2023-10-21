@@ -164,7 +164,7 @@ let unit_tests_eval_num () =
       (["4"; "DIFFERENT"; "4"; "MINUS"; "1"; "AND"; "0"], {re = 0.; im = 0.});
       (["0"; "EQUAL"; "0"; "PLUS"; "1"; "AND"; "0"], {re = 0.; im = 0.});
       (["2"; "TIMES"; "2"; "POWER"; "3"; "PLUS"; "1"], {re = 17.; im = 0.});
-
+      (["LPAR"; "2"; "RPAR"; "LPAR"; "3"; "RPAR"], {re = 6.; im = 0.});
       (* Tests for precedence *)
       (* All these expressions distinguish operators of different precedence *)
       (* For every A op1 B op2 C, it was checked that (A op1 B) op2 C

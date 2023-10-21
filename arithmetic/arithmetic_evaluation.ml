@@ -390,6 +390,7 @@ and calculate (p : parameters) (outq : entity list) (opq : arithm list) : entity
         | ListContent _
         | VarList _ -> ListContent (get_val_listexpr p x)
         | _ -> MatContent (get_val_matexpr p x))
+    | x2::x1::t, [] -> calculate p ((apply_op p "TIMES" x1 x2)::t) []
     | _ -> failwith "calculate: Syntax error"
 
 (* Calculates the result of a sequence of right-associative operations
@@ -480,6 +481,7 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
       else
         failwith ("Arithmetic parsing: Unknown function "^fname))
 
+    (* Lpar *)
     | Lpar::t, _ -> shunting_yard p t output_q (Lpar::op_q)
     
     (* Lunop *)
