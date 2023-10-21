@@ -11,7 +11,9 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let (a2,b2) = rescale p zx2.re zy2.re in
       if a1 >= 1 && a1 <= 127 && a2 >= 1 && a2 <= 127
         && b1 >= 1 && b1 <= 63 && b2 >= 1 && b2 <= 63 then
-        (let rect_l = bresenham true gscreen a1 (64-b1) a2 (64-b2) in
+        (* The pixels are written in gscreeen below *)
+        (let rect_l = bresenham false [||] a1 (64-b1) a2 (64-b2) in
+        (* Computing the right rectangles to draw, depending on the style of line *)
         let rect_t =
           let st =
             match style with
@@ -35,6 +37,17 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
               in
               Array.of_list (List.rev_map thicken (broken_line (List.rev rect_l) a1 b1 a2 b2 index))
         in
+        (* Writting the pixels in gscreen *)
+        Array.iter
+          (fun r ->
+            let (i,j,w,h) = pixels_of_rectangle r in
+            for a = i to i+w-1 do
+              for b = j to j+h-1 do
+                gscreen.(b).(a) <- true
+              done
+            done)
+          rect_t;
+        (* Drawing the pixels *)
         Sdlrender.fill_rects ren rect_t;
         refresh_update ren p !text_screen;
         if slowdown_condition () then
@@ -217,6 +230,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
           p.ymin <- yminval.re;
           p.ymax <- ymaxval.re;
           p.ystep <- ystepval.re;
+          wipe gscreen;
           draw_window ren p;
           background_changed := true)
           (* No refresh: the will be refreshed when the first object will be drawn *)

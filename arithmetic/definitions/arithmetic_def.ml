@@ -485,10 +485,30 @@ let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
         then complex_of_float (z1.re ** z2.re)
         else Complex.pow z1 z2
   (* Relations *)
-    | "LEQ" -> complex_of_bool (z1 <= z2)
-    | "LESS" -> complex_of_bool (z1 < z2)
-    | "GEQ" -> complex_of_bool (z1 >= z2)
-    | "GREATER" -> complex_of_bool (z1 > z2)
+    | "LEQ" ->
+      let x1_loss = float_of_string (string_of_float z1.re) in
+      let x2_loss = float_of_string (string_of_float z2.re) in
+      if z1.im = 0. && z2.im = 0.
+        then complex_of_bool (x1_loss <= x2_loss)
+        else failwith "apply_op: Leq (<=) only accepts real arguments"
+    | "LESS" ->
+      let x1_loss = float_of_string (string_of_float z1.re) in
+      let x2_loss = float_of_string (string_of_float z2.re) in
+      if z1.im = 0. && z2.im = 0.
+        then complex_of_bool (x1_loss < x2_loss)
+        else failwith "apply_op: Less (<) only accepts real arguments"
+    | "GEQ" ->
+      let x1_loss = float_of_string (string_of_float z1.re) in
+      let x2_loss = float_of_string (string_of_float z2.re) in
+      if z1.im = 0. && z2.im = 0.
+        then complex_of_bool (x1_loss >= x2_loss)
+        else failwith "apply_op: Geq (>=) only accepts real arguments"
+    | "GREATER" ->
+      let x1_loss = float_of_string (string_of_float z1.re) in
+      let x2_loss = float_of_string (string_of_float z2.re) in
+      if z1.im = 0. && z2.im = 0.
+        then complex_of_bool (x1_loss > x2_loss)
+        else failwith "apply_op: Greater (>) only accepts real arguments"
     | "EQUAL" ->
       complex_of_bool (is_zero_float (z1.re -. z2.re) && is_zero_float (z1.im -. z2.im))
     | "DIFFERENT" ->

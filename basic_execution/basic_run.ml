@@ -62,10 +62,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
     (* debug *)
     (* print_endline (string_of_int i); *)
-    (* print_endline (if !background_changed then "background_changed = true" else "background_changed = false"); *)
 
-    (* Pause for 1/798s *)
-    (* Overridden by Press on Tab *)
+    (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then
       Unix.sleepf timer.general;
 
@@ -78,7 +76,9 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
     let _ =
       if !parameters_updated then
-        tdraw ren
+        if !text_screen
+          then tdraw ren
+          else gdraw ren
     in
 
     (* Execution of the next command *)

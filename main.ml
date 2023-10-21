@@ -75,21 +75,21 @@ let play (file_name : string) (entry_point : string) : unit =
 
 (*
 Games that work:
-  - TIMELESS, PAC-MAN, RUN & JUMP, SUPER RUN & JUMP
-Games that mostly work:
-  - ACE COMBAT: bug spotted, when a missile is launched at an enemy at the right of the screen,
-  the missile misses and keeps going, creating an infinite loop
-  (both left and right missiles trigger the bug)
+  - TIMELESS, PAC-MAN, RUN & JUMP, SUPER RUN & JUMP, ACE COMBAT
 Next steps (by order of difficulty):
   - TIMELESS REMIX, CLONELAB, AIRWOLF
 
 To do next:
   - Keep implementing the "main" functions
   
-  Menus:
-  - Implement the entry point menu
+Menus:
   - Draw a calculator and link it to Getkey (by clicking on keys)
     (key pressed on the keyboard highlight keys of the calculator interface)
+  - Implement the menu:
+    -> File explorer (let us choose which g1m file to open)
+    -> PRGM menu that displays the available programs
+    -> Options menu: changing keybinds, dark mode
+    -> Pause option
 
 In the distant future:
   - Complete the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."
