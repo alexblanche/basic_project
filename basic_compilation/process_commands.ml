@@ -370,8 +370,7 @@ let process_sgph i lexlist code mem : int * string list =
       | "DOT" :: _ -> (false, DSMDot)
       | "SQUARE" :: _ -> (false, DSMSquare)
       | "CROSS" :: _ -> (false, DSMCross)
-      | [] -> (true, DSMDot)
-      | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command (Mark)"
+      | _ -> (true, DSMDot)
   in
 
   if stop then

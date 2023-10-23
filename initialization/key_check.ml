@@ -95,7 +95,17 @@ let rec key_check () =
         (getkey := 0;
         key_pressed := Unknown);
       key_check ())
-  
+    
+    (* | Some Controller_Button_Down -> (print_endline "Controller button down"; key_check ())
+    | Some (Joy_Button_Down _) -> (print_endline "Joy button down"; key_check ())
+    | Some (Joy_Axis_Motion _) -> (print_endline "Joy axis motion"; key_check ())
+    | Some Controller_Axis_Motion -> (print_endline "Controller axis motion"; key_check ())
+    | Some (Mouse_Button_Down _) -> (print_endline "Mouse button down"; key_check ())
+    | Some (Mouse_Motion _) -> (print_endline "..."; key_check ())
+    | Some (Joy_Device_Added _) -> (print_endline "Joy device added"; key_check ())
+    |	Some Controller_Device_Added -> (print_endline "Controller device added"; key_check ())
+    |	Some Controller_Device_Removed -> (print_endline "Controller device removed"; key_check ()) *)
+
     | _ -> key_check ()
 ;;
 

@@ -1,5 +1,21 @@
 (* Auxiliary functions to execute_graphic_commands.ml *)
 
+(* Truncates a rectangle to fit in the gscreen *)
+(* When it is "too far" (test how much), the line is not drawn *)
+let truncate (r : Sdlrect.t) : Sdlrect.t =
+  let (i,j,w,h) = pixels_of_rectangle r in
+	if i >= 1 && i <= 127 && w >= 1 && w <= 128-i
+	&& j >= 1 && j <= 63 && h >= 1 && h <= 64-j
+    then r
+    else
+      let ni = min (max i 1) 127 in
+      let nj = min (max j 1) 63 in
+      let nw = min w (127-ni+1) in
+      let nh = min h (63-nj+1) in
+      Sdlrect.make
+        ~pos:(!margin_h + !size * ni, !margin_v + !size * nj)
+        ~dims:(!size * nw, !size * nh);;
+
 (* Auxiliary function that traces the rectangles of the DrawStat display *)
 let trace_drawstat (ren : Sdlrender.t) (l : (int * int) list) (style : drawstat_style) (mark : drawstat_mark) : unit =
   let _ =
@@ -11,8 +27,15 @@ let trace_drawstat (ren : Sdlrender.t) (l : (int * int) list) (style : drawstat_
             let (_, rect_l) =
               List.fold_left
                 (fun ((ia,ja), rect_l) (ib,jb) ->
-                  ((ib,jb),
-                  List.rev_append (bresenham true gscreen ia (64-ja) ib (64-jb)) rect_l)) 
+                  let new_rects =
+                    if ia >= 1 && ia <= 127 && ib >= 1 && ib <= 127
+                      && ja >= 1 && ja <= 63 && jb >= 1 && jb <= 63
+                      then (* Both endpoints are in the screen *)
+                        bresenham true gscreen ia (64-ja) ib (64-jb)
+                      else (* One or both points do not belong to the screen *)
+                        List.rev_map truncate (bresenham true gscreen ia (64-ja) ib (64-jb))
+                  in
+                  ((ib,jb), List.rev_append new_rects rect_l))
                 (ij,[]) t
             in
             Sdlrender.fill_rects ren (Array.of_list rect_l))

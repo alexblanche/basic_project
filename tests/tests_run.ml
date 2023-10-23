@@ -946,3 +946,29 @@ let run_timer () =
         ])]
   in
   run (empty_projcont ()) prog "main";;
+
+(* Debug of Ace Combat level 9 *)
+let run_debug_aclvl9 () =
+  let prog =
+    compile
+      [("main",
+        [
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          (* "3"; "ASSIGN"; "A"; "COLON"; "5"; "0"; "0"; "ASSIGN"; "H"; "EOL";
+          "0"; "ASSIGN"; "LIST"; "1"; "LSQBRACKET"; "1"; "EOL";
+          "0"; "ASSIGN"; "LIST"; "1"; "LSQBRACKET"; "2"; "EOL"; *)
+          "SGPH1"; "DRAWON"; ","; "XYLINE"; ","; "LIST"; "3"; ","; "LIST"; "4"; ","; "1"; ","; "DOT"; "EOL";
+          (* "SGPH2"; "DRAWON"; "XYLINE"; "LIST"; "5"; "LIST"; "6"; ","; "1"; ","; "DOT"; "EOL"; *)
+          "SGPH2"; "DRAWOFF"; (* ","; "XYLINE"; ","; "LIST"; "1"; ","; "LIST"; "2"; ","; "1"; ","; "DOT"; *) "EOL";
+          "SGPH3"; "DRAWOFF"; "EOL";
+          "LBRACKET"; "3"; "8"; ","; "2"; "0"; ","; "2"; "0"; ","; "0"; ","; "0"; ",";
+          "2"; "0"; ","; "2"; "0"; ","; "1"; "0"; "8"; ","; "1"; "0"; "8"; ",";
+          "1"; "2"; "8"; ","; "1"; "2"; "8"; ","; "1"; "0"; "8"; ","; "1"; "0"; "8"; ","; "8"; "7"; "ASSIGN"; "LIST"; "3"; "EOL";
+          "LBRACKET"; "9"; ","; "9"; ","; "4"; "0"; ","; "4"; "0"; ","; "3"; "0"; ","; "3"; "0"; ","; "5"; "5"; ",";
+          "5"; "5"; ","; "3"; "0"; ","; "3"; "0"; ","; "4"; "0"; ","; "4"; "0"; ","; "9"; ","; "9"; "ASSIGN"; "LIST"; "4"; "EOL";
+          "LBRACKET"; "2"; ","; "1"; "0"; ","; "2"; "0"; "ASSIGN"; "LIST"; "1"; "EOL";
+          "LBRACKET"; "5"; ","; "5"; "0"; ","; "1"; "0"; "ASSIGN"; "LIST"; "2"; "EOL";
+          "DRAWSTAT"; "DISP";
+        ])]
+  in
+  run (empty_projcont ()) prog "main";;
