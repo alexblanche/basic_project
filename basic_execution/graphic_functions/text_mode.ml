@@ -49,6 +49,7 @@ let tdraw (ren : Sdlrender.t) : unit =
   done;
   clear_graph ren;
   draw_frame ren;
+  draw_black_square ren;
   Sdlrender.fill_rects ren (Array.of_list !acc);
   refresh ren;;
 
@@ -174,3 +175,10 @@ let clear_text () : unit =
   for j = 0 to 6 do
     clear_line j
   done;;
+
+(* Erases the black screen in text mode *)
+let erase_black_square_text (ren : Sdlrender.t) : unit =
+  set_color ren colors.background;
+  draw_black_square ren;
+  locate ren [tscreen.(0).(20)] 20 0;
+  set_color ren colors.pixels;;

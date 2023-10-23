@@ -29,6 +29,9 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
   (* text_screen = true if the text screen is currently displayed, false if it is the graphic screen *)
   let text_screen = ref true in
+  
+  (* Time of last color switch, to prevent flashing effect *)
+  let last_switch = ref (Unix.gettimeofday ()) in
 
   (* Initialization of the graphic window and graphic parameters *)
   let (win, ren) = open_graphic () in
@@ -39,7 +42,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   getkey := 0;
   key_pressed := Unknown;
   
-  set_color ren black;
+  set_color ren colors.pixels; 
   clear_text ();
   writing_index := -1;
 
@@ -53,8 +56,6 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   p.axeson <- false;
   background_changed := false;
 
-  (* Time of last color switch, to prevent flashing effect *)
-  let last_switch = ref (Unix.gettimeofday ()) in
   
   (* Ends the execution of the program *)
   let end_execution () =

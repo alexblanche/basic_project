@@ -112,6 +112,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
           if !background_changed then
             (clear_graph ren;
             draw_frame ren;
+            draw_black_square ren;
             draw_window ren p;
             background_changed := false);
           match eval_str p se with

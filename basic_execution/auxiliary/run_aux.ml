@@ -79,6 +79,9 @@ let rev_lexlist_to_rev_symblist (lexlist : string list) (text : bool) : string l
 (* text_screen is true iff the text screen is displayed (as opposed to the graphic screen) *)
 let quit (win : Sdlwindow.t) (ren : Sdlrender.t) (text_screen : bool) : unit =
   (try
+    (if text_screen
+      then erase_black_square_text ren
+      else erase_black_square_graphic ren);
     wait_release ren text_screen;
     wait_enter ren text_screen
   with
@@ -111,6 +114,7 @@ let disp (p : parameters) (ren : Sdlrender.t) (writing_index : int ref) : unit =
   clear_line !writing_index;
   print_disp !writing_index;
   tdraw ren;
+  erase_black_square_text ren;
   wait_release ren true;
   wait_enter ren true;
   clear_line !writing_index;
@@ -123,7 +127,9 @@ let disp_graphic (ren : Sdlrender.t) (is_not_the_end : bool) : unit =
   clear_line !writing_index;
   locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
   if is_not_the_end then
-    (wait_release ren false;
+    (erase_black_square_graphic ren;
+    refresh ren;
+    wait_release ren false;
     wait_enter ren false);;
 
 

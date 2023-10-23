@@ -333,6 +333,10 @@ let bresenham (write : bool) (m : bool array array)
 let draw_frame (ren : Sdlrender.t) : unit =
 	rect ren (!margin_h-1) (!margin_v-1) (!width+2) (!height+2);;
 
+(* Draws black square that appears at the top right of the screen when the program is running *)
+let draw_black_square (ren : Sdlrender.t) : unit =
+	Sdlrender.fill_rect ren (Sdlrect.make ~pos:(!margin_h + !size * 124, !margin_v) ~dims:(4 * !size, 4 * !size));;
+
 (* Prints the background and the grid *)
 let print_bg (ren : Sdlrender.t) (grid : bool) (bg : Sdlrender.t -> unit) : unit =
 	(* grid *)

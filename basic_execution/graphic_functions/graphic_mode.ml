@@ -204,6 +204,17 @@ let draw_single_pict (ren : Sdlrender.t) (write : bool) (screen : bool array arr
 let draw_single_pict_no_writing (ren : Sdlrender.t) (mpict : bool array array) : unit =
   draw_single_pict ren false [||] mpict;;
 
+(* Erases the black screen in graphic mode *)
+let erase_black_square_graphic (ren : Sdlrender.t) : unit =
+  set_color ren colors.background;
+  draw_black_square ren;
+  for j = 0 to 3 do
+    for i = 124 to 127 do
+      if bgscreen.(j).(i) || gscreen.(j).(i) then
+        ploton_no_writing ren i j
+    done
+  done;
+  set_color ren colors.pixels;;
 
 (* Draws the window in the current coordinates system *)
 let draw_window (ren : Sdlrender.t) (p : parameters) : unit =
@@ -221,6 +232,7 @@ let refresh_update (ren : Sdlrender.t) (p : parameters) (text_screen : bool) : u
     (* (print_endline "Updating..."; *)
     (clear_graph ren;
     draw_frame ren;
+    draw_black_square ren;
     draw_window ren p;
     draw_single_pict_no_writing ren gscreen;
     background_changed := false));
@@ -232,6 +244,7 @@ let gdraw (ren : Sdlrender.t) : unit =
   parameters_updated := false;
   clear_graph ren;
   draw_frame ren;
+  draw_black_square ren;
   draw_single_pict_no_writing ren bgscreen;
   draw_single_pict_no_writing ren gscreen;
   refresh ren;;
