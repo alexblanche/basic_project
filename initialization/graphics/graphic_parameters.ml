@@ -21,11 +21,6 @@ let size = ref 7;; (* Size of a pixel of the screen *)
 let width = ref (128 * !size);; (* Width of the calculator screen (without the margin) *)
 let height = ref (64 * !size);; (* Height of the calculator screen (without the margin) *)
 
-(* Colors *)
-let white = (255, 255, 255);;
-let gray = (120, 120, 148);;
-let black = (0, 0, 0);;
-
 (* Number of window resizings after which the screen is redrawn *)
 let resize_threshold = 15;;
 
@@ -51,55 +46,3 @@ let update_parameters (new_width : int) (new_height : int) : unit =
 
 (* Parameters initialization *)
 update_parameters (!width+2*40) (!height+2*40);;
-
-
-
-(* Test function: draws a red rectangle in place of the calculator screen, and adapts to window resizing *)
-(* let test () =
-  Sdl.init [`VIDEO];
-	let window = Sdlwindow.create ~title:"Display test" ~pos:(`pos 300, `pos 100) ~dims:(1000, 800) ~flags:[] in
-	
-	let renderer = Sdlrender.create_renderer ~win:window ~index:0 ~flags:[] in
-	Sdlrender.set_draw_blend_mode renderer SdlblendMode.BNone;
-
-  let x = ref 1000 in
-  let y = ref 800 in
-  let cpt_resize = ref 0 in
-  let threshold = 15 in
-
-  let print_rect () =
-    update_parameters !x !y;
-    Sdlrender.set_draw_color renderer ~rgb:white ~a:255;
-    Sdlrender.clear renderer;
-    let r = Sdlrect.make ~pos:(!margin_h, !margin_v) ~dims:(128 * !size, 64 * !size) in
-    Sdlrender.set_draw_color renderer ~rgb:(255,50,50) ~a:255;
-    Sdlrender.fill_rect renderer r;
-    Sdlrender.render_present renderer
-  in
-  
-  let rec aux () =
-		match Sdlevent.poll_event () with
-			| Some (Window_Event {kind = WindowEvent_Close})
-			| Some KeyDown {keycode = Escape} -> Sdl.quit ()
-
-      | Some (Window_Event {kind = WindowEvent_Resized wxy}) ->
-        (x := wxy.win_x;
-        y := wxy.win_y;
-        incr cpt_resize;
-        if !cpt_resize >= threshold
-          then (print_rect (); cpt_resize := 0);
-        aux ())
-
-      | Some (Window_Event {kind = WindowEvent_Exposed})
-      | Some Keymap_Changed ->
-        (cpt_resize := threshold;
-        aux ())
-
-      | _ -> aux ()
-	in
-	
-	try
-    print_rect ();
-		aux ()
-	with
-		| Failure _ -> Sdl.quit ();; *)

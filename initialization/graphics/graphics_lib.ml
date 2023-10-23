@@ -16,9 +16,9 @@ let set_color (ren : Sdlrender.t) (color : int * int * int) : unit =
 
 (* Clears the window *)
 let clear_graph (ren : Sdlrender.t) : unit =
-	set_color ren white;
+	set_color ren colors.background;
   Sdlrender.clear ren;
-	set_color ren black;;
+	set_color ren colors.pixels;;
 
 (* Draws the string s at position x,y with color rgb in the given renderer *)
 let draw_string (ren : Sdlrender.t) (x : int) (y : int) (s: string) (rgb : int * int * int) : unit =
@@ -101,14 +101,14 @@ let ploton_no_writing (ren : Sdlrender.t) (i : int) (j : int) : unit =
 (* Fills the pixel i,j of the screen with white and reforms the grid *)
 let plotoff (ren : Sdlrender.t) (m : bool array array) (grid : bool) (i : int) (j : int) : unit =
 	if m.(j).(i) then
-		(set_color ren white;
+		(set_color ren colors.background;
 		Sdlrender.fill_rect ren (ploton_rect i j);
 		m.(j).(i) <- false;
 		if grid then
 			(* reform the grid around the deleted pixel *)
-			(set_color ren gray;
+			(set_color ren colors.grid;
 			rect ren (!margin_h + !size*i) (!margin_v + !size*j) (!size+1) (!size+1));
-		set_color ren black);;
+		set_color ren colors.pixels);;
 
 (** Horizontal, Vertical lines **)
 
@@ -337,7 +337,7 @@ let draw_frame (ren : Sdlrender.t) : unit =
 let print_bg (ren : Sdlrender.t) (grid : bool) (bg : Sdlrender.t -> unit) : unit =
 	(* grid *)
 	if grid then
-		(set_color ren gray;
+		(set_color ren colors.grid;
 		let y0, yh = !margin_v, !margin_v + !height - 1 in
 		for i=1 to 127 do
 			let x = !margin_h + !size*i -1 in
@@ -350,7 +350,7 @@ let print_bg (ren : Sdlrender.t) (grid : bool) (bg : Sdlrender.t -> unit) : unit
 		done);
 	
 	(* frame *)
-	set_color ren black;
+	set_color ren colors.pixels;
 	draw_frame ren;
 	
 	(* Additional background *)
@@ -412,7 +412,7 @@ let print_mat (ren : Sdlrender.t) (m : bool array array) (grid : bool) (bg : Sdl
 (* Opens a new graphic window and displays the matrix m *)
 let view_matrix (m : bool array array) : unit =
 	let (win, ren) = config false (fun _ -> ()) in
-	set_color ren black;
+	set_color ren colors.pixels;
 	print_mat ren m false (fun _ -> ());
 	refresh ren;
 	(* Wait for a key to be pressed, or the window to be closed *)

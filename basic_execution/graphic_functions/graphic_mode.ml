@@ -280,7 +280,7 @@ let draw_text (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : un
   let (iend, points) = text_aux i j acc (List.rev slist) in
 
   (* White rectangle to cover the area we write in *)
-  set_color ren white;
+  set_color ren colors.background;
   let white_r = Sdlrect.make2
     ~pos:(!margin_h + !size*i, !margin_v + !size*j)
     ~dims:(!size*(iend - i), 6 * !size)
@@ -297,7 +297,7 @@ let draw_text (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : un
 
   (* Display of the characters *)
   List.iter (fun (x,y) -> gscreen.(y).(x) <- true) points;
-  set_color ren black;
+  set_color ren colors.pixels;
   Sdlrender.fill_rects ren (Array.of_list !acc);;
 
 

@@ -42,6 +42,7 @@
 #use "basic_compilation/basic_compile.ml"
 
 (** Emulation **)
+#use "initialization/graphics/colors.ml"
 #use "initialization/graphics/graphics_lib.ml"
 #use "basic_execution/initialization/float_repr.ml"
 #use "basic_execution/initialization/timer.ml"

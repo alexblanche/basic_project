@@ -52,7 +52,11 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   p.ymin <- 1.; p.ymax <- 63.; p.ystep <- 0.;
   p.axeson <- false;
   background_changed := false;
+
+  (* Time of last color switch, to prevent flashing effect *)
+  let last_switch = ref (Unix.gettimeofday ()) in
   
+  (* Ends the execution of the program *)
   let end_execution () =
     quit_print win ren !val_seen !last_val p.polar !string_seen !text_screen
   in
@@ -66,6 +70,14 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then
       Unix.sleepf timer.general;
+
+    (* Switch to or from dark mode *)
+    if !key_pressed = RCtrl then
+      (let time = Unix.gettimeofday () in
+      if time -. !last_switch > 0.5 then
+        (last_switch := time;
+        switch_color_mode ();
+        parameters_updated := true));
 
     (* End of the execution *)
     if i >= n then

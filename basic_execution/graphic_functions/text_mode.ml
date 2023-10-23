@@ -110,13 +110,13 @@ let locate (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : unit 
   let bound = min 20 (i+n-1) in
 
   (* White rectangle to cover the area we write in *)
-  set_color ren white;
+  set_color ren colors.background;
   let white_r = Sdlrect.make2
     ~pos:(!margin_h + !size*(1+6*i), !margin_v + !size*8*j)
     ~dims:(6 * !size * (bound-i+1) - !size, 7 * !size)
   in
   Sdlrender.fill_rect ren white_r;
-  set_color ren black;
+  set_color ren colors.pixels;
 
   (* Display of the characters *)
   let acc = ref [] in
