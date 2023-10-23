@@ -44,6 +44,15 @@ let rescale_y (p : parameters) (y : float) : int =
 let rescale (p : parameters) (x : float) (y : float) : int * int =
   (rescale_x p x, rescale_y p y);;
 
+(* Reverse scaling functions (imprecise approximations) *)
+let approx_descale_x (p : parameters) (i : int) : float =
+  let x = float_of_int (i-1) +. 0.5 in
+  x *. (p.xmax -. p.xmin) /. 126. +. p.xmin;;
+
+let approx_descale_y (p : parameters) (j : int) : float =
+  let x = float_of_int (j-1) +. 0.5 in
+  x *. (p.ymax -. p.ymin) /. 62. +. p.ymin;;
+
 (* Draws a horizontal line in the current system of coordinates at ordinate y *)
 let draw_horizontal_line (ren : Sdlrender.t) (p : parameters) (y : float) : unit =
   let j = rescale_y p y in
