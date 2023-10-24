@@ -453,10 +453,14 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
         (* Parentheses *)
         else if s = "LPAR" then
           let (e,t') = extract_par_content t in
-          (match e with
-            | Arithm al -> aux (Rpar::(List.rev_append (Lpar::al) acc)) t'
-            | Complex z -> aux (Rpar::(Entity (Value z))::Lpar::acc) t'
-            | StringExpr (Str_Func (fname, sel)) ->
+          (match e, t' with
+            | Arithm al, "LPAR"::_ -> aux ((Op "TIMES")::Rpar::(List.rev_append (Lpar::al) acc)) t'
+            | Arithm al, _ -> aux (Rpar::(List.rev_append (Lpar::al) acc)) t'
+            | Complex z, "LPAR"::_ -> aux ((Op "TIMES")::Rpar::(Entity (Value z))::Lpar::acc) t'
+            | Complex z, _ -> aux (Rpar::(Entity (Value z))::Lpar::acc) t'
+            | StringExpr (Str_Func (fname, sel)), "LPAR"::_ ->
+              aux ((Op "TIMES")::Rpar::(Function (fname, List.map (fun se -> StringExpr se) sel))::Lpar::acc) t'
+            | StringExpr (Str_Func (fname, sel)), _ ->
               aux (Rpar::(Function (fname, List.map (fun se -> StringExpr se) sel))::Lpar::acc) t'
             | _ -> failwith "Arithmetic lexing: syntax error, wrong type in parentheses")
 

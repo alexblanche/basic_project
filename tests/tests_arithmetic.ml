@@ -217,6 +217,7 @@ let unit_tests_eval_num () =
 
     (* Tests for higher precedence of omitted multiplication *)
     (["INT"; "0"; "."; "5"; "A"], {re = 5.; im = 0.});
+    (["1"; "PLUS"; "LPAR"; "4"; "RPAR"; "LPAR"; "0"; "RPAR"], {re = 1.; im = 0.});
 
     ];
     print_endline "--------------------------------------------";

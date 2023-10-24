@@ -1026,15 +1026,40 @@ let run_break () =
           "X"; "DISP";
         ])]
   in
-  let p =
-    let par = empty_projcont () in
-    let m = Array.make_matrix 64 128 false in
-    for j = 0 to 63 do
-      m.(j).(126) <- true;
-      if j mod 2 = 0 then
-        m.(j).(127) <- true
-    done;
-    par.pict.(0) <- (2048, m);
-    par
+  run (empty_projcont ()) prog "main";;
+
+
+(* Debug Timeless Remix first screen *)
+let run_trfs () =
+  let prog =
+    compile
+      [("main",
+        [
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          (* "SLDOT"; "EOL"; *)
+          (* "FLINE"; "1"; "0"; ","; "1"; "0"; ","; "1"; "0"; "0"; ","; "5"; "0"; "EOL"; *)
+          "FOR"; "0"; "ASSIGN"; "Z"; "TO"; "3"; "9"; "EOL";
+
+          "9"; "0"; "PLUS"; "Z"; "DISP";
+          "1"; "2"; "0"; "PLUS"; "Z"; "PLUS"; "LPAR"; "7"; "MINUS"; "Z"; "RPAR"; "LPAR"; "Z"; "GREATER"; "7"; "RPAR"; "DISP";
+          "6"; "3"; "MINUS"; "LPAR"; "Z"; "MINUS"; "7"; "RPAR"; "LPAR"; "Z"; "GREATER"; "7"; "RPAR"; "EOL";
+          
+          "FLINE"; "9"; "0"; "PLUS"; "Z"; ",";
+            "1"; ",";
+            "1"; "2"; "0"; "PLUS"; "Z"; "PLUS"; "LPAR"; "7"; "MINUS"; "Z"; "RPAR"; "LPAR"; "Z"; "GREATER"; "7"; "RPAR"; ",";
+            "6"; "3"; "MINUS"; "LPAR"; "Z"; "MINUS"; "7"; "RPAR"; "LPAR"; "Z"; "GREATER"; "7"; "RPAR"; "EOL";
+
+          "3"; "6"; "PLUS"; "Z"; "DISP";
+          "6"; "MINUS"; "Z"; "PLUS"; "LPAR"; "Z"; "MINUS"; "5"; "RPAR"; "LPAR"; "Z"; "GREATER"; "5"; "RPAR"; "DISP";
+          "6"; "3"; "MINUS"; "LPAR"; "Z"; "MINUS"; "5"; "RPAR"; "LPAR"; "Z"; "GREATER"; "5"; "RPAR"; "DISP";
+
+          "FLINE"; "3"; "6"; "PLUS"; "Z"; ",";
+            "1"; ",";
+            "6"; "MINUS"; "Z"; "PLUS"; "LPAR"; "Z"; "MINUS"; "5"; "RPAR"; "LPAR"; "Z"; "GREATER"; "5"; "RPAR"; ",";
+            "6"; "3"; "MINUS"; "LPAR"; "Z"; "MINUS"; "5"; "RPAR"; "LPAR"; "Z"; "GREATER"; "5"; "RPAR"; "EOL";
+          "NEXT"; "EOL";
+        ])]
   in
-  run p prog "main";;
+  (* prog;; *)
+  run (empty_projcont ()) prog "main";;
+
