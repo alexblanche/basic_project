@@ -200,6 +200,53 @@ let broken_line (l : Sdlrect.t list) (i1 : int) (j1 : int) (i2 : int) (j2 : int)
       (init_index, []) l
   in rect_l;;
 
+(* General line drawing function *)
+
+(* Draws the F-Line between the points (a1, b1) and (a2, b2) with given style *)
+let fline (ren : Sdlrender.t) (p : parameters) (a1 : int) (b1 : int) (a2 : int) (b2 : int)
+  (style : style option) (text_screen : bool ref) : unit =
+  
+  (* The pixels are written in gscreeen below *)
+  let rect_l = bresenham false [||] a1 (64-b1) a2 (64-b2) in
+  (* Computing the right rectangles to draw, depending on the style of line *)
+  let rect_t =
+    let st =
+      match style with
+        | None -> p.style
+        | Some s -> s
+    in
+    match st with
+      | StyleNormal -> Array.of_list rect_l
+      | StyleThick -> Array.of_list (List.rev_map thicken rect_l)
+      | StyleDot ->
+        (* Condition for keep_last checked experimentally, see run_style tests/tests_run.ml *)
+        Array.of_list (dot_line rect_l a1 b1 a2 b2 (a2 >= a1 && (b2 < b1 || b2+a1 <= a2+b1)))
+      | StyleBroken ->
+        (* Condition for index checked experimentally, see run_broken and run_broken2 tests/tests_run.ml *)
+        let nb = max (abs (a2-a1)) (abs (b2-b1)) + 1 in
+        let index =
+          if a2 > a1 && b2+a1 <= a2+b1
+            || b2 < b1 && not (a2 < a1 && b1+a2 < a1+b2) 
+            then 1
+            else nb mod 3
+        in
+        Array.of_list (List.rev_map thicken (broken_line (List.rev rect_l) a1 b1 a2 b2 index))
+  in
+  (* Writting the pixels in gscreen *)
+  Array.iter
+    (fun r ->
+      let (i,j,w,h) = pixels_of_rectangle r in
+      for a = i to i+w-1 do
+        for b = j to j+h-1 do
+          gscreen.(b).(a) <- true
+        done
+      done)
+    rect_t;
+  (* Drawing the pixels *)
+  Sdlrender.fill_rects ren rect_t;
+  refresh_update ren p !text_screen;;
+
+
 
 (****************************************************************************)
 (** Graphs **)

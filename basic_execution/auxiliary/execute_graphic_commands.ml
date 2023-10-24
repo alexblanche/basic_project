@@ -11,45 +11,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let (a2,b2) = rescale p zx2.re zy2.re in
       if a1 >= 1 && a1 <= 127 && a2 >= 1 && a2 <= 127
         && b1 >= 1 && b1 <= 63 && b2 >= 1 && b2 <= 63 then
-        (* The pixels are written in gscreeen below *)
-        (let rect_l = bresenham false [||] a1 (64-b1) a2 (64-b2) in
-        (* Computing the right rectangles to draw, depending on the style of line *)
-        let rect_t =
-          let st =
-            match style with
-              | None -> p.style
-              | Some s -> s
-          in
-          match st with
-            | StyleNormal -> Array.of_list rect_l
-            | StyleThick -> Array.of_list (List.rev_map thicken rect_l)
-            | StyleDot ->
-              (* Condition for keep_last checked experimentally, see run_style tests/tests_run.ml *)
-              Array.of_list (dot_line rect_l a1 b1 a2 b2 (a2 >= a1 && (b2 < b1 || b2+a1 <= a2+b1)))
-            | StyleBroken ->
-              (* Condition for index checked experimentally, see run_broken and run_broken2 tests/tests_run.ml *)
-              let nb = max (abs (a2-a1)) (abs (b2-b1)) + 1 in
-              let index =
-                if a2 > a1 && b2+a1 <= a2+b1
-                  || b2 < b1 && not (a2 < a1 && b1+a2 < a1+b2) 
-                  then 1
-                  else nb mod 3
-              in
-              Array.of_list (List.rev_map thicken (broken_line (List.rev rect_l) a1 b1 a2 b2 index))
-        in
-        (* Writting the pixels in gscreen *)
-        Array.iter
-          (fun r ->
-            let (i,j,w,h) = pixels_of_rectangle r in
-            for a = i to i+w-1 do
-              for b = j to j+h-1 do
-                gscreen.(b).(a) <- true
-              done
-            done)
-          rect_t;
-        (* Drawing the pixels *)
-        Sdlrender.fill_rects ren rect_t;
-        refresh_update ren p !text_screen;
+        (fline ren p a1 b1 a2 b2 style text_screen;
         if slowdown_condition () then
           Unix.sleepf timer.fline;
         text_screen := false)
@@ -308,7 +270,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let z = eval_num p e in
       let b = rescale_y p z.re in
       if b >= 1 && b <= 63 then
-        (horizontal_line ren gscreen 1 127 (64-b);
+        ((* horizontal_line ren gscreen 1 127 (64-b); *)
+        fline ren p 1 b 127 b None text_screen;
         refresh_update ren p !text_screen;
         if slowdown_condition () then
           Unix.sleepf timer.fline;
@@ -318,7 +281,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let z = eval_num p e in
       let a = rescale_x p z.re in
       if a >= 1 && a <= 127 then
-        (vertical_line ren gscreen a 1 63;
+        ((* vertical_line ren gscreen a 1 63; *)
+        fline ren p a 1 a 63 None text_screen;
         refresh_update ren p !text_screen;
         if slowdown_condition () then
           Unix.sleepf timer.fline;
