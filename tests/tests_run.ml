@@ -983,7 +983,7 @@ let run_black_square () =
           "BGPICT"; "1"; "EOL";
           "FLINE"; "1"; ","; "6"; "3"; ","; "1"; "2"; "7"; ","; "6"; "3"; "EOL";
           "FOR"; "1"; "ASSIGN"; "A"; "TO"; "1"; "0"; "0"; "0"; "EOL";
-          "NEXT"; "EOL";
+          "NEXT"; "DISP";
           "PLOTON"; "1"; ","; "1"; "DISP";
 
           "CLRTEXT"; "EOL";

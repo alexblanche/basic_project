@@ -404,11 +404,10 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
 
       (* Disp that was not handled by a string *)
       | Disp ->
-        (* (print_endline "In the DISP..."; *)
         ((if !text_screen
           then disp p ren writing_index
           else
-            (disp_graphic ren (i<n-1 && code.(i+1) <> End)));
+            (disp_graphic ren (i<n-1 && (code.(i+1) <> End || !prog_goback <> []))));
         aux (i+1))
 
       | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
