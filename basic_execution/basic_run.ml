@@ -67,7 +67,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   let rec aux (i : int) : unit =
 
     (* debug *)
-    (* print_endline (string_of_int i); *)
+    print_endline (string_of_int i);
 
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then
@@ -369,17 +369,23 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
       | AssignList (le, n) ->
         let t = eval_list p le in
         let ni = get_val_numexpr p n in
-        if is_int ni then
-          let nii = int_of_complex ni in
-          if nii >= 1 && nii <= 26 then
-            (p.list.(nii-1) <- t;
-            aux (i+1))
-          else failwith "Runtime error: index out of bounds for list assignment"
-        else failwith "Runtime error: wrong index for list assignment"
+        let nii =
+          match n with
+            | Variable (Var 28) (* Ans *) -> 27
+            | _ ->
+              if is_int ni
+                then int_of_complex ni
+                else failwith "Runtime error: wrong index for list assignment"
+        in
+        if nii >= 1 && nii <= 27 then
+          (p.list.(nii-1) <- t;
+          aux (i+1))
+        else failwith "Runtime error: index out of bounds for list assignment"
+        
 
       | AssignMat (me, mi) ->
         let m = eval_mat p me in
-        (p.mat.(mi) <- m;
+        (p.mat.(if mi = 28 then 26 else mi) <- m;
         aux (i+1)) 
 
       | AssignMult (e, vi1, vi2) ->

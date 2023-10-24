@@ -89,7 +89,7 @@ Menus:
   - Implement the menu:
     -> File explorer (let us choose which g1m file to open)
     -> PRGM menu that displays the available programs
-    -> Options menu: changing keybinds, dark mode
+    -> Options menu: changing keybinds
     -> Pause option
 
 In the distant future:
