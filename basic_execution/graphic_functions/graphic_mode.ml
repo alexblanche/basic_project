@@ -217,13 +217,13 @@ let draw_single_pict_no_writing (ren : Sdlrender.t) (mpict : bool array array) :
 let erase_black_square_graphic (ren : Sdlrender.t) : unit =
   set_color ren colors.background;
   draw_black_square ren;
+  set_color ren colors.pixels;
   for j = 0 to 3 do
     for i = 124 to 127 do
       if bgscreen.(j).(i) || gscreen.(j).(i) then
         ploton_no_writing ren i j
     done
-  done;
-  set_color ren colors.pixels;;
+  done;;
 
 (* Draws the window in the current coordinates system *)
 let draw_window (ren : Sdlrender.t) (p : parameters) : unit =

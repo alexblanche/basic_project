@@ -82,6 +82,7 @@ let quit (win : Sdlwindow.t) (ren : Sdlrender.t) (text_screen : bool) : unit =
     (if text_screen
       then erase_black_square_text ren
       else erase_black_square_graphic ren);
+    refresh ren;
     wait_release ren text_screen;
     wait_enter ren text_screen
   with
@@ -91,7 +92,11 @@ let quit (win : Sdlwindow.t) (ren : Sdlrender.t) (text_screen : bool) : unit =
 (* Prints the value of Ans if val_seen, "Done" otherwise, then quits *)
 let quit_print (win : Sdlwindow.t) (ren : Sdlrender.t) (val_seen : bool) (value : complex) (polar : bool) (string_seen : bool) (text_screen : bool) : unit =
   if not text_screen then
-    (wait_release ren false;
+    ((if text_screen
+      then erase_black_square_text ren
+      else erase_black_square_graphic ren);
+    refresh ren;
+    wait_release ren false;
     wait_enter ren false;
     line_feed ();
     clear_line !writing_index;

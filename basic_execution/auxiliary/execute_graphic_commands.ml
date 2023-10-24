@@ -128,7 +128,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       (Array.iter
         (fun (don, st, li1, li2, mk) ->
           if don then
-            let l1 = get_val_listexpr p (VarList (Value (complex_of_int li1))) in
+            (let l1 = get_val_listexpr p (VarList (Value (complex_of_int li1))) in
             let l2 = get_val_listexpr p (VarList (Value (complex_of_int li2))) in
             let pair_l = ref [] in
             Array.iter2
@@ -138,7 +138,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
                 let i,j = rescale p zi.re zj.re in
                 pair_l := (i,j) :: !pair_l)
               l1 l2;
-            trace_drawstat ren !pair_l st mk)
+            trace_drawstat ren !pair_l st mk))
         p.sgph;
       refresh_update ren p !text_screen;
       if slowdown_condition () then

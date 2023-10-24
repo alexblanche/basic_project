@@ -10,8 +10,8 @@ let truncate (r : Sdlrect.t) : Sdlrect.t =
     else
       let ni = min (max i 1) 127 in
       let nj = min (max j 1) 63 in
-      let nw = min w (127-ni+1) in
-      let nh = min h (63-nj+1) in
+      let nw = min (w-(abs (ni-i))) (128-ni) in
+      let nh = min (h-nj+j) (64-nj) in
       Sdlrect.make
         ~pos:(!margin_h + !size * ni, !margin_v + !size * nj)
         ~dims:(!size * nw, !size * nh);;
@@ -23,17 +23,30 @@ let trace_drawstat (ren : Sdlrender.t) (l : (int * int) list) (style : drawstat_
       | XYLine ->
         (match l with
           | [] -> ()
-          | ij::t -> 
+          | ij::t ->
             let (_, rect_l) =
               List.fold_left
                 (fun ((ia,ja), rect_l) (ib,jb) ->
                   let new_rects =
                     if ia >= 1 && ia <= 127 && ib >= 1 && ib <= 127
                       && ja >= 1 && ja <= 63 && jb >= 1 && jb <= 63
-                      then (* Both endpoints are in the screen *)
-                        bresenham true gscreen ia (64-ja) ib (64-jb)
-                      else (* One or both points do not belong to the screen *)
-                        List.rev_map truncate (bresenham true gscreen ia (64-ja) ib (64-jb))
+                      (* Both endpoints are in the screen *)
+                        then bresenham true gscreen ia (64-ja) ib (64-jb)
+                      (* One or both points do not belong to the screen *)
+                        else
+                          ((* Truncate the rectangles that go out of the screen *)
+                          let tr_br = List.rev_map truncate (bresenham false [||] ia (64-ja) ib (64-jb)) in
+                          (* Write the pixels in gscreen (all within bounds) *)
+                          List.iter
+                            (fun r ->
+                              let (i,j,w,h) = pixels_of_rectangle r in
+                              for a = i to i+w-1 do
+                                for b = j to j+h-1 do
+                                  gscreen.(b).(a) <- true
+                                done
+                              done)
+                            tr_br;
+                          tr_br)
                   in
                   ((ib,jb), List.rev_append new_rects rect_l))
                 (ij,[]) t

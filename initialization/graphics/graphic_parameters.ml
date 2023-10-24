@@ -3,7 +3,7 @@
 (** SDL2 initialization **)
 
 let sdl_init () : unit =
-  Sdl.init [`VIDEO; `EVENTS (*; `GAMECONTROLLER; `HAPTIC; `JOYSTICK *)]; (* tests for Joystick handling (failed) *)
+  Sdl.init [`VIDEO; `EVENTS];
   Sdlttf.init ()
 in
 sdl_init ();;

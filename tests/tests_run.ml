@@ -948,7 +948,7 @@ let run_timer () =
   run (empty_projcont ()) prog "main";;
 
 (* Debug of Ace Combat level 9 *)
-let run_debug_aclvl9 () =
+let run_truncate () =
   let prog =
     compile
       [("main",
@@ -966,9 +966,43 @@ let run_debug_aclvl9 () =
           "1"; "2"; "8"; ","; "1"; "2"; "8"; ","; "1"; "0"; "8"; ","; "1"; "0"; "8"; ","; "8"; "7"; "ASSIGN"; "LIST"; "3"; "EOL";
           "LBRACKET"; "9"; ","; "9"; ","; "4"; "0"; ","; "4"; "0"; ","; "3"; "0"; ","; "3"; "0"; ","; "5"; "5"; ",";
           "5"; "5"; ","; "3"; "0"; ","; "3"; "0"; ","; "4"; "0"; ","; "4"; "0"; ","; "9"; ","; "9"; "ASSIGN"; "LIST"; "4"; "EOL";
-          "LBRACKET"; "2"; ","; "1"; "0"; ","; "2"; "0"; "ASSIGN"; "LIST"; "1"; "EOL";
-          "LBRACKET"; "5"; ","; "5"; "0"; ","; "1"; "0"; "ASSIGN"; "LIST"; "2"; "EOL";
+          (* "LBRACKET"; "2"; ","; "1"; "0"; ","; "2"; "0"; "ASSIGN"; "LIST"; "1"; "EOL";
+          "LBRACKET"; "5"; ","; "5"; "0"; ","; "1"; "0"; "ASSIGN"; "LIST"; "2"; "EOL"; *)
           "DRAWSTAT"; "DISP";
         ])]
   in
+  (* prog;; *)
   run (empty_projcont ()) prog "main";;
+
+let run_black_square () =
+  let prog =
+    compile
+      [("main",
+        [
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "BGPICT"; "1"; "EOL";
+          "FLINE"; "1"; ","; "6"; "3"; ","; "1"; "2"; "7"; ","; "6"; "3"; "EOL";
+          "FOR"; "1"; "ASSIGN"; "A"; "TO"; "1"; "0"; "0"; "0"; "EOL";
+          "NEXT"; "EOL";
+          "PLOTON"; "1"; ","; "1"; "DISP";
+
+          "CLRTEXT"; "EOL";
+          "QUOTE"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A";
+          "A"; "A"; "A"; "A"; "A"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "B"; "QUOTE"; "EOL";
+          "FOR"; "1"; "ASSIGN"; "A"; "TO"; "1"; "0"; "0"; "0"; "EOL";
+          "NEXT"; "EOL";
+          "QUOTE"; "C"; "QUOTE"; "DISP"
+        ])]
+  in
+  let p =
+    let par = empty_projcont () in
+    let m = Array.make_matrix 64 128 false in
+    for j = 0 to 63 do
+      m.(j).(126) <- true;
+      if j mod 2 = 0 then
+        m.(j).(127) <- true
+    done;
+    par.pict.(0) <- (2048, m);
+    par
+  in
+  run p prog "main";;
