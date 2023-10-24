@@ -974,6 +974,8 @@ let run_truncate () =
   (* prog;; *)
   run (empty_projcont ()) prog "main";;
 
+
+(* Test of erasing the black square in text and graphic modes *)
 let run_black_square () =
   let prog =
     compile
@@ -992,6 +994,36 @@ let run_black_square () =
           "FOR"; "1"; "ASSIGN"; "A"; "TO"; "1"; "0"; "0"; "0"; "EOL";
           "NEXT"; "EOL";
           "QUOTE"; "C"; "QUOTE"; "DISP"
+        ])]
+  in
+  let p =
+    let par = empty_projcont () in
+    let m = Array.make_matrix 64 128 false in
+    for j = 0 to 63 do
+      m.(j).(126) <- true;
+      if j mod 2 = 0 then
+        m.(j).(127) <- true
+    done;
+    par.pict.(0) <- (2048, m);
+    par
+  in
+  run p prog "main";;
+
+
+(* Debug Break *)
+let run_break () =
+  let prog =
+    compile
+      [("main",
+        [
+          "1"; "ASSIGN"; "X"; "EOL";
+          "WHILE"; "X"; "DIFFERENT"; "1"; "0"; "EOL";
+          "X"; "PLUS"; "1"; "ASSIGN"; "X"; "EOL";
+          "LOCATE"; "3"; ","; "3"; ","; "X"; "EOL";
+          "IF"; "X"; "EQUAL"; "5"; "COLON"; "THEN"; "BREAK"; "EOL";
+          "IFEND"; "EOL";
+          "WHILEEND";
+          "X"; "DISP";
         ])]
   in
   let p =

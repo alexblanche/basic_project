@@ -280,7 +280,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             | _ -> failwith "Runtime error: wrong output type for string expression evaluation"
         in
         locate ren sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
-        val_seen := true;
+        val_seen := false;
+        string_seen := true;
         if slowdown_condition () then
           Unix.sleepf timer.locate;
         if (i <= n-2 && code.(i+1) = End
@@ -295,7 +296,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             aux (i+2))
           else aux (i+1))
 
-      | Function "CLRTEXT" ->
+      | Function ("CLRTEXT", _) ->
         (clear_text ();
         text_screen := true;
         tdraw ren;
@@ -382,7 +383,6 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
           aux (i+1))
         else failwith "Runtime error: index out of bounds for list assignment"
         
-
       | AssignMat (me, mi) ->
         let m = eval_mat p me in
         (p.mat.(if mi = 28 then 26 else mi) <- m;
@@ -397,6 +397,31 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         done;
         aux (i+1))
 
+      | Function ("FILL", [e; Arithm [Entity n]]) ->
+        let z = eval_num p e in
+        ((match n with
+          | VarList nl ->
+            (let li = get_val_numexpr p n in
+            if is_int li then
+              let lii = int_of_complex li in
+              let len = (Array.length p.list.(lii-1))/2 in
+              (for k = 0 to len-1 do
+                p.list.(lii-1).(k) <- z.re;
+                p.list.(lii-1).(k+len) <- z.im
+              done))
+          | VarMat mi ->
+            (let row = (Array.length p.mat.(mi)) / 2 in
+            if row <> 0 then
+              let col = Array.length p.mat.(mi).(0) in
+              for a = 0 to row-1 do
+                for b = 0 to col-1 do
+                  p.mat.(mi).(a).(b) <- z.re;
+                  p.mat.(mi).(a+row).(b) <- z.im
+                done
+              done)
+          | _ -> failwith "Runtime error: wrong arguments for command Fill");
+        aux (i+1))
+
       | End ->
         (match !prog_goback with
           | j::t ->
@@ -404,7 +429,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             aux j)
           | [] -> end_execution ())
 
-      | Function "STOP" ->
+      | Function ("STOP", _) ->
         (* Hard stop: ends the execution without returning to the calling program *)
         end_execution ()
 

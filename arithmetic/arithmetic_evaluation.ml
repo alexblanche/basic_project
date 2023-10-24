@@ -307,70 +307,68 @@ and eval_str (p : parameters) (se : string_expr) : string_expr =
 (* Special functions evaluation *)
 (* Each function has type basic_expr list -> entity *)
 and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) : entity =
-  if fname = "SEQ" then
-    (match el with
-      | [e; Arithm [Entity (Variable (Var vi))]; Complex z1; Complex z2; Complex z3] ->
-        if z1.im = 0. && z2.im = 0. && z3.im = 0. then
-          let coef = (z2.re -. z1.re)/.z3.re in
-          let n = 1 + true_int_of_float coef in
-          if coef < 0. then
-            failwith "apply_special_func: wrong input for Seq"
-          else
-            let asc = z2.re > z1.re in
-            let t = Array.make n QMark in
-            (p.var.(vi+29) <- 0.;
-            p.var.(vi) <- z1.re;
-            let i = ref 0 in
-            while
-              (if asc
-                then p.var.(vi) <= z2.re
-                else p.var.(vi) >= z2.re) do
-              t.(!i) <- Complex (eval_num p e);
-              p.var.(vi) <- p.var.(vi) +. z3.re;
-              incr i
-            done;
-            ListContent t)
-        else failwith "apply_special_func: wrong input for Seq"
-      | _ -> failwith "apply_special_func: wrong input for Seq")
-  else if fname = "PXLTEST" then
-    (match el with
-      | [Complex z1; Complex z2] ->
-        if is_int z1 && is_int z2
-          && z1.re >= 1. && z1.re <= 63.
-          && z2.re >= 1. && z2.re <= 127. then
-          let n1 = true_int_of_float z1.re in
-          let n2 = true_int_of_float z2.re in
-          Value
-            (complex_of_bool
-              (p.gscreen.(n1).(n2) || p.bgscreen.(n1).(n2)))
-        else failwith "apply_special_func: wrong input for PxlTest" 
-      | _ -> failwith "apply_special_func: wrong input for PxlTest")
-  else if fname = "MATTOLIST" then
-    (match el with
-      | [Arithm [Entity (Variable (Var vi))]; Complex z] ->
-        let j = int_of_complex z -1 in
-        let m = p.mat.(if vi = 28 then 26 else vi) in (* Mat Ans is stored at position 26 *)
-        let row = (Array.length m)/2 in
-        ListContent (Array.init row (fun i -> Complex (get_complex m.(i).(j) m.(i+row).(j))))
-      | _ -> failwith "apply_special_func: wrong input for MatToList") 
-  else if fname = "SIGMAPAR" then
-    (let arg_seq =
-      if List.length el = 5
-        then el
-        else (* Case of omitted "Step" parameter: 1 by default *)
-          (* Omitting the "Step" is allowed for Sigmapar but not Seq (weird) *)
-          List.rev (Complex {re = 1.; im = 0.}::(List.rev el))
-    in
-    match apply_special_func p "SEQ" arg_seq with
-      | ListContent t ->
-        let sum_list = Arithm [Function ("SUM", [Arithm [Entity (ListContent t)]])] in
-        let z = eval_num p sum_list in
-        Value z
-      | _ ->
-        failwith "apply_special_func: wrong output of function Seq in
-          internal computation of function Sigma")
-  else failwith ("apply_special_func: unknown function "^fname)
+  match fname, el with
+    | "SEQ", [e; Arithm [Entity (Variable (Var vi))]; Complex z1; Complex z2; Complex z3] ->
+      if z1.im = 0. && z2.im = 0. && z3.im = 0. then
+        let coef = (z2.re -. z1.re)/.z3.re in
+        let n = 1 + true_int_of_float coef in
+        if coef < 0. then
+          failwith "apply_special_func: wrong input for Seq"
+        else
+          let asc = z2.re > z1.re in
+          let t = Array.make n QMark in
+          (p.var.(vi+29) <- 0.;
+          p.var.(vi) <- z1.re;
+          let i = ref 0 in
+          while
+            (if asc
+              then p.var.(vi) <= z2.re
+              else p.var.(vi) >= z2.re) do
+            t.(!i) <- Complex (eval_num p e);
+            p.var.(vi) <- p.var.(vi) +. z3.re;
+            incr i
+          done;
+          ListContent t)
+      else failwith "apply_special_func: wrong input for Seq"
 
+    | "PXLTEST", [Complex z1; Complex z2] ->
+      if is_int z1 && is_int z2
+        && z1.re >= 1. && z1.re <= 63.
+        && z2.re >= 1. && z2.re <= 127. then
+        let n1 = true_int_of_float z1.re in
+        let n2 = true_int_of_float z2.re in
+        Value
+          (complex_of_bool
+            (p.gscreen.(n1).(n2) || p.bgscreen.(n1).(n2)))
+      else failwith "apply_special_func: wrong input for PxlTest"
+
+    | "MATTOLIST", [Arithm [Entity (Variable (Var vi))]; Complex z] ->
+      let j = int_of_complex z -1 in
+      let m = p.mat.(if vi = 28 then 26 else vi) in (* Mat Ans is stored at position 26 *)
+      let row = (Array.length m)/2 in
+      ListContent (Array.init row (fun i -> Complex (get_complex m.(i).(j) m.(i+row).(j))))
+
+    | "SIGMAPAR", _ ->
+      (let arg_seq =
+        if List.length el = 5
+          then el
+          else (* Case of omitted "Step" parameter: 1 by default *)
+            (* Omitting the "Step" is allowed for Sigmapar but not Seq (weird) *)
+            List.rev (Complex {re = 1.; im = 0.}::(List.rev el))
+      in
+      match apply_special_func p "SEQ" arg_seq with
+        | ListContent t ->
+          let sum_list = Arithm [Function ("SUM", [Arithm [Entity (ListContent t)]])] in
+          let z = eval_num p sum_list in
+          Value z
+        | _ ->
+          failwith "apply_special_func: wrong output of function Seq in
+            internal computation of function Sigma")
+
+    | "MATTOLIST", _ -> failwith "apply_special_func: wrong input for MatToList"
+    | "PXLTEST", _ -> failwith "apply_special_func: wrong input for PxlTest"
+    | "SEQ", _ -> failwith "apply_special_func: wrong input for Seq"
+    | _ -> failwith ("apply_special_func: unknown function "^fname)
 
 
 (* Final evaluation of the arithmetic formula *)

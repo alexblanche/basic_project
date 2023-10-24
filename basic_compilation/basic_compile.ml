@@ -277,12 +277,6 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "\039"::t ->
         let (_, t') = extract_line t in
         aux t' i
-      
-      | "CLRTEXT" :: t
-      | "STOP" :: t ->
-        (fail_if_not_eol lexlist i;
-        set code i (Function (List.hd lexlist));
-        aux t (i+1))
 
       | "RETURN" :: t ->
         (fail_if_not_eol lexlist i;
@@ -291,16 +285,20 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
       | "BREAK" :: t ->
         (fail_if_not_eol lexlist i;
-        match skip_breaks mem.stack with
-          | ("for", _)::_
-          | ("while", _)::_
-          | ("do", _)::_ ->
-            (mem.stack <- ("break", i)::mem.stack;
-            (* One spot is left empty for a Goto command to be inserted
-              when the closing statement of the loop is encountered *)
-            aux t (i+1))
-          | _ -> fail t i "Compilation error: Unexpected Break with no opened loop")
-      
+        mem.stack <- ("break", i)::mem.stack;
+        (* One spot is left empty for a Goto command to be inserted
+          when the closing statement of the loop is encountered *)
+        aux t (i+1))
+
+      (* Commands with 0 arguments *)
+      | "CLRTEXT" :: t
+      | "STOP" :: t ->
+        (fail_if_not_eol lexlist i;
+        set code i (Function (List.hd lexlist, []));
+        aux t (i+1))
+
+      (* Commands with arguments *)
+
       | "ISZ" :: t
       | "DSZ" :: t ->
         (* Compiled as V + 1 -> V or V - 1 -> V *)
@@ -348,6 +346,29 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           done;
           aux t'' (i+20))
         else fail lexlist i "Compilation error: Wrong index for ClrMat"
+
+      | "FILL" :: t ->
+        (match extract_expr t with
+          | e, ","::"LIST"::a::t' ->
+            if is_var a then
+              (set code i (Function ("FILL", [e; Arithm [Entity (VarList (Variable (Var (var_index a))))]]));
+              aux (match t' with [] -> [] | "RPAR"::q -> q | _ -> t') (i+1))
+            else if is_digit a then
+              let (vi,q) = read_int (a::t') true in
+              (set code i (Function ("FILL", [e; Arithm [Entity (VarList (Value (complex_of_int vi)))]]));
+              aux (match q with [] -> [] | "RPAR"::q' -> q' | _ -> q) (i+1))
+            else fail lexlist i "Compilation error: wrong list index in Fill command"
+
+          | e, ","::"MAT"::a::t' ->
+            if is_var a && a <> "SMALLR" && a <> "THETA" then
+              (set code i (Function ("FILL", [e; Arithm [Entity (VarMat (var_index a))]]));
+              aux (match t' with [] -> [] | "RPAR"::q -> q | _ -> t') (i+1))
+            else fail lexlist i "extract_mat_index: wrong matrix index"
+
+          | _ -> fail t i "Compilation error: Syntax error in Fill command")
+        
+
+      (* Graphic commands *)
 
       | "PLOTON" :: t
       | "PLOTOFF" :: t
