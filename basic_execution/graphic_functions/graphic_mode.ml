@@ -237,21 +237,17 @@ let draw_window (ren : Sdlrender.t) (p : parameters) : unit =
 (* If the background parameters were modified, redraws the window,
   then refreshed the renderer *)
 let refresh_update (ren : Sdlrender.t) (p : parameters) (text_screen : bool) : unit =
-  print_endline "refresh update";
   (if !background_changed || text_screen then
-    (* (print_endline "Updating..."; *)
     (clear_graph ren;
     draw_frame ren;
     draw_black_square ren;
     draw_window ren p;
     draw_single_pict_no_writing ren gscreen;
     background_changed := false));
-  (* print_endline "Refreshing..."; *)
   refresh ren;;
 
 (** Graphic display **)
 let gdraw (ren : Sdlrender.t) : unit =
-  print_endline "gdraw";
   parameters_updated := false;
   clear_graph ren;
   draw_frame ren;
