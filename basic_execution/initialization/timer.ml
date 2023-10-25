@@ -21,6 +21,6 @@ let timer =
   locate   = 0.013;
   fline    = 0.045;
   plot     = 0.04;
-  drawstat = 0.;
+  drawstat = 0.16;
   text     = 0.08;
 };;

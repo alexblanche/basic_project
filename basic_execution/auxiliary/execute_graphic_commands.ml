@@ -142,7 +142,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
         p.var.(24) <- zy.re;
         if bgscreen.(64-b).(a) then
           bgscreen.(64-b).(a) <- false));
-      gdraw ren;
+      refresh_update ren p true;
       if slowdown_condition () then
         Unix.sleepf timer.plot;
       text_screen := false)
