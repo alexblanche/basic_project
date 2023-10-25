@@ -35,6 +35,21 @@ let lcm_l (l : int list) : int =
       List.fold_left lcm x (y::t)
     | _ -> failwith "lcm_l: at least two integers are expected"
 
+(* More accurate Frac function than x -. float_of_int (true_int_of_float x) *)
+let accurate_frac (x : float) : float =
+  if x >= 0. then
+    if x < 1. then x
+    else if x < 1e12 then
+      (* Normal form: more precision by looking directly at the numbers after the '.' *)
+      (* Temporary *)
+      x -. float_of_int (true_int_of_float x)
+    else
+      (* Scientific form, precision lost *)
+      0.
+  else
+    x -. float_of_int (true_int_of_float x);;
+
+
 (**********************************************************************************)
 
 
@@ -171,11 +186,12 @@ let func_table =
       (let f (l : complex list) =
         match l with
           | [z] ->
-            if z.im = 0.
+            (* Too imprecise *)
+            (* if z.im = 0.
               then complex_of_float (z.re -. float_of_int (true_int_of_float z.re))
               else
                 {re = z.re -. float_of_int (true_int_of_float z.re);
-                 im = z.im -. float_of_int (true_int_of_float z.im)}
+                 im = z.im -. float_of_int (true_int_of_float z.im)} *)
           | _ -> failwith "Function error: Frac has arity 1"
       in f)
     );
