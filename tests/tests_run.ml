@@ -1051,9 +1051,20 @@ let run_stopict () =
           "BGPICT"; "2"; "EOL";
 
           "PLOTON"; "1"; "0"; "0"; ","; "2"; "0"; "DISP";
-          
+
           "CLS";
-          "PLOTON"; "9"; "0"; ","; "6"; "0"; "DISP";
+          
+          "CLRTEXT"; "EOL";
+          
+          "VERTICAL"; "6"; "0"; "EOL";
+          "VERTICAL"; "6"; "1"; "EOL";
+          "VERTICAL"; "6"; "2"; "DISP";
+
+          "CLRTEXT"; "EOL";
+          
+          "HORIZONTAL"; "3"; "0"; "EOL";
+          "HORIZONTAL"; "3"; "1"; "EOL";
+          "HORIZONTAL"; "3"; "2"; "DISP";
         ])]
   in
   let p =

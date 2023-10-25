@@ -85,6 +85,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
             draw_frame ren;
             draw_black_square ren;
             draw_window ren p;
+            draw_single_pict_no_writing ren gscreen;
             background_changed := false);
           match eval_str p se with
             | Str_content s -> draw_text ren (rev_lexlist_to_rev_symblist s false) (int_of_complex zx) (int_of_complex zy)
@@ -275,8 +276,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       p.axeson <- true)
     
     | Graphic_Function ("BGNONE", _) ->
-      (background_changed := true;
-      p.bgpict <- -1)
+      (* (background_changed := false; *)
+      p.bgpict <- -1
 
     | Graphic_Function ("HORIZONTAL", [e]) ->
       let z = eval_num p e in

@@ -110,7 +110,7 @@ let apply_str_func (p : parameters) (fname : string) (sel : string_expr list) : 
       else failwith "String evaluation error: StrShift expects one string and an integer as arguments"
       
     | "STRSRC", [Str_content sl1; Str_content sl2] ->
-      let src = search sl1 sl2 in
+      let src = search (List.rev sl1) (List.rev sl2) in
       if src >= 0
         then Num_expr (Complex (complex_of_int (src + 1)))
         else Num_expr (Complex (complex_of_float 0.))
