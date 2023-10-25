@@ -11,7 +11,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       let (a2,b2) = rescale p zx2.re zy2.re in
       if a1 >= 1 && a1 <= 127 && a2 >= 1 && a2 <= 127
         && b1 >= 1 && b1 <= 63 && b2 >= 1 && b2 <= 63 then
-        (fline ren p a1 b1 a2 b2 style text_screen;
+        (fline ren p a1 b1 a2 b2 style;
+        refresh_update ren p !text_screen;
         if slowdown_condition () then
           Unix.sleepf timer.fline;
         text_screen := false)
@@ -271,7 +272,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       let b = rescale_y p z.re in
       if b >= 1 && b <= 63 then
         ((* horizontal_line ren gscreen 1 127 (64-b); *)
-        fline ren p 1 b 127 b None text_screen;
+        fline ren p 1 b 127 b None;
         refresh_update ren p !text_screen;
         if slowdown_condition () then
           Unix.sleepf timer.fline;
@@ -282,7 +283,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       let a = rescale_x p z.re in
       if a >= 1 && a <= 127 then
         ((* vertical_line ren gscreen a 1 63; *)
-        fline ren p a 1 a 63 None text_screen;
+        fline ren p a 1 a 63 None;
         refresh_update ren p !text_screen;
         if slowdown_condition () then
           Unix.sleepf timer.fline;

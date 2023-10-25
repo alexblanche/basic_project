@@ -1029,37 +1029,13 @@ let run_break () =
   run (empty_projcont ()) prog "main";;
 
 
-(* Debug Timeless Remix first screen *)
-let run_trfs () =
+let run_vert () =
   let prog =
     compile
       [("main",
         [
-          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
-          (* "SLDOT"; "EOL"; *)
-          (* "FLINE"; "1"; "0"; ","; "1"; "0"; ","; "1"; "0"; "0"; ","; "5"; "0"; "EOL"; *)
-          "FOR"; "0"; "ASSIGN"; "Z"; "TO"; "3"; "9"; "EOL";
-
-          "9"; "0"; "PLUS"; "Z"; "DISP";
-          "1"; "2"; "0"; "PLUS"; "Z"; "PLUS"; "LPAR"; "7"; "MINUS"; "Z"; "RPAR"; "LPAR"; "Z"; "GREATER"; "7"; "RPAR"; "DISP";
-          "6"; "3"; "MINUS"; "LPAR"; "Z"; "MINUS"; "7"; "RPAR"; "LPAR"; "Z"; "GREATER"; "7"; "RPAR"; "EOL";
-          
-          "FLINE"; "9"; "0"; "PLUS"; "Z"; ",";
-            "1"; ",";
-            "1"; "2"; "0"; "PLUS"; "Z"; "PLUS"; "LPAR"; "7"; "MINUS"; "Z"; "RPAR"; "LPAR"; "Z"; "GREATER"; "7"; "RPAR"; ",";
-            "6"; "3"; "MINUS"; "LPAR"; "Z"; "MINUS"; "7"; "RPAR"; "LPAR"; "Z"; "GREATER"; "7"; "RPAR"; "EOL";
-
-          "3"; "6"; "PLUS"; "Z"; "DISP";
-          "6"; "MINUS"; "Z"; "PLUS"; "LPAR"; "Z"; "MINUS"; "5"; "RPAR"; "LPAR"; "Z"; "GREATER"; "5"; "RPAR"; "DISP";
-          "6"; "3"; "MINUS"; "LPAR"; "Z"; "MINUS"; "5"; "RPAR"; "LPAR"; "Z"; "GREATER"; "5"; "RPAR"; "DISP";
-
-          "FLINE"; "3"; "6"; "PLUS"; "Z"; ",";
-            "1"; ",";
-            "6"; "MINUS"; "Z"; "PLUS"; "LPAR"; "Z"; "MINUS"; "5"; "RPAR"; "LPAR"; "Z"; "GREATER"; "5"; "RPAR"; ",";
-            "6"; "3"; "MINUS"; "LPAR"; "Z"; "MINUS"; "5"; "RPAR"; "LPAR"; "Z"; "GREATER"; "5"; "RPAR"; "EOL";
-          "NEXT"; "EOL";
+          "SLDOT"; "EOL";
+          "FLINE"; "1"; "0"; ","; "1"; "0"; ","; "1"; "0"; ","; "6"; "3"
         ])]
   in
-  (* prog;; *)
   run (empty_projcont ()) prog "main";;
-

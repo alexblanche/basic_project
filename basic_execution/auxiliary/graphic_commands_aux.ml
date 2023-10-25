@@ -37,15 +37,7 @@ let trace_drawstat (ren : Sdlrender.t) (l : (int * int) list) (style : drawstat_
                           ((* Truncate the rectangles that go out of the screen *)
                           let tr_br = List.rev_map truncate (bresenham false [||] ia (64-ja) ib (64-jb)) in
                           (* Write the pixels in gscreen (all within bounds) *)
-                          List.iter
-                            (fun r ->
-                              let (i,j,w,h) = pixels_of_rectangle r in
-                              for a = i to i+w-1 do
-                                for b = j to j+h-1 do
-                                  gscreen.(b).(a) <- true
-                                done
-                              done)
-                            tr_br;
+                          List.iter (fun r -> write_in_matrix gscreen r) tr_br;
                           tr_br)
                   in
                   ((ib,jb), List.rev_append new_rects rect_l))
@@ -204,7 +196,7 @@ let broken_line (l : Sdlrect.t list) (i1 : int) (j1 : int) (i2 : int) (j2 : int)
 
 (* Draws the F-Line between the points (a1, b1) and (a2, b2) with given style *)
 let fline (ren : Sdlrender.t) (p : parameters) (a1 : int) (b1 : int) (a2 : int) (b2 : int)
-  (style : style option) (text_screen : bool ref) : unit =
+  (style : style option) : unit =
   
   (* The pixels are written in gscreeen below *)
   let rect_l = bresenham false [||] a1 (64-b1) a2 (64-b2) in
@@ -233,18 +225,9 @@ let fline (ren : Sdlrender.t) (p : parameters) (a1 : int) (b1 : int) (a2 : int) 
         Array.of_list (List.rev_map thicken (broken_line (List.rev rect_l) a1 b1 a2 b2 index))
   in
   (* Writting the pixels in gscreen *)
-  Array.iter
-    (fun r ->
-      let (i,j,w,h) = pixels_of_rectangle r in
-      for a = i to i+w-1 do
-        for b = j to j+h-1 do
-          gscreen.(b).(a) <- true
-        done
-      done)
-    rect_t;
+  Array.iter (fun r -> write_in_matrix gscreen r) rect_t;
   (* Drawing the pixels *)
-  Sdlrender.fill_rects ren rect_t;
-  refresh_update ren p !text_screen;;
+  Sdlrender.fill_rects ren rect_t;;
 
 
 
@@ -289,17 +272,23 @@ let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
           then (j, min (!last_j - 1) 63)
         else (j, j)
       in
-      (vertical_line ren gscreen i (64-jmax) (64-jmin);
-      (* Refreshing at each step in Casio Basic (if "=" mode) *)
-      if t mod 2 = 0 then
+      (fline ren p i jmax i jmin
+        (if t mod 2 = 0
+          then Some StyleNormal
+          else Some StyleDot);
+      (* Refreshing at each step in Casio Basic *)
+      if t = 0 then
         refresh ren)
     else if !last_j >= 1 && !last_j <= 63 then
       let (jmin, jmax) =
         if j <= 0 then (1, max (!last_j - 1) 1) else (min (!last_j + 1) 63, 63)
       in
-      (vertical_line ren gscreen i (64-jmax) (64-jmin);
-      (* Refreshing at each step in Casio Basic (if "=" mode) *)
-      if t mod 2 = 0 then
+      (fline ren p i jmax i jmin
+        (if t mod 2 = 0
+          then Some StyleNormal
+          else Some StyleDot);
+      (* Refreshing at each step in Casio Basic *)
+      if t = 0 then
         refresh ren)
     );
     last_j := j;
@@ -311,7 +300,9 @@ let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
           if k mod 2 = parity then
             acc := (ploton_rect i (64-k)) :: !acc
         done;
-        Sdlrender.fill_rects ren (Array.of_list !acc);
+        let rect_t = Array.of_list !acc in
+        Array.iter (fun r -> write_in_matrix gscreen r) rect_t;
+        Sdlrender.fill_rects ren rect_t;
         refresh ren
         )
       else (* < or <= *)
@@ -321,7 +312,9 @@ let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
           if k mod 2 = parity then
             acc := (ploton_rect i (64-k)) :: !acc
         done;
-        Sdlrender.fill_rects ren (Array.of_list !acc);
+        let rect_t = Array.of_list !acc in
+        Array.iter (fun r -> write_in_matrix gscreen r) rect_t;
+        Sdlrender.fill_rects ren rect_t;
         refresh ren
         )
       );

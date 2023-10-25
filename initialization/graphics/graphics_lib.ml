@@ -327,6 +327,18 @@ let bresenham (write : bool) (m : bool array array)
 		| _ 											-> bresenham_loop_67 write m i1 j1 i2 j2 (* 6th octant *));;
 
 
+(* Writing the pixels of rectangles in the gscreen matrix *)
+let write_in_matrix (m : bool array array) (r : Sdlrect.t) : unit =
+	let (i,j,w,h) = pixels_of_rectangle r in
+  for a = i to i+w-1 do
+    for b = j to j+h-1 do
+  	  m.(b).(a) <- true
+    done
+  done;;
+	
+
+
+
 (** Graphical interface **)
 
 (* Draws the frame around the screen *)
