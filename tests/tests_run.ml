@@ -1029,13 +1029,42 @@ let run_break () =
   run (empty_projcont ()) prog "main";;
 
 
-let run_vert () =
+(* Test of erasing the black square in text and graphic modes *)
+let run_stopict () =
   let prog =
     compile
       [("main",
         [
-          "SLDOT"; "EOL";
-          "FLINE"; "1"; "0"; ","; "1"; "0"; ","; "1"; "0"; ","; "6"; "3"
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "BGPICT"; "1"; "EOL";
+          "CLS"; "DISP";
+          "PLOTON"; "8"; "0"; ","; "2"; "0"; "DISP";
+
+          "FLINE"; "1"; ","; "1"; "0"; ","; "3"; "0"; ","; "3"; "0"; "EOL";
+          "FLINE"; "1"; ","; "3"; "0"; ","; "3"; "0"; ","; "1"; "0"; "EOL";
+          "FLINE"; "1"; ","; "1"; "0"; ","; "3"; "0"; ","; "1"; "0"; "EOL";
+          "FLINE"; "1"; ","; "3"; "0"; ","; "3"; "0"; ","; "3"; "0"; "EOL";
+          "FLINE"; "1"; ","; "1"; "0"; ","; "1"; ","; "3"; "0"; "EOL";
+          "FLINE"; "3"; "0"; ","; "1"; "0"; ","; "3"; "0"; ","; "3"; "0"; "EOL";
+
+          "STOPICT"; "2"; "COLON";
+          "BGPICT"; "2"; "EOL";
+
+          "PLOTON"; "1"; "0"; "0"; ","; "2"; "0"; "DISP";
+          
+          "CLS";
+          "PLOTON"; "9"; "0"; ","; "6"; "0"; "DISP";
         ])]
   in
-  run (empty_projcont ()) prog "main";;
+  let p =
+    let par = empty_projcont () in
+    let m = Array.make_matrix 64 128 false in
+    for j = 0 to 63 do
+      m.(j).(126) <- true;
+      if j mod 2 = 0 then
+        m.(j).(127) <- true
+    done;
+    par.pict.(0) <- (2048, m);
+    par
+  in
+  run p prog "main";;

@@ -77,25 +77,26 @@ let entity_func_table =
           | [MatContent m1; MatContent m2] ->
             let r1 = Array.length m1 in
             let r2 = Array.length m2 in
-            if r1 = r2 && r1 <> 0 && r2 <> 0 then
-              let c1 = Array.length m1.(0) in
-              let c2 = Array.length m2.(0) in
-              let zero = Complex (complex_of_float 0.) in
-              let m = Array.make_matrix r1 (c1+c2) zero in
-              (try
-                for i = 0 to r1-1 do
-                  for j = 0 to c1-1 do
-                    m.(i).(j) <- m1.(i).(j)
-                  done
-                done;
-                for i = 0 to r1-1 do
-                  for j = 0 to c1-1 do
-                    m.(i).(j+c1) <- m2.(i).(j)
-                  done
-                done;
-                MatContent m
-              with
-                | _ -> failwith "Function error: Wrong dimensions for function Augment")
+            if r1 = r2 then
+              if r1 = 0 then
+                MatContent [||]
+              else
+                let c1 = Array.length m1.(0) in
+                let c2 = Array.length m2.(0) in
+                let zero = Complex (complex_of_float 0.) in
+                let m = Array.make_matrix r1 (c1+c2) zero in
+                (try
+                  for i = 0 to r1-1 do
+                    for j = 0 to c1-1 do
+                      m.(i).(j) <- m1.(i).(j)
+                    done;
+                    for j = 0 to c2-1 do
+                      m.(i).(j+c1) <- m2.(i).(j)
+                    done
+                  done;
+                  MatContent m
+                with
+                  | _ -> failwith "Function error: Assignment out of bounds in function Augment")
             else failwith "Function error: Wrong dimensions for function Augment"
           | _ -> failwith "Function error: Augment has arity 2 and accepts lists and matrices"
       in f)

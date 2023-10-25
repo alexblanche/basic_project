@@ -473,7 +473,9 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "GRIDON" :: t
       | "GRIDOFF" :: t
       | "COORDON" :: t
-      | "COORDOFF" :: t ->
+      | "COORDOFF" :: t
+      | "FUNCON" :: t
+      | "FUNCOFF" :: t ->
         (set code i (Graphic (Graphic_Function (List.hd lexlist, [])));
         aux t (i+1))
 
@@ -508,6 +510,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "GRAPHXL" :: t
       | "GRAPHXGEQ" :: t
       | "GRAPHXLEQ" :: t
+      | "RCLVWIN" :: t
+      | "STOVWIN" :: t
         ->
         let (e, t') = extract_expr t in
         (set code i (Graphic (Graphic_Function (List.hd lexlist, [e])));

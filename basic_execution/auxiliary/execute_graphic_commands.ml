@@ -31,7 +31,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
         let m = Array.make_matrix 64 128 false in
         (for b = 0 to 63 do
           for a = 0 to 127 do
-            m.(b).(a) <- gscreen.(b).(a)
+            m.(b).(a) <- bgscreen.(b).(a) || gscreen.(b).(a)
           done
         done;
         p.pict.(int_of_complex z - 1) <- (2048, m))
@@ -40,8 +40,16 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
     | Graphic_Function ("BGPICT", [e]) ->
       let z = eval_num p e in
       if is_int z && z.re >= 1. && z.re <= 20. then
-        (p.bgpict <- int_of_complex z - 1;
-        background_changed := true)
+        p.bgpict <- int_of_complex z - 1
+        (* In Casio Basic, some display after BGPict does NOT feature the background pict. *)
+        (* let (bgpict_size, m) = p.pict.(p.bgpict) in
+        (if bgpict_size >= 1024 then
+          for b = 0 to 63 do
+            for a = 0 to 127 do
+              bgscreen.(b).(a) <- m.(b).(a) || bgscreen.(b).(a)
+            done
+          done); *)
+        (* background_changed := true) *)
       else graphic_fail i  "Wrong index for BGPict command"
 
     | Graphic_Function ("RCLCAPT", [e]) ->
@@ -211,6 +219,9 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
     | Graphic_Function ("CLS", _) ->
       (* (print_endline "CLS"; *)
       (wipe gscreen;
+      line_feed ();
+      clear_line !writing_index;
+      locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
       background_changed := true)
 
     | ViewWindow (ex1, ex2, esx, ey1, ey2, esy) ->
