@@ -1,6 +1,6 @@
 (* Execution of the graphic commands *)
 
-let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_screen : bool ref) : unit =
+let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (text_screen : bool ref) : unit =
   match g with
     | Fline (ex1, ey1, ex2, ey2, style) ->
       let zx1 = eval_num p ex1 in
@@ -22,26 +22,26 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
         (draw_pict ren p (int_of_complex z - 1);
         refresh_update ren p !text_screen;
         text_screen := false)
-      else failwith "Graphic error: wrong index for RclPict command"
+      else graphic_fail i "Wrong index for RclPict command"
 
     | Graphic_Function ("STOPICT", [e]) ->
       let z = eval_num p e in
       if is_int z && z.re >= 1. && z.re <= 20. then
         let m = Array.make_matrix 64 128 false in
-        (for j = 0 to 63 do
-          for i = 0 to 127 do
-            m.(j).(i) <- gscreen.(j).(i)
+        (for b = 0 to 63 do
+          for a = 0 to 127 do
+            m.(b).(a) <- gscreen.(b).(a)
           done
         done;
         p.pict.(int_of_complex z - 1) <- (2048, m))
-      else failwith "Graphic error: wrong index for StoPict command"
+      else graphic_fail i  "Wrong index for StoPict command"
 
     | Graphic_Function ("BGPICT", [e]) ->
       let z = eval_num p e in
       if is_int z && z.re >= 1. && z.re <= 20. then
         (p.bgpict <- int_of_complex z - 1;
         background_changed := true)
-      else failwith "Graphic error: wrong index for BGPict command"
+      else graphic_fail i  "Wrong index for BGPict command"
 
     | Graphic_Function ("RCLCAPT", [e]) ->
       let z = eval_num p e in
@@ -55,16 +55,16 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
           gdraw ren
         else 
           background_changed := true)
-      else failwith "Graphic error: wrong index for RclCapt command"
+      else graphic_fail i "Wrong index for RclCapt command"
 
     | Text (ey, ex, se) ->
-      let zy = eval_num p ey in
+      (let zy = eval_num p ey in
       let zx = eval_num p ex in
       if not
         ((is_int zx) && (is_int zy)
         && (zx.re >= 1.) && (zx.re <= 127.)
         && (zy.re >= 1.) && (zy.re <= 63.))
-        then failwith "Graphic error: wrong arguments for Text";
+        then graphic_fail i "Wrong arguments for Text";
       
       if zy.re <= 58. then
         (text_screen := false;
@@ -80,11 +80,11 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
           match eval_str p se with
             | Str_content s -> draw_text ren (rev_lexlist_to_rev_symblist s false) (int_of_complex zx) (int_of_complex zy)
             | Num_expr (Complex z) -> draw_number ren z p.polar (int_of_complex zx) (int_of_complex zy)
-            | _ -> failwith "Graphic error: wrong output type for string expression evaluation"
+            | _ -> graphic_fail i  "Wrong output type for string expression evaluation"
         in
         refresh ren;
         if slowdown_condition () then
-          Unix.sleepf timer.text)
+          Unix.sleepf timer.text))
 
     | Graphic_Function ("DRAWSTAT", _) ->
       (Array.iter
@@ -222,7 +222,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
       let ystepval = eval_num p esy in
       if xminval.im <> 0. || xmaxval.im <> 0. || xstepval.im <> 0.
         || yminval.im <> 0. || ymaxval.im <> 0. || ystepval.im <> 0.
-        then failwith "Graphic error: ViewWindow expects real arguments"
+        then graphic_fail i "ViewWindow expects real arguments"
         else
           (p.xmin <- xminval.re;
           p.xmax <- xmaxval.re;
@@ -253,7 +253,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (g : graphic) (text_scree
           let z1 = eval_num p (Arithm [Entity list1]) in
           let z2 = eval_num p (Arithm [Entity list2]) in
           p.sgph.(sgphi) <- (drawon, style, int_of_complex z1, int_of_complex z2, mark)
-        | _ -> failwith "Graphic error: wrong arguments for Sgph DrawStat setup")
+        | _ -> graphic_fail i "Wrong arguments for Sgph DrawStat setup")
 
     | Graphic_Function ("AXESON", _) ->
       (background_changed := true;

@@ -67,7 +67,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   let rec aux (i : int) : unit =
 
     (* debug *)
-    print_endline (string_of_int i);
+    (* print_endline (string_of_int i); *)
 
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then
@@ -135,7 +135,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             (let vala = get_val_numexpr p a in
             let ie = eval_num p iexp in
             if not (is_int vala && is_int ie)
-              then failwith "Runtime error: wrong index for list";
+              then run_fail i "Wrong index for list";
             (* let t = p.list.(int_of_complex vala) in
             let iint = int_of_complex ie in
             t.(iint) <- z.re;
@@ -146,7 +146,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             (let ie = eval_num p iexp in
             let je = eval_num p jexp in
             if not (is_int ie && is_int je)
-              then failwith "Runtime error: wrong index for matrix";
+              then run_fail i "Wrong index for matrix";
             (* let m = p.mat.(int_of_complex vala) in
             let iint = int_of_complex ie in
             let jint = int_of_complex je in
@@ -156,7 +156,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
               (MatIndex (ai,
                 Complex ie, Complex je)))
 
-          | _ -> failwith "Runtime error: assignment to unassignable object"
+          | _ -> run_fail i "Assignment to unassignable object"
         );
         if i<n-1 && code.(i+1) = Disp then
           (text_screen := true;
@@ -167,7 +167,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         else aux (i+1))
 
       | Graphic g ->
-        (apply_graphic ren p g text_screen;
+        (apply_graphic ren p i g text_screen;
         aux (i+1))
       
       | Expr (Complex z) ->
@@ -210,7 +210,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             aux (i+2) (* Display to be treated here *)
           else aux (i+1))
         
-        | _ -> failwith "Runtime error: wrong output type of eval_entity")
+        | _ -> run_fail i "Wrong output type of eval_entity")
       
       | String se ->
         (* A string alone is printed, an application of string function is not *)
@@ -256,8 +256,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
                 (disp p ren writing_index;
                 aux (i+1))
               else quit win ren true (* Quit after the string *))
-          | _, Num_expr _ -> failwith "Runtime error: string expression has numerical value"
-          | _  -> failwith "Runtime error: wrong type in string expression evaluation")
+          | _, Num_expr _ -> run_fail i "String expression has numerical value"
+          | _  -> run_fail i "Wrong type in string expression evaluation")
           
       | Locate (e1, e2, se) ->
         let z1 = eval_num p e1 in
@@ -266,7 +266,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
           ((is_int z1) && (is_int z2)
           && (z1.re >= 1.) && (z1.re <= 21.)
           && (z2.re >= 1.) && (z2.re <= 7.))
-          then failwith "Runtime error: wrong arguments for Locate";
+          then run_fail i "Wrong arguments for Locate";
         (* The coordinates in Casio Basic are between 1 and 21 *)
         text_screen := true;
         let sl =
@@ -274,10 +274,10 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             | Str_content s -> rev_lexlist_to_rev_symblist s true
             | Num_expr (Complex z) ->
               (if z.im <> 0. (* In Casio Basic, Locate does not handle complex numbers *)
-                then failwith "Runtime error: a number printed by Locate cannot be a complex number";
+                then run_fail i "A number printed by Locate cannot be a complex number";
               let z_repr = float_to_casio z.re in
               str_to_rev_symblist_simple z_repr)
-            | _ -> failwith "Runtime error: wrong output type for string expression evaluation"
+            | _ -> run_fail i "Wrong output type for string expression evaluation"
         in
         locate ren sl ((int_of_complex z1)-1) ((int_of_complex z2)-1);
         val_seen := false;
@@ -308,15 +308,15 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
       | For (vi, e1, e2, e3, inext) ->
         (let z1 = eval_num p e1 in
         if z1.im <> 0.
-          then failwith "Runtime error: complex value given to a For loop";
+          then run_fail i "Complex value given to a For loop";
         p.var.(vi) <- z1.re;
         p.var.(vi+29) <- 0.;
         let z2 = eval_num p e2 in
         let z3 = eval_num p e3 in
         if z2.im <> 0. || z3.im <> 0.
-          then failwith "Runtime error: complex value given to a For loop"
+          then run_fail i "Complex value given to a For loop"
         else if is_zero z3
-          then failwith "Runtime error: the step value of a For loop is 0";
+          then run_fail i "The step value of a For loop is 0";
           
         let asc = z3.re > 0. in
         for_info := (vi, i+1, asc, z2.re, z3.re)::!for_info;
@@ -338,7 +338,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
               else (* Exitting the loop *)
                 (for_info := List.tl !for_info;
                 aux (i+1)))
-          | [] -> failwith "Runtime error: unexpected Next")
+          | [] -> run_fail i "Unexpected Next")
       
       | Prog name ->
         (prog_goback := (i+1)::!prog_goback;
@@ -346,7 +346,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
           try
             List.assoc name proglist
           with
-            | Not_found -> failwith ("Runtime error: Prog \""^name^"\" not found")
+            | Not_found -> run_fail i ("Prog \""^name^"\" not found")
         in
         aux j)
       
@@ -354,7 +354,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         let sl =
           match eval_str p se with
             | Str_content s -> s
-            | _ -> failwith ("Runtime error: wrong input type in string assignment")
+            | _ -> run_fail i ("Wrong input type in string assignment")
         in
         ((match si with
           | Str_access j -> p.str.(j) <- sl
@@ -364,7 +364,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             (p.listzero.(ai) <- sl;
             if Array.length p.list.(ai) = 0 then
               p.list.(ai) <- [|0.;0.|])
-          | _ -> failwith "Runtime error: wrong string in string assignment");
+          | _ -> run_fail i "Wrong string in string assignment");
         aux (i+1))
 
       | AssignList (le, n) ->
@@ -376,12 +376,12 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             | _ ->
               if is_int ni
                 then int_of_complex ni
-                else failwith "Runtime error: wrong index for list assignment"
+                else run_fail i "Wrong index for list assignment"
         in
         if nii >= 1 && nii <= 27 then
           (p.list.(nii-1) <- t;
           aux (i+1))
-        else failwith "Runtime error: index out of bounds for list assignment"
+        else run_fail i "Index out of bounds for list assignment"
         
       | AssignMat (me, mi) ->
         let m = eval_mat p me in
@@ -419,7 +419,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
                   p.mat.(mi).(a+row).(b) <- z.im
                 done
               done)
-          | _ -> failwith "Runtime error: wrong arguments for command Fill");
+          | _ -> run_fail i "Wrong arguments for command Fill");
         aux (i+1))
 
       | End ->
@@ -441,7 +441,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             (disp_graphic ren (i<n-1 && (code.(i+1) <> End || !prog_goback <> []))));
         aux (i+1))
 
-      | _ -> failwith ("Runtime error: unexpected command at line "^(string_of_int i))
+      | _ -> run_fail i "Unexpected command"
   in
 
   let key_check_domain = Domain.spawn launch_key_check in
