@@ -74,13 +74,11 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
         && (zx.re >= 1.) && (zx.re <= 127.)
         && (zy.re >= 1.) && (zy.re <= 63.))
         then graphic_fail i "Wrong arguments for Text";
-      
       if zy.re <= 58. then
-        (text_screen := false;
-        let _ =
+        (let _ =
           (* Exception to the treatment of other drawing commands,
              because a Text is also used to erase some pixels *)
-          if !background_changed then
+          if !background_changed || !text_screen then
             (clear_graph ren;
             draw_frame ren;
             draw_black_square ren;
@@ -92,6 +90,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
             | Num_expr (Complex z) -> draw_number ren z p.polar (int_of_complex zx) (int_of_complex zy)
             | _ -> graphic_fail i  "Wrong output type for string expression evaluation"
         in
+        text_screen := false;
         refresh ren;
         if slowdown_condition () then
           Unix.sleepf timer.text))

@@ -1053,18 +1053,21 @@ let run_stopict () =
           "PLOTON"; "1"; "0"; "0"; ","; "2"; "0"; "DISP";
 
           "CLS";
+          "TEXT"; "1"; "0"; ","; "2"; "0"; ","; "QUOTE"; "A"; "B"; "C"; "QUOTE"; "EOL";
           
           "CLRTEXT"; "EOL";
           
+          "TEXT"; "1"; "0"; ","; "4"; "0"; ","; "QUOTE"; "A"; "B"; "C"; "QUOTE"; "EOL";
+
           "VERTICAL"; "6"; "0"; "EOL";
           "VERTICAL"; "6"; "1"; "EOL";
           "VERTICAL"; "6"; "2"; "DISP";
 
-          "CLRTEXT"; "EOL";
+          (* "CLRTEXT"; "EOL";
           
           "HORIZONTAL"; "3"; "0"; "EOL";
           "HORIZONTAL"; "3"; "1"; "EOL";
-          "HORIZONTAL"; "3"; "2"; "DISP";
+          "HORIZONTAL"; "3"; "2"; "DISP"; *)
         ])]
   in
   let p =
