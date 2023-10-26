@@ -1119,58 +1119,6 @@ let run_dcmp () =
           "X"; "GREATER"; "3"; "IMPL"; "ANS"; "FRAC"; "LPAR"; "CPLXI"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "G"; "EOL";
           "H"; "DISP";
           "NEXT";
-
-
-          (* "REP"; "G"; "DISP";
-          "LPAR"; "REP"; "G"; "RPAR"; "DIVIDED"; "1"; "0"; "0"; "0"; "0"; "ASSIGN"; "A"; "DISP";
-          "1"; "0"; "0"; "0"; "0"; "TIMES"; "FRAC"; "A"; "DISP";
-          "LPAR"; "REP"; "G"; "RPAR"; "MINUS"; "A"; "TIMES"; "1"; "0"; "0"; "0"; "0"; "DISP";
-          "IMP"; "G"; "DISP";
-          "LPAR"; "IMP"; "G"; "RPAR"; "DIVIDED"; "1"; "0"; "0"; "0"; "0"; "0"; "ASSIGN"; "A"; "DISP";
-          "1"; "0"; "0"; "0"; "0"; "0"; "TIMES"; "FRAC"; "A"; "DISP";
-          "LPAR"; "IMP"; "G"; "RPAR"; "MINUS"; "A"; "TIMES"; "1"; "0"; "0"; "0"; "0"; "0"; "DISP"; *)
-          
-          (* "1"; "0"; "POWER"; "LPAR"; "1"; "5"; "MINUS"; "5"; "LPAR"; "1"; "PLUS"; "MOD"; "X"; "MINUS"; "1"; ","; "3"; "EOL";
-          "X"; "LEQ"; "3"; "IMPL"; "INT"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          "X"; "GREATER"; "3"; "IMPL"; "INT"; "LPAR"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          "H"; "DISP";
-          
-          "2"; "ASSIGN"; "X"; "EOL";
-          "2"; "5"; "3"; "1"; "4"; "2"; "7"; "9"; "PLUS";
-          "1"; "5"; "2"; "6"; "4"; "0"; "4"; "0"; "6"; "0"; "0"; "6"; "9"; "1"; "2"; "CPLXI"; "ASSIGN"; "G"; "DISP";
-          "1"; "0"; "POWER"; "LPAR"; "1"; "5"; "MINUS"; "5"; "LPAR"; "1"; "PLUS"; "MOD"; "X"; "MINUS"; "1"; ","; "3"; "EOL";
-          "X"; "LEQ"; "3"; "IMPL"; "INT"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          "X"; "GREATER"; "3"; "IMPL"; "INT"; "LPAR"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          "H"; "DISP";
-
-          "3"; "ASSIGN"; "X"; "EOL";
-          "1"; "4"; "2"; "7"; "9"; "PLUS";
-          "1"; "5"; "2"; "6"; "4"; "0"; "4"; "0"; "6"; "0"; "0"; "6"; "9"; "1"; "2"; "CPLXI"; "ASSIGN"; "G"; "DISP";
-          "1"; "0"; "POWER"; "LPAR"; "1"; "5"; "MINUS"; "5"; "LPAR"; "1"; "PLUS"; "MOD"; "X"; "MINUS"; "1"; ","; "3"; "EOL";
-          "X"; "LEQ"; "3"; "IMPL"; "INT"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          "X"; "GREATER"; "3"; "IMPL"; "INT"; "LPAR"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          "H"; "DISP";
-
-          "4"; "ASSIGN"; "X"; "EOL";
-          "1"; "5"; "2"; "6"; "4"; "0"; "4"; "0"; "6"; "0"; "0"; "6"; "9"; "1"; "2"; "CPLXI"; "ASSIGN"; "G"; "DISP";
-          "1"; "0"; "POWER"; "LPAR"; "1"; "5"; "MINUS"; "5"; "LPAR"; "1"; "PLUS"; "MOD"; "X"; "MINUS"; "1"; ","; "3"; "EOL";
-          "X"; "LEQ"; "3"; "IMPL"; "INT"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          "X"; "GREATER"; "3"; "IMPL"; "INT"; "LPAR"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          "H"; "DISP";
-
-          "5"; "ASSIGN"; "X"; "EOL";
-          "4"; "0"; "6"; "0"; "0"; "6"; "9"; "1"; "2"; "CPLXI"; "ASSIGN"; "G"; "DISP";
-          "1"; "0"; "POWER"; "LPAR"; "1"; "5"; "MINUS"; "5"; "LPAR"; "1"; "PLUS"; "MOD"; "X"; "MINUS"; "1"; ","; "3"; "EOL";
-          "X"; "LEQ"; "3"; "IMPL"; "INT"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          "X"; "GREATER"; "3"; "IMPL"; "INT"; "LPAR"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          "H"; "DISP";
-
-          "6"; "ASSIGN"; "X"; "EOL";
-          "6"; "9"; "1"; "2"; "CPLXI"; "ASSIGN"; "G"; "DISP";
-          "1"; "0"; "POWER"; "LPAR"; "1"; "5"; "MINUS"; "5"; "LPAR"; "1"; "PLUS"; "MOD"; "X"; "MINUS"; "1"; ","; "3"; "EOL";
-          "X"; "LEQ"; "3"; "IMPL"; "INT"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          "X"; "GREATER"; "3"; "IMPL"; "INT"; "LPAR"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          "H"; "DISP"; *)
         ])]
   in
   run (empty_projcont ()) prog "main";;

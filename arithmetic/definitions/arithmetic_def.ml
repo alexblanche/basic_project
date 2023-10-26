@@ -36,18 +36,35 @@ let lcm_l (l : int list) : int =
     | _ -> failwith "lcm_l: at least two integers are expected"
 
 (* More accurate Frac function than x -. float_of_int (true_int_of_float x) *)
-let accurate_frac (x : float) : float =
+
+(* Converts the list of decimals (in reverse order) [dk;...;d2;d1] to the float 0.d1d2...dk *)
+let rev_dec_to_frac (dl : int list) : float =
+	let x = List.fold_left (fun x d -> float_of_int d +. x /. 10.) 0. dl in
+	x /. 10.;;
+
+(* Returns the list of decimals in reverse order: when x = 123.4567, the output is [7;6;5;4] *)
+let float_to_rev_dec (x : float) : int list =
+	let rec aux y cpt digits zeroes =
+		if cpt = 15 then digits
+		else
+			let d = (true_int_of_float (10.*.y)) mod 10 in
+			if d = 0
+				then aux (10.*.y) (cpt + 1) digits (0::zeroes) 
+				else aux (10.*.y) (cpt + 1) (d::List.rev_append zeroes digits) []
+	in
+	
+	let pow = 1 + int_of_float ((Float.log x)/.(Float.log 10.)) in
+	aux x pow [] [];;
+
+(* Accurate frac function *)
+let rec accurate_frac (x : float) : float =
   if x >= 0. then
     if x < 1. then x
-    else if x < 1e12 then
-      (* Normal form: more precision by looking directly at the numbers after the '.' *)
-      (* Temporary *)
-      x -. float_of_int (true_int_of_float x)
-    else
-      (* Scientific form, precision lost *)
-      0.
+    else if x < 1e14 then
+      rev_dec_to_frac (float_to_rev_dec x)
+    else 0.
   else
-    x -. float_of_int (true_int_of_float x);;
+    -. (accurate_frac (-. x));;
 
 
 (**********************************************************************************)
@@ -192,6 +209,11 @@ let func_table =
               else
                 {re = z.re -. float_of_int (true_int_of_float z.re);
                  im = z.im -. float_of_int (true_int_of_float z.im)} *)
+            if z.im = 0.
+              then complex_of_float (accurate_frac z.re)
+              else
+                {re = accurate_frac z.re;
+                 im = accurate_frac z.im}
           | _ -> failwith "Function error: Frac has arity 1"
       in f)
     );

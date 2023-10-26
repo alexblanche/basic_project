@@ -136,7 +136,7 @@ let float_to_casio (n : float) : string =
   if res.[nres-1] = '.'
     then String.sub res 0 (nres-1)
     else
-      (* Deletion of zeroes at the end of res, or between '.' and 'e' *)
+      (* Deletion of zeroes at the end of res, or before the 'e' *)
       (let last_dec =
         if nres >= 4 && res.[nres-4] = '\015'
           then nres-5
@@ -147,12 +147,15 @@ let float_to_casio (n : float) : string =
       while res.[!i] = '0' do
         decr i
       done;
-      if res.[!i] = '.' then
-        if last_dec = nres-5
-          then (String.sub res 0 !i)^(String.sub res (nres-4) 4)
-          else String.sub res 0 !i
-      else res)
-;;
+      let index_sub =
+        if res.[!i] = '.'
+          then !i
+          else !i+1
+      in
+      if last_dec = nres-5 then
+        (String.sub res 0 index_sub)^(String.sub res (nres-4) 4)
+      else 
+        String.sub res 0 index_sub);;
 
 
 (** Formatting complex numbers **)
