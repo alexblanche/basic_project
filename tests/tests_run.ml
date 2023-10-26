@@ -1124,7 +1124,7 @@ let run_dcmp () =
           *)
           
           "FOR"; "1"; "ASSIGN"; "X"; "TO"; "6"; "EOL";
-          (* "G"; "DISP"; *)
+          "G"; "DISP";
           "1"; "0"; "POWER"; "LPAR"; "1"; "5"; "MINUS"; "5"; "LPAR"; "1"; "PLUS"; "MOD"; "X"; "MINUS"; "1"; ","; "3"; "EOL";
           (* "ANS"; "DISP"; *)
           "X"; "LEQ"; "3"; "IMPL"; "INT"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
@@ -1132,7 +1132,7 @@ let run_dcmp () =
           
           "X"; "LEQ"; "3"; "IMPL"; "CPLXI"; "IMP"; "G"; "PLUS"; "ANS"; "FRAC"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "G"; "EOL";
           "X"; "GREATER"; "3"; "IMPL"; "ANS"; "FRAC"; "LPAR"; "CPLXI"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "G"; "EOL";
-          (* "H"; "DISP"; *)
+          "H"; "DISP";
 
           "0"; "ASSIGN"; "S"; "COLON"; "1"; "ASSIGN"; "M"; "EOL";
           "WHILE"; "H"; "EOL";
@@ -1147,22 +1147,17 @@ let run_dcmp () =
           "QUOTE"; "M"; "QUOTE"; "EOL";
           "M"; "DISP";
 
-          "S"; "ASSIGN"; "T"; "EOL";
-
-          "FOR"; "0"; "ASSIGN"; "Y"; "TO"; "1"; "3"; "EOL";
+          (* "FOR"; "0"; "ASSIGN"; "Y"; "TO"; "1"; "3"; "EOL";
 
           "INT"; "LPAR"; "S"; "DIVIDED"; "1"; "0"; "POWER"; "LPAR"; "1"; "3"; "MINUS"; "Y"; "DISP";
           "2"; "PLUS"; "LPAR"; "1"; "4"; "LPAR"; "X"; "MINUS"; "1"; "RPAR"; "PLUS"; "Y"; "RPAR"; "INTDIV"; "1"; "9"; "DISP";
           "2"; "PLUS"; "LPAR"; "1"; "4"; "LPAR"; "X"; "MINUS"; "1"; "RPAR"; "PLUS"; "Y"; "RPAR"; "RMDR"; "1"; "9"; "DISP";
           "1"; "0"; "POWER"; "LPAR"; "1"; "3"; "MINUS"; "Y"; "RPAR"; "FRAC"; "LPAR"; "S"; "DIVIDED"; "1"; "0"; "POWER"; "LPAR"; "1"; "3"; "MINUS"; "Y"; "ASSIGN"; "S"; "EOL";
-          "LPAR"; "1"; "0"; "POWER"; "LPAR"; "1"; "3"; "MINUS"; "Y"; "RPAR"; "RPAR"; "FRAC"; "LPAR"; "T"; "DIVIDED"; "1"; "0"; "POWER"; "LPAR"; "1"; "3"; "MINUS"; "Y"; "ASSIGN"; "T"; "EOL";
-          
 
           "QUOTE"; "N"; "E"; "W"; " "; "S"; "QUOTE"; "EOL";
           "S"; "DISP";
-          "T"; "DISP";
 
-          "NEXT";
+          "NEXT"; *)
 
           "NEXT";
         ])]

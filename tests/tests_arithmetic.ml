@@ -165,6 +165,7 @@ let unit_tests_eval_num () =
       (["0"; "EQUAL"; "0"; "PLUS"; "1"; "AND"; "0"], {re = 0.; im = 0.});
       (["2"; "TIMES"; "2"; "POWER"; "3"; "PLUS"; "1"], {re = 17.; im = 0.});
       (["LPAR"; "2"; "RPAR"; "LPAR"; "3"; "RPAR"], {re = 6.; im = 0.});
+      (["2"; "POWER"; "3"; "ABS"; "LPAR"; "UMINUS"; "8"; "RPAR"], {re = 64.; im = 0.});
       (["2"; "POWER"; "LPAR"; "3"; "RPAR"; "TIMES"; "ABS"; "LPAR"; "UMINUS"; "8"; "RPAR"], {re = 64.; im = 0.});
       (["2"; "POWER"; "LPAR"; "3"; "RPAR"; "ABS"; "LPAR"; "UMINUS"; "8"; "RPAR"], {re = 64.; im = 0.});
 
