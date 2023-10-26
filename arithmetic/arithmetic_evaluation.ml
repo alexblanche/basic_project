@@ -415,6 +415,8 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
 
     (* Add to a queue *)
     (* Case of omitted multiplication operator *)
+    | Rpar :: (Lunop _) :: _, _
+    | Rpar :: (Function _) :: _, _ -> shunting_yard p (Rpar::(Op "TIMES")::List.tl alist) output_q op_q
     | (Entity x1)::(Entity x2)::t, _ -> shunting_yard p t ((apply_op p "TIMES" x1 x2)::output_q) op_q
     | (Entity x1):: Lpar ::_, _
     | (Entity x1)::(Lunop _)::_, _
