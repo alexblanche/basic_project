@@ -38,14 +38,25 @@ let lcm_l (l : int list) : int =
 (* More accurate Frac function than x -. float_of_int (true_int_of_float x) *)
 
 (* Converts the list of decimals (in reverse order) [dk;...;d2;d1] to the float 0.d1d2...dk *)
-let rev_dec_to_frac (dl : int list) : float =
-	let x = List.fold_left (fun x d -> float_of_int d +. x /. 10.) 0. dl in
-	x /. 10.;;
+let dec_to_frac (dl : int list) : float =
+  (* let x =
+    List.fold_left
+      (fun x d ->
+        (* Fighting against imprecision *)
+        let div = x /. 10. in
+        let mul = x *. 0.1 in
+        ((div +. mul) /. 2.) +. (float_of_int d))
+      0. dl
+  in
+	x /. 10.;; *)
+  let sum = List.fold_left (fun n d -> 10*n+d) 0 dl in
+  float_of_int sum /. (10. ** (float_of_int (List.length dl)));;
+
 
 (* Returns the list of decimals in reverse order: when x = 123.4567, the output is [7;6;5;4] *)
-let float_to_rev_dec (x : float) : int list =
+let float_to_dec (x : float) : int list =
 	let rec aux y cpt digits zeroes =
-		if cpt = 15 then digits
+		if cpt = 15 then List.rev digits
 		else
 			let d = (true_int_of_float (10.*.y)) mod 10 in
 			if d = 0
@@ -53,7 +64,7 @@ let float_to_rev_dec (x : float) : int list =
 				else aux (10.*.y) (cpt + 1) (d::List.rev_append zeroes digits) []
 	in
 	
-	let pow = 1 + int_of_float ((Float.log x)/.(Float.log 10.)) in
+	let pow = 1 + int_of_float (Float.log10 x) in
 	aux x pow [] [];;
 
 (* Accurate frac function *)
@@ -61,7 +72,7 @@ let rec accurate_frac (x : float) : float =
   if x >= 0. then
     if x < 1. then x
     else if x < 1e14 then
-      rev_dec_to_frac (float_to_rev_dec x)
+      dec_to_frac (float_to_dec x)
     else 0.
   else
     -. (accurate_frac (-. x));;
@@ -318,7 +329,7 @@ let func_table =
         match l with
           | [z] ->
             if z.im = 0.
-              then complex_of_float ((Float.log z.re) /. (Float.log 10.))
+              then complex_of_float (Float.log10 z.re)
               else scal (1./.Float.log 10.) (Complex.log z)
           | _ -> failwith "Function error: Log has arity 1"
       in f)
@@ -338,7 +349,7 @@ let func_table =
         match l with
           | [z] ->
             if z.im = 0.
-              then complex_of_float (Float.pow z.re (1./.3.))
+              then complex_of_float (Float.cbrt z.re)
               else Complex.pow z (complex_of_float (1./.3.))
           | _ -> failwith "Function error: Sqrt has arity 1"
       in f)

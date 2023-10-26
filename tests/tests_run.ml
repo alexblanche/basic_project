@@ -1094,24 +1094,39 @@ let run_dcmp () =
           "1"; "5"; "2"; "6"; "4"; "0"; "4"; "0"; "6"; "0"; "0"; "6"; "9"; "1"; "2"; "CPLXI"; "ASSIGN"; "G"; "EOL";
 
           (* 
-            Values of G, H:
+            Actual value of G:
+            80660025314279 + 152640406006912 i
+
+            Values of G, H, Ans:
             8.066002531e+13 + 1.52640406e+14i
             8066
+            10e+10
+
             25314279 + 1.52640406e+14i
             253
+            100000
+
             14279 + 1.52640406e+14i
             14279
+            1
+
             1.52640406e+14i
             15264
+            10e+10
+
             406006912i
             4060
+            100000
+
             6912i
             6912
+            1
           *)
           
           "FOR"; "1"; "ASSIGN"; "X"; "TO"; "6"; "EOL";
           "G"; "DISP";
           "1"; "0"; "POWER"; "LPAR"; "1"; "5"; "MINUS"; "5"; "LPAR"; "1"; "PLUS"; "MOD"; "X"; "MINUS"; "1"; ","; "3"; "EOL";
+          "ANS"; "DISP";
           "X"; "LEQ"; "3"; "IMPL"; "INT"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
           "X"; "GREATER"; "3"; "IMPL"; "INT"; "LPAR"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
           
