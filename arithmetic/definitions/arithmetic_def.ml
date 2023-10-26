@@ -39,33 +39,26 @@ let lcm_l (l : int list) : int =
 
 (* Converts the list of decimals (in reverse order) [dk;...;d2;d1] to the float 0.d1d2...dk *)
 let dec_to_frac (dl : int list) : float =
-  (* let x =
-    List.fold_left
-      (fun x d ->
-        (* Fighting against imprecision *)
-        let div = x /. 10. in
-        let mul = x *. 0.1 in
-        ((div +. mul) /. 2.) +. (float_of_int d))
-      0. dl
-  in
-	x /. 10.;; *)
   let sum = List.fold_left (fun n d -> 10*n+d) 0 dl in
   float_of_int sum /. (10. ** (float_of_int (List.length dl)));;
 
 
 (* Returns the list of decimals in reverse order: when x = 123.4567, the output is [7;6;5;4] *)
 let float_to_dec (x : float) : int list =
-	let rec aux y cpt digits zeroes =
+  let pow = 1 + int_of_float (Float.log10 x) in
+	
+  let rec aux y cpt digits zeroes =
 		if cpt = 15 then List.rev digits
 		else
-			let d = (true_int_of_float (10.*.y)) mod 10 in
+			let d = (true_int_of_float y) mod 10 in
+      let next_y = (10. ** (float_of_int (2 + cpt - pow))) *. x in
 			if d = 0
-				then aux (10.*.y) (cpt + 1) digits (0::zeroes) 
-				else aux (10.*.y) (cpt + 1) (d::List.rev_append zeroes digits) []
+        (* 10**cpt is more accurate than 10*...(10*(10*(10*x))) *)
+				then aux next_y (cpt + 1) digits (0::zeroes) 
+				else aux next_y (cpt + 1) (d::List.rev_append zeroes digits) []
 	in
 	
-	let pow = 1 + int_of_float (Float.log10 x) in
-	aux x pow [] [];;
+	aux (10.*.x) pow [] [];;
 
 (* Accurate frac function *)
 let rec accurate_frac (x : float) : float =
@@ -508,7 +501,9 @@ let op_list = [
 (* Application of the functions *)
 let apply_func (fname : string) (zl : complex list) : complex =
   try
-    (Hashtbl.find func_table fname) zl
+    let z = (Hashtbl.find func_table fname) zl in
+    (* Rounding after the application of the function *)
+    round z
   with
     | Not_found -> failwith ("apply_func: Function "^fname^" undefined");;
 
@@ -517,7 +512,8 @@ let apply_func (fname : string) (zl : complex list) : complex =
 (* Real and complex operations are sometimes separated for efficiency and precision
   (ex: float ** is much more precise than Complex.pow) *)
 let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
-  match o with
+  round
+  (match o with
   (* Arithmetic *)
     | "PLUS" -> Complex.add z1 z2
     | "MINUS" -> Complex.sub z1 z2
@@ -595,12 +591,14 @@ let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
         then complex_of_float (Float.pow z2.re (1. /. z1.re))
         else Complex.pow z2 (Complex.div {re = 1.; im = 0.} z1)
 
-    | _ -> failwith ("apply_op: Unkown operator "^o);;
+    | _ -> failwith ("apply_op: Unkown operator "^o)
+  );;
 
 (* Application of the right unary operators *)
 (* Since there are only a few, we hard-code them like the operators. *)
 let apply_rop_single (ro : string) (z : complex) : complex =
-  match ro with
+  round
+  (match ro with
     | "EXCLAMATIONMARK" ->
       if is_int z
         then complex_of_int (fact (true_int_of_float z.re))
@@ -657,7 +655,8 @@ let apply_rop_single (ro : string) (z : complex) : complex =
       if z.im = 0.
       then complex_of_float (z.re *. 1e18)
       else scal 1e18 z
-    | _ -> failwith ("apply_rop: Unkown operator "^ro);;
+    | _ -> failwith ("apply_rop: Unkown operator "^ro)
+  );;
 
 (* Application of the left unary operators *)
 let apply_lop_single (lo : string) (z : complex) : complex =
