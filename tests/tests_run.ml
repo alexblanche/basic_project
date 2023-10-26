@@ -1126,13 +1126,26 @@ let run_dcmp () =
           "FOR"; "1"; "ASSIGN"; "X"; "TO"; "6"; "EOL";
           "G"; "DISP";
           "1"; "0"; "POWER"; "LPAR"; "1"; "5"; "MINUS"; "5"; "LPAR"; "1"; "PLUS"; "MOD"; "X"; "MINUS"; "1"; ","; "3"; "EOL";
-          "ANS"; "DISP";
+          (* "ANS"; "DISP"; *)
           "X"; "LEQ"; "3"; "IMPL"; "INT"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
           "X"; "GREATER"; "3"; "IMPL"; "INT"; "LPAR"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
           
           "X"; "LEQ"; "3"; "IMPL"; "CPLXI"; "IMP"; "G"; "PLUS"; "ANS"; "FRAC"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "G"; "EOL";
           "X"; "GREATER"; "3"; "IMPL"; "ANS"; "FRAC"; "LPAR"; "CPLXI"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "G"; "EOL";
           "H"; "DISP";
+
+          "0"; "ASSIGN"; "S"; "COLON"; "1"; "ASSIGN"; "M"; "EOL";
+          "WHILE"; "H"; "EOL";
+          "H"; "RMDR"; "2"; "ASSIGN"; "I"; "EOL";
+          "H"; "INTDIV"; "2"; "ASSIGN"; "H"; "EOL";
+          "I"; "M"; "PLUS"; "S"; "ASSIGN"; "S"; "EOL";
+          "1"; "0"; "M"; "ASSIGN"; "M"; "EOL";
+          "WHILEEND"; 
+
+          "S"; "DISP";
+          "M"; "DISP";
+
+
           "NEXT";
         ])]
   in

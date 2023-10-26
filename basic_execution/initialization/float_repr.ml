@@ -124,13 +124,30 @@ let rec sf_le1 (s : string) : string =
 (* Returns the representation of the OCaml float n as a Casio number *)
 let float_to_casio (n : float) : string =
   let s = string_of_float n in
+  let ns = String.length s in
   let res =
-    if (n >= 1e+10 || n <= -.1e+10) && not (n >= 1e+12 || n <= -.1e+12) then
+    (* if (n >= 1e+10 || n <= -.1e+10) && not (n >= 1e+12 || n <= -.1e+12) then
       sf_ge1 s (* nf in OCaml, sf in Casio *)
     else if (n > -.0.01 && n < 0.01) && not (n > -.0.0001 && n < 0.0001) then
       sf_le1 s (* nf in OCaml, sf in Casio *)
     else
-      count_ten_digits s (* Already in sf *)
+      count_ten_digits s (* Already in sf *) *)
+    
+    (* More robust implementation *)
+    if s = "0." || ns >= 4 && s.[ns-4] = 'e' || ns >= 5 && s.[ns-5] = 'e' then
+      (* Already in sf *)
+      count_ten_digits s
+    else
+      (* nf in OCaml *)
+
+      if (n >= 1e+10 || n <= -.1e+10)
+        (* Conversion to sf *)
+        then sf_ge1 s
+      else if (n > -.0.01 && n < 0.01)
+        then sf_le1 s
+      else
+        (* String remains in nf *)
+        count_ten_digits s
   in
   let nres = String.length res in
   if res.[nres-1] = '.'

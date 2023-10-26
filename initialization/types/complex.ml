@@ -80,7 +80,7 @@ let scal (a : float) (z : complex) : complex =
 (** Rounding **)
 (* Diminishes the accuracy to 14 significant numbers *)
 let round (z : complex) : complex =
-  let factor = 1e+15 in
+  let factor = 1e+14 in
   if z.im = 0.
     then complex_of_float (Float.round (factor *. z.re)/. factor)
     else

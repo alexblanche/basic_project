@@ -6,16 +6,13 @@ exception Test_failed of int
 
 let unit_tests () =
   let check i (nocaml,scasio) =
-    (* In order to be sure the number is properly formatted *)
-    (* print_string ("Test "^(string_of_int i)^"... "); *)
-    let socaml = float_of_string (string_of_float nocaml) in
-    let sresult = float_to_casio socaml in
+    (* print_endline ("Test n°"^(string_of_int i)^": "^scasio); *)
+    let sresult = float_to_casio nocaml in
     if sresult <> scasio then
       (print_endline
         ("Expected: "^(String.map (fun c -> if c = '\015' then 'E' else c) scasio)
         ^", Result: "^(String.map (fun c -> if c = '\015' then 'E' else c) sresult));
       raise (Test_failed i))
-    (* else print_endline "Done." *)
   in
   try
     List.iteri check [
@@ -51,6 +48,7 @@ let unit_tests () =
     (1.000000000234e-13, "1\015-13");
     (152640406006912., "1.52640406\015+14");
     (1.20000000001, "1.2");
+    (Float.pred 1e+12, "1\015+12");
     ];
     print_endline "----------------------------------";
     print_endline "Tests_float_repr: all tests passed";
