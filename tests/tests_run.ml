@@ -1165,3 +1165,42 @@ let run_dcmp () =
         ])]
   in
   run (empty_projcont ()) prog "main";;
+
+
+let run_compr () =
+  let prog =
+    compile
+      [("main",
+        [
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "RCLPICT"; "2"; "DISP";
+          "CLS"; "EOL";
+          "PLOTOFF"; "1"; ","; "1"; "EOL";
+          "FOR"; "1"; "1"; "ASSIGN"; "A"; "TO"; "1"; "9"; "EOL";
+          "CLS"; "EOL";
+          "TEXT"; "2"; "0"; ","; "1"; "0"; "0"; ","; "A"; "EOL";
+          "RCLPICT"; "A"; "DISP";
+          "NEXT";
+        ])]
+  in
+  let p =
+    let s = file_to_string "/mnt/c/users/blanc/desktop/jeux_casio_alex1186/airwolf/airwolf.g1m" in
+    let prj = g1m_reader s in
+    prj.pict.(18) <- prj.pict.(1);
+    (* for p = 10 to 17 do
+      let (_,m) = prj.pict.(p) in
+      for j = 0 to 5 do
+        m.(j).(p) <- true;
+        (* for a = 0 to 63 do
+          m.(0).(2*a) <- true;
+          m.(5).(2*a) <- true
+        done; *)
+        (* m.(0).(0) <- true; *)
+        (* m.(0).(127) <- true; *)
+        (* m.(5).(0) <- true; *)
+        (* m.(5).(127) <- true *)
+      done
+    done; *)
+    prj
+  in
+  run p prog "main";;

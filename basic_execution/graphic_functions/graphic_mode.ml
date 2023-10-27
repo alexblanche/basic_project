@@ -127,26 +127,29 @@ let draw_axes (ren : Sdlrender.t) (p : parameters) : unit =
       step_yminus));;
 
 (* Auxiliary function to draw_pict *)
-(* Adds to rects the rectangles needed to draw line j of the picture stored in matrix m,
-  between the abscissas imin and imax included *)
+(* Adds to rects the rectangles needed to draw line lookup_j of the picture stored in matrix m,
+  but placed at write_j, between the abscissas imin and imax included *)
+
 (* If write is true then each pixel is written in the matrix screen *)
-let aux_draw_line (write : bool) (screen : bool array array) (m : bool array array) (j : int) (imin : int) (imax : int) (rects : Sdlrect.t list ref) : unit =
+let aux_draw_line (write : bool) (screen : bool array array) (m : bool array array)
+  (lookup_j : int) (write_j : int) (imin : int) (imax : int) (rects : Sdlrect.t list ref) : unit =
+
   let ibeg = ref (-1) in
   for i = imin to imax do
-    if m.(j).(i) then
+    if m.(lookup_j).(i - imin) then
       (if !ibeg = (-1) then
         ibeg := i)
     else
       if !ibeg <> -1 then
-        (rects := (horizontal_rect !ibeg (i-1) j)::!rects;
+        (rects := (horizontal_rect !ibeg (i-1) write_j)::!rects;
         if write then
-          write_horizontal screen !ibeg (i-1) j;
-        ibeg := -1)
+          write_horizontal screen !ibeg (i-1) write_j;
+        ibeg := -1);
   done;
   if !ibeg <> -1 then
-    (rects := (horizontal_rect !ibeg imax j)::!rects;
+    (rects := (horizontal_rect !ibeg imax write_j)::!rects;
     if write then
-      write_horizontal screen !ibeg imax j);;
+      write_horizontal screen !ibeg imax write_j);;
 
 (* Draws the picture pict (0..19) on screen *)
 (* The first given number of bytes is drawn:
@@ -159,45 +162,53 @@ let draw_pict_offset (ren : Sdlrender.t) (write : bool) (screen : bool array arr
   (pict_size : int) (wanted_size : int) (offset : int) (m : bool array array) : unit =
 
   let actual_size = min 1024 (min pict_size wanted_size) in
-  let nb_lines = actual_size / 16 in
+  let nb_lines = actual_size / 16 in (* 16 bytes per line *)
   let rects = ref [] in
   let offset_i = offset mod 128 in
-  let offset_j = offset / 64 in
+  let offset_j = offset / 128 in
+
   (if offset = 0 then
     for j = 0 to nb_lines - 1 do
-      aux_draw_line write screen m j 0 127 rects
+      aux_draw_line write screen m j j 0 127 rects
+    done
+  else if offset_i = 0 then
+    for j = 0 to nb_lines - 1 do
+      let actual_j = (offset_j + j) mod 64 in
+      aux_draw_line write screen m j actual_j 0 127 rects
     done
   else
     for j = 0 to nb_lines - 1 do
       let actual_j = (j + offset_j) mod 64 in
-      aux_draw_line write screen m actual_j offset_i 127 rects;
-      aux_draw_line write screen m ((actual_j + 1) mod 64) 0 (offset_i-1) rects;
+      aux_draw_line write screen m j actual_j offset_i 127 rects;
+      aux_draw_line write screen m j ((actual_j + 1) mod 64) 0 (offset_i-1) rects;
     done);
   let remainder = 8 * (actual_size mod 16) in
   if remainder <> 0 then
     (let offset_rem = offset_i + remainder - 1 in
     let actual_nj = (nb_lines + offset_j) mod 64 in
-    (aux_draw_line write screen m actual_nj offset_i (min 127 offset_rem) rects;
+    aux_draw_line write screen m nb_lines actual_nj offset_i (min 127 offset_rem) rects;
     if offset_rem > 127 then
-      aux_draw_line write screen m ((actual_nj + 1) mod 64) 0 (offset_rem - 128) rects));
+      aux_draw_line write screen m nb_lines ((actual_nj + 1) mod 64) 0 (offset_rem - 128) rects);
   Sdlrender.fill_rects ren (Array.of_list !rects);;
+
 
 (* Auxiliary function that returns the next picture in reader order *)
 let next_pict_index (i : int) : int =
-  if i = 1 then 10
-  else if i = 19 then 2
-  else if i = 2 then 20
-  else i + 1;;
+  match i with
+    | 0 -> 9 (* 1 -> 10 *)
+    | 18 -> 1 (* 19 -> 2 *)
+    | 1 -> 19 (* 2 -> 20 *)
+    | _ -> i+1;;
 
 (* General RlcPict function, handles the cascading effect of compressed pictures *)
 let draw_pict (ren : Sdlrender.t) (p : parameters) (pict : int) : unit =
   let rec aux (i : int) (bytes_left : int) : unit =
-    let (pict_size, m) = p.pict.(pict) in
+    let (pict_size, m) = p.pict.(i) in
     let wanted_size = min bytes_left pict_size in
     if wanted_size <> 0 then
-      draw_pict_offset ren true gscreen pict_size wanted_size (2048 - bytes_left) m;
-    if pict_size < bytes_left && pict < 20 then
-      aux (next_pict_index pict) (bytes_left - pict_size)
+      draw_pict_offset ren true gscreen pict_size wanted_size (8 * (2048 - bytes_left)) m;
+    if pict_size < bytes_left && i < 19 then
+      aux (next_pict_index i) (bytes_left - pict_size)
   in
   aux pict 2048;;
 

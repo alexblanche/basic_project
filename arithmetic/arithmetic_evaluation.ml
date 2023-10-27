@@ -342,9 +342,10 @@ and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) 
             (p.gscreen.(n1).(n2) || p.bgscreen.(n1).(n2)))
       else failwith "apply_special_func: wrong input for PxlTest"
 
-    | "MATTOLIST", [Arithm [Entity (Variable (Var vi))]; Complex z] ->
+    | "MATTOLIST", [Arithm [Entity (VarMat mi)]; Complex z]
+    | "MATTOLIST", [Arithm [Entity (Variable (Var mi))]; Complex z] ->
       let j = int_of_complex z -1 in
-      let m = p.mat.(if vi = 28 then 26 else vi) in (* Mat Ans is stored at position 26 *)
+      let m = p.mat.(if mi = 28 then 26 else mi) in (* Mat Ans is stored at position 26 *)
       let row = (Array.length m)/2 in
       ListContent (Array.init row (fun i -> Complex (get_complex m.(i).(j) m.(i+row).(j))))
 
