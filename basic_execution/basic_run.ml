@@ -61,70 +61,13 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   let end_execution () =
     quit_print win ren !val_seen !last_val p.polar !string_seen !text_screen
   in
-
-  (* Debug Timeless ending levels *)
-  (* let expr_tmls,_ =
-    extract_expr
-      ["NOT"; "LPAR"; "X"; "EQUAL"; "A"; "AND"; "Y"; "EQUAL"; "B"; "OR"; "R"; "EQUAL"; "A";
-      "AND"; "S"; "EQUAL"; "B"; "OR"; "T"; "EQUAL"; "A"; "AND"; "U"; "EQUAL"; "B"; "RPAR";
-      "OR"; "LIST"; "1"; "LSQBRACKET"; "3"; "RSQBRACKET"; "OR"; "LIST"; "2"; "LSQBRACKET";
-      "3"; "RSQBRACKET"; "OR"; "LIST"; "3"; "LSQBRACKET"; "3"]
-  in
-  let expr_p1, _ =
-    extract_expr
-      ["LPAR"; "X"; "EQUAL"; "A"; "AND"; "Y"; "EQUAL"; "B"; "OR"; "R"; "EQUAL"; "A";
-      "AND"; "S"; "EQUAL"; "B"; "OR"; "T"; "EQUAL"; "A"; "AND"; "U"; "EQUAL"; "B"; "RPAR"]
-  in
-  let expr_p2, _ =
-    extract_expr
-      ["LIST"; "1"; "LSQBRACKET"; "3"; "RSQBRACKET"; "OR"; "LIST"; "2"; "LSQBRACKET";
-      "3"; "RSQBRACKET"; "OR"; "LIST"; "3"; "LSQBRACKET"; "3"]
-  in
-  let expr_p3, _ =
-    extract_expr
-      ["X"; "EQUAL"; "A"]
-  in
-  let expr_p4, _ =
-    extract_expr
-      ["Y"; "EQUAL"; "B"]
-  in *)
-
+  
 
   (** Main looping function **)
   let rec aux (i : int) : unit =
 
     (* debug *)
     (* print_endline (string_of_int i); *)
-
-    (try
-      (* print_string "A = "; print_float p.var.(0);
-      print_string "; X = "; print_float p.var.(23); *)
-      (* print_string "B = "; print_float p.var.(1);
-      print_string "; Y = "; print_float p.var.(24); *)
-      (* print_string "; R = "; print_float p.var.(17);
-      print_string "; S = "; print_float p.var.(18);
-      print_string "; T = "; print_float p.var.(19);
-      print_string "; U = "; print_float p.var.(20);
-      print_string "; List 1,2,3[3] = ";
-        print_float p.list.(0).(2);
-        print_float p.list.(1).(2);
-        print_float p.list.(2).(2);
-      print_newline (); *)
-      (* print_string "Condition: "; print_float (let z = eval_num p expr_tmls in z.re); *)
-      (* print_string "; (X=A And...) = "; print_float (let z = eval_num p expr_p1 in z.re); *)
-      (* print_string "; X=A: "; print_float (let z = eval_num p expr_p3 in z.re); *)
-      (* print_string "; Y=B: "; print_float (let z = eval_num p expr_p4 in z.re);
-      print_string "; Y-B: "; print_float (p.var.(24) -. p.var.(1)); *)
-      for j = 1 to 5 do
-        for i = 1 to 19 do
-          print_float p.mat.(0).(j).(i);
-          print_char ' '
-        done;
-        print_newline ()
-      done;
-      print_newline ();
-    with
-      | _ -> print_newline ());
 
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then

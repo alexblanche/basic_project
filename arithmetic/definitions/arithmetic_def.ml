@@ -69,10 +69,11 @@ let rec accurate_frac (x : float) : float =
       (* Alternate, simpler version *)
       (* Less accurate than dec_to_frac (float_to_dec x), but the more accurate version is
          no longer needed, now that we round every value after operator application *)
-      let pow = float_of_int (int_of_float (Float.log10 x)) in
-      let all = int_of_float (x *. (10. ** (15.-.pow))) in
-      let intg = (int_of_float (10. ** (15.-.pow))) * (int_of_float x) in
-      (float_of_int (all-intg)) /. (10. ** (15.-.pow))
+      let pow = int_of_float (Float.log10 x) in
+      let tenpow = 10. ** (float_of_int (15-pow)) in
+      let all = int_of_float (round_float (x *. tenpow)) in
+      let intg = (int_of_float tenpow) * (true_int_of_float x) in
+      (float_of_int (all-intg)) /. tenpow
     else 0.
   else
     -. (accurate_frac (-. x));;
