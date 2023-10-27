@@ -131,7 +131,7 @@ let unit_tests_eval_num () =
   let check i (slist, expected) =
     let (expr, _) = extract_expr slist in
     let z = eval_num p expr in
-    if is_not_zero (Complex.sub z expected) then
+    if not (are_equal z expected) then
       (print_endline (String.concat " " slist);
       raise (Test_failed i))
       (* else print_endline ("Test "^(string_of_int i)^" passed") *)
@@ -141,8 +141,7 @@ let unit_tests_eval_num () =
       (["1"], {re = 1.; im = 0.});
       (["1"; "."; "5"; "PLUS"; "2"; "."; "5"], {re = 4.; im = 0.});
       (["1"; "."; "5"; "PLUS"; "LPAR"; "2"; "."; "5"; "TIMES"; "3"; "."; "5"; "RPAR";
-        "POWER"; "LPAR"; "5"; "MINUS"; "3"; "RPAR"],
-        {re = 78.0625; im = 0.});
+        "POWER"; "LPAR"; "5"; "MINUS"; "3"; "RPAR"], {re = 78.0625; im = 0.});
       (["ABS"; "LPAR"; "LPAR"; "3"; "."; "RPAR"; "RPAR"; "EXCLAMATIONMARK"], {re = 6.; im = 0.});
       (["2"; "POWER"; "2"; "POWER"; "2"; "POWER"; "2"], {re = 256.; im = 0.});
       (["ABS"; "ABS"; "ABS"; "5"; "."; "EXCLAMATIONMARK"], {re = 120.; im = 0.});
@@ -231,6 +230,11 @@ let unit_tests_eval_num () =
     (["FRAC"; "2"; "5"; "3"; "."; "1"; "4"; "2"; "7"; "9"], {re = 0.14279; im = 0.});
     (["FRAC"; "1"; "."; "2"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "1"], {re = 0.20000000000001; im = 0.});
     (["FRAC"; "1"; "."; "2"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "1"], {re = 0.2; im = 0.});
+
+    (* Accuracy *)
+    (["5"; "."; "1"; "2"; "3"; "7"; "TIMESTENPOWER"; "MINUS"; "2"; "0"; "TIMES"; "2"], {re = 1.02474e-19; im = 0.});
+    (["0"; "."; "1"; "PLUS"; "0"; "."; "2"; "MINUS"; "0"; "."; "3"], {re = 0.; im = 0.});
+    (["0"; "."; "1"; "PLUS"; "0"; "."; "2"; "EQUAL"; "0"; "."; "3"], {re = 1.; im = 0.});
     ];
     print_endline "--------------------------------------------";
     print_endline "Tests_arithmetic, eval_num: all tests passed";

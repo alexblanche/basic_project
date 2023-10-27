@@ -562,7 +562,7 @@ let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
         then complex_of_bool (x1_loss > x2_loss)
         else failwith "apply_op: Greater (>) only accepts real arguments"
     | "EQUAL" ->
-      complex_of_bool (is_zero_float (z1.re -. z2.re) && is_zero_float (z1.im -. z2.im))
+      complex_of_bool (are_equal z1 z2)
     | "DIFFERENT" ->
       complex_of_bool (not (is_zero_float (z1.re -. z2.re)) || not (is_zero_float (z1.im -. z2.im)))
   (* Logic *)

@@ -48,6 +48,15 @@ let complex_of_bool (b : bool) : complex =
     This accounts for imprecision inherent to float calculations. *)
 let is_zero_float (x : float) : bool =
   x < 1e-13 && -.x < 1e-13;;
+
+let are_equal_float (x1 : float) (x2 : float) : bool =
+  let pow = true_int_of_float (Float.log10 x1) in
+  let factor = 10. ** (float_of_int (14 - pow)) in
+  Float.abs (x1 *. factor -. x2 *. factor) < 10000.;;
+
+let are_equal (z1 : complex) (z2 : complex) : bool =
+  (z1.re = z2.re || are_equal_float z1.re z2.re)
+  && (z1.im = z2.im || are_equal_float z1.im z2.im);;
   
 (* Returns true if the complex z has a real part close enough to 0.
   and an imaginary part equal to 0.
@@ -78,11 +87,17 @@ let scal (a : float) (z : complex) : complex =
 
 
 (** Rounding **)
+
 (* Diminishes the accuracy to 14 significant numbers *)
+let round_float (x : float) : float =
+  let pow = int_of_float (Float.log10 x) in
+  let factor = 10. ** (float_of_int (14 - pow)) in
+  Float.round (factor *. x) /. factor;;
+
+(* Rounding applied to complex numbers *)
 let round (z : complex) : complex =
-  let factor = 1e+14 in
   if z.im = 0.
-    then complex_of_float (Float.round (factor *. z.re)/. factor)
+    then complex_of_float (round_float z.re)
     else
-      {re = Float.round (factor *. z.re)/. factor;
-      im = Float.round (factor *. z.im)/. factor};;
+      { re = round_float z.re;
+        im = round_float z.im };;
