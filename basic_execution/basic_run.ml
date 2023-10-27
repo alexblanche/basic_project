@@ -63,7 +63,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   in
 
   (* Debug Timeless ending levels *)
-  let expr_tmls,_ =
+  (* let expr_tmls,_ =
     extract_expr
       ["NOT"; "LPAR"; "X"; "EQUAL"; "A"; "AND"; "Y"; "EQUAL"; "B"; "OR"; "R"; "EQUAL"; "A";
       "AND"; "S"; "EQUAL"; "B"; "OR"; "T"; "EQUAL"; "A"; "AND"; "U"; "EQUAL"; "B"; "RPAR";
@@ -87,7 +87,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   let expr_p4, _ =
     extract_expr
       ["Y"; "EQUAL"; "B"]
-  in
+  in *)
+
 
   (** Main looping function **)
   let rec aux (i : int) : unit =
@@ -98,8 +99,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
     (try
       (* print_string "A = "; print_float p.var.(0);
       print_string "; X = "; print_float p.var.(23); *)
-      print_string "B = "; print_float p.var.(1);
-      print_string "; Y = "; print_float p.var.(24);
+      (* print_string "B = "; print_float p.var.(1);
+      print_string "; Y = "; print_float p.var.(24); *)
       (* print_string "; R = "; print_float p.var.(17);
       print_string "; S = "; print_float p.var.(18);
       print_string "; T = "; print_float p.var.(19);
@@ -112,8 +113,15 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
       (* print_string "Condition: "; print_float (let z = eval_num p expr_tmls in z.re); *)
       (* print_string "; (X=A And...) = "; print_float (let z = eval_num p expr_p1 in z.re); *)
       (* print_string "; X=A: "; print_float (let z = eval_num p expr_p3 in z.re); *)
-      print_string "; Y=B: "; print_float (let z = eval_num p expr_p4 in z.re);
-      print_string "; Y-B: "; print_float (p.var.(24) -. p.var.(1));
+      (* print_string "; Y=B: "; print_float (let z = eval_num p expr_p4 in z.re);
+      print_string "; Y-B: "; print_float (p.var.(24) -. p.var.(1)); *)
+      for j = 1 to 5 do
+        for i = 1 to 19 do
+          print_float p.mat.(0).(j).(i);
+          print_char ' '
+        done;
+        print_newline ()
+      done;
       print_newline ();
     with
       | _ -> print_newline ());

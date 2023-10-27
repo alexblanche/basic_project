@@ -1094,6 +1094,8 @@ let run_dcmp () =
           "1"; "5"; "2"; "6"; "4"; "0"; "4"; "0"; "6"; "0"; "0"; "6"; "9"; "1"; "2"; "CPLXI"; "ASSIGN"; "G"; "EOL";
 
           (* 
+            Level 2:
+
             Actual value of G:
             80660025314279 + 152640406006912 i
 
@@ -1126,10 +1128,10 @@ let run_dcmp () =
           "FOR"; "1"; "ASSIGN"; "X"; "TO"; "6"; "EOL";
           "G"; "DISP";
           "1"; "0"; "POWER"; "LPAR"; "1"; "5"; "MINUS"; "5"; "LPAR"; "1"; "PLUS"; "MOD"; "X"; "MINUS"; "1"; ","; "3"; "EOL";
-          (* "ANS"; "DISP"; *)
+
           "X"; "LEQ"; "3"; "IMPL"; "INT"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
           "X"; "GREATER"; "3"; "IMPL"; "INT"; "LPAR"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "H"; "EOL";
-          
+
           "X"; "LEQ"; "3"; "IMPL"; "CPLXI"; "IMP"; "G"; "PLUS"; "ANS"; "FRAC"; "LPAR"; "REP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "G"; "EOL";
           "X"; "GREATER"; "3"; "IMPL"; "ANS"; "FRAC"; "LPAR"; "CPLXI"; "IMP"; "G"; "DIVIDED"; "ANS"; "ASSIGN"; "G"; "EOL";
           "H"; "DISP";
@@ -1142,22 +1144,22 @@ let run_dcmp () =
           "1"; "0"; "M"; "ASSIGN"; "M"; "EOL";
           "WHILEEND"; 
 
-          "QUOTE"; "S"; "QUOTE"; "EOL";
+          (* "QUOTE"; "S"; "QUOTE"; "EOL"; *)
           "S"; "DISP";
-          "QUOTE"; "M"; "QUOTE"; "EOL";
+          (* "QUOTE"; "M"; "QUOTE"; "EOL"; *)
           "M"; "DISP";
 
-          (* "FOR"; "0"; "ASSIGN"; "Y"; "TO"; "1"; "3"; "EOL";
+          "FOR"; "0"; "ASSIGN"; "Y"; "TO"; "1"; "3"; "EOL";
 
           "INT"; "LPAR"; "S"; "DIVIDED"; "1"; "0"; "POWER"; "LPAR"; "1"; "3"; "MINUS"; "Y"; "DISP";
           "2"; "PLUS"; "LPAR"; "1"; "4"; "LPAR"; "X"; "MINUS"; "1"; "RPAR"; "PLUS"; "Y"; "RPAR"; "INTDIV"; "1"; "9"; "DISP";
           "2"; "PLUS"; "LPAR"; "1"; "4"; "LPAR"; "X"; "MINUS"; "1"; "RPAR"; "PLUS"; "Y"; "RPAR"; "RMDR"; "1"; "9"; "DISP";
           "1"; "0"; "POWER"; "LPAR"; "1"; "3"; "MINUS"; "Y"; "RPAR"; "FRAC"; "LPAR"; "S"; "DIVIDED"; "1"; "0"; "POWER"; "LPAR"; "1"; "3"; "MINUS"; "Y"; "ASSIGN"; "S"; "EOL";
 
-          "QUOTE"; "N"; "E"; "W"; " "; "S"; "QUOTE"; "EOL";
+          (* "QUOTE"; "N"; "E"; "W"; " "; "S"; "QUOTE"; "EOL"; *)
           "S"; "DISP";
 
-          "NEXT"; *)
+          "NEXT";
 
           "NEXT";
         ])]

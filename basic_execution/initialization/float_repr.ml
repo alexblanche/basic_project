@@ -140,10 +140,10 @@ let float_to_casio (n : float) : string =
     else
       (* nf in OCaml *)
 
-      if (n >= 1e+10 || n <= -.1e+10)
+      if n >= 1e+10 || n <= -.1e+10
         (* Conversion to sf *)
         then sf_ge1 s
-      else if (n > -.0.01 && n < 0.01)
+      else if n > -.0.01 && n < 0.01
         then sf_le1 s
       else
         (* String remains in nf *)
@@ -171,8 +171,11 @@ let float_to_casio (n : float) : string =
       in
       if last_dec = nres-5 then
         (String.sub res 0 index_sub)^(String.sub res (nres-4) 4)
-      else 
-        String.sub res 0 index_sub);;
+      else
+        match String.rindex_from_opt res (min index_sub (nres-2)) '.' with
+          | Some _ -> String.sub res 0 index_sub
+          | _ -> res
+      );;
 
 
 (** Formatting complex numbers **)
