@@ -139,12 +139,11 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       let (a,b) = rescale p zx.re zy.re in
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
         (plotoff ren gscreen false a (64-b);
+        plotoff ren bgscreen false a (64-b);
         (* Placing the coordinates in X, Y, as in Casio Basic *)
         p.var.(23) <- zx.re;
-        p.var.(24) <- zy.re;
-        if bgscreen.(64-b).(a) then
-          bgscreen.(64-b).(a) <- false));
-      refresh_update ren p true;
+        p.var.(24) <- zy.re));
+      gdraw ren;
       if slowdown_condition () then
         Unix.sleepf timer.plot;
       text_screen := false)
@@ -156,13 +155,10 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
         (p.var.(23) <- zx.re;
         p.var.(24) <- zy.re;
-        if gscreen.(b).(a) then
-          (plotoff ren gscreen false a b;
-          if bgscreen.(b).(a) then
-            bgscreen.(b).(a) <- false)
-        else if bgscreen.(b).(a) then
-          plotoff ren bgscreen false a b
-        else ploton ren gscreen a b));
+        if gscreen.(64-b).(a) || bgscreen.(64-b).(a) then
+          (plotoff ren gscreen false a (64-b);
+          plotoff ren bgscreen false a (64-b))
+        else ploton ren gscreen a (64-b)));
       gdraw ren;
       if slowdown_condition () then
         Unix.sleepf timer.plot;
@@ -190,9 +186,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
         let y = approx_descale_y p (64-b) in
         p.var.(23) <- x;
         p.var.(24) <- y;
-        plotoff ren gscreen false a b;
-        if bgscreen.(b).(a) then
-          bgscreen.(b).(a) <- false));
+        plotoff ren gscreen  false a b;
+        plotoff ren bgscreen false a b));
       gdraw ren;
       if slowdown_condition () then
         Unix.sleepf timer.plot;
@@ -202,16 +197,13 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       let a = int_of_complex (eval_num p ex) in
       let b = int_of_complex (eval_num p ey) in
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
-        if gscreen.(b).(a) then
+        if gscreen.(b).(a) || bgscreen.(b).(a) then
           (let x = approx_descale_x p a in
           let y = approx_descale_y p (64-b) in
           p.var.(23) <- x;
           p.var.(24) <- y;
-          plotoff ren gscreen false a b;
-          if bgscreen.(b).(a) then
-            bgscreen.(b).(a) <- false)
-        else if bgscreen.(b).(a) then
-          plotoff ren bgscreen false a b
+          plotoff ren gscreen  false a b;
+          plotoff ren bgscreen false a b)
         else ploton ren gscreen a b);
       gdraw ren;
       if slowdown_condition () then

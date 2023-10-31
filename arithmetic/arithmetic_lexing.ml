@@ -311,6 +311,7 @@ and extract_mat_content (lexlist : string list) : num_expr array array * string 
       | "COLON"::_
       | "DISP"::_
       | "ASSIGN"::_ -> (acc, l)
+      | [] -> (acc, [])
       | _ -> failwith "extract_mat_content: syntax error in matrix definition"
   in
   let (ell, t) = aux [] lexlist in
