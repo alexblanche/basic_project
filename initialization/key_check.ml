@@ -86,8 +86,9 @@ let rec key_check () =
         
     (* KeyDown, KeyUp check *)
     | Some (KeyDown {keycode = key}) ->
-      (getkey := get_getkey_val key;
-      key_pressed := key;
+      (if !getkey = 0 then
+        (getkey := get_getkey_val key;
+        key_pressed := key);
       key_check ())
 
     | Some (KeyUp {keycode = key}) ->
