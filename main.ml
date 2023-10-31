@@ -77,9 +77,9 @@ let play (file_name : string) (entry_point : string) : unit =
 
 (*
 Games that work:
-  - TIMELESS, PAC-MAN, RUN & JUMP, SUPER RUN & JUMP, ACE COMBAT, TIMELESS REMIX
-Next steps (by order of difficulty):
-  - CLONELAB, AIRWOLF
+  - TIMELESS, PAC-MAN, RUN & JUMP, SUPER RUN & JUMP, ACE COMBAT, TIMELESS REMIX, AIRWOLF
+Final step:
+  - CLONELAB
 
 To do next:
   - Keep implementing the "main" functions
