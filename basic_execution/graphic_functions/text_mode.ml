@@ -182,4 +182,6 @@ let erase_black_square_text (ren : Sdlrender.t) : unit =
   draw_black_square ren;
   set_color ren colors.pixels;
   if tscreen.(0).(20) <> "\000" then
-    locate ren [tscreen.(0).(20)] 20 0;;
+    locate ren [tscreen.(0).(20)] 20 0
+  else
+    refresh ren;;

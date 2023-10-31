@@ -13,6 +13,7 @@ type timer_constants =
   plot     : float;
   drawstat : float;
   text     : float;
+  rlcpict  : float;
 }
 
 let timer =
@@ -23,4 +24,5 @@ let timer =
   plot     = 0.04;
   drawstat = 0.16;
   text     = 0.08;
+  rlcpict  = 0.055;
 };;

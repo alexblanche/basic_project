@@ -22,6 +22,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       if is_int z && z.re >= 1. && z.re <= 20. then
         (draw_pict ren p (int_of_complex z - 1);
         refresh_update ren p !text_screen;
+        if slowdown_condition () then
+          Unix.sleepf timer.rlcpict;
         text_screen := false)
       else graphic_fail i "Wrong index for RclPict command"
 
@@ -311,6 +313,13 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
     | Graphic_Function ("GRAPHYL" as s, [e])
     | Graphic_Function ("GRAPHYLEQ" as s, [e]) ->
       graphy ren p text_screen s e
+
+    (* Ignored commands *)
+    | Graphic_Function ("FUNCOFF", [])
+    | Graphic_Function ("GRIDOFF", [])
+    | Graphic_Function ("LABELOFF", [])
+    | Graphic_Function ("SWINDMAN", [])
+    | Graphic_Function ("COORDOFF", []) -> ()
 
     (* Errors or functionalities not implemented yet *)
     | Graphic_Function (s, _) -> (print_endline ("Runtime warning: ignored command "^s))

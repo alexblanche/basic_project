@@ -1204,3 +1204,26 @@ let run_compr () =
     prj
   in
   run p prog "main";;
+
+
+let run_speed_pict () =
+  let prog =
+    compile
+      [("main",
+        [
+          (* "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL"; *)
+          "QUOTE"; "R"; "E"; "A"; "D"; "Y"; "?"; "QUOTE"; "DISP";
+          (* "CLS"; "EOL";
+          "FOR"; "1"; "ASSIGN"; "A"; "TO"; "2"; "0"; "0"; "EOL";
+          "RCLPICT"; "1"; "EOL";
+          "NEXT"; *)
+          "QUOTE"; "D"; "O"; "N"; "E"; "QUOTE"; "DISP";
+        ])]
+  in
+  let p =
+    let s = file_to_string "/mnt/c/users/blanc/desktop/jeux_casio_alex1186/airwolf/airwolf.g1m" in
+    let prj = g1m_reader s in
+    prj.pict.(18) <- prj.pict.(1);
+    prj
+  in
+  run p prog "main";;
