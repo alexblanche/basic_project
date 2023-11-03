@@ -78,7 +78,7 @@ let play (file_name : string) (entry_point : string) : unit =
 (*
 Games that work:
   - TIMELESS, PAC-MAN, RUN & JUMP, SUPER RUN & JUMP, ACE COMBAT, TIMELESS REMIX, AIRWOLF
-Final step:
+Final boss:
   - CLONELAB
 
 To do next:
@@ -97,7 +97,6 @@ In the distant future:
   - Complete the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."
   - Treat the EOL/DISP in Strings vs Locate (EOL shows in Strings, syntax error in Locate. Disp shows in the Locate display, syntax error in String.)
   - Code the "ABC"?->X without skipping a line
-  - Complete the list of encodings, with the Catalog
   - Implement the fraction display (5 FRACSIGN 3 displays as a pair of int separated by FRACSIGN)
   - Implement the menu in the QMark entry menu, to access all functions
   - Improve the side by side interface, by allowing changing the conversion window when clicking
