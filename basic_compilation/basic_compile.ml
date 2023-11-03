@@ -108,8 +108,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
               else fail lexlist i "Compilation error: wrong list index"
 
             | "MAT"::a::t'' ->
-              (* Numerical is allowed, because entity functions have unspecified output type *)
-              if is_var a && a <> "SMALLR" && a <> "THETA" || a = "ANS" then
+              if is_var a && String.length a = 1 || a = "ANS" then
                 (set code i (AssignMat (e, var_index a));
                 (true, i+1, t''))
               else fail lexlist i "extract_mat_index: wrong matrix index"
@@ -126,7 +125,6 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
               else fail lexlist i "Compilation error: wrong list index in dimension assignment"
 
             | "DIM"::"MAT"::a::t'' ->
-              (* Numerical is allowed, because entity functions have unspecified output type *)
               let dim_expr = Arithm [Function ("Init", [e])] in
               if is_var a || a = "ANS" then
                 (set code i (AssignMat (dim_expr, var_index a));

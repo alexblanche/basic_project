@@ -51,12 +51,22 @@ let rec precedence (o1 : string) (o2 : string) : int =
 
 (* Returns true if the string s contains exactly one character among A..Z, r, theta *)
 let is_var (s : string) : bool =
-  (String.length s = 1)
+  (* (String.length s = 1)
   &&
   (let c = Char.code s.[0] in
   (c >= 65 && c <= 90))
   || s = "SMALLR"
-  || s = "THETA";;
+  || s = "THETA";; *)
+  let c = Char.code s.[0] in
+  if String.length s = 1 then
+    c >= 65 && c <= 90
+  else
+       s = "SMALLR"
+    || s = "THETA"
+    || (c = 65 && (s = "AZERO" || s = "AONE" || s = "ATWO" || s = "ANSTART"))
+    || (c = 66 && (s = "BZERO" || s = "BONE" || s = "BTWO" || s = "BNSTART"))
+    || (c = 67 && (s = "CZERO" || s = "CONE" || s = "CTWO" || s = "CNSTART"))
+    || (c = 82 && (s = "RSTART" || s = "REND"));;
 
 (* Returns true if the string s contains exactly one character that is a digit *)
 let is_digit (s : string) : bool =
@@ -64,15 +74,42 @@ let is_digit (s : string) : bool =
   &&
   (s.[0] >= '0' && s.[0] <= '9');;
 
-(* Returns the index of the variables a (A..Z, r, theta, Ans)
+(* Returns the index of the variables a (A..Z, r, theta, Ans and recursion variables)
   the variable array used in basic_run.ml
-  A..Z = 0..25, r = 26, theta = 27, Ans = 28 *)
+  A..Z = 0..25, r = 26, theta = 27, Ans = 28,
+  a0,a1,a2,anStart: 29,30,31,32
+  b0,b1,b2,bnStart: 33,34,35,36
+  c0,c1,c2,cnStart: 37,38,39,40
+  R Start, R End: 41, 42 *)
 let var_index (a : string) : int =
-  match a with
+  (* match a with
     | "SMALLR" -> 26
     | "THETA" -> 27
     | "ANS" -> 28
-    | _ -> (Char.code a.[0]) - 65;;
+    | _ -> (Char.code a.[0]) - 65;; *)
+  let c = Char.code a.[0] in
+  let l = String.length a in
+  if l = 1 then
+    c - 65
+  else
+    match a with
+      | "SMALLR" -> 26
+      | "THETA" -> 27
+      | "ANS" -> 28
+      | _ ->
+        let k =
+          match String.sub a 1 (l-1) with
+            | "ZERO" -> 0
+            | "ONE" -> 1
+            | "TWO" -> 2
+            | _ -> 3
+        in
+        if c = 82 then
+          if a = "RSTART"
+            then 41
+            else 42
+        else 29 + 4*(c-65) + k
+;;
 
 (** Main lexing function **)
 
