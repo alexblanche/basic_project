@@ -99,6 +99,14 @@ type parameters = {
   (* List _[0]: contain strings *)
   listzero : (string list) array;
 
+  (* Recursion variables: can only contain real numbers
+    0,1:         R Start, R End
+    2,3,4,5:     anStart, a0, a1, a2
+    6,7,8,9:     bnStart, b0, b1, b2
+    10,11,12,13: cnStart, c0, c1, c2 *)
+  (* recurvar : float array; *)
+  (* Or: add them to var, with new var indices *)
+
 
   (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
   mutable polar : bool;

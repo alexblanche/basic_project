@@ -119,6 +119,10 @@ let locate (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : unit 
   Sdlrender.fill_rect ren white_r;
   set_color ren colors.pixels;
 
+  (* Black square is placed back if overwritten *)
+  if j = 0 && bound = 20 then
+    draw_black_square ren;
+
   (* Display of the characters *)
   let acc = ref [] in
   fast_locate_aux i j acc (skip_k (n+i-21) slist) bound;
