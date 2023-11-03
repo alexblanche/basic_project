@@ -184,8 +184,17 @@ let clear_text () : unit =
 let erase_black_square_text (ren : Sdlrender.t) : unit =
   set_color ren colors.background;
   draw_black_square ren;
-  set_color ren colors.pixels;
-  if tscreen.(0).(20) <> "\000" then
-    locate ren [tscreen.(0).(20)] 20 0
+  (if tscreen.(0).(20) <> "\000" then
+    (* Locate draws a black square, this circumvents it *)
+    (let white_r = Sdlrect.make2
+      ~pos:(!margin_h + !size*121, !margin_v)
+      ~dims:(5 * !size, 7 * !size)
+    in
+    Sdlrender.fill_rect ren white_r;
+    set_color ren colors.pixels;
+    let acc = ref [] in
+    fast_locate_aux 20 0 acc [tscreen.(0).(20)] 20;
+    Sdlrender.fill_rects ren (Array.of_list !acc))
   else
-    refresh ren;;
+    set_color ren colors.pixels);
+  refresh ren;;
