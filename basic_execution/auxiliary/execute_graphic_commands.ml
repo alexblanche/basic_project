@@ -119,7 +119,6 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       text_screen := false)
 
     | PlotOn (ex, ey) ->
-      (* let _ = print_endline "PLOT" in *)
       let zx = eval_num p ex in
       let zy = eval_num p ey in
       let (a,b) = rescale p zx.re zy.re in
@@ -211,15 +210,14 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       text_screen := false)
 
     | Graphic_Function ("CLS", _) ->
-      (* (print_endline "CLS"; *)
       (wipe gscreen;
+      draw_window ren p;
       line_feed ();
       clear_line !writing_index;
       locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
       background_changed := true)
 
     | ViewWindow (ex1, ex2, esx, ey1, ey2, esy) ->
-      (* let _ = print_endline "VIEWWINDOW" in *)
       let xminval = eval_num p ex1 in
       let xmaxval = eval_num p ex2 in
       let xstepval = eval_num p esx in
@@ -269,7 +267,6 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       p.axeson <- true)
     
     | Graphic_Function ("BGNONE", _) ->
-      (* (background_changed := false; *)
       p.bgpict <- -1
 
     | Graphic_Function ("HORIZONTAL", [e]) ->
