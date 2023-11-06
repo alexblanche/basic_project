@@ -1001,15 +1001,15 @@ let visual () =
   Hashtbl.add t " " (new_vr ());
   (* Digits *)
   for i = 48 to 57 do
-    Hashtbl.add t (Char.escaped (Char.chr i)) (read_symbol vischar2 (i-48) 3);
+    Hashtbl.add t (Char.escaped (Char.chr i)) (read_symbol vischar2 (i-48) 3)
   done;
   (* Upper-case letters *)
   for i = 65 to 90 do
-    Hashtbl.add t (Char.escaped (Char.chr i)) (read_symbol vischar1 ((i-65) mod 21) (i/(65+21)));
+    Hashtbl.add t (Char.escaped (Char.chr i)) (read_symbol vischar1 ((i-65) mod 21) (i/(65+21)))
   done;
   (* Lower-case letters *)
   for i = 97 to 122 do
-    Hashtbl.add t (Char.escaped (Char.chr i)) (read_symbol vischar1 ((i-97) mod 21) (2+(i/(97+21))));
+    Hashtbl.add t (Char.escaped (Char.chr i)) (read_symbol vischar1 ((i-97) mod 21) (2+(i/(97+21))))
   done;
   (* Comma *)
   Hashtbl.add t "," (read_symbol vischar1 0 4);
@@ -1041,6 +1041,17 @@ let visual () =
   read_all 112 vischar6;
   (* Indices: 52 symbols *)
   read_all 52 vischar7;
+  
+  (* Hidden characters: thick letters A,B,C,D,E,F,r,X,Y and white rectangle *)
+  (* Thick A,B,C,D,E,F *)
+  for i = 26 to 31 do
+    Hashtbl.add t (String.make 1 (Char.chr i)) (read_symbol vischar7 (i-26) 4)
+  done;
+  Hashtbl.add t "\127\244" (read_symbol vischar7 6 4); (* X *)
+  Hashtbl.add t "\127\240" (read_symbol vischar7 7 4); (* Y *)
+  Hashtbl.add t "\127\241" (read_symbol vischar7 8 4); (* r *)
+  Hashtbl.add t "\216" (read_symbol vischar7 9 4); (* White rectangle *)
+  
   (* One-character commands *)
   (* Some are already present in the list symbols; they are not re-added *)
   let add_elt i s =
@@ -1196,6 +1207,20 @@ let visualgraph () =
   in
   (* 9 lines *)
   List.iteri read_all_graph [29;31;6;30;7;2;4;26;26];
+  (* Thick A, B, C, D, E, F, entered manually
+    (because I am lazy and do not want to create another gphviscar...) *)
+  Hashtbl.add t "\026" (* A *)
+    [| false; false; true; false; true; true; false; true; true; true; true; true; true; true; false; true; true; true; false; true |];
+  Hashtbl.add t "\027" (* B *)
+    [| true; true; true; false; true; true; false; true; true; true; true; false; true; true; false; true; true; true; true; false |];
+  Hashtbl.add t "\028" (* C *)
+    [| false; true; true; true; true; true; false; false; true; true; false; false; true; true; false; false; false; true; true; true |];
+  Hashtbl.add t "\029" (* D *)
+    [| true; true; true; false; true; true; false; true; true; true; false; true; true; true; false; true; true; true; true; false |];
+  Hashtbl.add t "\030" (* E *)
+    [| true; true; true; true; true; true; false; false; true; true; true; true; true; true; false; false; true; true; true; true |];
+  Hashtbl.add t "\031" (* F *)
+    [| true; true; true; true; true; true; false; false; true; true; true; true; true; true; false; false; true; true; false; false |];
   (* Final step: the one exception, the backslash (\092),
     which is the only symbol that has a representation of
     height 6 (seriously?). *)

@@ -122,6 +122,7 @@ let text_display = [
   ("HEX", "Hex");
   ("BIN", "Bin");
   ("OCT", "Oct");
+  ("WHITERECT", "\216");
 	("NORM", "Norm ");
 	("DEG", "Deg");
 	("RAD", "Rad");
@@ -338,11 +339,11 @@ let text_display = [
   ("CELLMEAN", "CellMean(");
   ("CELLMEDIAN", "CellMedian(");
   ("CELLIF", "CellIf(");
-  ("YGRAPH", "Y");
-  ("RGRAPH", "r");
-  ("XT", "Xt");
-  ("YT", "Yt");
-  ("XGRAPH", "X");
+  ("YGRAPH", "\127\240");
+  ("RGRAPH", "\127\241");
+  ("XT", "\127\244t");
+  ("YT", "\127\240t");
+  ("XGRAPH", "\127\244");
   ("SSB", "SSb");
   ("SSAB", "SSab");
   ("MSB", "MSb");

@@ -37,7 +37,12 @@ let tdraw (ren : Sdlrender.t) : unit =
   for j = 0 to 6 do
     for i = 0 to 20 do
       if tscreen.(j).(i) <> "\000" then
-        let t = Hashtbl.find repr_text tscreen.(j).(i) in
+        let t =
+          try
+            Hashtbl.find repr_text tscreen.(j).(i)
+          with
+            | Not_found -> Hashtbl.find repr_text "\064"
+        in
         (* The visual representation of the character has dimensions 7*5. *)
         for y = 0 to 6 do
           for x = 0 to 4 do
@@ -94,7 +99,12 @@ let rec fast_locate_aux (i : int) (j : int) (acc : Sdlrect.t list ref) (l : stri
     match l with
       | s::lt ->
         (tscreen.(j).(k) <- s;
-        let t = Hashtbl.find repr_text s in
+        let t =
+          try
+            Hashtbl.find repr_text s
+          with
+            | Not_found -> Hashtbl.find repr_text "\064"
+        in
         for y = 0 to 6 do
           for x = 0 to 4 do
             if t.(5*y+x) then
