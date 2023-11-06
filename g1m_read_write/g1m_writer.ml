@@ -429,7 +429,7 @@ let mat_bin (mat_array : (bool * (float array array)) array) =
         in
         let col = Array.length m.(0) in
         let t = matrix_to_array m in
-        let subh = obj_subheader "MAT" (String.make 1 Char.chr (65+i)) (16+12*row*col) in
+        let subh = obj_subheader "MAT" (String.make 1 (Char.chr (65+i))) (16+12*row*col) in
         let pre_data =
           (String.make 8 '\000')
           ^(String.init 2 (fun j -> if j = 0 then Char.chr (actual_row/256) else Char.chr (actual_row mod 256)))
