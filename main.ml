@@ -29,6 +29,7 @@
 
 (** Compilation **)
 (* Arithmetic *)
+#use "initialization/variables.ml"
 #use "arithmetic/definitions/arithmetic_def.ml"
 #use "arithmetic/definitions/entity_functions.ml"
 #use "arithmetic/definitions/string_func.ml"
