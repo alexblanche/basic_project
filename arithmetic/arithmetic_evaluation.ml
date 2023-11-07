@@ -67,7 +67,8 @@ let numexpr_to_float_matrix (em : num_expr array array) : float array array =
 
 (* Returns the value of the variable of index i in the array var *)
 let get_var_val (var : float array) (i : int) : complex =
-  get_complex var.(i) var.(i+29);;
+  (* get_complex var.(i) var.(i+29);; *)
+  access_var var i;;
 
 (* Returns the value of List a[i] *)
 let get_list_val (tlist : float array array) (a : int) (i : int) : complex =

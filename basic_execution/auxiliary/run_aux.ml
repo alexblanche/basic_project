@@ -7,9 +7,8 @@ exception Runtime_interruption;;
 let assign_var (p : parameters) (x : entity) (v : variable) : unit =
   match x,v with
     | Value z, Var vi ->
-      if vi >= 0 && vi <= 28 then
-        (p.var.(vi) <- z.re;
-        p.var.(vi+29) <- z.im)
+      if vi >= 0 && vi <= 72 then
+        set_var p.var vi z
       else failwith "Runtime error: Incorrect index of a variable during assignment"
 
     | Value z,

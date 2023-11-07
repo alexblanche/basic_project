@@ -70,8 +70,7 @@ let number_of_elements (p : project_content) : int =
 (* Type for the parameter container *)
 type parameters = {
 
-  (* Variables: array of size 2*29, storing the content of each variable A..Z, r, theta, Ans
-    as real part in the 29 first cells, and imaginary part in the next 29 *)
+  (* Variables: see variables.ml *)
   var : float array;
 
   (* Lists: an array of 26 float arrays
@@ -99,17 +98,8 @@ type parameters = {
   (* List _[0]: contain strings *)
   listzero : (string list) array;
 
-
   (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
   mutable polar : bool;
-
-  (* Parameters of the V-Window *)
-  mutable xmin : float;
-  mutable xmax : float;
-  mutable xstep : float;
-  mutable ymin : float;
-  mutable ymax : float;
-  mutable ystep : float;
 
   (* Pointers to the bgscreen and the gscreen *)
   mutable bgscreen : bool array array;
@@ -131,10 +121,21 @@ type parameters = {
 
 (* Returns an empty parameters object *)
 let empty_param () : parameters =
+
+  (* Variable storage array *)
+  let alphamem = new_var_storage () in
+  (* Parameters of the V-Window *)
+  set_real_var alphamem (var_index "XMIN") 1.;
+  set_real_var alphamem (var_index "XMAX") 127.;
+  set_real_var alphamem (var_index "XSCL") 0.;
+  set_real_var alphamem (var_index "YMIN") 1.;
+  set_real_var alphamem (var_index "YMAX") 127.;
+  set_real_var alphamem (var_index "YSCL") 0.;
+  set_real_var alphamem (var_index "XDOT") 1.;
+
   {
-    (* Variables: array of size 2*29, storing the content of each variable A..Z, r, theta, Ans
-      and the recursion variables as real part in the 43 first cells, and imaginary part in the next 43 *)
-    var = Array.make (2*43) 0.;
+    (* Variables: see variables.ml *)
+    var = alphamem;
 
     (* Lists 1 to 26 + List Ans *)
     list = Array.make 27 [||];
@@ -153,14 +154,6 @@ let empty_param () : parameters =
     
     (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
     polar = false;
-
-    (* Parameters of the V-Window *)
-    xmin = 1.;
-    xmax = 127.;
-    xstep = 0.;
-    ymin = 1.;
-    ymax = 63.;
-    ystep = 0.;
 
     (* Pointers to the bgscreen and the gscreen *)
     bgscreen = [||];

@@ -228,12 +228,13 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
         || yminval.im <> 0. || ymaxval.im <> 0. || ystepval.im <> 0.
         then graphic_fail i "ViewWindow expects real arguments"
         else
-          (p.xmin <- xminval.re;
-          p.xmax <- xmaxval.re;
-          p.xstep <- xstepval.re;
-          p.ymin <- yminval.re;
-          p.ymax <- ymaxval.re;
-          p.ystep <- ystepval.re;
+          (set_real_var alphamem (var_index "XMIN") xminval.re;
+          set_real_var alphamem (var_index "XMAX") xmaxval.re;
+          set_real_var alphamem (var_index "XSCL") xstepval.re;
+          set_real_var alphamem (var_index "YMIN") yminval.re;
+          set_real_var alphamem (var_index "YMAX") ymaxval.re;
+          set_real_var alphamem (var_index "YSCL") ystepval.re;
+          set_real_var alphamem (var_index "XDOT") ((xmaxval.re -. xminval.re) /. 126.);
           wipe gscreen;
           draw_window ren p;
           background_changed := true)

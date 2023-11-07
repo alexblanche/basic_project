@@ -20,6 +20,7 @@
 #use "initialization/types/graphic_types.ml"
 #use "initialization/types/basic_type.ml"
 #use "initialization/encodings/locate_format.ml"
+#use "initialization/variables.ml"
 #use "initialization/types/project_type.ml"
 
 #use "initialization/encodings/basic_encoding.ml"
@@ -29,7 +30,6 @@
 
 (** Compilation **)
 (* Arithmetic *)
-#use "initialization/variables.ml"
 #use "arithmetic/definitions/arithmetic_def.ml"
 #use "arithmetic/definitions/entity_functions.ml"
 #use "arithmetic/definitions/string_func.ml"

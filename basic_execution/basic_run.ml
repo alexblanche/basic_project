@@ -127,9 +127,13 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         val_seen := true;
         (match v with
           | Var vi ->
-            (* (p.var.(vi) <- z.re;
-            p.var.(vi+29) <- z.im) *)
-            assign_var p (Value z) v
+            if vi <= 28
+              || z.im = 0.
+                &&
+                (z.re >= 0.
+                || not (List.mem vi [53; 55; 58; 59; 65; 66; 69]))
+              then assign_var p (Value z) v
+            else run_fail i ("Incorrect value for variable of index "^(string_of_int vi))
 
           | ListIndex (a, iexp) ->
             (let vala = get_val_numexpr p a in
