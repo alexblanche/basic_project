@@ -299,6 +299,21 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
           Unix.sleepf timer.fline;
         text_screen := false)
 
+    | Graphic_Function ("STOVWIN", [e]) ->
+      let z = eval_num p e in
+      if is_int z then
+        let a = int_of_complex z in
+        if a >= 1 && a <= 6 then
+          (p.vwin.(a-1) <-
+            (access_real_var p.var xmin_index,
+            access_real_var p.var xmax_index,
+            access_real_var p.var xscl_index,
+            access_real_var p.var ymin_index,
+            access_real_var p.var ymax_index,
+            access_real_var p.var yscl_index))
+        else graphic_fail i "StoVWin index should be between 1 and 6"
+      else graphic_fail i "StoVWin expects an integer index"
+
     | Graphic_Function ("SLNORMAL", []) -> p.style <- StyleNormal
     | Graphic_Function ("SLTHICK", []) -> p.style <- StyleThick
     | Graphic_Function ("SLBROKEN", []) -> p.style <- StyleBroken

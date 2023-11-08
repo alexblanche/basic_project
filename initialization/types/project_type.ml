@@ -114,6 +114,9 @@ type parameters = {
 
   (* Sgph [0|1|2] [DrawOn | DrawOff], [Scatter | XyLine], List i1, List i2, [Dot | Square | Cross] *)
   mutable sgph : (bool * drawstat_style * int * int * drawstat_mark) array;
+
+  (* Stored VWin: 6 spots *)
+  vwin : (float * float * float * float * float * float) array;
 }
 
 
@@ -171,6 +174,14 @@ let empty_param () : parameters =
       [| (false, XYLine, (-1), (-1), DSMDot);
          (false, XYLine, (-1), (-1), DSMDot);
          (false, XYLine, (-1), (-1), DSMDot) |];
+    
+    vwin =
+      [|(-1.,-1.,-1.,-1.,-1.,-1.);
+        (-1.,-1.,-1.,-1.,-1.,-1.);
+        (-1.,-1.,-1.,-1.,-1.,-1.);
+        (-1.,-1.,-1.,-1.,-1.,-1.);
+        (-1.,-1.,-1.,-1.,-1.,-1.);
+        (-1.,-1.,-1.,-1.,-1.,-1.)|];
   };;
 
 (* Returns a new array with twice the size of t, with the elements of t as first elements
