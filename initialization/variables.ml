@@ -70,10 +70,11 @@ let is_real_var (s : string) : bool =
       List.mem send ["START"; "PITCH"]
     | 'T' ->
       List.mem send ["THETAMIN"; "THETAMAX"; "THETAPITCH"]
-    | _ -> (* 'R' *)
+    | 'R' ->
       if s.[1] = 'I'
-        then List.mem (String.sub send 4 (l-5)) ["XMIN"; "XMAX"; "YMIN"; "YMAX"; "TTHETAMIN"; "TTHETAMAX"; "TTHETAPTCH"]
+        then l >= 9 && List.mem (String.sub send 4 (l-5)) ["XMIN"; "XMAX"; "YMIN"; "YMAX"; "TTHETAMIN"; "TTHETAMAX"; "TTHETAPTCH"]
         else List.mem send ["START"; "END"]
+    | _ -> false
 ;;
 
 (* Recognizes positive real variables *)

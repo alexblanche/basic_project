@@ -61,7 +61,14 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
         draw_frame ren;
         draw_single_pict_no_writing ren p.capt.(int_of_complex z - 1);
         refresh ren;
-        disp_graphic ren true;
+        (* disp_graphic ren true; *)
+        (* Bug with erase_black_square *)
+        line_feed ();
+        clear_line !writing_index;
+        locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
+        wait_release ren false;
+        wait_enter ren false;
+
         if not !text_screen then
           gdraw ren
         else 

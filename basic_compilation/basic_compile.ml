@@ -332,6 +332,13 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           done;
           aux t'' (i+20))
         else fail lexlist i "Compilation error: Wrong index for ClrList"
+      
+      | ["CLRLIST"] ->
+        (let empty_list = Arithm [Entity (ListContent [||])] in
+        for j = 1 to 20 do
+          set code (i+j-1) (AssignList (empty_list, Value (complex_of_int j)))
+        done;
+        aux [] (i+20))
 
       | "CLRMAT" :: a :: t'' ->
         let empty_mat = Arithm [Entity (MatContent [||])] in
@@ -344,6 +351,13 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           done;
           aux t'' (i+20))
         else fail lexlist i "Compilation error: Wrong index for ClrMat"
+
+      | ["CLRMAT"] ->
+        (let empty_mat = Arithm [Entity (MatContent [||])] in
+        for j = 0 to 19 do
+          set code (i+j) (AssignMat (empty_mat, j))
+        done;
+        aux [] (i+20))
 
       | "FILL" :: t ->
         (match extract_expr t with
@@ -464,6 +478,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "SLBROKEN" :: t
       | "SLDOT" :: t
       (* Ignored: *)
+      | "CLRGRAPH" :: t
       | "SWINDMAN" :: t
       | "SWINDAUTO" :: t
       | "LABELON" :: t

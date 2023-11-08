@@ -5,8 +5,8 @@
 (* Returns true if the operator is associative or left-associative *)
 (* Remark: in Basic Casio, 2^2^2^2 = 256, so the exponentiation is left-associative,
    unlike in traditional math *)
-let left_assoc (s : string) : bool =
-  true;;
+(* let left_assoc (s : string) : bool =
+  true;; *)
   (* (s <> "POWER");; *)
 
 (* Relation of precedence of operators *)
@@ -119,7 +119,11 @@ let read_float (lexlist : string list) : float * (string list) =
         else (0, t')
       | _ -> (0, t')
   in
-  let ints = string_of_int int_part in
+  let ints =
+    match lexlist with
+      | "TIMESTENPOWER" :: _ -> "1"
+      | _ -> string_of_int int_part
+  in
   let decs =
     if dec_part = 0
       then ""
@@ -422,7 +426,7 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
     match l with
       | s::t ->
         (* Values and variables *)
-        if is_digit s || s = "." then
+        if is_digit s || s = "." || s = "TIMESTENPOWER" then
           let (x, t') = read_float l in
           aux ((Entity (Value (complex_of_float x)))::acc) t'
         else if is_var s || s = "ANS" then
