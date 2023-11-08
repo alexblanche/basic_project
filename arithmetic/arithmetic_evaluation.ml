@@ -492,7 +492,7 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
     (* Runop *)
     | (Runop ro)::t, _ ->
       (match output_q with
-        | x::outq -> shunting_yard p t ((apply_rop p ro x)::outq) op_q
+        | x::outq -> shunting_yard p ((Entity (apply_rop p ro x))::t) outq op_q
         | _ -> failwith ("Arithmetic parsing: No operand for operator "^ro))
 
     (* Op *)

@@ -311,6 +311,19 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
     | Graphic_Function ("GRAPHYLEQ" as s, [e]) ->
       graphy ren p text_screen s e
 
+    | Graphic_Function ("CLRGRAPH", []) ->
+      (* Equivalent to ViewWindow -6.3, 6.3, 1, -3.1, 3.1, 1 (empirically) *)
+      (set_real_var p.var xmin_index (-6.3);
+      set_real_var p.var xmax_index 6.3;
+      set_real_var p.var xscl_index 1.;
+      set_real_var p.var ymin_index (-3.1);
+      set_real_var p.var ymax_index 3.1;
+      set_real_var p.var yscl_index 1.;
+      set_real_var p.var xdot_index 0.1;
+      wipe gscreen;
+      draw_window ren p;
+      background_changed := true)
+
     (* Ignored commands *)
     | Graphic_Function ("FUNCOFF", [])
     | Graphic_Function ("GRIDOFF", [])

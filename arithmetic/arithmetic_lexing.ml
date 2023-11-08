@@ -5,8 +5,8 @@
 (* Returns true if the operator is associative or left-associative *)
 (* Remark: in Basic Casio, 2^2^2^2 = 256, so the exponentiation is left-associative,
    unlike in traditional math *)
-(* let left_assoc (s : string) : bool =
-  true;; *)
+let left_assoc (s : string) : bool =
+  true;;
   (* (s <> "POWER");; *)
 
 (* Relation of precedence of operators *)

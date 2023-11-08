@@ -121,10 +121,9 @@ let unit_tests_lexer () =
 let unit_tests_eval_num () =
   let p = empty_param () in
   (* 10 -> A *)
-  p.var.(0) <- 10.;
+  set_var p.var 0 (complex_of_float 10.);
   (* 3+4i -> B *)
-  p.var.(1) <- 3.;
-  p.var.(1+29) <- 4.;
+  set_var p.var 1 (get_complex 3. 4.);
   (* List 1 *)
   p.list.(0) <- [| 5.; 2.; 3.; 1. |];
 
@@ -223,6 +222,7 @@ let unit_tests_eval_num () =
     (* Tests for higher precedence of omitted multiplication *)
     (["INT"; "0"; "."; "5"; "A"], {re = 5.; im = 0.});
     (["1"; "PLUS"; "LPAR"; "4"; "RPAR"; "LPAR"; "0"; "RPAR"], {re = 1.; im = 0.});
+    (["1"; "KILO"; "FRAC"; "."; "1"; "MINUS"; "1"], {re = 99.; im = 0.});
 
     (* Accuracy of Frac *)
     (["FRAC"; "1"; "5"; "4"; "."; "6"; "7"; "8"], {re = 0.678; im = 0.});

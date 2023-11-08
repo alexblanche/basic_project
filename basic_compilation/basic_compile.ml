@@ -488,7 +488,10 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "COORDON" :: t
       | "COORDOFF" :: t
       | "FUNCON" :: t
-      | "FUNCOFF" :: t ->
+      | "FUNCOFF" :: t
+      | "DEG" :: t
+      | "RAD" :: t
+      | "GRA" :: t ->
         (set code i (Graphic (Graphic_Function (List.hd lexlist, [])));
         aux t (i+1))
 
