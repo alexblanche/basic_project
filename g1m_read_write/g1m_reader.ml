@@ -181,7 +181,7 @@ let prog_to_lexlist (s : string) (istart : int) : string list =
           s.[i] = ' '
           then aux (word::acc) (i+1)
           else
-            if word.[0] = '\127' || word.[0] = '\247' || word.[0] = '\249'
+            if List.mem word.[0] ['\127'; '\247'; '\249'; '\231']
               then (* Two-byte word in commands *)
                 (try
                   aux ((List.assoc word commands)::acc) (i+2)
@@ -189,19 +189,25 @@ let prog_to_lexlist (s : string) (istart : int) : string list =
                 | Not_found ->
                   if List.mem word symbols
                     then aux (word::acc) (i+2)
-                    else failwith ("prog_to_lexlist: Unknown word "^word^" "^word_to_pair_of_codes word))
+                    else
+                      (print_endline ("Input warning (prog_to_lexlist): Unknown word "^word^" "^word_to_pair_of_codes word);
+                      aux acc (i+2)))
               else (* Two-byte word in symbols *)
-                if word.[0] = '\229' || word.[0] = '\230' || word.[0] = '\231'
+                if word.[0] = '\229' || word.[0] = '\230'
                   then
                     if List.mem word symbols
                       then aux (word::acc) (i+2)
-                      else failwith ("prog_to_lexlist: Unknown symbol "^word^" "^word_to_pair_of_codes word)
+                      else
+                        (print_endline ("Input warning (prog_to_lexlist): Unknown symbol "^word^" "^word_to_pair_of_codes word);
+                        aux acc (i+2))
                   else (* One-byte word *)
                     (match List.assoc_opt word commands with
-                      | None     ->
+                      | None ->
                         if List.mem word symbols
                           then aux (word::acc) (i+1)
-                          else failwith ("prog_to_lexlist: Unknown symbol "^word^" ("^(string_of_int (Char.code word.[0]))^")")
+                          else
+                            (print_endline ("prog_to_lexlist: Unknown symbol "^word^" ("^(string_of_int (Char.code word.[0]))^")");
+                            aux acc (i+2))
                       | Some lex -> aux (lex::acc) (i+1))
   in
   aux [] istart;;
@@ -360,7 +366,8 @@ let g1m_reader (s : string) : project_content =
   
   let prog_list =
     List.rev_map
-      (fun (name, _, istart, _) -> (name, prog_to_lexlist s istart))
+      (fun (name, _, istart, _) ->
+        (name, prog_to_lexlist s istart))
       c.prog
   in
 

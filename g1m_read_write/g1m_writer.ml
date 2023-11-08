@@ -263,9 +263,10 @@ let lexlist_to_bin (lexlist : string list) : string list =
             enco
     with
       | Not_found ->
-        if List.mem lex symbols
+        (* if List.mem lex symbols
           then lex
-          else failwith ("lexlist_to_bin: Unknown lexeme "^lex)
+          else failwith ("lexlist_to_bin: Unknown lexeme "^lex) *)
+        lex
   in
   List.rev (List.rev_map bin lexlist);;
 

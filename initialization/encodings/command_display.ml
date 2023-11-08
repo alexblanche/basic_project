@@ -627,6 +627,7 @@ let text_display = [
 	("GSELON", "G SelOn ");
 	("TSELON", "T SelOn ");
 	("DSELON", "D SelOn ");
+  ("RSELON", "R SelOn ");
 	("DRAWON", "DrawOn");
 	("ABOVERC", "ab/c");
 	("DOVERC", "d/c");
@@ -641,7 +642,12 @@ let text_display = [
 	("GSELOFF", "G SelOff ");
 	("TSELOFF", "T SelOff ");
 	("DSELOFF", "D SelOff ");
+  ("RSELOFF", "R SelOff ");
 	("DRAWOFF", "DrawOff");
+  ("TODEC", "\230\158Dec");
+  ("TOHEX", "\230\158Hex");
+  ("TOBIN", "\230\158Bin");
+  ("TOOCT", "\230\158Oct");
 	("TODMS", "\230\158DMS");
 	("TOAPLUSBI", "\230\158a+b\127\080");
 	("TORTHETA", "\230\158r\127\084\206");
