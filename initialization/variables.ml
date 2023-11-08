@@ -146,6 +146,15 @@ let var_index (s : string) : int =
           if send = "START" then 49 else 50
 ;;
 
+(* Hard-coded indices for window variables *)
+let xmin_index = 51;;
+let xmax_index = 52;;
+let xscl_index = 53;;
+let xdot_index = 55;;
+let ymin_index = 56;;
+let ymax_index = 57;;
+let yscl_index = 58;;
+
 
 (** Data structure for storage **)
 (* Array of floats in this order:
@@ -164,6 +173,13 @@ let access_var (alphamem : float array) (vi : int) : complex =
   else complex_of_float alphamem.(29+vi)
 ;;
 
+(* Returns only the real part of a complex variable, or the content of a real variable *)
+let access_real_var (alphamem : float array) (vi : int) : float =
+  if vi <= 28
+    then alphamem.(2*vi)
+    else alphamem.(29+vi)
+;;
+
 (* Sets the variable of index vi to the value z *)
 let set_var (alphamem : float array) (vi : int) (z : complex) : unit =
   if vi <= 28 then
@@ -173,8 +189,10 @@ let set_var (alphamem : float array) (vi : int) (z : complex) : unit =
     alphamem.(29+vi) <- z.re
 ;;
 
-(* Same, restricted to real variables *)
+(* Sets only the real part of a complex variable, or the content of a real variable *)
 let set_real_var (alphamem : float array) (vi : int) (x : float) : unit =
-  alphamem.(29+vi) <- x
+  if vi <= 28
+    then alphamem.(2*vi) <- x
+    else alphamem.(29+vi) <- x
 ;;
 

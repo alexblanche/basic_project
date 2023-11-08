@@ -253,10 +253,11 @@ let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
       | "GRAPHYLEQ" -> 4
       | _ -> -1
   in
-  let step = (p.xmax -. p.xmin) /. 126. in
-  (* xmin -> X *)
-  p.var.(23+29) <- 0.;
-  p.var.(23) <- p.xmin;
+  let pxmin = access_real_var p.var xmin_index in
+  (* let step = (pxmax -. pxmin) /. 126. in *)
+  let step = access_real_var p.var xdot_index in
+  (* Xmin -> X *)
+  set_var p.var 23 (complex_of_float pxmin);
   let z = eval_num p e in
   let last_j = ref (rescale_y p z.re) in
 
@@ -318,5 +319,6 @@ let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
         refresh ren
         )
       );
-    p.var.(23) <- p.var.(23) +. step
+    (* X + step -> X *)
+    set_real_var p.var 23 ((access_real_var p.var 23) +. step)
   done;;

@@ -30,13 +30,17 @@ let background_changed = ref true;;
 
 (* Converts the coordinates x,y, in the system {xmin, xmax, ymin, ymax}, to a pixel in {1, 127, 1, 63} *)
 let rescale_x (p : parameters) (x : float) : int =
-  let ax = 126. *. (x -. p.xmin) /. (p.xmax -. p.xmin) -. 0.5 in
+  let pxmin = access_real_var p.var xmin_index in
+  let pxmax = access_real_var p.var xmax_index in
+  let ax = 126. *. (x -. pxmin) /. (pxmax -. pxmin) -. 0.5 in
   if ax >= 0.
     then true_int_of_float ax + 2
     else true_int_of_float ax + 1;;
 
 let rescale_y (p : parameters) (y : float) : int =
-  let ay = 62. *. (y -. p.ymin) /. (p.ymax -. p.ymin) -. 0.5 in
+  let pymin = access_real_var p.var ymin_index in
+  let pymax = access_real_var p.var ymax_index in
+  let ay = 62. *. (y -. pymin) /. (pymax -. pymin) -. 0.5 in
   if ay >= 0.
     then true_int_of_float ay + 2
     else true_int_of_float ay + 1;;
@@ -46,12 +50,16 @@ let rescale (p : parameters) (x : float) (y : float) : int * int =
 
 (* Reverse scaling functions (imprecise approximations) *)
 let approx_descale_x (p : parameters) (i : int) : float =
+  let pxmin = access_real_var p.var xmin_index in
+  let pxmax = access_real_var p.var xmax_index in
   let x = float_of_int (i-1) +. 0.5 in
-  x *. (p.xmax -. p.xmin) /. 126. +. p.xmin;;
+  x *. (pxmax -. pxmin) /. 126. +. pxmin;;
 
 let approx_descale_y (p : parameters) (j : int) : float =
-  let x = float_of_int (j-1) +. 0.5 in
-  x *. (p.ymax -. p.ymin) /. 62. +. p.ymin;;
+  let pymin = access_real_var p.var ymin_index in
+  let pymax = access_real_var p.var ymax_index in
+  let y = float_of_int (j-1) +. 0.5 in
+  y *. (pymax -. pymin) /. 62. +. pymin;;
 
 (* Draws a horizontal line in the current system of coordinates at ordinate y *)
 let draw_horizontal_line (ren : Sdlrender.t) (p : parameters) (y : float) : unit =
@@ -75,11 +83,14 @@ let draw_axes (ren : Sdlrender.t) (p : parameters) : unit =
     vertical_line ren bgscreen i_axis 1 63);
   (* Scales *)
   (* Horizontal scales *)
-  if not (is_zero_float p.xstep) then
-    (let nb_step_xplus  = true_int_of_float (Float.abs (p.xmax /. p.xstep)) in
-    let nb_step_xminus = true_int_of_float (Float.abs (p.xmin /. p.xstep)) in
-    let step_xplus = Array.init nb_step_xplus (fun i -> (float_of_int (i+1))*.p.xstep) in
-    let step_xminus = Array.init nb_step_xminus (fun i -> (float_of_int (-i-1))*.p.xstep) in
+  let pxstep = access_real_var p.var xscl_index in
+  if not (is_zero_float pxstep) then
+    (let pxmin = access_real_var p.var xmin_index in
+    let pxmax = access_real_var p.var xmax_index in
+    let nb_step_xplus  = true_int_of_float (Float.abs (pxmax /. pxstep)) in
+    let nb_step_xminus = true_int_of_float (Float.abs (pxmin /. pxstep)) in
+    let step_xplus = Array.init nb_step_xplus (fun i -> (float_of_int (i+1))*.pxstep) in
+    let step_xminus = Array.init nb_step_xminus (fun i -> (float_of_int (-i-1))*.pxstep) in
     let j = rescale_y p 0. in
     let correctj =
       let temp_j = min (max 1 (63-j)) 63 in
@@ -101,11 +112,14 @@ let draw_axes (ren : Sdlrender.t) (p : parameters) : unit =
       step_xminus));
 
   (* Vertical scales *)
-  if not (is_zero_float p.ystep) then
-    (let nb_step_yplus  = true_int_of_float (Float.abs (p.ymax /. p.ystep)) in
-    let nb_step_yminus = true_int_of_float (Float.abs (p.ymin /. p.ystep)) in
-    let step_yplus = Array.init nb_step_yplus (fun j -> (float_of_int (j+1))*.p.ystep) in
-    let step_yminus = Array.init nb_step_yminus (fun j -> (float_of_int (-j-1))*.p.ystep) in
+  let pystep = access_real_var p.var yscl_index in
+  if not (is_zero_float pystep) then
+    (let pymin = access_real_var p.var ymin_index in
+    let pymax = access_real_var p.var ymax_index in
+    let nb_step_yplus  = true_int_of_float (Float.abs (pymax /. pystep)) in
+    let nb_step_yminus = true_int_of_float (Float.abs (pymin /. pystep)) in
+    let step_yplus = Array.init nb_step_yplus (fun j -> (float_of_int (j+1))*.pystep) in
+    let step_yminus = Array.init nb_step_yminus (fun j -> (float_of_int (-j-1))*.pystep) in
     let i = rescale_x p 0. in
     let correcti =
       let temp_i = min (max 1 i) 127 in

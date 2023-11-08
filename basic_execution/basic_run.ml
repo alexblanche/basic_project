@@ -51,8 +51,13 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   p.bgscreen <- bgscreen;
   p.gscreen <- gscreen;
   p.bgpict <- -1;
-  p.xmin <- 1.; p.xmax <- 127.; p.xstep <- 0.;
-  p.ymin <- 1.; p.ymax <- 63.; p.ystep <- 0.;
+  set_real_var p.var xmin_index 1.;
+  set_real_var p.var xmax_index 127.;
+  set_real_var p.var xscl_index 0.;
+  set_real_var p.var ymin_index 1.;
+  set_real_var p.var ymax_index 63.;
+  set_real_var p.var yscl_index 0.;
+  set_real_var p.var xdot_index 1.;
   p.axeson <- false;
   background_changed := false;
 
@@ -310,11 +315,13 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         aux (i+1))
       
       | For (vi, e1, e2, e3, inext) ->
-        (let z1 = eval_num p e1 in
+        (if not (is_letter_var vi)
+          then run_fail i "Wrong index of variable in For loop";
+        let z1 = eval_num p e1 in
         if z1.im <> 0.
           then run_fail i "Complex value given to a For loop";
-        p.var.(vi) <- z1.re;
-        p.var.(vi+29) <- 0.;
+        set_var p.var vi z1;
+
         let z2 = eval_num p e2 in
         let z3 = eval_num p e3 in
         if z2.im <> 0. || z3.im <> 0.
@@ -326,7 +333,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         for_info := (vi, i+1, asc, z2.re, z3.re)::!for_info;
 
         (* First test of the loop condition *)
-        if (asc && p.var.(vi) <= z2.re) || ((not asc) && p.var.(vi) >= z2.re)
+        let xi = access_real_var p.var vi in
+        if (asc && xi <= z2.re) || ((not asc) && xi >= z2.re)
           then aux (i+1)
           else
             (for_info := List.tl !for_info;
@@ -336,8 +344,9 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
       | Next ->
         (match !for_info with
           | (vari, iback, asc, vto, vstep)::_ ->
-            (p.var.(vari) <- p.var.(vari) +. vstep;
-            if (asc && p.var.(vari) <= vto) || ((not asc) && p.var.(vari) >= vto)
+            (let xi = (access_real_var p.var vari) +. vstep in
+            set_real_var p.var vari xi;
+            if (asc && xi <= vto) || ((not asc) && xi >= vto)
               then aux iback
               else (* Exitting the loop *)
                 (for_info := List.tl !for_info;
@@ -397,7 +406,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         (last_val := z;
         val_seen := true;
         for vi = vi1 to vi2 do
-          assign_var p (Value z) (Var vi)
+          (* assign_var p (Value z) (Var vi) *)
+          set_var p.var vi z
         done;
         aux (i+1))
 

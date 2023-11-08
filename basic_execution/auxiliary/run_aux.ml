@@ -45,8 +45,7 @@ let assign_var (p : parameters) (x : entity) (v : variable) : unit =
 (* Stores the value z in the Ans variable *)
 let store_ans (var : float array) (z : complex) : unit =
   (* assign_var p (Value z) (Var 28) *)
-  var.(28) <- z.re;
-  var.(57) <- z.im;;
+  set_var var 28 z;;
 
 (* Converts as string in reverse string list type to reverse symbol list *)
 (* text = true if the string is about to be printed in text mode, and false if in graphic mode *)
