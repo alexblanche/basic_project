@@ -183,7 +183,7 @@ let rec extract_list_index (t : string list) : arithm * (string list) =
   let (a,t') =
     match t with
       | a::q ->
-        if is_var a || a = "ANS" then
+        if is_letter_var a || a = "ANS" then
           (Variable (Var (var_index a)), q)
         else if is_digit a then
           let (i,q') = read_int t true in
@@ -216,9 +216,12 @@ and extract_mat_index (t : string list) : arithm * (string list) =
   let (ai,t2) =
     match t with
       | a::q ->
-        if is_var a && a <> "SMALLR" && a <> "THETA" then
-          (var_index a, q)
-        else failwith "extract_mat_index: Mat should be followed by a"
+        if is_letter_var a then
+          let vi = var_index a in
+          if vi <= 25 || vi = 28 then
+            (vi, q)
+          else failwith "extract_mat_index: a matrix index variable has to be a letter and not r nor theta"
+        else failwith "extract_mat_index: Mat should be followed by a variable"
       | [] -> failwith "extract_mat_index: Error, the list of lexemes is empty"
   in
   (* Detection of the indices between square brackets *)
@@ -422,7 +425,7 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
         if is_digit s || s = "." then
           let (x, t') = read_float l in
           aux ((Entity (Value (complex_of_float x)))::acc) t'
-        else if is_var s || s = "ANS" || s = "SMALLR" || s = "THETA" then
+        else if is_var s || s = "ANS" then
           aux ((Entity (Variable (Var (var_index s))))::acc) t
         else if s = "CPLXI" then
           aux ((Entity (Value (Complex.i)))::acc) t
@@ -496,7 +499,7 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
               let (li,t') = extract_list_index t in
               aux (li::acc) t'
             | a::t' -> (* List a *)
-              if is_var a || a = "ANS" then
+              if is_letter_var a || a = "ANS" then
                 aux ((Entity (VarList (Variable (Var (var_index a)))))::acc) t'
               else if is_digit a then
                 let (i,q) = read_int t true in
@@ -511,9 +514,12 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
               let (mi,t') = extract_mat_index t in
               aux (mi::acc) t'
             | a::t' -> (* Mat a *)
-              if is_var a && a <> "SMALLR" && a <> "THETA" || a = "ANS" then
-                aux ((Entity (VarMat (var_index a)))::acc) t'
-              else failwith "extract_mat_index: wrong matrix index"
+              if is_var a then
+                let vi = var_index a in
+                if vi <= 25 || vi = 28 then
+                  aux ((Entity (VarMat (var_index a)))::acc) t'
+                else failwith "extract_expr: a matrix index variable has to be a letter and not r nor theta"
+              else failwith "extract_expr: wrong matrix index"
             | _ -> failwith "extract_expr: syntax error in matrix access")
         
         (* {...} *)

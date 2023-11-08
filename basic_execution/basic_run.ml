@@ -132,13 +132,18 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         val_seen := true;
         (match v with
           | Var vi ->
-            if vi <= 28
+            ((if vi <= 28
               || z.im = 0.
                 &&
                 (z.re >= 0.
                 || not (List.mem vi [53; 55; 58; 59; 65; 66; 69]))
               then assign_var p (Value z) v
-            else run_fail i ("Incorrect value for variable of index "^(string_of_int vi))
+            else run_fail i ("Incorrect value for variable of index "^(string_of_int vi)));
+            (* Specific actions for window variables *)
+            if vi >= 51 && vi <= 59 then
+              (wipe gscreen;
+              background_changed := true)
+            )
 
           | ListIndex (a, iexp) ->
             (let vala = get_val_numexpr p a in
@@ -315,9 +320,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         aux (i+1))
       
       | For (vi, e1, e2, e3, inext) ->
-        (if not (is_letter_var vi)
-          then run_fail i "Wrong index of variable in For loop";
-        let z1 = eval_num p e1 in
+        (let z1 = eval_num p e1 in
         if z1.im <> 0.
           then run_fail i "Complex value given to a For loop";
         set_var p.var vi z1;

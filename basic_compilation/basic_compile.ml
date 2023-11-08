@@ -60,7 +60,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 fail lexlist i "Compilation error: Wrong assignment (->) of a variable"
             (* e -> X~Z *)
             | v1::"\126"::v2::t'' ->
-              if is_var v1 && is_var v2 then
+              if is_letter_var v1 && is_letter_var v2 then
                 let vi1 = var_index v1 in
                 let vi2 = var_index v2 in
                 if vi2 >= vi1 then
@@ -98,7 +98,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
             | "LIST"::a::t'' ->
               (* Numerical is allowed, because entity functions have unspecified output type *)
-              if is_var a || a = "ANS" then
+              if is_letter_var a || a = "ANS" then
                 (set code i (AssignList (e, Variable (Var (var_index a))));
                 (true, i+1, t''))
               else if is_digit a then
@@ -108,14 +108,14 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
               else fail lexlist i "Compilation error: wrong list index"
 
             | "MAT"::a::t'' ->
-              if is_var a && String.length a = 1 || a = "ANS" then
+              if is_letter_var a && String.length a = 1 || a = "ANS" then
                 (set code i (AssignMat (e, var_index a));
                 (true, i+1, t''))
               else fail lexlist i "extract_mat_index: wrong matrix index"
             
             | "DIM"::"LIST"::a::t'' ->
               let dim_expr = Arithm [Function ("Init", [e])] in
-              if is_var a || a = "ANS" then
+              if is_letter_var a || a = "ANS" then
                 (set code i (AssignList (dim_expr, Variable (Var (var_index a))));
                 (true, i+1, t''))
               else if is_digit a then
@@ -126,7 +126,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
             | "DIM"::"MAT"::a::t'' ->
               let dim_expr = Arithm [Function ("Init", [e])] in
-              if is_var a || a = "ANS" then
+              if is_letter_var a && String.length a = 1 || a = "ANS" then
                 (set code i (AssignMat (dim_expr, var_index a));
                 (true, i+1, t''))
               else fail lexlist i "Compilation error: wrong matrix index in dimension assignment"
@@ -319,7 +319,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         
       | "CLRLIST" :: a :: t'' ->
         let empty_list = Arithm [Entity (ListContent [||])] in
-        if is_var a || a = "ANS" then (* ClrList A *)
+        if is_letter_var a || a = "ANS" then (* ClrList A *)
           (set code i (AssignList (empty_list, Variable (Var (var_index a))));
           aux t'' (i+1))
         else if is_digit a then (* ClrList 11 *)
@@ -335,7 +335,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
       | "CLRMAT" :: a :: t'' ->
         let empty_mat = Arithm [Entity (MatContent [||])] in
-        if is_var a || a = "ANS" then
+        if is_letter_var a && String.length a = 1 || a = "ANS" then
           (set code i (AssignMat (empty_mat, var_index a));
           aux t'' (i+1))
         else if a = "EOL" || a = "COLON" || a = "DISP" then (* ClrMat (clears all matrices)*)
@@ -348,7 +348,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "FILL" :: t ->
         (match extract_expr t with
           | e, ","::"LIST"::a::t' ->
-            if is_var a then
+            if is_letter_var a then
               (set code i (Function ("FILL", [e; Arithm [Entity (VarList (Variable (Var (var_index a))))]]));
               aux (match t' with [] -> [] | "RPAR"::q -> q | _ -> t') (i+1))
             else if is_digit a then
@@ -358,7 +358,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
             else fail lexlist i "Compilation error: wrong list index in Fill command"
 
           | e, ","::"MAT"::a::t' ->
-            if is_var a && a <> "SMALLR" && a <> "THETA" then
+            if is_letter_var a && String.length a = 1 then
               (set code i (Function ("FILL", [e; Arithm [Entity (VarMat (var_index a))]]));
               aux (match t' with [] -> [] | "RPAR"::q -> q | _ -> t') (i+1))
             else fail lexlist i "extract_mat_index: wrong matrix index"
