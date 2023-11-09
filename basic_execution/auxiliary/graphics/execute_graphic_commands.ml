@@ -234,18 +234,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       if xminval.im <> 0. || xmaxval.im <> 0. || xstepval.im <> 0.
         || yminval.im <> 0. || ymaxval.im <> 0. || ystepval.im <> 0.
         then graphic_fail i "ViewWindow expects real arguments"
-        else
-          (set_real_var p.var xmin_index xminval.re;
-          set_real_var p.var xmax_index xmaxval.re;
-          set_real_var p.var xscl_index xstepval.re;
-          set_real_var p.var ymin_index yminval.re;
-          set_real_var p.var ymax_index ymaxval.re;
-          set_real_var p.var yscl_index ystepval.re;
-          set_real_var p.var xdot_index ((xmaxval.re -. xminval.re) /. 126.);
-          wipe gscreen;
-          draw_window ren p;
-          background_changed := true)
-          (* No refresh: the will be refreshed when the first object will be drawn *)
+        else viewwindow ren p xminval.re xmaxval.re xstepval.re yminval.re ymaxval.re ystepval.re
 
     | Drawstat_Setup (sgphi, drawon, style_opt, list1_opt, list2_opt, mark_opt) ->
       let (curr_drawon, curr_style, curr_list1, curr_list2, curr_mark) = p.sgph.(sgphi) in
@@ -313,6 +302,17 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
             access_real_var p.var yscl_index))
         else graphic_fail i "StoVWin index should be between 1 and 6"
       else graphic_fail i "StoVWin expects an integer index"
+
+    | Graphic_Function ("RCLVWIN", [e]) ->
+      let z = eval_num p e in
+      if is_int z then
+        let a = int_of_complex z in
+        if a >= 1 && a <= 6 then
+          let (xmin, xmax, xscl, ymin, ymax, yscl) = p.vwin.(a-1) in
+          viewwindow ren p xmin xmax xscl ymin ymax yscl
+        else graphic_fail i "RclVWin index should be between 1 and 6"
+      else graphic_fail i "RclVWin expects an integer index"
+
 
     | Graphic_Function ("SLNORMAL", []) -> p.style <- StyleNormal
     | Graphic_Function ("SLTHICK", []) -> p.style <- StyleThick
