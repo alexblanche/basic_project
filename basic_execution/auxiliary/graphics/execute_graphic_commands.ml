@@ -224,17 +224,17 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       locate_no_refresh ["e"; "n"; "o"; "D"] 17 !writing_index;
       background_changed := true)
 
-    | ViewWindow (ex1, ex2, esx, ey1, ey2, esy) ->
-      let xminval = eval_num p ex1 in
-      let xmaxval = eval_num p ex2 in
-      let xstepval = eval_num p esx in
-      let yminval = eval_num p ey1 in
-      let ymaxval = eval_num p ey2 in
-      let ystepval = eval_num p esy in
-      if xminval.im <> 0. || xmaxval.im <> 0. || xstepval.im <> 0.
-        || yminval.im <> 0. || ymaxval.im <> 0. || ystepval.im <> 0.
-        then graphic_fail i "ViewWindow expects real arguments"
-        else viewwindow ren p xminval.re xmaxval.re xstepval.re yminval.re ymaxval.re ystepval.re
+    | ViewWindow el ->
+      let xl =
+        List.map
+          (fun e ->
+            let z = eval_num p e in
+            if z.im <> 0.
+              then graphic_fail i "ViewWindow expects real arguments"
+              else z.re)
+          el
+      in
+      partial_vwin ren p xl
 
     | Drawstat_Setup (sgphi, drawon, style_opt, list1_opt, list2_opt, mark_opt) ->
       let (curr_drawon, curr_style, curr_list1, curr_list2, curr_mark) = p.sgph.(sgphi) in
@@ -309,7 +309,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
         let a = int_of_complex z in
         if a >= 1 && a <= 6 then
           let (xmin, xmax, xscl, ymin, ymax, yscl) = p.vwin.(a-1) in
-          viewwindow ren p xmin xmax xscl ymin ymax yscl
+          viewWindow ren p xmin xmax xscl ymin ymax yscl
         else graphic_fail i "RclVWin index should be between 1 and 6"
       else graphic_fail i "RclVWin expects an integer index"
 

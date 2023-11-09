@@ -94,7 +94,8 @@ let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
 
 (** ViewWindow function **)
 
-let viewwindow (ren : Sdlrender.t) (p : parameters) 
+(* ViewWindow treatment with all 6 parameters *)
+let viewWindow (ren : Sdlrender.t) (p : parameters) 
   (xmin : float) (xmax : float) (xscl : float)
   (ymin : float) (ymax : float) (yscl : float) : unit =
 
@@ -109,4 +110,21 @@ let viewwindow (ren : Sdlrender.t) (p : parameters)
   draw_window ren p;
   background_changed := true
   (* No refresh: the will be refreshed when the first object will be drawn *)
+;;
+
+(* Calls viewWindow with 6 parameters or less *)
+let partial_vwin (ren : Sdlrender.t) (p : parameters) (l : float list) : unit =
+  let xmax = access_real_var p.var xmax_index in
+  let xscl = access_real_var p.var xscl_index in
+  let ymin = access_real_var p.var ymin_index in
+  let ymax = access_real_var p.var ymax_index in
+  let yscl = access_real_var p.var yscl_index in
+  match l with
+    | [nxmin]                                    -> viewWindow ren p nxmin xmax xscl ymin ymax yscl
+    | [nxmin; nxmax]                             -> viewWindow ren p nxmin nxmax xscl ymin ymax yscl
+    | [nxmin; nxmax; nxscl]                      -> viewWindow ren p nxmin nxmax nxscl ymin ymax yscl
+    | [nxmin; nxmax; nxscl; nymin]               -> viewWindow ren p nxmin nxmax nxscl nymin ymax yscl
+    | [nxmin; nxmax; nxscl; nymin; nymax]        -> viewWindow ren p nxmin nxmax nxscl nymin nymax yscl
+    | [nxmin; nxmax; nxscl; nymin; nymax; nyscl] -> viewWindow ren p nxmin nxmax nxscl nymin nymax nyscl
+    | _ -> failwith "Graphic error: partial_vwin expects a list of between 1 and 6 float numbers as argument"
 ;;

@@ -442,12 +442,12 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
       | "VIEWWINDOW" :: t ->
         let (el, t') = extract_list_content t in
-        (match el with
-          | [exmin; exmax; exstep; eymin; eymax; eystep] ->
-            (set code i (Graphic (ViewWindow (exmin, exmax, exstep, eymin, eymax, eystep))));
-            aux t' (i+1)
-          | _ ->
-            fail t i "Compilation error: ViewWindow expects six parameters")
+        let len = List.length el in
+        if len >= 1 && len <= 6 then
+          (set code i (Graphic (ViewWindow el));
+          aux t' (i+1))
+        else
+          fail t i "Compilation error: ViewWindow expects between 1 and 6 parameters"
 
       | "TEXT" :: t ->
         (match extract_list_content t with

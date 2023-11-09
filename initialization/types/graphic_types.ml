@@ -8,7 +8,7 @@ type drawstat_style = Scatter | XYLine
 
 (* Graphic screen commands *)
 type graphic =
-  | ViewWindow of num_expr * num_expr * num_expr * num_expr * num_expr * num_expr
+  | ViewWindow of num_expr list (* ViewWindow can take between 1 and 6 parameters *)
   | PlotOn of num_expr * num_expr
   | PlotOff of num_expr * num_expr
   | Fline of num_expr * num_expr * num_expr * num_expr * (style option)
