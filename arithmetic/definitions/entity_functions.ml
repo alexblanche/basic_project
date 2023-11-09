@@ -369,6 +369,85 @@ let entity_func_table =
         MatContent m
       in f)
     );
+
+
+    ("RANINT",
+      (let f nl =
+        match nl with
+          | [Value za; Value zb] ->
+            if is_int za && is_int zb then
+              let a = int_of_complex za in
+              let b = int_of_complex zb in
+              if b>a then
+                Value (complex_of_int (a + Random.int (b-a+1)))
+              else failwith "RanInt: the second argument should be greater than the first"
+            else failwith "RanInt: integers expected"
+          | [Value za; Value zb; Value zn] ->
+            if is_int za && is_int zb && is_int n then
+              let a = int_of_complex za in
+              let b = int_of_complex zb in
+              let n = int_of_complex zn in
+              if b>a && n>0 then
+                (let zero = complex_of_float 0. in
+                let t = Array.make n zero in
+                for i = 0 to n-1 do
+                  t.(i) <- Complex (complex_of_int (a + Random.int (b-a+1)))
+                done;
+                ListContent t)
+              else failwith "RanInt(a,b,n): it is expected that b>a and n>0"
+            else failwith "RanInt: integers expected"
+      in f)
+    );
+
+    ("RANLIST",
+      (let f nl =
+        match nl with
+          | [Value zn] ->
+            if is_int zn && zn.re > 0. then
+              (let n = int_of_complex za in
+              let zero = complex_of_float 0. in
+              let t = Array.make n zero in
+              for i = 0 to n-1 do
+                t.(i) <- Complex (complex_of_float (Random.float 1.))
+              done;
+              ListContent t)
+            else failwith "RanList: an integer is expected"
+      in f)
+    );
+
+    ("RANBIN",
+      (let f nl =
+        match nl with
+          | [Value zn; Value zp] ->
+            if is_int zn && zn.re >= 0. && zp.im = 0. && zp.re >= 0. && zp.re <= 1. then
+              (let n = int_of_complex zn in
+              let p = zp.re in
+              let s = ref 0 in
+              for i = 0 to n-1 do
+                if Random.float 1. <= p
+                  then incr s
+              done;
+              Value (complex_of_int !s))
+            else failwith "RanBin: an integer n and a probability p are expected"
+          | [Value zn; Value zp; Value znb] ->
+            if is_int zn && is_int znb && zn.re >= 0. && znb.re > 0. then
+              let n = int_of_complex zn in
+              let nb = int_of_complex znb in
+              (let zero = complex_of_float 0. in
+              let t = Array.make nb zero in
+              let s = ref 0 in
+              for i = 0 to nb-1 do
+                s := 0;
+                for i = 0 to n-1 do
+                  if Random.float 1. <= p
+                    then incr s
+                done;
+                t.(i) <- Complex (complex_of_int !s)
+              done;
+              ListContent t)
+            else failwith "RanBin: an integer n, a probability p and an integer nb are expected"
+      in f)
+    );
     ]
   in
   let t = Hashtbl.create (5 + List.length entity_func_list) in
