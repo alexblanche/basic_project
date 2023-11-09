@@ -391,19 +391,28 @@ and calculate (p : parameters) (outq : entity list) (opq : arithm list) : entity
         | VarList _ -> ListContent (get_val_listexpr p x)
         | _ -> MatContent (get_val_matexpr p x))
     | x2::x1::t, [] -> calculate p ((apply_op p "TIMES" x1 x2)::t) []
+    | _, (Op o)::opqt ->
+      if o = "PLUS" then
+        (* x + 0 = x *)
+        calculate p outq opqt
+      else failwith ("calculate: Not enough operands for operator "^o)
     | _ -> failwith "calculate: Syntax error"
 
 (* Calculates the result of a sequence of right-associative operations
   (ex: 1+2^2^2 is reduced to 1+16) *)
 and right_reduce (p : parameters) (output_q : entity list) (op_q : arithm list) : entity list * arithm list =
-  match (output_q,op_q) with
+  match (output_q, op_q) with
     | _, []
     | _, Lpar::_ -> (output_q, op_q)
     | x2::x1::outq, (Op o)::opqt ->
       if left_assoc o
         then (output_q, op_q)
         else right_reduce p ((apply_op p o x1 x2)::outq) opqt
-    | _, (Op o)::_ -> failwith ("reduce: Not enough operands for operator "^o)
+    | _, (Op o)::opqt ->
+      if o = "PLUS" then
+        (* x + 0 = x *)
+        right_reduce p output_q opqt
+      else failwith ("reduce: Not enough operands for operator "^o)
     | x::outq, (Lunop (lo, a))::opqt ->
         right_reduce p ((apply_lop p lo x a)::outq) opqt
     | _ -> failwith "reduce: Syntax error"
@@ -503,7 +512,12 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
             (match output_q with
               | x2::x1::outq ->
                 shunting_yard p alist ((apply_op p o2 x1 x2)::outq) opqt
-              | _ -> failwith ("Arithmetic parsing: Not enough operands for operator "^o2))
+              | _ ->
+                (* Annoying behavior of PLUS operator *)
+                if o1 = "PLUS" then
+                  (* Skip the excess PLUS *)
+                  shunting_yard p t output_q op_q
+                else failwith ("Arithmetic parsing: Not enough operands for operator "^o2))
           else
             let noutq, nopq = right_reduce p output_q op_q in
             shunting_yard p alist noutq nopq

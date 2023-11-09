@@ -383,12 +383,12 @@ let entity_func_table =
               else failwith "RanInt: the second argument should be greater than the first"
             else failwith "RanInt: integers expected"
           | [Value za; Value zb; Value zn] ->
-            if is_int za && is_int zb && is_int n then
+            if is_int za && is_int zb && is_int zn then
               let a = int_of_complex za in
               let b = int_of_complex zb in
               let n = int_of_complex zn in
               if b>a && n>0 then
-                (let zero = complex_of_float 0. in
+                (let zero = Complex (complex_of_float 0.) in
                 let t = Array.make n zero in
                 for i = 0 to n-1 do
                   t.(i) <- Complex (complex_of_int (a + Random.int (b-a+1)))
@@ -396,6 +396,7 @@ let entity_func_table =
                 ListContent t)
               else failwith "RanInt(a,b,n): it is expected that b>a and n>0"
             else failwith "RanInt: integers expected"
+          | _ -> failwith "Function error: RanInt has arity 2 or 3"
       in f)
     );
 
@@ -404,14 +405,15 @@ let entity_func_table =
         match nl with
           | [Value zn] ->
             if is_int zn && zn.re > 0. then
-              (let n = int_of_complex za in
-              let zero = complex_of_float 0. in
+              (let n = int_of_complex zn in
+              let zero = Complex (complex_of_float 0.) in
               let t = Array.make n zero in
               for i = 0 to n-1 do
                 t.(i) <- Complex (complex_of_float (Random.float 1.))
               done;
               ListContent t)
             else failwith "RanList: an integer is expected"
+          | _ -> failwith "Function error: RanList has arity 1 and expects an integer"
       in f)
     );
 
@@ -432,8 +434,9 @@ let entity_func_table =
           | [Value zn; Value zp; Value znb] ->
             if is_int zn && is_int znb && zn.re >= 0. && znb.re > 0. then
               let n = int_of_complex zn in
+              let p = zp.re in
               let nb = int_of_complex znb in
-              (let zero = complex_of_float 0. in
+              (let zero = Complex (complex_of_float 0.) in
               let t = Array.make nb zero in
               let s = ref 0 in
               for i = 0 to nb-1 do
@@ -446,6 +449,7 @@ let entity_func_table =
               done;
               ListContent t)
             else failwith "RanBin: an integer n, a probability p and an integer nb are expected"
+          | _ -> failwith "Function error: RanBin has arity 2 or 3"
       in f)
     );
     ]

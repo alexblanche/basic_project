@@ -235,6 +235,10 @@ let unit_tests_eval_num () =
     (["5"; "."; "1"; "2"; "3"; "7"; "TIMESTENPOWER"; "MINUS"; "2"; "0"; "TIMES"; "2"], {re = 1.02474e-19; im = 0.});
     (["0"; "."; "1"; "PLUS"; "0"; "."; "2"; "MINUS"; "0"; "."; "3"], {re = 0.; im = 0.});
     (["0"; "."; "1"; "PLUS"; "0"; "."; "2"; "EQUAL"; "0"; "."; "3"], {re = 1.; im = 0.});
+
+    (* Weird behavior of PLUS (does it happen with other binary operators?) *)
+    (["PLUS"; "PLUS"; "PLUS"; "PLUS"; "3"], {re = 3.; im = 0.});
+    (["5"; "MINUS"; "PLUS"; "PLUS"; "PLUS"; "PLUS"; "2"], {re = 3.; im = 0.});
     ];
     print_endline "--------------------------------------------";
     print_endline "Tests_arithmetic, eval_num: all tests passed";
