@@ -405,25 +405,52 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
               ("Compilation error: Plot"^(String.capitalize_ascii suffix)^" expects two parameters"))
       
       | "FLINE" :: t
-      | "SKETCHNORMAL" :: "FLINE" :: t
-      | "SKETCHTHICK" :: "FLINE" :: t
-      | "SKETCHBROKEN" :: "FLINE" :: t
-      | "SKETCHDOT" :: "FLINE" :: t ->
+      | "CIRCLE" :: t
+      | "HORIZONTAL" :: t
+      | "VERTICAL" :: t
+      | "SKETCHNORMAL" :: _ :: t
+      | "SKETCHTHICK" :: _ :: t
+      | "SKETCHBROKEN" :: _ :: t
+      | "SKETCHDOT" :: _ :: t ->
         let (el, t') = extract_list_content t in
-        let style =
+        let style, style_code =
           (match List.hd lexlist with
-            | "FLINE" -> None
-            | "SKETCHNORMAL" -> Some StyleNormal
-            | "SKETCHTHICK" -> Some StyleThick
-            | "SKETCHBROKEN" -> Some StyleBroken
-            | "SKETCHDOT" -> Some StyleDot
-            | _ -> fail lexlist i "Compilation error: Style error")
+            | "SKETCHNORMAL" -> (Some StyleNormal), Complex (complex_of_float 1.)
+            | "SKETCHTHICK" -> (Some StyleThick), Complex (complex_of_float 2.)
+            | "SKETCHBROKEN" -> (Some StyleBroken), Complex (complex_of_float 3.)
+            | "SKETCHDOT" -> (Some StyleDot), Complex (complex_of_float 4.)
+            | _ -> None, Complex (complex_of_float 0.))
         in
-        (match el with
-          | [ex1; ey1; ex2; ey2] ->
+        let line_type =
+          (* 0 = F-line, 1 = Vertical, 2 = Horizontal, 3 = Circle *)
+          match lexlist with
+            | "FLINE" :: _
+            | _ :: "FLINE" :: _ -> 0
+            | "VERTICAL" :: _
+            | _ :: "VERTICAL" :: _ -> 1
+            | "HORIZONTAL" :: _
+            | _ :: "HORIZONTAL" :: _ -> 2
+            | _ -> 3
+        in
+        (match line_type, el with
+          | 0, [ex1; ey1; ex2; ey2] ->
             (set code i (Graphic (Fline (ex1, ey1, ex2, ey2, style)));
             aux t' (i+1))
-          | _ -> fail t i "Compilation error: Fline expects four parameters")
+          | 1, [e]
+          | 2, [e] ->
+            (set code i (Graphic (Graphic_Function ((if line_type = 1 then "VERTICAL" else "HORIZONTAL"), style_code :: el)));
+            aux t' (i+1))
+          | 3, [ex; ey; er] ->
+            (set code i (Graphic (Graphic_Function ("CIRCLE", style_code :: el)));
+            aux t' (i+1))
+          | _ ->
+            fail t i ("Compilation error: "^
+            (match line_type with
+              | 0 -> "Fline expects four parameters"
+              | 1 -> "Vertical expects one parameter"
+              | 2 -> "Horizonal expects one parameter"
+              | _ -> "Circle expects three parameters"))
+        )
 
       | "PXLON" :: t
       | "PXLOFF" :: t
@@ -510,11 +537,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           | s, _ ->
             (set code i (Graphic (Graphic_Function (s, [e])));
             aux t' (i+1)))
-        
-      | "HORIZONTAL" :: t
-      | "VERTICAL" :: t
+      
       | "GRAPHYEQ" :: t
-      | "GRAPHS" :: t
       | "GRAPHYG" :: t
       | "GRAPHYL" :: t
       | "GRAPHYGEQ" :: t
@@ -532,6 +556,15 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         let (e, t') = extract_expr t in
         (set code i (Graphic (Graphic_Function (List.hd lexlist, [e])));
         aux t' (i+1))
+
+      | "GRAPHS" :: t ->
+        let (el, t') = extract_list_content t in
+        let len = List.length el in
+        if len = 3 then
+          (set code i (Graphic (Graphic_Function ("GRAPHS", el)));
+          aux t' (i+1))
+        else
+          fail t i "Compilation error: GraphS expects 3 parameters"
 
       (* Errors *)
       | lex :: _ -> fail lexlist i ("Compilation error: Unexpected command "^(String.escaped lex))

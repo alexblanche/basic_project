@@ -266,27 +266,34 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
     | Graphic_Function ("BGNONE", _) ->
       p.bgpict <- -1
 
-    | Graphic_Function ("HORIZONTAL", [e]) ->
+    | Graphic_Function ("VERTICAL" as s, [style_code; e])
+    | Graphic_Function ("HORIZONTAL" as s, [style_code; e]) ->
+      let z_style =
+        match style_code with
+          | Complex z -> z
+          | _ -> graphic_fail i ("Wrong style argument for "^(String.capitalize_ascii (String.lowercase_ascii s)))
+      in
+      let style =
+        match int_of_complex z_style with
+          | 0 -> None
+          | 1 -> Some StyleNormal
+          | 2 -> Some StyleThick
+          | 3 -> Some StyleBroken
+          | _ -> Some StyleDot
+      in
       let z = eval_num p e in
-      let b = rescale_y p z.re in
-      if b >= 1 && b <= 63 then
-        ((* horizontal_line ren gscreen 1 127 (64-b); *)
-        fline ren p 1 b 127 b None;
-        refresh_update ren p !text_screen;
-        if slowdown_condition () then
-          Unix.sleepf timer.fline;
-        text_screen := false)
-
-    | Graphic_Function ("VERTICAL", [e]) ->
-      let z = eval_num p e in
-      let a = rescale_x p z.re in
-      if a >= 1 && a <= 127 then
-        ((* vertical_line ren gscreen a 1 63; *)
-        fline ren p a 1 a 63 None;
-        refresh_update ren p !text_screen;
-        if slowdown_condition () then
-          Unix.sleepf timer.fline;
-        text_screen := false)
+      ((if s = "VERTICAL" then
+        (let a = rescale_x p z.re in
+        if a >= 1 && a <= 127 then
+          fline ren p a 1 a 63 style)
+      else (* Horizontal *)
+        (let b = rescale_y p z.re in
+        if b >= 1 && b <= 63 then
+          fline ren p 1 b 127 b style));
+      refresh_update ren p !text_screen;
+      if slowdown_condition () then
+        Unix.sleepf timer.fline;
+      text_screen := false)
 
     | Graphic_Function ("STOVWIN", [e]) ->
       let z = eval_num p e in
@@ -313,6 +320,27 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
         else graphic_fail i "RclVWin index should be between 1 and 6"
       else graphic_fail i "RclVWin expects an integer index"
 
+      | Graphic_Function ("CIRCLE", [style_code; ex; ey; er]) ->
+        let z_style =
+          match style_code with
+            | Complex z -> z
+            | _ -> graphic_fail i "Wrong style argument for Circle"
+        in
+        let style =
+          match int_of_complex z_style with
+            | 0 -> None
+            | 1 -> Some StyleNormal
+            | 2 -> Some StyleThick
+            | 3 -> Some StyleBroken
+            | _ -> Some StyleDot
+        in
+        let zx = eval_num p ex in
+        let zy = eval_num p ey in
+        let zr = eval_num p er in
+        (text_screen := false;
+        if zx.im <> 0. || zy.im <> 0. || zr.im <> 0. then
+          graphic_fail i "Circle expects real arguments";
+        circle ren p zx.re zy.re zr.re style)
 
     | Graphic_Function ("SLNORMAL", []) -> p.style <- StyleNormal
     | Graphic_Function ("SLTHICK", []) -> p.style <- StyleThick
@@ -325,6 +353,10 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
     | Graphic_Function ("GRAPHYL" as s, [e])
     | Graphic_Function ("GRAPHYLEQ" as s, [e]) ->
       graphy ren p text_screen s e
+
+    (* Temporary (for Clonelab) *)
+    | Graphic_Function ("GRAPHS", _) ->
+      refresh_update ren p true
 
     | Graphic_Function ("CLRGRAPH", []) ->
       (* Equivalent to ViewWindow -6.3, 6.3, 1, -3.1, 3.1, 1 (empirically) *)

@@ -128,3 +128,24 @@ let partial_vwin (ren : Sdlrender.t) (p : parameters) (l : float list) : unit =
     | [nxmin; nxmax; nxscl; nymin; nymax; nyscl] -> viewWindow ren p nxmin nxmax nxscl nymin nymax nyscl
     | _ -> failwith "Graphic error: partial_vwin expects a list of between 1 and 6 float numbers as argument"
 ;;
+
+
+(** Circle **)
+let circle (ren : Sdlrender.t) (p : parameters)
+  (x : float) (y : float) (r : float) (style : style option) : unit =
+  
+  let n = 15 in
+  let two_pi_over_n = 2. *. Float.pi /. (float_of_int n) in
+  for k = 0 to n-1 do
+    let a1 = rescale_x p (x +. r *. cos (two_pi_over_n *. (float_of_int k))) in
+    let a2 = rescale_x p (x +. r *. cos (two_pi_over_n *. (float_of_int (k+1)))) in
+    let b1 = rescale_y p (y +. r *. sin (two_pi_over_n *. (float_of_int k))) in
+    let b2 = rescale_y p (y +. r *. sin (two_pi_over_n *. (float_of_int (k+1)))) in
+    if a1 >= 1 && a1 <= 127 && a2 >= 1 && a2 <= 127
+      && b1 >= 1 && b1 <= 63 && b2 >= 1 && b2 <= 63 then
+        (fline ren p a1 b1 a2 b2 style;
+        refresh_update ren p false;
+        if slowdown_condition () then
+          Unix.sleepf (timer.fline /. 2.));
+  done;;
+

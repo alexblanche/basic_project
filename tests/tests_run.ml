@@ -1227,3 +1227,21 @@ let run_speed_pict () =
     prj
   in
   run p prog "main";;
+
+
+let run_circle () =
+  let prog =
+    compile
+      [("main",
+        [
+          "VIEWWINDOW"; "UMINUS"; "2"; ","; "2"; ","; "0"; ","; "UMINUS"; "1"; ","; "1"; ","; "0"; "EOL";
+          "CIRCLE"; "1"; ","; "0"; "."; "2"; ","; "0"; "."; "8"; "DISP";
+          "CLS"; "EOL";
+          "SKETCHDOT"; "CIRCLE"; "1"; ","; "0"; "."; "2"; ","; "0"; "."; "8"; "DISP";
+          "CLS"; "EOL";
+          "SKETCHTHICK"; "CIRCLE"; "1"; ","; "0"; "."; "2"; ","; "0"; "."; "8"; "DISP";
+          "CLS"; "EOL";
+          "SKETCHBROKEN"; "CIRCLE"; "1"; ","; "0"; "."; "2"; ","; "0"; "."; "8"; "DISP";
+        ])]
+  in
+  run (empty_projcont ()) prog "main";;
