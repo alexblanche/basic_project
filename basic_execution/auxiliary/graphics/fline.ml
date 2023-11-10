@@ -30,15 +30,19 @@ let trace_drawstat (ren : Sdlrender.t) (l : (int * int) list) (style : drawstat_
                   let new_rects =
                     if ia >= 1 && ia <= 127 && ib >= 1 && ib <= 127
                       && ja >= 1 && ja <= 63 && jb >= 1 && jb <= 63
-                      (* Both endpoints are in the screen *)
-                        then bresenham true gscreen ia (64-ja) ib (64-jb)
-                      (* One or both points do not belong to the screen *)
-                        else
-                          ((* Truncate the rectangles that go out of the screen *)
-                          let tr_br = List.rev_map truncate (bresenham false [||] ia (64-ja) ib (64-jb)) in
-                          (* Write the pixels in gscreen (all within bounds) *)
-                          List.iter (fun r -> write_in_matrix gscreen r) tr_br;
-                          tr_br)
+                    (* Both endpoints are in the screen *)
+                      then bresenham true gscreen ia (64-ja) ib (64-jb)
+                    (* One or both points do not belong to the screen *)
+                      (* The distance between the points is not "too big"
+                        (need experiments to obtain the exact condition) *)
+                      else if (ib-ia)*(ib-ia) + (jb-ja)*(jb-ja) <= 500 then
+                        ((* Truncate the rectangles that go out of the screen *)
+                        let tr_br = List.rev_map truncate (bresenham false [||] ia (64-ja) ib (64-jb)) in
+                        (* Write the pixels in gscreen (all within bounds) *)
+                        List.iter (fun r -> write_in_matrix gscreen r) tr_br;
+                        tr_br)
+                      else
+                        []
                   in
                   ((ib,jb), List.rev_append new_rects rect_l))
                 (ij,[]) t

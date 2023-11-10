@@ -71,15 +71,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   (** Main looping function **)
   let rec aux (i : int) : unit =
     
-    (try
-      print_string "Ans: ";
-      let z = access_var p.var 28 in
-      print_endline ((string_of_float z.re)^" + "^(string_of_float z.im)^"i")
-    with
-      | _ -> ());
-
     (* debug *)
-    print_endline (string_of_int i);
+    (* print_endline (string_of_int i); *)
 
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then

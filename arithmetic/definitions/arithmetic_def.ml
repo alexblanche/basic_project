@@ -571,7 +571,7 @@ let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
     | "OR" -> complex_of_bool ((is_not_zero z1) || (is_not_zero z2))
     | "XOR" ->
       complex_of_bool ((is_not_zero z1) && (is_zero z2) || (is_zero z1) && (is_not_zero z2))
-      
+  
   (* Others *)
 
     (* /!\
