@@ -158,7 +158,7 @@ let func_table =
         match l with
           | [z] ->
             if z.im = 0.
-              then complex_of_bool (z.re = 0.)
+              then complex_of_bool (is_zero_float z.re)
               else failwith "Function application error: Not accepts only real arguments"
           | _ -> failwith "Function error: Not has arity 1"
       in f)
