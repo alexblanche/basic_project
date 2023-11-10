@@ -74,6 +74,31 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
     (* debug *)
     (* print_endline (string_of_int i); *)
 
+    (* (try
+      print_string (string_of_int i);
+      print_string "; K: ";
+      let zk = access_var p.var 10 in
+      print_float zk.re;
+      print_char '+';
+      print_float zk.im;
+      print_string "i; L: ";
+      let zl = access_var p.var 11 in
+      print_float zl.re;
+      print_char '+';
+      print_float zl.im;
+      print_string "i; Mat A size: ";
+      let m = p.mat.(0) in
+      let row = Array.length m in
+      if row = 0
+        then print_endline "0, 0"
+        else
+          (print_int row;
+          print_string ", ";
+          print_int (Array.length m.(0));
+          print_newline ())
+    with
+      | _ -> ()); *)
+
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then
       Unix.sleepf timer.general;

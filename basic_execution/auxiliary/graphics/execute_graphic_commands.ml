@@ -132,8 +132,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
         (ploton ren gscreen a (64-b);
         (* Placing the coordinates in X, Y, as in Casio Basic *)
-        p.var.(23) <- zx.re;
-        p.var.(24) <- zy.re));
+        set_var p.var 23 (complex_of_float zx.re);
+        set_var p.var 24 (complex_of_float zy.re)));
       refresh_update ren p !text_screen;
       if slowdown_condition () then
         Unix.sleepf timer.plot;
@@ -147,8 +147,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
         (plotoff ren gscreen false a (64-b);
         plotoff ren bgscreen false a (64-b);
         (* Placing the coordinates in X, Y, as in Casio Basic *)
-        p.var.(23) <- zx.re;
-        p.var.(24) <- zy.re));
+        set_var p.var 23 (complex_of_float zx.re);
+        set_var p.var 24 (complex_of_float zy.re)));
       gdraw ren;
       if slowdown_condition () then
         Unix.sleepf timer.plot;
@@ -159,8 +159,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       let zy = eval_num p ey in
       let (a,b) = rescale p zx.re zy.re in
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
-        (p.var.(23) <- zx.re;
-        p.var.(24) <- zy.re;
+        (set_var p.var 23 (complex_of_float zx.re);
+        set_var p.var 24 (complex_of_float zy.re);
         if gscreen.(64-b).(a) || bgscreen.(64-b).(a) then
           (plotoff ren gscreen false a (64-b);
           plotoff ren bgscreen false a (64-b))
@@ -176,8 +176,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
         (let x = approx_descale_x p a in
         let y = approx_descale_y p (64-b) in
-        p.var.(23) <- x;
-        p.var.(24) <- y;
+        set_var p.var 23 (complex_of_float x);
+        set_var p.var 24 (complex_of_float y);
         ploton ren gscreen a b));
       refresh_update ren p !text_screen;
       if slowdown_condition () then
@@ -190,8 +190,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
         (let x = approx_descale_x p a in
         let y = approx_descale_y p (64-b) in
-        p.var.(23) <- x;
-        p.var.(24) <- y;
+        set_var p.var 23 (complex_of_float x);
+        set_var p.var 24 (complex_of_float y);
         plotoff ren gscreen  false a b;
         plotoff ren bgscreen false a b));
       gdraw ren;
@@ -206,8 +206,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
         if gscreen.(b).(a) || bgscreen.(b).(a) then
           (let x = approx_descale_x p a in
           let y = approx_descale_y p (64-b) in
-          p.var.(23) <- x;
-          p.var.(24) <- y;
+          set_var p.var 23 (complex_of_float x);
+          set_var p.var 24 (complex_of_float y);
           plotoff ren gscreen  false a b;
           plotoff ren bgscreen false a b)
         else ploton ren gscreen a b);
