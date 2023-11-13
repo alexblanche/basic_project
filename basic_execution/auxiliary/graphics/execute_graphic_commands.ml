@@ -349,14 +349,16 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
 
     | Graph (graph_var, graph_type, [e]) ->
       (match graph_var with
-        | 'Y' -> graphy ren p text_screen ("GRAPHY"^graph_type) e
+        | 'Y' -> graphy ren p text_screen ("GRAPHY"^graph_type) e false 0. 0.
         | 'X' -> graphx ren p text_screen ("GRAPHX"^graph_type) e
         | 'R' -> (* to do *) ()
         | _ -> graphic_fail i "Wrong variable for Graph display")
 
     (* Temporary (for Clonelab) *)
     | Graph ('S', _, [e; exmin; exmax]) ->
-      refresh_update ren p true
+      let xmin = let z = eval_num p exmin in z.re in
+      let xmax = let z = eval_num p exmax in z.re in
+      graphy ren p text_screen "GRAPHYLEQ" e true xmin xmax
 
     | Graphic_Function ("CLRGRAPH", []) ->
       (* Equivalent to ViewWindow -6.3, 6.3, 1, -3.1, 3.1, 1 (empirically) *)

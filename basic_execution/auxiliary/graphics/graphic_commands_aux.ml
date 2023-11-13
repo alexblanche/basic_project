@@ -3,9 +3,10 @@
 (** Graphs **)
 
 (** Graph Y (=, >=, <=, >, <) **)
-
+(* Also, GraphS *)
 let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
-  (command : string) (e : num_expr) : unit =
+  (command : string) (e : num_expr)
+  (bound : bool) (xmin : float) (xmax : float) : unit =
 
   refresh_update ren p !text_screen;
   text_screen := false;
@@ -28,6 +29,9 @@ let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
   set_var p.var 23 (complex_of_float pxmin);
   let z = eval_num p e in
   let last_j = ref (rescale_y p z.re) in
+  let iboundmin = if bound then rescale_x p xmin else 1 in
+  let iboundmax = if bound then rescale_x p xmax else 127 in
+  let jzero = if bound then rescale_y p 0. else 1 in
 
   for i = 1 to 127 do
     let z = eval_num p e in
@@ -61,7 +65,7 @@ let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
         refresh ren)
     );
     last_j := j;
-    if t<>0 then
+    if t<>0 && i >= iboundmin && i <= iboundmax then
       (if t<=2 (* > or >= *) then
         (let acc = ref [] in
         let parity = (i + 1) mod 2 in
@@ -77,7 +81,7 @@ let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
       else (* < or <= *)
         (let acc = ref [] in
         let parity = (i + 1) mod 2 in
-        for k = min (j-1) 63 downto 1 do
+        for k = min (j-1) 63 downto max jzero 1 do
           if k mod 2 = parity then
             acc := (ploton_rect i (64-k)) :: !acc
         done;

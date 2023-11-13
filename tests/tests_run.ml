@@ -909,6 +909,9 @@ let run_graph () =
         [ (* Checking GraphY=, GraphY>=, GraphY>... *)
           "AXESON"; "EOL";
 
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "MINUS"; "6"; "0"; ","; "6"; "3"; ","; "0"; "EOL";
+          "GRAPHS"; "2"; "0"; "COS"; "LPAR"; "X"; "DIVIDED"; "1"; "0"; "RPAR"; "PLUS"; "5"; "0"; ","; "5"; "0"; ","; "1"; "0"; "0"; "DISP";
+          
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
           "GRAPHXGEQ"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
           "CLS"; "EOL";
