@@ -132,7 +132,7 @@ let empty_param () : parameters =
   set_real_var alphamem xmax_index 127.;
   set_real_var alphamem xscl_index 0.;
   set_real_var alphamem ymin_index 1.;
-  set_real_var alphamem ymax_index 127.;
+  set_real_var alphamem ymax_index 63.;
   set_real_var alphamem yscl_index 0.;
   set_real_var alphamem xdot_index 1.;
 

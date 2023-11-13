@@ -261,7 +261,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       p.axeson <- true)
     | Graphic_Function ("AXESOFF", _) ->
       (background_changed := true;
-      p.axeson <- true)
+      p.axeson <- false)
     
     | Graphic_Function ("BGNONE", _) ->
       p.bgpict <- -1

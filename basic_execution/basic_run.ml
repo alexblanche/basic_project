@@ -72,16 +72,16 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   let rec aux (i : int) : unit =
     
     (* debug *)
-    print_string (string_of_int i); print_char ' ';
+    (* print_endline (string_of_int i); *)
 
-    (try
+    (* (try
       print_string "Ymin: ";
       print_float (access_real_var p.var ymin_index);
       print_string "; Ymax: ";
       print_float (access_real_var p.var ymax_index);
       print_newline ()
     with
-      | _ -> ());
+      | _ -> ()); *)
 
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then
@@ -150,8 +150,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             else run_fail i ("Incorrect value for variable of index "^(string_of_int vi)));
             (* Specific actions for window variables *)
             if vi >= xmin_index && vi <= yscl_index then
-              (print_endline "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WINDOW VARIABLE ASSIGNMENT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
-              let xmin = access_real_var p.var xmin_index in
+              (let xmin = access_real_var p.var xmin_index in
               let xmax = access_real_var p.var xmax_index in
               set_real_var p.var xdot_index ((xmax -. xmin) /. 126.);
               wipe gscreen;

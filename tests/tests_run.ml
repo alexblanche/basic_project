@@ -907,6 +907,11 @@ let run_graph () =
     compile
       [("main",
         [ (* Checking GraphY=, GraphY>=, GraphY>... *)
+          "AXESOFF"; "EOL";
+
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "5"; "9"; ","; "0"; ","; "0"; "EOL";
+          "GRAPHS"; "1"; "1"; ","; "4"; "4"; ","; "1"; "2"; "6"; "DISP";
+
           "AXESON"; "EOL";
 
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "MINUS"; "6"; "0"; ","; "6"; "3"; ","; "0"; "EOL";
