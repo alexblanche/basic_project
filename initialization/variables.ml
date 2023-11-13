@@ -129,7 +129,7 @@ let var_index (s : string) : int =
       | 'H' ->
         if send = "START" then 47 else 48
       | 'X' | 'Y' ->
-        (if s.[0] = 'X' then 51 else 55)
+        (if s.[0] = 'X' then 51 else 56)
         + List.assoc send [("MIN", 0); ("MAX", 1); ("SCL", 2); ("FCT", 3); ("DOT", 4)]
       | 'T' ->
         List.assoc (String.sub send 5 (l-6)) [("MIN", 60); ("MAX", 61); ("PITCH", 62)]

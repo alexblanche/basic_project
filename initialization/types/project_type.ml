@@ -128,13 +128,13 @@ let empty_param () : parameters =
   (* Variable storage array *)
   let alphamem = new_var_storage () in
   (* Parameters of the V-Window *)
-  set_real_var alphamem (var_index "XMIN") 1.;
-  set_real_var alphamem (var_index "XMAX") 127.;
-  set_real_var alphamem (var_index "XSCL") 0.;
-  set_real_var alphamem (var_index "YMIN") 1.;
-  set_real_var alphamem (var_index "YMAX") 127.;
-  set_real_var alphamem (var_index "YSCL") 0.;
-  set_real_var alphamem (var_index "XDOT") 1.;
+  set_real_var alphamem xmin_index 1.;
+  set_real_var alphamem xmax_index 127.;
+  set_real_var alphamem xscl_index 0.;
+  set_real_var alphamem ymin_index 1.;
+  set_real_var alphamem ymax_index 127.;
+  set_real_var alphamem yscl_index 0.;
+  set_real_var alphamem xdot_index 1.;
 
   {
     (* Variables: see variables.ml *)

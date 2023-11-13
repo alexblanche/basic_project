@@ -484,7 +484,7 @@ let rop_list = [
 (* The operators are ordered by frequency in usual expresssions *)
 let op_list = [
   ("PLUS", 4); ("MINUS", 4);
-  ("TIMES", 3); ("DIVIDED", 3);
+  ("TIMES", 3); ("DIVIDED", 3); ("FRACSIGN", 3);
   ("POWER", 0);
   ("LEQ", 5); ("LESS", 5); ("GEQ", 5); ("GREATER", 5); ("EQUAL", 5); ("DIFFERENT", 5);
   ("AND", 6);
@@ -498,7 +498,7 @@ let op_list = [
        POWER
     << NSQRT
     << (INTDIV, RMDR)
-    << (TIMES, DIVIDED)
+    << (TIMES, DIVIDED, FRACSIGN)
     << (PLUS, MINUS)
     << (LEQ, LESS, GEQ, GREATER, EQUAL, DIFFERENT)
     << AND
@@ -529,7 +529,8 @@ let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
       if z1.im = 0. && z2.im = 0.
         then complex_of_float (z1.re *. z2.re)
         else Complex.mul z1 z2
-    | "DIVIDED" ->
+    | "DIVIDED"
+    | "FRACSIGN" ->
       if z1.im = 0. && z2.im = 0.
         then complex_of_float (z1.re /. z2.re)
         else Complex.div z1 z2
