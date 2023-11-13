@@ -911,8 +911,23 @@ let run_graph () =
 
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "MINUS"; "6"; "0"; ","; "6"; "3"; ","; "0"; "EOL";
           "GRAPHS"; "2"; "0"; "COS"; "LPAR"; "X"; "DIVIDED"; "1"; "0"; "RPAR"; "PLUS"; "5"; "0"; ","; "5"; "0"; ","; "1"; "0"; "0"; "DISP";
+
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "6"; "3"; ","; "MINUS"; "6"; "0"; ","; "0"; "EOL";
+          "GRAPHS"; "2"; "0"; "COS"; "LPAR"; "X"; "DIVIDED"; "1"; "0"; "RPAR"; "PLUS"; "5"; "0"; ","; "5"; "0"; ","; "1"; "0"; "0"; "DISP";
           
-          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "VIEWWINDOW"; "1"; "2"; "7"; ","; "1"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "GRAPHXGEQ"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
+          "CLS"; "EOL";
+          "GRAPHXLEQ"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
+          "CLS"; "EOL";
+          "GRAPHXG"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
+          "CLS"; "EOL";
+          "GRAPHXL"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
+          "CLS"; "EOL";
+          "GRAPHXEQ"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
+          "CLS"; "EOL";
+
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "6"; "3"; ","; "1"; ","; "0"; "EOL";
           "GRAPHXGEQ"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
           "CLS"; "EOL";
           "GRAPHXLEQ"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
@@ -925,6 +940,22 @@ let run_graph () =
           "CLS"; "EOL";
 
           "VIEWWINDOW"; "MINUS"; "1"; "0"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "2"; "."; "5"; ","; "1"; "EOL";
+          "HORIZONTAL"; "2"; "DISP";
+          
+          "CLS"; "EOL";
+          "GRAPHYEQ"; "MINUS"; "X"; "POWER2"; "PLUS"; "1"; "DISP";
+
+          "CLS"; "EOL";
+          "GRAPHYG"; "MINUS"; "X"; "POWER2"; "PLUS"; "1"; "DISP";
+          "CLS"; "EOL";
+          "GRAPHYGEQ"; "MINUS"; "X"; "POWER2"; "PLUS"; "1"; "DISP";
+
+          "CLS"; "EOL";
+          "GRAPHYL"; "MINUS"; "X"; "POWER2"; "PLUS"; "1"; "DISP";
+          "CLS"; "EOL";
+          "GRAPHYLEQ"; "MINUS"; "X"; "POWER2"; "PLUS"; "1"; "DISP";
+
+          "VIEWWINDOW"; "MINUS"; "1"; "0"; ","; "5"; ","; "1"; ","; "2"; "."; "5"; ","; "MINUS"; "5"; ","; "1"; "EOL";
           "HORIZONTAL"; "2"; "DISP";
           
           "CLS"; "EOL";

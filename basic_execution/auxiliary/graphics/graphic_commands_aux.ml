@@ -31,7 +31,16 @@ let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
   let last_j = ref (rescale_y p z.re) in
   let iboundmin = if bound then rescale_x p xmin else 1 in
   let iboundmax = if bound then rescale_x p xmax else 127 in
-  let jzero = if bound then rescale_y p 0. else 1 in
+  let not_inverted =
+    access_real_var p.var ymax_index > access_real_var p.var ymin_index
+  in
+  let jzero =
+    if bound
+      then rescale_y p 0.
+    else if not_inverted
+      then 1
+      else 63
+  in
 
   for i = 1 to 127 do
     let z = eval_num p e in
@@ -69,26 +78,42 @@ let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
       (if t<=2 (* > or >= *) then
         (let acc = ref [] in
         let parity = (i + 1) mod 2 in
-        for k = max (j+1) 1 to 63 do
-          if k mod 2 = parity then
-            acc := (ploton_rect i (64-k)) :: !acc
-        done;
+        (if not_inverted then
+          for k = max (j+1) 1 to 63 do
+            if k mod 2 = parity then
+              acc := (ploton_rect i (64-k)) :: !acc
+          done
+        else
+          for k = min (j-1) 63 downto 1 do
+            if k mod 2 = parity then
+              acc := (ploton_rect i (64-k)) :: !acc
+          done
+        );
         let rect_t = Array.of_list !acc in
         Array.iter (fun r -> write_in_matrix gscreen r) rect_t;
         Sdlrender.fill_rects ren rect_t;
-        refresh ren
+        if i mod 3 = 1 || i = iboundmax then
+          refresh ren;
         )
       else (* < or <= *)
         (let acc = ref [] in
         let parity = (i + 1) mod 2 in
-        for k = min (j-1) 63 downto max jzero 1 do
-          if k mod 2 = parity then
-            acc := (ploton_rect i (64-k)) :: !acc
-        done;
+        (if not_inverted then
+          for k = min (j-1) 63 downto max jzero 1 do
+            if k mod 2 = parity then
+              acc := (ploton_rect i (64-k)) :: !acc
+          done
+        else
+          for k = max (j+1) 1 to min jzero 63 do
+            if k mod 2 = parity then
+              acc := (ploton_rect i (64-k)) :: !acc
+          done
+        );
         let rect_t = Array.of_list !acc in
         Array.iter (fun r -> write_in_matrix gscreen r) rect_t;
         Sdlrender.fill_rects ren rect_t;
-        refresh ren
+        if i mod 3 = 1 then
+          refresh ren;
         )
       );
     (* X + step -> X *)
@@ -120,6 +145,9 @@ let graphx (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
   set_var p.var 24 (complex_of_float pymin);
   let z = eval_num p e in
   let last_i = ref (rescale_x p z.re) in
+  let not_inverted =
+    access_real_var p.var xmax_index > access_real_var p.var xmin_index
+  in
 
   for j = 63 downto 1 do
     let z = eval_num p e in
@@ -157,26 +185,42 @@ let graphx (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
       (if t<=2 (* > or >= *) then
         (let acc = ref [] in
         let parity = (j + 1) mod 2 in
-        for k = max (i+1) 1 to 127 do
-          if k mod 2 = parity then
-            acc := (ploton_rect k j) :: !acc
-        done;
+        (if not_inverted then
+          for k = max (i+1) 1 to 127 do
+            if k mod 2 = parity then
+              acc := (ploton_rect k j) :: !acc
+          done
+        else
+          for k = min (i-1) 127 downto 1 do
+            if k mod 2 = parity then
+              acc := (ploton_rect k j) :: !acc
+          done
+        );
         let rect_t = Array.of_list !acc in
         Array.iter (fun r -> write_in_matrix gscreen r) rect_t;
         Sdlrender.fill_rects ren rect_t;
-        refresh ren
+        if j mod 3 = 1 then
+          refresh ren
         )
       else (* < or <= *)
         (let acc = ref [] in
         let parity = (j + 1) mod 2 in
-        for k = min (i-1) 127 downto 1 do
-          if k mod 2 = parity then
-            acc := (ploton_rect k j) :: !acc
-        done;
+        (if not_inverted then
+          for k = min (i-1) 127 downto 1 do
+            if k mod 2 = parity then
+              acc := (ploton_rect k j) :: !acc
+          done
+        else
+          for k = max (i+1) 1 to 127 do
+            if k mod 2 = parity then
+              acc := (ploton_rect k j) :: !acc
+          done
+        );
         let rect_t = Array.of_list !acc in
         Array.iter (fun r -> write_in_matrix gscreen r) rect_t;
         Sdlrender.fill_rects ren rect_t;
-        refresh ren
+        if j mod 3 = 1 then
+          refresh ren
         )
       );
     (* Y + step -> Y *)
