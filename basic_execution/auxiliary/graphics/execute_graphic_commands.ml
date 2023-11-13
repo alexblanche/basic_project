@@ -347,15 +347,15 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
     | Graphic_Function ("SLBROKEN", []) -> p.style <- StyleBroken
     | Graphic_Function ("SLDOT", []) -> p.style <- StyleDot
 
-    | Graphic_Function ("GRAPHYEQ" as s, [e])
-    | Graphic_Function ("GRAPHYG" as s, [e])
-    | Graphic_Function ("GRAPHYGEQ" as s, [e])
-    | Graphic_Function ("GRAPHYL" as s, [e])
-    | Graphic_Function ("GRAPHYLEQ" as s, [e]) ->
-      graphy ren p text_screen s e
+    | Graph (graph_var, graph_type, [e]) ->
+      (match graph_var with
+        | 'Y' -> graphy ren p text_screen ("GRAPHY"^graph_type) e
+        | 'X' -> graphx ren p text_screen ("GRAPHX"^graph_type) e
+        | 'R' -> (* to do *) ()
+        | _ -> graphic_fail i "Wrong variable for Graph display")
 
     (* Temporary (for Clonelab) *)
-    | Graphic_Function ("GRAPHS", _) ->
+    | Graph ('S', _, [e; exmin; exmax]) ->
       refresh_update ren p true
 
     | Graphic_Function ("CLRGRAPH", []) ->
@@ -380,6 +380,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
 
     (* Errors or functionalities not implemented yet *)
     | Graphic_Function (s, _) -> (print_endline ("Runtime warning: ignored command "^s))
+    | Graph (_,_,_) -> graphic_fail i "Wrong graph command"
     (* | _ -> failwith "Runtime error: wrong parameters for a graphic command" *)
 ;;
 

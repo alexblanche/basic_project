@@ -91,6 +91,95 @@ let graphy (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
     set_real_var p.var 23 ((access_real_var p.var 23) +. step)
   done;;
 
+(* GraphX=, >, <, >=, <= *)
+let graphx (ren : Sdlrender.t) (p : parameters) (text_screen : bool ref)
+  (command : string) (e : num_expr) : unit =
+
+  refresh_update ren p !text_screen;
+  text_screen := false;
+  let t =
+    match command with
+    (* t mod 2 = 0 <=> EQ type
+       t <= 2 (and <> 0) <=> "greater than" type
+       t >= 3 <=> "less than" type *)
+      | "GRAPHXEQ" -> 0
+      | "GRAPHXG" -> 1
+      | "GRAPHXGEQ" -> 2
+      | "GRAPHXL" -> 3
+      | "GRAPHXLEQ" -> 4
+      | _ -> -1
+  in
+  let pymin = access_real_var p.var ymin_index in
+  let pymax = access_real_var p.var ymax_index in
+  let step = (pymax -. pymin) /. 62. in
+  (* Ymin -> Y *)
+  set_var p.var 24 (complex_of_float pymin);
+  let z = eval_num p e in
+  let last_i = ref (rescale_x p z.re) in
+
+  for j = 63 downto 1 do
+    let z = eval_num p e in
+    let i = rescale_x p z.re in
+    (if i >= 1 && i <= 127 then
+      (* normal line if =, >= or <=, dot line if > or < *)
+      let (imin, imax) =
+        if !last_i < i
+          then (max (!last_i + 1) 1, i)
+        else if !last_i > i
+          then (i, min (!last_i - 1) 127)
+        else (i, i)
+      in
+      (fline ren p imin (64-j) imax (64-j)
+        (if t mod 2 = 0
+          then Some StyleNormal
+          else Some StyleDot);
+      (* Refreshing at each step in Casio Basic *)
+      if t = 0 then
+        refresh ren)
+    else if !last_i >= 1 && !last_i <= 127 then
+      let (imin, imax) =
+        if i <= 0 then (1, max (!last_i - 1) 1) else (min (!last_i + 1) 127, 127)
+      in
+      (fline ren p imax (64-j) imin (64-j)
+        (if t mod 2 = 0
+          then Some StyleNormal
+          else Some StyleDot);
+      (* Refreshing at each step in Casio Basic *)
+      if t = 0 then
+        refresh ren)
+    );
+    last_i := i;
+    if t<>0 then
+      (if t<=2 (* > or >= *) then
+        (let acc = ref [] in
+        let parity = (j + 1) mod 2 in
+        for k = max (i+1) 1 to 127 do
+          if k mod 2 = parity then
+            acc := (ploton_rect k j) :: !acc
+        done;
+        let rect_t = Array.of_list !acc in
+        Array.iter (fun r -> write_in_matrix gscreen r) rect_t;
+        Sdlrender.fill_rects ren rect_t;
+        refresh ren
+        )
+      else (* < or <= *)
+        (let acc = ref [] in
+        let parity = (j + 1) mod 2 in
+        for k = min (i-1) 127 downto 1 do
+          if k mod 2 = parity then
+            acc := (ploton_rect k j) :: !acc
+        done;
+        let rect_t = Array.of_list !acc in
+        Array.iter (fun r -> write_in_matrix gscreen r) rect_t;
+        Sdlrender.fill_rects ren rect_t;
+        refresh ren
+        )
+      );
+    (* Y + step -> Y *)
+    set_real_var p.var 24 ((access_real_var p.var 24) +. step)
+  done;;
+
+
 
 (** ViewWindow function **)
 

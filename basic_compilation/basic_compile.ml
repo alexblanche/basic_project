@@ -537,31 +537,37 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           | s, _ ->
             (set code i (Graphic (Graphic_Function (s, [e])));
             aux t' (i+1)))
-      
-      | "GRAPHYEQ" :: t
-      | "GRAPHYG" :: t
-      | "GRAPHYL" :: t
-      | "GRAPHYGEQ" :: t
-      | "GRAPHYLEQ" :: t
-      | "GRAPHREQ" :: t
-      | "GRAPHXYEQ" :: t
-      | "GRAPHXEQ" :: t
-      | "GRAPHXG" :: t
-      | "GRAPHXL" :: t
-      | "GRAPHXGEQ" :: t
-      | "GRAPHXLEQ" :: t
+
       | "RCLVWIN" :: t
-      | "STOVWIN" :: t
-        ->
+      | "STOVWIN" :: t ->
         let (e, t') = extract_expr t in
         (set code i (Graphic (Graphic_Function (List.hd lexlist, [e])));
+        aux t' (i+1))
+      
+      | ("GRAPHYEQ" as s) :: t
+      | ("GRAPHYG" as s) :: t
+      | ("GRAPHYL" as s) :: t
+      | ("GRAPHYGEQ" as s) :: t
+      | ("GRAPHYLEQ" as s) :: t
+      | ("GRAPHREQ" as s) :: t
+      | ("GRAPHXYEQ" as s) :: t
+      | ("GRAPHXEQ" as s) :: t
+      | ("GRAPHXG" as s) :: t
+      | ("GRAPHXL" as s) :: t
+      | ("GRAPHXGEQ" as s) :: t
+      | ("GRAPHXLEQ" as s) :: t ->
+        let graph_var = s.[5] in (* X, Y, R *)
+        let l = String.length s in
+        let graph_type = String.sub s 6 (l-6) in (* EQ, G, L, GEQ or LEQ *)
+        let (e, t') = extract_expr t in
+        (set code i (Graphic (Graph (graph_var, graph_type, [e])));
         aux t' (i+1))
 
       | "GRAPHS" :: t ->
         let (el, t') = extract_list_content t in
         let len = List.length el in
         if len = 3 then
-          (set code i (Graphic (Graphic_Function ("GRAPHS", el)));
+          (set code i (Graphic (Graph ('S', "", el)));
           aux t' (i+1))
         else
           fail t i "Compilation error: GraphS expects 3 parameters"

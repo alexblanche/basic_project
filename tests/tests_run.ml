@@ -907,9 +907,21 @@ let run_graph () =
     compile
       [("main",
         [ (* Checking GraphY=, GraphY>=, GraphY>... *)
-          "VIEWWINDOW"; "MINUS"; "1"; "0"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "2"; "."; "5"; ","; "1"; "EOL";
           "AXESON"; "EOL";
 
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "GRAPHXGEQ"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
+          "CLS"; "EOL";
+          "GRAPHXLEQ"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
+          "CLS"; "EOL";
+          "GRAPHXG"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
+          "CLS"; "EOL";
+          "GRAPHXL"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
+          "CLS"; "EOL";
+          "GRAPHXEQ"; "0"; "."; "1"; "LPAR"; "Y"; "MINUS"; "1"; "5"; "RPAR"; "POWER2"; "DISP";
+          "CLS"; "EOL";
+
+          "VIEWWINDOW"; "MINUS"; "1"; "0"; ","; "5"; ","; "1"; ","; "MINUS"; "5"; ","; "2"; "."; "5"; ","; "1"; "EOL";
           "HORIZONTAL"; "2"; "DISP";
           
           "CLS"; "EOL";
