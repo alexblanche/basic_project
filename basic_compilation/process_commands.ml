@@ -225,7 +225,7 @@ let process_lbl i t code mem =
     | [a] ->
       let a_index =
         if is_digit a then Char.code a.[0] - 48
-        else if is_var a then var_index a + 10
+        else if is_letter_var a then var_index a + 10
         else fail t i "Compilation error: Wrong Lbl index"
       in
       (* In Casio Basic, only the first occurrence of a Lbl is considered *)
