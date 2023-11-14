@@ -152,6 +152,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             if vi >= xmin_index && vi <= yscl_index then
               (let xmin = access_real_var p.var xmin_index in
               let xmax = access_real_var p.var xmax_index in
+              (* Resetting Xdot *)
               set_real_var p.var xdot_index ((xmax -. xmin) /. 126.);
               wipe gscreen;
               background_changed := true)

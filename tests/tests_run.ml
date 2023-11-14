@@ -1296,3 +1296,49 @@ let run_circle () =
         ])]
   in
   run (empty_projcont ()) prog "main";;
+
+
+(* Tests on BgPict update of the background *)
+let run_bgpict2 () =
+  let prog =
+    compile
+      [("main",
+        [
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+
+          "BGPICT"; "2"; "EOL";
+          "STOPICT"; "5"; "COLON";
+          "BGPICT"; "5"; "EOL";
+
+          "PLOTON"; "2"; "0"; ","; "3"; "0"; "DISP";
+
+          "BGPICT"; "1"; "EOL";
+          "PLOTON"; "3"; "0"; ","; "3"; "0"; "DISP";
+
+          "CLS"; "EOL";
+          (* "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL"; *)
+          "BGPICT"; "2"; "EOL";
+          "PLOTON"; "4"; "5"; ","; "3"; "0"; "DISP";
+
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "BGPICT"; "2"; "EOL";
+          "PLOTON"; "2"; "0"; ","; "3"; "0"; "DISP";
+        ])]
+  in
+  let p =
+    let par = empty_projcont () in
+    let m1 = Array.make_matrix 64 128 false in
+    for i = 20 to 100 do
+      m1.(15).(i) <- true;
+      m1.(63-15).(i) <- true
+    done;
+    par.pict.(0) <- (2048, m1);
+    let m2 = Array.make_matrix 64 128 false in
+    for i = 10 to 50 do
+      m2.(i).(40) <- true;
+      m2.(i).(80) <- true
+    done;
+    par.pict.(1) <- (2048, m2);
+    par
+  in
+  run p prog "main";;

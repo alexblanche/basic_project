@@ -31,7 +31,8 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
       let z = eval_num p e in
       if is_int z && z.re >= 1. && z.re <= 20. then
         let m = Array.make_matrix 64 128 false in
-        (for b = 0 to 63 do
+        (refresh_update ren p false;
+        for b = 0 to 63 do
           for a = 0 to 127 do
             m.(b).(a) <- bgscreen.(b).(a) || gscreen.(b).(a)
           done
