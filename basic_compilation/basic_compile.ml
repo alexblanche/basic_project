@@ -572,6 +572,10 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         else
           fail t i "Compilation error: GraphS expects 3 parameters"
 
+      | "MENU" :: t ->
+        (let (j, t') = process_menu i t code mem in
+        aux t' j)
+
       (* Errors *)
       | lex :: _ -> fail lexlist i ("Compilation error: Unexpected command "^(String.escaped lex))
 

@@ -385,3 +385,54 @@ let process_sgph i lexlist code mem : int * string list =
       | _ -> t'
   in
   (i+1, tail);;
+
+
+
+(******************************************************************************************)
+
+(** Compilation of Menu **)
+
+let process_menu i t code mem : int * string list =
+  let (stitle, t2) =
+    match extract_string_expr t with
+      | ((Str_content _) as s), t
+      | ((Str_access _) as s), t -> s,t
+      | _ -> fail t i "Compilation error: Wrong title for Menu"
+  in
+  
+  let extract_lbl a =
+    if is_digit a then
+      Char.code a.[0] - 48
+    else if is_letter_var a && String.length a = 1 then
+      Char.code a.[0] - 65 + 10
+    else
+      fail t i "Compilation error: Wrong label index for Menu"
+  in
+
+  let rec entry_extraction_loop (t : string list) (entry_list : basic_expr list) =
+    match t with
+      | "EOL" :: _
+      | "DISP" :: _
+      | "COLON" :: _ -> entry_list, t
+
+      | "," :: "QUOTE" :: t' ->
+        let s,t'' = extract_string_expr (List.tl t) in
+        (match t'' with
+          | "," :: a :: t''' ->
+            let lbl = extract_lbl a in
+            entry_extraction_loop t''' ((StringExpr s) :: (Complex (complex_of_int lbl)) :: entry_list)
+          | _ -> fail t i "Compilation error: Wrong label index for Menu")
+
+      | "," :: "STR" :: _ ::      "," :: a :: t'
+      | "," :: "STR" :: _ :: _ :: "," :: a :: t' ->
+        let (si,_) = read_int (List.tl (List.tl t)) true in
+        let lbl = extract_lbl a in
+        entry_extraction_loop t' ((StringExpr (Str_access si)) :: (Complex (complex_of_int lbl)) :: entry_list)
+
+      | _ -> fail t i "Compilation error: Syntax error in Menu"
+  in
+
+  let entry_list, t3 = entry_extraction_loop t2 [] in
+  set code i (Function ("MENU", (StringExpr stitle) :: entry_list));
+  (i+1, t3);;
+        

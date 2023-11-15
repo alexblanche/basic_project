@@ -471,6 +471,33 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
             (disp_graphic ren (i<n-1 && (code.(i+1) <> End || !prog_goback <> []))));
         aux (i+1))
 
+      | Function ("MENU", (StringExpr sexptitle) :: entry_list) ->
+        (let title =
+          match eval_str p sexptitle with
+            | Str_content s -> skip_k ((List.length s)-19) (rev_lexlist_to_rev_symblist s true)
+            | _ -> run_fail i "Wrong Menu title"
+        in
+        let nentry = (List.length entry_list) / 2 in
+        let entry_t = Array.make nentry ([], -1) in
+
+        let rec entry_eval_loop k el =
+          if k >= 0 then
+            (match el with
+              | StringExpr se :: Complex z :: t ->
+                (let s =
+                  match eval_str p se with
+                    | Str_content s -> s
+                    | _ -> run_fail i "Wrong Menu string argument"
+                in
+                entry_t.(k) <- (s, int_of_complex z);
+                entry_eval_loop (k-1) t)
+              
+              | _ -> run_fail i "Error in Menu arguments")
+        in
+        entry_eval_loop (nentry - 1) [];
+        let chosen_lbl = menu_command ren p title entry_t in
+        aux mem.lblindex.(chosen_lbl))
+
       | _ -> run_fail i "Unexpected command"
   in
 
