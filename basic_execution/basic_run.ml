@@ -71,9 +71,9 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   let rec aux (i : int) : unit =
     
     (* debug *)
-    print_endline (string_of_int i);
+    (* print_endline (string_of_int i); *)
 
-    (try
+    (* (try
       (* print_string "Ans: ";
       print_float (access_real_var p.var 28);
       print_string "; anStart: ";
@@ -81,7 +81,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
       print_newline () *)
       ()
     with
-      | _ -> ());
+      | _ -> ()); *)
 
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then
