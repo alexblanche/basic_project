@@ -83,7 +83,22 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic) (
         ((is_int zx) && (is_int zy)
         && (zx.re >= 1.) && (zx.re <= 127.)
         && (zy.re >= 1.) && (zy.re <= 63.))
-        then graphic_fail i "Wrong arguments for Text";
+        then
+          (
+          print_string "X = ";
+          print_float (zx.re);
+          print_string " + ";
+          print_float zx.im;
+          print_string " i ; Y = ";
+          print_float zy.re;
+          print_string " + ";
+          print_float zy.im;
+          print_endline " i";
+          print_float (zx.re -. 72.); print_newline ();
+          if is_int zx then print_endline "X is an int";
+          if is_int zy then print_endline "Y is an int";
+          graphic_fail i "Wrong arguments for Text"
+          );
       if zy.re <= 58. then
         (let _ =
           (* Exception to the treatment of other drawing commands,

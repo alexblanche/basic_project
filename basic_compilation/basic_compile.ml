@@ -635,6 +635,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
     done;
     (* Now that the label indices are set, the menu commands can be processed *)
     List.iter (fun (i, args) -> process_menu i (List.rev args) code mem) mem.menustack;
+    mem.menustack <- [];
 
     (* Next index *)
     j

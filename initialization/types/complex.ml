@@ -71,8 +71,12 @@ let is_not_zero (z : complex) : bool =
 (** Others **)
 
 (* Returns true if the complex z represents an integer *)
+(* Terrible precision allowed, because OCaml float calculations have an AWFUL precision *)
 let is_int (z : complex) : bool =
-  Float.is_integer z.re && z.im = 0.;;
+  (let r = Float.rem z.re 1. in
+  r <= 1e-08 || r > 0.99999999)
+  &&
+  z.im = 0.;;
 
 (** Recoding of the operations **)
 

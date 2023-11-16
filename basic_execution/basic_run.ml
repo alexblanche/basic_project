@@ -65,23 +65,23 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   (* Ends the execution of the program *)
   let end_execution () =
     quit_print win ren !val_seen !last_val p.polar !string_seen !text_screen
-  in
-  
+  in  
 
   (** Main looping function **)
   let rec aux (i : int) : unit =
     
     (* debug *)
-    (* print_endline (string_of_int i); *)
+    print_endline (string_of_int i);
 
-    (* (try
-      print_string "Ymin: ";
-      print_float (access_real_var p.var ymin_index);
-      print_string "; Ymax: ";
-      print_float (access_real_var p.var ymax_index);
-      print_newline ()
+    (try
+      (* print_string "Ans: ";
+      print_float (access_real_var p.var 28);
+      print_string "; anStart: ";
+      print_float (access_real_var p.var 32);
+      print_newline () *)
+      ()
     with
-      | _ -> ()); *)
+      | _ -> ());
 
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then
