@@ -488,7 +488,8 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
               | StringExpr se :: Complex z :: t ->
                 (let s =
                   match eval_str p se with
-                    | Str_content s -> s
+                    | Str_content s ->
+                      skip_k ((List.length s)-16) (rev_lexlist_to_rev_symblist s true)
                     | _ -> run_fail i "Wrong Menu string argument"
                 in
                 entry_t.(k) <- (s, int_of_complex z);
@@ -499,7 +500,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         entry_eval_loop (nentry - 1) entry_list;
 
         (* Execution of the command *)
-        let chosen_lbl = menu_command ren p title entry_t in
+        let chosen_lbl = menu_command ren p title entry_t !text_screen in
         (if !text_screen
           then tdraw ren
           else gdraw ren);

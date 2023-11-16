@@ -94,11 +94,13 @@ let locate_no_refresh (slist : string list) (i : int) (j : int) : unit =
 
 (* Auxiliary loop to fast_locate:
   for k = bound downto i do (print the character at position k) done *)
-let rec fast_locate_aux (i : int) (j : int) (acc : Sdlrect.t list ref) (l : string list) (k : int) =
+(* Writes in tscreen if the boolean write is true *)
+let rec fast_locate_aux (write : bool) (i : int) (j : int) (acc : Sdlrect.t list ref) (l : string list) (k : int) =
   if k >= i then
     match l with
       | s::lt ->
-        (tscreen.(j).(k) <- s;
+        ((if write then
+          tscreen.(j).(k) <- s);
         let t =
           try
             Hashtbl.find repr_text s
@@ -111,7 +113,7 @@ let rec fast_locate_aux (i : int) (j : int) (acc : Sdlrect.t list ref) (l : stri
               acc := (ploton_rect (1+6*k+x) (8*j+y))::!acc
           done
         done;
-        fast_locate_aux i j acc lt (k-1))
+        fast_locate_aux write i j acc lt (k-1))
       | [] -> ();;
 
 (* Fast version of Locate, but does not need to refresh the whole screen *)
@@ -135,7 +137,7 @@ let locate (ren : Sdlrender.t) (slist : string list) (i : int) (j : int) : unit 
 
   (* Display of the characters *)
   let acc = ref [] in
-  fast_locate_aux i j acc (skip_k (n+i-21) slist) bound;
+  fast_locate_aux true i j acc (skip_k (n+i-21) slist) bound;
   Sdlrender.fill_rects ren (Array.of_list !acc);
   refresh ren;;
 
@@ -203,7 +205,7 @@ let erase_black_square_text (ren : Sdlrender.t) : unit =
     Sdlrender.fill_rect ren white_r;
     set_color ren colors.pixels;
     let acc = ref [] in
-    fast_locate_aux 20 0 acc [tscreen.(0).(20)] 20;
+    fast_locate_aux false 20 0 acc [tscreen.(0).(20)] 20;
     Sdlrender.fill_rects ren (Array.of_list !acc))
   else
     set_color ren colors.pixels);
