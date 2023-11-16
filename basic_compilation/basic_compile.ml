@@ -9,6 +9,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       lblindex = Array.make 38 (-1);
       gotoindex = [];
       progindex = [];
+      menustack = [];
     }
   in
 
@@ -573,8 +574,9 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
           fail t i "Compilation error: GraphS expects 3 parameters"
 
       | "MENU" :: t ->
-        (let (j, t') = process_menu i t code mem in
-        aux t' j)
+        (let args, t' = extract_line t in
+        mem.menustack  <- (i, args) :: mem.menustack;
+        aux t' (i+1))
 
       (* Errors *)
       | lex :: _ -> fail lexlist i ("Compilation error: Unexpected command "^(String.escaped lex))
@@ -631,6 +633,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
     while mem.stack <> [] do
       let _ = process_ifend (j-1) [] code mem in ()
     done;
+    (* Now that the label indices are set, the menu commands can be processed *)
+    List.iter (fun (i, args) -> process_menu i (List.rev args) code mem) mem.menustack;
 
     (* Next index *)
     j

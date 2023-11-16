@@ -472,6 +472,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         aux (i+1))
 
       | Function ("MENU", (StringExpr sexptitle) :: entry_list) ->
+        (* Evaluation of the title *)
         (let title =
           match eval_str p sexptitle with
             | Str_content s -> skip_k ((List.length s)-19) (rev_lexlist_to_rev_symblist s true)
@@ -480,6 +481,7 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
         let nentry = (List.length entry_list) / 2 in
         let entry_t = Array.make nentry ([], -1) in
 
+        (* Computation of the entry array *)
         let rec entry_eval_loop k el =
           if k >= 0 then
             (match el with
@@ -494,10 +496,17 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
               
               | _ -> run_fail i "Error in Menu arguments")
         in
-        entry_eval_loop (nentry - 1) [];
-        let chosen_lbl = menu_command ren p title entry_t in
-        aux mem.lblindex.(chosen_lbl))
+        entry_eval_loop (nentry - 1) entry_list;
 
+        (* Execution of the command *)
+        let chosen_lbl = menu_command ren p title entry_t in
+        (if !text_screen
+          then tdraw ren
+          else gdraw ren);
+        aux chosen_lbl)
+
+      (* Errors *)
+      | Function ("MENU", _) -> run_fail i "Wrong arguments for Menu"
       | _ -> run_fail i "Unexpected command"
   in
 

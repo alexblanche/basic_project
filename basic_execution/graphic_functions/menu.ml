@@ -21,7 +21,7 @@ let draw_menu_title (ren : Sdlrender.t) (title : string list) : unit =
   margin_h := !margin_h + !size;
   
   let acc = ref [] in
-  fast_locate_aux 1 0 acc title 20;
+  fast_locate_aux 1 0 acc title (min 20 (1 + List.length title));
   Sdlrender.fill_rects ren (Array.of_list !acc);
 
   (* The margins are shifted back to their original position *)
@@ -47,20 +47,28 @@ let draw_menu_entries (ren : Sdlrender.t) (entries : (string list * int) array)
   margin_v := !margin_v + 3 * !size;
   margin_h := !margin_h + !size;
 
+  let n = Array.length entries in
   let acc = ref [] in
-  for i = 0 to 5 do
+
+  for i = 0 to n-1 do
     let entry = fst (entries.(highest + i)) in
     if highest + i = pindex then
-      (fill_rect ren !margin_h (!margin_v + i*8* !size) (128 * !size) (8* !size);
-      switch_color_mode ();
+      (fill_rect ren
+        (!margin_h + 5 * !size) (!margin_v + (i+1) * 8 * !size)
+        (119 * !size) (9 * !size);
       let white_acc = ref [] in
-      (* Missing: "1:" "2:" *)
-      fast_locate_aux 1 (i+1) white_acc entry 20;
+      (* "[index]:" *)
+      fast_locate_aux 1 (i+1) white_acc [":"; string_of_int (highest + i)] 2;
+      (* entry text *)
+      fast_locate_aux 3 (i+1) white_acc entry (min 20 (3 + List.length entry));
+      set_color ren colors.background;
       Sdlrender.fill_rects ren (Array.of_list !white_acc);
-      switch_color_mode ())
+      set_color ren colors.pixels)
     else
-      (* Missing: "1:" "2:" *)
-      fast_locate_aux 1 (i+1) acc entry 20
+      (* "[index]:" *)
+      (fast_locate_aux 1 (i+1) acc [":"; string_of_int (highest + i)] 2;
+      (* entry text *)
+      fast_locate_aux 3 (i+1) acc entry (min 20 (3 + List.length entry)))
   done;
 
   Sdlrender.fill_rects ren (Array.of_list !acc);
@@ -93,11 +101,16 @@ let draw_menu (ren : Sdlrender.t) (title : string list) (entries : ((string list
 let menu_command (ren : Sdlrender.t) (p : parameters)
   (title : string list) (entries : ((string list) * int) array) : int =
   
+  wait_release ren false;
   draw_menu ren title entries;
 
   let n = Array.length entries in
 
   let rec loop (pindex : int) (highest : int) : int =
+    if !exit_key_check then
+      snd (entries.(0))
+    else
+
     match !key_pressed with
       | Up ->
         if pindex <> 0 then
@@ -105,6 +118,7 @@ let menu_command (ren : Sdlrender.t) (p : parameters)
           let new_highest = min new_pindex highest in
           draw_menu_entries ren entries new_pindex new_highest;
           refresh ren;
+          wait_release ren false;
           loop new_pindex new_highest)
         else
           loop pindex highest
@@ -119,6 +133,7 @@ let menu_command (ren : Sdlrender.t) (p : parameters)
           in
           draw_menu_entries ren entries new_pindex new_highest;
           refresh ren;
+          wait_release ren false;
           loop new_pindex new_highest)
         else
           loop pindex highest

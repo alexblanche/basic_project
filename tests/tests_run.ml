@@ -1342,3 +1342,37 @@ let run_bgpict2 () =
     par
   in
   run p prog "main";;
+
+
+(* Test for menu command *)
+let run_menu () =
+  let prog =
+    compile
+      [("main",
+        [
+          "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
+          "FLINE"; "1"; ","; "6"; "3"; ","; "1"; "2"; "7"; ","; "1"; "DISP";
+          "3"; "ASSIGN"; "A"; "EOL";
+          
+          "LBL"; "E"; "EOL";
+
+          "MENU"; "QUOTE"; "A"; "B"; "C"; "D"; "E"; "F"; "G"; "QUOTE"; ",";
+            "QUOTE"; "A"; "A"; "A"; "QUOTE"; ","; "3"; ",";
+            "QUOTE"; "B"; "B"; "B"; "QUOTE"; ","; "7"; ",";
+            "QUOTE"; "C"; "C"; "C"; "QUOTE"; ","; "9"; ",";
+            "QUOTE"; "D"; "D"; "D"; "QUOTE"; ","; "A"; "EOL";
+
+          "LBL"; "3"; "COLON"; "3"; "DISP";
+          "GOTO"; "E"; "EOL";
+
+          "LBL"; "7"; "COLON"; "7"; "DISP";
+          "GOTO"; "E"; "EOL";
+
+          "LBL"; "9"; "COLON"; "9"; "DISP";
+          "GOTO"; "E"; "EOL";
+
+          "LBL"; "A"; "COLON"; "QUOTE"; "A"; "QUOTE"; "DISP";          
+          "GOTO"; "E"; "EOL";
+        ])]
+  in
+  run (empty_projcont ()) prog "main";;

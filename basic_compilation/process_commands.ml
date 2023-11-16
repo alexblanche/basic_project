@@ -392,7 +392,7 @@ let process_sgph i lexlist code mem : int * string list =
 
 (** Compilation of Menu **)
 
-let process_menu i t code mem : int * string list =
+let process_menu i t code mem : unit =
   let (stitle, t2) =
     match extract_string_expr t with
       | ((Str_content _) as s), t
@@ -413,26 +413,31 @@ let process_menu i t code mem : int * string list =
     match t with
       | "EOL" :: _
       | "DISP" :: _
-      | "COLON" :: _ -> entry_list, t
+      | "COLON" :: _ -> entry_list
 
       | "," :: "QUOTE" :: t' ->
         let s,t'' = extract_string_expr (List.tl t) in
         (match t'' with
           | "," :: a :: t''' ->
             let lbl = extract_lbl a in
-            entry_extraction_loop t''' ((StringExpr s) :: (Complex (complex_of_int lbl)) :: entry_list)
+            entry_extraction_loop t'''
+              ((StringExpr s)
+                :: Complex (complex_of_int (mem.lblindex.(lbl)))
+                :: entry_list)
           | _ -> fail t i "Compilation error: Wrong label index for Menu")
 
       | "," :: "STR" :: _ ::      "," :: a :: t'
       | "," :: "STR" :: _ :: _ :: "," :: a :: t' ->
         let (si,_) = read_int (List.tl (List.tl t)) true in
         let lbl = extract_lbl a in
-        entry_extraction_loop t' ((StringExpr (Str_access si)) :: (Complex (complex_of_int lbl)) :: entry_list)
+        entry_extraction_loop t'
+          ((StringExpr (Str_access si))
+            :: Complex (complex_of_int (mem.lblindex.(lbl)))
+            :: entry_list)
 
       | _ -> fail t i "Compilation error: Syntax error in Menu"
   in
 
-  let entry_list, t3 = entry_extraction_loop t2 [] in
-  set code i (Function ("MENU", (StringExpr stitle) :: entry_list));
-  (i+1, t3);;
+  let entry_list = entry_extraction_loop t2 [] in
+  set code i (Function ("MENU", (StringExpr stitle) :: entry_list));;
         

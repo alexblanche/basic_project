@@ -58,4 +58,6 @@ type working_mem =
 
     (* progindex: a list containing the name and index in the code of each program in the project *)
     mutable progindex : (string * int) list;
+
+    mutable menustack : (int * (string list)) list;
   };;
