@@ -352,6 +352,10 @@ let process_sgph i lexlist code mem : int * string list =
           (false, Variable (Var (var_index a)), t)
         else
           fail lexlist i "Compilation error: Syntax error in Sgph command (List index)"
+      | "," :: "LISTONE" :: t ->
+        (false, Value (complex_of_float 1.), t)
+      | "," :: "LISTTWO" :: t ->
+        (false, Value (complex_of_float 2.), t)
       | [] -> (true, Value (complex_of_float 0.), [])
       | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command (List)"
   in

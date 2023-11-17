@@ -48,7 +48,7 @@ Esc quits the emulator.
 
 The emulator was tested on the games I coded in 2011-2013, which can all be found on [Planet Casio](https://www.planet-casio.com/): [Timeless](https://www.planet-casio.com/Fr/programmes/programme2007-1-timeless-alex-1186-jeux-reflexion.html), [Timeless Remix](https://www.planet-casio.com/Fr/programmes/programme2228-last-timeless-remix-alex-1186-jeux-reflexion.html), [Super Run & Jump](https://www.planet-casio.com/Fr/programmes/programme2156-1-super-run-jump-alex-1186-jeux-actionsport.html), [Ace Combat](https://www.planet-casio.com/Fr/programmes/programme1960-1-ace-combat-alex-1186-jeux-directiontir.html), [Airwolf](https://www.planet-casio.com/Fr/programmes/programme2240-1-airwolf-alex-1186-jeux-directiontir.html), and the great [CloneLab](https://www.planet-casio.com/Fr/programmes/programme1984-1-clonelab-ne0tux-jeux-reflexion.html) by Ne0tux.
 
-Do not hesitate to open an issue if you encounter an error when running a program (highly probable).
+Do not hesitate to open an issue if you encounter an error when running a program (highly probable), or if the program does not open the G1M file (even more probable).
 
 
 # Other tools:
