@@ -84,8 +84,7 @@ let quit (win : Sdlwindow.t) (ren : Sdlrender.t) (text_screen : bool) : unit =
     wait_release ren text_screen;
     wait_enter ren text_screen
   with
-    | Window_Closed -> ());
-  close_graph win;;
+    | Window_Closed -> ());;
 
 (* Prints the value of Ans if val_seen, "Done" otherwise, then quits *)
 let quit_print (win : Sdlwindow.t) (ren : Sdlrender.t) (val_seen : bool) (value : complex) (polar : bool) (string_seen : bool) (text_screen : bool) : unit =
