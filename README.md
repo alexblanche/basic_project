@@ -7,11 +7,11 @@ This project contains an emulator of Casio Basic programs, written on a Casio fx
 
 ![Screen](https://github.com/alexblanche/basic_project/blob/main/data/screen.png)
 
-## How it works:
+## How it works
 
 The program receives the name of a G1M or G2M file containing a project (made up of programs, pictures, captures, strings, lists and matrices) as argument. It extracts the content of the project and compiles the programs into an abstract code. The user can then select which programs to run via a menu.
 
-### How to launch the emulator:
+### How to launch the emulator
 
 For convenience during development, the project is currently interpreted. It will be converted to compiled at a later date, but the main.ml program is temporarily used to launch all the subprograms.
 The program requires the library [OCamlSDL2](https://github.com/fccm/OCamlSDL2) in its latest version (as of october 2023) and [OCamlSDL2_TTF](https://github.com/fccm/OCamlSDL2_TTF).
@@ -41,19 +41,19 @@ The keybinds are as follows:
 
 Esc quits the emulator.
 
-## Remarks:
+## Remarks
 - The emulated Casio models are fx-9750GII (Graph 35+) / fx-9860GII (Graph 75). More modern models are not handled, and the compatibility with older models is not guaranteed.
 - Only the main functionalities are implemented, some programs may not be supported or run as expected.
 - Supported functionalities include: arithmetic (including complex numbers, list and matrix arithmetic, string functions), string display (including Locate), graphic display (PlotOn, F-Line, DrawStat), picture and capture dispay (RclPict, RclCapt, StoPict, BGPict), "?", menu.
 
-### Games tested:
+### Games tested
 
 The emulator was tested on the games I coded in 2011-2013, which can all be found on [Planet Casio](https://www.planet-casio.com/): [Timeless](https://www.planet-casio.com/Fr/programmes/programme2007-1-timeless-alex-1186-jeux-reflexion.html), [Timeless Remix](https://www.planet-casio.com/Fr/programmes/programme2228-last-timeless-remix-alex-1186-jeux-reflexion.html), [Super Run & Jump](https://www.planet-casio.com/Fr/programmes/programme2156-1-super-run-jump-alex-1186-jeux-actionsport.html), [Ace Combat](https://www.planet-casio.com/Fr/programmes/programme1960-1-ace-combat-alex-1186-jeux-directiontir.html), [Airwolf](https://www.planet-casio.com/Fr/programmes/programme2240-1-airwolf-alex-1186-jeux-directiontir.html), and the great [CloneLab](https://www.planet-casio.com/Fr/programmes/programme1984-1-clonelab-ne0tux-jeux-reflexion.html) by Ne0tux.
 
 Do not hesitate to open an issue if you encounter an error when running a program (highly probable), or if the program does not open the G1M file (even more probable).
 
 
-# Other tools:
+# Other tools
 
 This project also contains:
 - A graphical interface to draw and modify monochromatic images
@@ -63,7 +63,7 @@ This project also contains:
 These tools are present but no interface has been added yet. I will implement one in the future.
 
 
-## To come next:
+## To come next
 - A converter from abstract Basic code to readable "Custom Basic" code
 - A lexer of Custom Basic into a list of lexemes, that can then be handled by the emulator
 - A Picture edition general interface, that opens BMP files and writes G1M files
