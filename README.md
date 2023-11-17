@@ -5,7 +5,7 @@ This project contains an emulator of Casio Basic programs, written on a Casio fx
 <!-- Early demo, on the games I coded in high school:
 [![](https://markdown-videos-api.jorgenkh.no/youtube/Be-btigfZnY)](https://youtu.be/Be-btigfZnY) -->
 
-![Screen](https://github.com/ablanche/basic_project/blob/main/data/screen.png)
+![Screen](https://github.com/alexblanche/basic_project/blob/main/data/screen.png)
 
 ## How it works:
 
