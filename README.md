@@ -1,24 +1,15 @@
-# Basic Project
+# Casio Basic emulator
 
-## Goals
+This project contains an emulator of Casio Basic programs, written on a Casio fx-9750GII (Graph 35+) / fx-9860GII (Graph 75). It aims at emulating the main functionalities of these systems.
 
-In this project I aim at developing tools related to Casio calculators. The targetted model is Casio Graph 35+/75.
+<!-- Early demo, on the games I coded in high school:
+[![](https://markdown-videos-api.jorgenkh.no/youtube/Be-btigfZnY)](https://youtu.be/Be-btigfZnY) -->
 
-(Everything is work in progress.)
+## How it works:
 
-- A Casio Basic compiler and emulator: the compiler reads the content of a G1M file (programs, pictures, captures, strings, lists and matrices) and converts it into an abstract code that can be executed by the emulator
-- A lexer that converts Casio Basic code written in text mode (with spaces and indentation) into a G1M file that runs on a Casio calculator, and that can be executed with the emulator
-- A "decompiler" that generates indented code in a text file from a G1M file containing Casio Basic code (which uses keywords for operators and commands, such as "If", "List", "F-line"...)
-- A picture editor, to draw monochromatic 64*128 pictures, or convert existing BMP images into pictures, and write them in a G1M file
+The program receives the name of a G1M or G2M file containing a project (made up of programs, pictures, captures, strings, lists and matrices) as argument. It extracts the content of the project and compiles the programs into an abstract code. The user can then select which programs to run via a menu.
 
-## What works:
-- The emulator runs text-mode Basic programs (that use Strings, Locate)
-  Graphic display (F-line, DrawStat) coming soon
-- The graphical interface to draw and modify monochromatic images
-- BMP (RGB) image conversion to monochromatic image through the Floyd-Steinberg dithering algorithm or the simple Threshold algorithm
-- Reading/writing G1M/G2M files: extraction/generation of all types of objects (programs, lists, matrices, pictures, captures, strings)
-
-### To launch the emulator:
+### How to launch the emulator:
 
 For convenience during development, the project is currently interpreted. It will be converted to compiled at a later date, but the main.ml program is temporarily used to launch all the subprograms.
 The program requires the library [OCamlSDL2](https://github.com/fccm/OCamlSDL2) in its latest version (as of october 2023) and [OCamlSDL2_TTF](https://github.com/fccm/OCamlSDL2_TTF).
@@ -27,27 +18,50 @@ To launch a Casio program in G1M or G2M format:
 ```
 $ ocaml
 #use "main.ml";;
-play "[filename].g1m";;
+main "[filename].g1m";;
 ```
 
 To extract a G1M file from a Casio Basic program on a Casio calculator, see [FA-124](https://www.planet-casio.com/Fr/logiciels/voir_un_logiciel_casio.php?showid=16).
 
+### Keybinds
+
+The keybinds are as follows:
+- Digits, +,-,*,/, Enter: Keypad
+- Arrows: keyboard arrows
+- EXE: Enter or keypad Enter
+- Shift: Left Shift
+- Alpha: Left Ctrl
+- A-Z, Space, "(" ")" ",": letters A-Z, Space, "(" ")" "," 
+- F1-F6: F1-F6
+- DEL: Backspace
+- MENU: Right Shift
+- EXIT: Delete
+
+Esc quits the emulator.
+
+## Remarks:
 - The emulated Casio models are fx-9750GII (Graph 35+) / fx-9860GII (Graph 75). More modern models are not handled, and the compatibility with older models is not guaranteed.
-- The graphic display (F-line, DrawStat) is not implemented yet. Only the text mode display is implemented so far (Strings, Locate).
 - Only the main functionalities are implemented, some programs may not be supported or run as expected.
+- Supported functionalities include: arithmetic (including complex numbers, list and matrix arithmetic, string functions), string display (including Locate), graphic display (PlotOn, F-Line, DrawStat), picture and capture dispay (RclPict, RclCapt, StoPict, BGPict), "?", menu.
+
+### Games tested:
+
+The emulator was tested on the games I coded in 2011-2013, which can all be found on [Planet Casio](https://www.planet-casio.com/): [Timeless](https://www.planet-casio.com/Fr/programmes/programme2007-1-timeless-alex-1186-jeux-reflexion.html), [Timeless Remix](https://www.planet-casio.com/Fr/programmes/programme2228-last-timeless-remix-alex-1186-jeux-reflexion.html), [Super Run & Jump](https://www.planet-casio.com/Fr/programmes/programme2156-1-super-run-jump-alex-1186-jeux-actionsport.html), [Ace Combat](https://www.planet-casio.com/Fr/programmes/programme1960-1-ace-combat-alex-1186-jeux-directiontir.html), [Airwolf](https://www.planet-casio.com/Fr/programmes/programme2240-1-airwolf-alex-1186-jeux-directiontir.html), and the great [CloneLab](https://www.planet-casio.com/Fr/programmes/programme1984-1-clonelab-ne0tux-jeux-reflexion.html) by Ne0tux.
+
+Do not hesitate to open an issue if you encounter an error when running a program (highly probable).
 
 
-## To do next:
-Emulation:
-- Code the graphic display (F-line, DrawStat)
-- Code the remaining functions and commands
+# Other tools:
 
-Compilers and decompilers:
-- Code a converter from abstract Basic code to readable "Custom Basic" code
-- Code a lexer from Custom Basic code to list of lexemes (which can then be handled by the compiler)
+This project also contains:
+- A graphical interface to draw and modify monochromatic images
+- BMP image conversion to monochromatic image through the Floyd-Steinberg dithering algorithm or the simple threshold algorithm
+- A general G1M/G2M file reader/writer: extraction/generation of all types of objects (programs, lists, matrices, pictures, captures, strings) from/into a G1M file that can then be transfered to a Casio calculator
 
-Interface:
-- Code an interface that opens G1M files and displays its content
-- Code a PRGM menu that displays the available programs, and launches the emulator
-- Code a Picture Edition general interface, that opens BMP files and writes G1M files
-- Code an interface that displays all the buttons of the calculator, in order to interact with the programs, and a keybinds interface (for more convenient gameplay)
+These tools are present but no interface has been added yet. I will implement one in the future.
+
+
+## To come next:
+- A converter from abstract Basic code to readable "Custom Basic" code
+- A lexer of Custom Basic into a list of lexemes, that can then be handled by the emulator
+- A Picture edition general interface, that opens BMP files and writes G1M files
