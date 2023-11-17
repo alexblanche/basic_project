@@ -318,15 +318,14 @@ and apply_special_func (p : parameters) (fname : string) (el : basic_expr list) 
         else
           let asc = z2.re > z1.re in
           let t = Array.make n QMark in
-          (p.var.(vi+29) <- 0.;
-          p.var.(vi) <- z1.re;
+          (set_var p.var vi (complex_of_float z1.re);
           let i = ref 0 in
           while
             (if asc
-              then p.var.(vi) <= z2.re
-              else p.var.(vi) >= z2.re) do
+              then access_real_var p.var vi <= z2.re
+              else access_real_var p.var vi >= z2.re) do
             t.(!i) <- Complex (eval_num p e);
-            p.var.(vi) <- p.var.(vi) +. z3.re;
+            set_real_var p.var vi ((access_real_var p.var vi) +. z3.re);
             incr i
           done;
           ListContent t)

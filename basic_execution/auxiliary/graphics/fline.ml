@@ -54,24 +54,39 @@ let trace_drawstat (ren : Sdlrender.t) (l : (int * int) list) (style : drawstat_
     match mark with
       | DSMDot ->
         if style <> XYLine then
-          List.iter (fun (i,j) -> ploton ren gscreen i (64-j)) l
+          List.iter
+            (fun (i,j) ->
+              if i >= 1 && i <= 127 && j >= 1 && j <= 63 then
+                ploton ren gscreen i (64-j))
+            l
       | DSMCross ->
         List.iter
           (fun (i,j) ->
-            for k = (-1) to 1 do
-              ploton ren gscreen (i + k) (64 - j - k);
-              ploton ren gscreen (i + k) (64 - j + k)
-            done)
+            if i >= 1 && i <= 127 && j >= 1 && j <= 63 then
+              for k = (-1) to 1 do
+                let a = i + k in
+                let b1 = j + k in
+                let b2 = j - k in
+                if a >= 1 && a <= 127 then
+                  (if b1 >= 1 && b1 <= 63 then
+                    ploton ren gscreen (i + k) (64 - b1);
+                  if b2 >= 1 && b2 <= 63 then
+                    ploton ren gscreen (i + k) (64 - b2))
+              done)
           l
       | DSMSquare ->
         List.iter
           (fun (i,j) ->
-            for kx = (-1) to 1 do
-              for ky = (-1) to 1 do
-                if kx <> 0 || ky <> 0 then
-                  ploton ren gscreen (i + kx) (64 - j - ky)
-              done
-            done)
+            if i >= 1 && i <= 127 && j >= 1 && j <= 63 then
+              for kx = (-1) to 1 do
+                for ky = (-1) to 1 do
+                  if kx <> 0 || ky <> 0 then
+                    let a = i + kx in
+                    let b = j + ky in
+                    if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
+                      ploton ren gscreen (i + kx) (64 - j - ky)
+                done
+              done)
           l
   in
   ();;

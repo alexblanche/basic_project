@@ -171,7 +171,8 @@ let aux_extract_str (lexlist : string list) : string list * string list =
           then aux (s::acc) t (* The quote or anti-slash is kept *)
           else aux acc (s::t)
       | s :: t -> aux (s::acc) t
-      | [] -> failwith "aux_extract_str: the string is not closed properly"
+      (* Strangely, the closing quote can be omitted at the end of the code *)
+      | [] -> (acc, []) 
   in
   aux [] lexlist;;
 

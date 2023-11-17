@@ -39,7 +39,7 @@ The keybinds are as follows:
 - MENU: Right Shift
 - EXIT: Delete
 
-Esc quits the emulator.
+Esc quits the emulator. Tab speeds up the emulation.
 
 ## Remarks
 - The emulated Casio models are fx-9750GII (Graph 35+) / fx-9860GII (Graph 75). More modern models are not handled, and the compatibility with older models is not guaranteed.
