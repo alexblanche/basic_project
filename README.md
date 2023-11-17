@@ -5,6 +5,8 @@ This project contains an emulator of Casio Basic programs, written on a Casio fx
 <!-- Early demo, on the games I coded in high school:
 [![](https://markdown-videos-api.jorgenkh.no/youtube/Be-btigfZnY)](https://youtu.be/Be-btigfZnY) -->
 
+![alt text](https://github.com/ablanche/basic_project/blob/main/data/screen.png?raw=true)
+
 ## How it works:
 
 The program receives the name of a G1M or G2M file containing a project (made up of programs, pictures, captures, strings, lists and matrices) as argument. It extracts the content of the project and compiles the programs into an abstract code. The user can then select which programs to run via a menu.
