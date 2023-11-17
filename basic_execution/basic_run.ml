@@ -2,10 +2,11 @@
 
 
 (* General execution function *)
-let run (proj : project_content) ((code, proglist): basic_code) (entry_point : string) : unit =
+let run (win : Sdlwindow.t) (ren : Sdlrender.t)
+  (p : parameters) (proj : project_content) ((code, proglist): basic_code)
+  (entry_index : int) : unit =
   
   (** Initialization of all parameters **)
-  let (p : parameters) = new_param proj in
 
   let n = Array.length code in
   
@@ -33,34 +34,16 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
   (* Time of last color switch, to prevent flashing effect *)
   let last_switch = ref (Unix.gettimeofday ()) in
 
-  (* Initialization of the graphic window and graphic parameters *)
-  let (win, ren) = open_graphic () in
+  (* Initialization of the parameters *)
   
   exit_key_check := false;
   parameters_updated := true;
   escape_activated := true;
-  getkey := 0;
-  key_pressed := Unknown;
-  
-  set_color ren colors.pixels; 
+   
   clear_text ();
   writing_index := -1;
-
-  wipe gscreen;
-  wipe bgscreen;
-  p.bgscreen <- bgscreen;
-  p.gscreen <- gscreen;
-  p.bgpict <- -1;
-  set_real_var p.var xmin_index 1.;
-  set_real_var p.var xmax_index 127.;
-  set_real_var p.var xscl_index 0.;
-  set_real_var p.var ymin_index 1.;
-  set_real_var p.var ymax_index 63.;
-  set_real_var p.var yscl_index 0.;
-  set_real_var p.var xdot_index 1.;
-  p.axeson <- false;
   background_changed := false;
-
+  
   
   (* Ends the execution of the program *)
   let end_execution () =
@@ -511,8 +494,9 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
       | _ -> run_fail i "Unexpected command"
   in
 
-  let key_check_domain = Domain.spawn launch_key_check in
-  (try
+  (* let key_check_domain = Domain.spawn launch_key_check in *)
+
+  (* (try
     let entry_index =
       try
         List.assoc entry_point proglist
@@ -526,8 +510,11 @@ let run (proj : project_content) ((code, proglist): basic_code) (entry_point : s
     | Window_Closed -> print_endline "--- Runtime interruption ---"
     | Invalid_argument s
     | Failure s -> print_endline s
-    | Not_found -> print_endline "Runtime error: Not_found");
-  exit_key_check := true;
+    | Not_found -> print_endline "Runtime error: Not_found"); *)
+
+  aux entry_index;;
+
+  (* exit_key_check := true;
   Domain.join key_check_domain;
   close_graph win;
-  Sdl.quit ();;
+  Sdl.quit ();; *)

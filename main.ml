@@ -61,15 +61,10 @@
 #use "basic_execution/basic_run.ml"
 
 (* Tests *)
-#use "tests/tests_run.ml"
+(* #use "tests/tests_run.ml" *)
 
-(* Launches the program in the given G1M/G2M file *)
-let play (file_name : string) (entry_point : string) : unit =
-  let s = file_to_string file_name in
-  let p = g1m_reader s in
-  let code = compile p.prog in
-  run p code entry_point;;
-
+(* Main menu *)
+#use "main_menu/main_menu.ml"
 
 (* Picture generation *)
 (*
@@ -79,22 +74,20 @@ let play (file_name : string) (entry_point : string) : unit =
 *)
 
 (*
-Games that work:
-  - TIMELESS, PAC-MAN, RUN & JUMP, SUPER RUN & JUMP, ACE COMBAT, TIMELESS REMIX, AIRWOLF
-Final boss:
-  - CLONELAB
 
-To do next:
-  - Keep implementing the "main" functions
-  
+Games tested:
+  - TIMELESS, PAC-MAN, RUN & JUMP, SUPER RUN & JUMP, ACE COMBAT, TIMELESS REMIX, AIRWOLF, CLONELAB
+
+
+*** To do:
+
 Menus:
   - Draw a calculator and link it to Getkey (by clicking on keys)
     (key pressed on the keyboard highlight keys of the calculator interface)
   - Implement the menu:
-    -> File explorer (let us choose which g1m file to open)
-    -> PRGM menu that displays the available programs
     -> Options menu: changing keybinds
     -> Pause option
+    ...
 
 In the distant future:
   - Complete the "Done" print: a lot of functions print "Done" on the tscreen, so we may finish with "Done Done Done Done ..."
@@ -102,5 +95,6 @@ In the distant future:
   - Code the "ABC"?->X without skipping a line
   - Implement the fraction display (5 FRACSIGN 3 displays as a pair of int separated by FRACSIGN)
   - Implement the menu in the QMark entry menu, to access all functions
+  - Implement the Disp command on lists and matrices
   - Improve the side by side interface, by allowing changing the conversion window when clicking
 *)
