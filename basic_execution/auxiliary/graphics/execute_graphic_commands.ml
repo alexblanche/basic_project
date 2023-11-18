@@ -99,7 +99,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic)
             draw_single_pict_no_writing ren gscreen;
             background_changed := false);
           match eval_str p se with
-            | Str_content s -> draw_text ren (rev_lexlist_to_rev_symblist s false) (int_of_complex zx) (int_of_complex zy)
+            | Str_content s -> draw_text ren (rev_lexlist_to_rev_symblist s false verbose) (int_of_complex zx) (int_of_complex zy)
             | Num_expr (Complex z) -> draw_number ren z p.polar (int_of_complex zx) (int_of_complex zy)
             | _ -> graphic_fail i  "Wrong output type for string expression evaluation"
         in

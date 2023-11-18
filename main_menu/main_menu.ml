@@ -256,7 +256,7 @@ let run_strict (file_name : string) : unit =
   main file_name false false;;
 
 (* Returns the compiled code and the list of entry indices for each program *)
-let get_compiled_code (file_name : string) : unit =
+let get_compiled_code (file_name : string) : basic_code =
   let s = file_to_string file_name in
-  let p = g1m_reader s verbose in
+  let p = g1m_reader s true in
   compile p.prog true true;;
