@@ -49,7 +49,7 @@ let store_ans (var : float array) (z : complex) : unit =
 
 (* Converts as string in reverse string list type to reverse symbol list *)
 (* text = true if the string is about to be printed in text mode, and false if in graphic mode *)
-let rev_lexlist_to_rev_symblist (lexlist : string list) (text : bool) : string list =
+let rev_lexlist_to_rev_symblist (lexlist : string list) (text : bool) (verbose : bool) : string list =
   let l =
     let repr_table =
       if text
@@ -65,7 +65,10 @@ let rev_lexlist_to_rev_symblist (lexlist : string list) (text : bool) : string l
               try
                 List.assoc lex text_display
               with
-                | Not_found -> (print_endline ("Runtime warning: Unknown lexeme "^lex); "")
+                | Not_found ->
+                  (if verbose then
+                    print_endline ("Runtime warning: Unknown lexeme "^lex);
+                  "")
             in
             List.rev_append (str_to_rev_symblist_full repr) acc)
       []

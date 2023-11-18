@@ -162,7 +162,7 @@ let word_to_pair_of_codes (w : string) : string =
 
 (* Converts the Basic program in string s starting at index istart
   into a list of lexemes *)
-let prog_to_lexlist (s : string) (istart : int) : string list =
+let prog_to_lexlist (s : string) (istart : int) (verbose : bool) : string list =
   let n = String.length s in
   let rec aux acc i =
     if i = n || s.[i] = '\000'
@@ -190,7 +190,8 @@ let prog_to_lexlist (s : string) (istart : int) : string list =
                   if List.mem word symbols
                     then aux (word::acc) (i+2)
                     else
-                      (print_endline ("Input warning (prog_to_lexlist): Unknown word "^word^" "^word_to_pair_of_codes word);
+                      (if verbose then
+                        print_endline ("Input warning (prog_to_lexlist): Unknown word "^word^" "^word_to_pair_of_codes word);
                       aux acc (i+2)))
               else (* Two-byte word in symbols *)
                 if word.[0] = '\229' || word.[0] = '\230'
@@ -198,7 +199,8 @@ let prog_to_lexlist (s : string) (istart : int) : string list =
                     if List.mem word symbols
                       then aux (word::acc) (i+2)
                       else
-                        (print_endline ("Input warning (prog_to_lexlist): Unknown symbol "^word^" "^word_to_pair_of_codes word);
+                        (if verbose then
+                          print_endline ("Input warning (prog_to_lexlist): Unknown symbol "^word^" "^word_to_pair_of_codes word);
                         aux acc (i+2))
                   else (* One-byte word *)
                     (match List.assoc_opt word commands with
@@ -206,7 +208,8 @@ let prog_to_lexlist (s : string) (istart : int) : string list =
                         if List.mem word symbols
                           then aux (word::acc) (i+1)
                           else
-                            (print_endline ("prog_to_lexlist: Unknown symbol "^word^" ("^(string_of_int (Char.code word.[0]))^")");
+                            (if verbose then
+                              print_endline ("prog_to_lexlist: Unknown symbol "^word^" ("^(string_of_int (Char.code word.[0]))^")");
                             aux acc (i+2))
                       | Some lex -> aux (lex::acc) (i+1))
   in
@@ -361,13 +364,13 @@ let read_matrix (s : string) (istart : int) (row : int) (col : int) : float arra
 (* #use "basic_parsing/project_type.ml" *)
 
 (* Returns the content of each object of the G1M/G2M file *)
-let g1m_reader (s : string) : project_content =
+let g1m_reader (s : string) (verbose : bool) : project_content =
   let c = get_content s in
   
   let prog_list =
     List.rev_map
       (fun (name, _, istart, _) ->
-        (name, prog_to_lexlist s istart))
+        (name, prog_to_lexlist s istart verbose))
       c.prog
   in
 

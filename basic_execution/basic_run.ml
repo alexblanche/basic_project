@@ -2,9 +2,9 @@
 
 
 (* General execution function *)
-let run (win : Sdlwindow.t) (ren : Sdlrender.t)
+let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
   (p : parameters) (proj : project_content) ((code, proglist): basic_code)
-  (entry_index : int) : unit =
+  (entry_index : int) (verbose : bool) : unit =
   
   (** Initialization of all parameters **)
 
@@ -53,8 +53,10 @@ let run (win : Sdlwindow.t) (ren : Sdlrender.t)
   (** Main looping function **)
   let rec aux (i : int) : unit =
     
-    (* debug *)
-    (* print_endline (string_of_int i); *)
+    if verbose then
+      (print_string "Index: ";
+      print_int i;
+      print_newline ());
 
     (* (try
       (* print_string "Ans: ";
@@ -177,7 +179,7 @@ let run (win : Sdlwindow.t) (ren : Sdlrender.t)
         else aux (i+1))
 
       | Graphic g ->
-        (apply_graphic ren p i g text_screen;
+        (apply_graphic ren p i g text_screen verbose;
         aux (i+1))
       
       | Expr (Complex z) ->
@@ -227,7 +229,7 @@ let run (win : Sdlwindow.t) (ren : Sdlrender.t)
         (string_seen := true;
         match se, eval_str p se with
           | Str_content _, Str_content s ->
-            (let sl = rev_lexlist_to_rev_symblist s true in
+            (let sl = rev_lexlist_to_rev_symblist s true verbose in
             text_screen := true;
             line_feed ();
             clear_line !writing_index;
@@ -281,7 +283,7 @@ let run (win : Sdlwindow.t) (ren : Sdlrender.t)
         text_screen := true;
         let sl =
           match eval_str p se with
-            | Str_content s -> rev_lexlist_to_rev_symblist s true
+            | Str_content s -> rev_lexlist_to_rev_symblist s true verbose
             | Num_expr (Complex z) ->
               (if z.im <> 0. (* In Casio Basic, Locate does not handle complex numbers *)
                 then run_fail i "A number printed by Locate cannot be a complex number";
@@ -458,7 +460,7 @@ let run (win : Sdlwindow.t) (ren : Sdlrender.t)
         (* Evaluation of the title *)
         (let title =
           match eval_str p sexptitle with
-            | Str_content s -> skip_k ((List.length s)-19) (rev_lexlist_to_rev_symblist s true)
+            | Str_content s -> skip_k ((List.length s)-19) (rev_lexlist_to_rev_symblist s true verbose)
             | _ -> run_fail i "Wrong Menu title"
         in
         let nentry = (List.length entry_list) / 2 in
@@ -472,7 +474,7 @@ let run (win : Sdlwindow.t) (ren : Sdlrender.t)
                 (let s =
                   match eval_str p se with
                     | Str_content s ->
-                      skip_k ((List.length s)-16) (rev_lexlist_to_rev_symblist s true)
+                      skip_k ((List.length s)-16) (rev_lexlist_to_rev_symblist s true verbose)
                     | _ -> run_fail i "Wrong Menu string argument"
                 in
                 entry_t.(k) <- (s, int_of_complex z);

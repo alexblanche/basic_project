@@ -20,8 +20,10 @@ To launch a Casio program in G1M or G2M format:
 ```
 $ ocaml
 #use "main.ml";;
-main "[filename].g1m";;
+run "[filename].g1m";;
 ```
+
+Alternatively, use ```run_verbose [filename].g1m``` to display compilation errors and runtime warnings.
 
 To extract a G1M file from a Casio Basic program on a Casio calculator, see [FA-124](https://www.planet-casio.com/Fr/logiciels/voir_un_logiciel_casio.php?showid=16).
 

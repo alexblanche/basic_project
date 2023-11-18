@@ -404,11 +404,12 @@ let process_menu i t code mem : unit =
       | _ -> fail t i "Compilation error: Wrong title for Menu"
   in
   
+  (* The label index is between 0 and 37: 0-9 = digits, 10-37 = letters *)
   let extract_lbl a =
     if is_digit a then
       Char.code a.[0] - 48
-    else if is_letter_var a && String.length a = 1 then
-      Char.code a.[0] - 65 + 10
+    else if is_letter_var a then
+      var_index a + 10
     else
       fail t i "Compilation error: Wrong label index for Menu"
   in

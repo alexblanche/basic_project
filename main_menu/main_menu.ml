@@ -92,7 +92,8 @@ let draw_prog_menu (ren : Sdlrender.t) (entries : info array) (pindex : int) (hi
 
 
 (* Runs the main menu *)
-let main_menu ((code, proglist) : basic_code) (proj : project_content) (content : content) : unit =
+let main_menu ((code, proglist) : basic_code) (proj : project_content) (content : content)
+  (verbose : bool) : unit =
 
   (* Creation of the window and the renderer *)
   let (win, ren) = open_graphic () in
@@ -205,7 +206,7 @@ let main_menu ((code, proglist) : basic_code) (proj : project_content) (content 
       
       (* Running the chosen program *)
       (try
-        run win ren p proj (code, proglist) entry_index
+        run_program win ren p proj (code, proglist) entry_index verbose
       with
         | Runtime_interruption
         | Window_Closed -> print_endline "--- Runtime interruption ---"
@@ -229,9 +230,33 @@ let main_menu ((code, proglist) : basic_code) (proj : project_content) (content 
 
 
 (* Main function: launches the emulator *)
-let main (file_name : string) : unit =
+let main (file_name : string) (verbose : bool) (ignore_compilation_errors : bool) : unit =
+
   let s = file_to_string file_name in
-  let p = g1m_reader s in
+  let p = g1m_reader s verbose in
   let c = get_content s in
-  let codeprogl = compile p.prog in
-  main_menu codeprogl p c;;
+  let codeprogl = compile p.prog verbose ignore_compilation_errors in
+  main_menu codeprogl p c verbose;;
+
+
+(** Functions that launch the programs with different parameters **)
+
+(* Default running function *)
+let run (file_name : string) : unit =
+  main file_name false true;;
+
+(* Running function with compilation errors and warnings displayed *)
+let run_verbose (file_name : string) : unit =
+  main file_name true true;;
+
+(* Debugging functions *)
+
+(* Strict compilation: for debugging purposes, no command is ignored *)
+let run_strict (file_name : string) : unit =
+  main file_name false false;;
+
+(* Returns the compiled code and the list of entry indices for each program *)
+let get_compiled_code (file_name : string) : unit =
+  let s = file_to_string file_name in
+  let p = g1m_reader s verbose in
+  compile p.prog true true;;

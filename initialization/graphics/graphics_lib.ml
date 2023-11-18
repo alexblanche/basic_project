@@ -91,8 +91,8 @@ let ploton_rect (i : int) (j : int) : Sdlrect.t =
 let ploton (ren : Sdlrender.t) (m : bool array array) (i : int) (j : int) : unit =
 	if i >= 0 && i <= 127 && j >= 0 && j <= 63 then
 		(Sdlrender.fill_rect ren (ploton_rect i j);
-		m.(j).(i) <- true)
-	else print_endline ("Runtime warning: PlotOn on out of screen parameters ("^(string_of_int i)^", "^(string_of_int j)^")");;
+		m.(j).(i) <- true);;
+	(* else print_endline ("Runtime warning: PlotOn on out of screen parameters ("^(string_of_int i)^", "^(string_of_int j)^")");; *)
 
 (* Same without writing in a matrix *)
 let ploton_no_writing (ren : Sdlrender.t) (i : int) (j : int) : unit =
