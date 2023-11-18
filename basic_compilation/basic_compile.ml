@@ -588,7 +588,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       aux t i
     with
       | Compilation_error (t', j, error_message) ->
-        (print_error_info lexlist name (List.length t') error_message;
+        (if verbose then
+          print_error_info lexlist name (List.length t') error_message;
         let (_, t'') = extract_line t' in
         aux_ignore_error lexlist name t'' j)
   in
@@ -603,8 +604,8 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
     mem.gotoindex <- [];
     mem.stack <- [];
 
-    (* Debug *)
-    (* print_endline name; *)
+    if verbose then
+      (print_string "Compiling program "; print_endline name);
 
     (* Compilation of the program *)
     let j =
@@ -659,4 +660,6 @@ let compile (proglist : program list)
   
   let code = ref (Array.make 50 Empty) in
   let prog_index = process_commands code proglist verbose ignore_errors in
+  if verbose then
+    print_endline "Compilation complete";
   (extract_non_empty !code, prog_index);;
