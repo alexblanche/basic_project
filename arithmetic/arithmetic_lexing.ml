@@ -160,7 +160,7 @@ let read_name (s : string) (i : int) : (string * int) =
       else aux_read_name (i+1);; *)
 
 
-(* Auxiliary function to extract a string, simpler than the one from compile_aux *)
+(* Auxiliary function to extract a string *)
 (* Returns the string in reverse order in string list form and the tail of the list of lexemes *)
 let aux_extract_str (lexlist : string list) : string list * string list =
   let rec aux acc l =
@@ -170,9 +170,10 @@ let aux_extract_str (lexlist : string list) : string list * string list =
         if s = "QUOTE" || s = "\092"
           then aux (s::acc) t (* The quote or anti-slash is kept *)
           else aux acc (s::t)
+      | "EOL" :: t -> (acc, l)
       | s :: t -> aux (s::acc) t
       (* Strangely, the closing quote can be omitted at the end of the code *)
-      | [] -> (acc, []) 
+      | [] -> (acc, [])
   in
   aux [] lexlist;;
 
@@ -225,7 +226,7 @@ and extract_mat_index (t : string list) : arithm * (string list) =
           let vi = var_index a in
           if vi <= 25 || vi = 28 then
             (vi, q)
-          else failwith "extract_mat_index: a matrix index variable has to be a letter and not r nor theta"
+          else failwith "extract_mat_index: a matrix index variable has to be a letter and neither r nor theta"
         else failwith "extract_mat_index: Mat should be followed by a variable"
       | [] -> failwith "extract_mat_index: Error, the list of lexemes is empty"
   in
@@ -519,11 +520,11 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
               let (mi,t') = extract_mat_index t in
               aux (mi::acc) t'
             | a::t' -> (* Mat a *)
-              if is_var a then
+              if is_var a || a = "ANS" then
                 let vi = var_index a in
                 if vi <= 25 || vi = 28 then
                   aux ((Entity (VarMat (var_index a)))::acc) t'
-                else failwith "extract_expr: a matrix index variable has to be a letter and not r nor theta"
+                else failwith "extract_expr: a matrix index variable has to be a letter and neither r nor theta"
               else failwith "extract_expr: wrong matrix index"
             | _ -> failwith "extract_expr: syntax error in matrix access")
         

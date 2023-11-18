@@ -230,12 +230,13 @@ let main_menu ((code, proglist) : basic_code) (proj : project_content) (content 
 
 
 (* Main function: launches the emulator *)
-let main (file_name : string) (verbose : bool) (ignore_compilation_errors : bool) : unit =
+let main (file_name : string) (verbose : bool) (compile_display_all : bool)
+  (ignore_compilation_errors : bool) : unit =
 
   let s = file_to_string file_name in
   let p = g1m_reader s verbose in
   let c = get_content s in
-  let codeprogl = compile p.prog verbose ignore_compilation_errors in
+  let codeprogl = compile p.prog verbose compile_display_all ignore_compilation_errors in
   main_menu codeprogl p c verbose;;
 
 
@@ -243,20 +244,26 @@ let main (file_name : string) (verbose : bool) (ignore_compilation_errors : bool
 
 (* Default running function *)
 let run (file_name : string) : unit =
-  main file_name false true;;
+  main file_name false false true;;
 
 (* Running function with compilation errors and warnings displayed *)
 let run_verbose (file_name : string) : unit =
-  main file_name true true;;
+  main file_name true false true;;
 
 (* Debugging functions *)
 
 (* Strict compilation: for debugging purposes, no command is ignored *)
 let run_strict (file_name : string) : unit =
-  main file_name false false;;
+  main file_name false false false;;
 
 (* Returns the compiled code and the list of entry indices for each program *)
 let get_compiled_code (file_name : string) : basic_code =
   let s = file_to_string file_name in
   let p = g1m_reader s true in
-  compile p.prog true true;;
+  compile p.prog true false true;;
+
+(* Same, but displays each line of the code (useful to spot an infinite loop during compile time) *)
+let get_compiled_code_verbose (file_name : string) : basic_code =
+  let s = file_to_string file_name in
+  let p = g1m_reader s true in
+  compile p.prog true true true;;

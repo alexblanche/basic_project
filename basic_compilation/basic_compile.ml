@@ -3,7 +3,7 @@
 (* Compiles the list of lexemes lexlist by modifying the array code in place. *)
 (* Returns the proglist parameter of the working memory *)
 let process_commands (code : (command array) ref) (prog : ((string * (string list)) list))
-  (verbose : bool) (ignore_errors : bool) : (string * int) list =
+  (verbose : bool) (display_all : bool) (ignore_errors : bool) : (string * int) list =
   let mem =
     {
       stack = [];
@@ -18,15 +18,13 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
   
   let rec aux (lexlist : string list) (i : int) : int =
 
-    (* Debug (might be kept in, with higher bound) *)
-    (* if i >= 1000 then failwith "Max number of lines reached"; *)
-
     (* Debug *)
-    (* (try
-      let (line, _) = extract_line lexlist in
-      print_endline ("i = "^(string_of_int i)^" -> "^(String.concat " " (List.rev (List.map String.escaped line))))
-    with
-      | _ -> ()); *)
+    if display_all then
+      (try
+        let (line, _) = extract_line lexlist in
+        print_endline ("i = "^(string_of_int i)^" -> "^(String.concat " " (List.rev (List.map String.escaped line))))
+      with
+        | _ -> ());
 
     (* Expression handling *)
     let (e, t) =
@@ -656,10 +654,10 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
 (* Compiles the list of lexemes lexlist into an object of type basic_code *)
 let compile (proglist : program list)
-  (verbose : bool) (ignore_errors : bool) : basic_code =
+  (verbose : bool) (display_all : bool) (ignore_errors : bool) : basic_code =
   
   let code = ref (Array.make 50 Empty) in
-  let prog_index = process_commands code proglist verbose ignore_errors in
+  let prog_index = process_commands code proglist verbose display_all ignore_errors in
   if verbose then
     print_endline "Compilation complete";
   (extract_non_empty !code, prog_index);;
