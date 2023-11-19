@@ -2,6 +2,8 @@
 
 #use "tests/tests_compilation.ml"
 
+(** Test functions **)
+
 (* Empty project_content *)
 let empty_projcont () : project_content = 
   {
@@ -13,9 +15,41 @@ let empty_projcont () : project_content =
     str = Array.make 20 "";
   };;
 
+(* Main function *)
+let main_test (codeprog : basic_code) (verbose : bool) : unit =
+
+  let (_, progl) = codeprog in
+  let (c : content) =
+    {
+      prog = List.map (fun (s, i) -> (s, i, 0, 0)) progl;
+      list = []; mat = []; pict = [];
+      capt = []; str = []
+    }
+  in
+  let (p : project_content) = empty_projcont () in
+  main_menu codeprog p c verbose;;
+
+(* Test run function, with verbose = true *)
+let run_test (prog : basic_code) : unit =
+  main_test prog true;;
+
+(* Test run function, with specified project_content *)
+let run_with_projcont (p : project_content) (codeprog : basic_code) : unit =
+  let (_, progl) = codeprog in
+  let (c : content) =
+    {
+      prog = List.map (fun (s, i) -> (s, i, 0, 0)) progl;
+      list = []; mat = []; pict = [];
+      capt = []; str = []
+    }
+  in
+  main_menu codeprog p c true;;
+
+(*********************************************************************************************)
+
 (* Display *)
 let run_prog1 () =
-  run (empty_projcont ()) (
+  run_test (
     [|
       Expr (Arithm [Entity (Value {re = 1.; im = 0.})]);
       Disp;
@@ -36,12 +70,11 @@ let run_prog1 () =
       End
     |]
     ,
-    [("main", 0)])
-  "main";;
+    [("main", 0)]);;
 
 (* Variables *)
 let run_prog2 () =
-  run (empty_projcont ()) (
+  run_test (
     [|
       Assign (Arithm [Entity (Value {re = 8.; im = 0.})], (Var 0)); (* 8 -> A DISP *)
       Disp;
@@ -52,12 +85,11 @@ let run_prog2 () =
       End
     |]
     ,
-    [("main", 0)])
-  "main";;
+    [("main", 0)]);;
 
 (* For, QMark *)
 let run_prog3 () =
-  run (empty_projcont ()) (
+  run_test (
     [|
       For (0, (* For 3-1 -> A To 8 Step 2 *)
         Arithm [Entity (Value {re = 3.; im = 0.}); Op "MINUS"; Entity (Value {re = 1.; im = 0.})],
@@ -77,27 +109,16 @@ let run_prog3 () =
       End
     |]
     ,
-    [("main", 0)])
-  "main";;
+    [("main", 0)]);;
 
 (* Subroutine calls *)
 let run_prog4 () =
-  run (empty_projcont ()) (prog4 ()) "MAIN";;
-
-(* Test Locate *)
-(* run p ([|
-  Locate (Arithm [Entity (Value {re = 10.; im = 0.})],
-    Arithm [Entity (Value {re = 5.; im = 0.})],
-    ["A"; "B"; "C"]);
-    Disp;
-    End
-  |],
-  [("main", 0)]);; *)
+  run_test (prog4 ());;
 
 (* Speed of a For loop *)
 let run_prog5 () =
   let prog5 =
-    compile
+    compile_test
       [("main",
         ["QUOTE"; "R"; "E"; "A"; "D"; "Y"; "?"; "QUOTE"; "DISP";
         "FOR"; "1"; "ASSIGN"; "X"; "TO"; "1"; "TIMESTENPOWER"; "3"; "EOL";
@@ -107,7 +128,7 @@ let run_prog5 () =
         ]
       )]
   in
-  run (empty_projcont ()) prog5 "main";;
+  run_test prog5;;
 
 (* Result: about 10^8 operations (empty For Next) in 6 to 10s *)
 (* With Locate, program runs 3 times faster than the calculator... *)
@@ -115,12 +136,12 @@ let run_prog5 () =
 
 (* Getkey *)
 let run_prog_getkey () =
-  run (empty_projcont ()) (prog_getkey ()) "main";;
+  run_test (prog_getkey ());;
 
 (* Speed of a For loop *)
 let run_prog6 () =
   let prog6 =
-    compile
+    compile_test
       [("main",
         ["QUOTE"; "R"; "E"; "A"; "D"; "Y"; "?"; "QUOTE"; "DISP";
         "FOR"; "1"; "ASSIGN"; "X"; "TO"; "1"; "TIMESTENPOWER"; "3"; "EOL";
@@ -132,14 +153,14 @@ let run_prog6 () =
         ]
       )]
   in
-  run (empty_projcont ()) prog6 "main";;
+  run_test prog6;;
   (* 22s in the emulator, 37s in the calculator *)
 
 (* Test of IMPL => *)
 
 let run_prog7 () =
   let prog7 =
-    compile
+    compile_test
       [("main",
         ["9"; "EOL";
         "3"; "EQUAL"; "2"; "IMPL"; "8"; "EOL";
@@ -147,17 +168,17 @@ let run_prog7 () =
         ]
       )]
   in
-  run (empty_projcont ()) prog7 "main";;
+  run_test prog7;;
 
 let run_prog_if () =
-  run (empty_projcont ()) (prog_if ()) "main";;
+  run_test (prog_if ());;
 
 (*******************************************)
 
 (* Debug of Timeless *)
 let run_prog_assign_list () =
   let prog_assign_list =
-    compile
+    compile_test
       [("main",
         [
         (* "5"; "ASSIGN"; "DIM"; "LIST"; "9"; "EOL"; *)
@@ -173,11 +194,11 @@ let run_prog_assign_list () =
         ]
       )]
   in
-  (prog_assign_list, run (empty_projcont ()) prog_assign_list "main");;
+  (prog_assign_list, run_test prog_assign_list);;
 
 let run_prog_locate () =
   let prog =
-    compile
+    compile_test
       [("main",
         ["QUOTE";
           "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "A"; "a"; "a"; "a";
@@ -186,11 +207,11 @@ let run_prog_locate () =
         "QUOTE"; "DISP"]
       )]
   in
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
 let run_prog_eval () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
          "1"; "AND"; "1"; "DISP";
@@ -210,11 +231,11 @@ let run_prog_eval () =
          "D"; "EQUAL"; "REP"; "D"; "AND"; "THETA"; "DIFFERENT"; "CPLXI"; "DISP"]
       )]
   in
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
 let run_prog_print () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "QUOTE"; " "; "*"; "*"; "*"; " "; "L"; "a"; "u"; "r"; "e"; "a"; "t"; " "; " "; "d"; "u"; " "; "*"; "*"; "*"; " "; "QUOTE"; "EOL";
@@ -317,13 +338,13 @@ let run_prog_print () =
         ]
       )]
   in
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
 (********************************************************************)
 
 let run_end () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
          "1"; "PLUS"; "2"; "DISP";
@@ -331,11 +352,11 @@ let run_end () =
         ]
       )]
   in
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
 let run_clrlist () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
          "LBRACKET"; "1"; ","; "2"; "ASSIGN"; "LIST"; "2"; "EOL";
@@ -347,11 +368,11 @@ let run_clrlist () =
         ]
       )]
   in
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
 let run_seq () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
          (* "SEQ"; "2"; "X"; ","; "X"; ","; "MINUS"; "0"; "."; "4"; ","; "5"; "."; "6"; ","; "1"; "."; "3"; "ASSIGN"; "LIST"; "1"; "EOL"; *)
@@ -374,7 +395,7 @@ let run_seq () =
       )]
   in
   (* prog;; *)
-  (prog, run (empty_projcont ()) prog "main");;
+  (prog, run_test prog);;
 
 (* Debug for a condition in the PAC-MAN game *)
 let run_test_cond () =
@@ -405,28 +426,28 @@ let run_test_cond () =
 
 let run_prog_minus () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
          "NOT"; "LPAR"; "1"; "OR"; "LPAR"; "1"; "AND"; "1"; "EQUAL"; "MINUS"; "1"; "DISP"
         ]
       )]
   in prog;;
-  (* run (empty_projcont ()) prog "main";; *)
+  (* run_test prog;; *)
 
 let run_cond_list () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
             "4"; "DIFFERENT"; "4"; "MINUS"; "1"; "AND"; "0"
         ]
       )]
-  in (prog, run (empty_projcont ()) prog "main");;
+  in (prog, run_test prog);;
 
 let run_str_mid () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "LOCATE"; "3"; ","; "5"; ","; "STRMID"; "QUOTE"; "0"; "1"; "2"; "3"; "4"; "5"; "6"; "QUOTE"; ","; "5"; "RPAR"; "DISP";
@@ -438,7 +459,7 @@ let run_str_mid () =
           "LOCATE"; "3"; ","; "3"; ","; "STR"; "1"; "DISP";
         ]
       )]
-  in run (empty_projcont ()) prog "main";;
+  in run_test prog;;
 
 (************************************************************)
 
@@ -446,7 +467,7 @@ let run_str_mid () =
 
 let run_prog_graphic () =
   let prog =
-    compile
+    compile_test
       [("main",
         [ (* First tests of ViewWindow, PlotOn, F-line, Text, going back and forth between
            the tscreen and the gscreen *)
@@ -466,11 +487,11 @@ let run_prog_graphic () =
           "QUOTE"; "S"; "T"; "O"; "P"; "QUOTE"; "DISP"
         ]
       )]
-  in run (empty_projcont ()) prog "main";;
+  in run_test prog;;
 
 let run_pict () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "RCLPICT"; "4"; "EOL";
@@ -488,11 +509,11 @@ let run_pict () =
     par.pict.(3) <- (2048, m);
     par
   in
-  run p prog "main";;
+  run_with_projcont p prog;;
 
 let run_window () =
   let prog =
-    compile
+    compile_test
       [("main",
         [ "AXESON"; "EOL";
           (* "BGPICT"; "4"; "EOL"; *)
@@ -517,11 +538,11 @@ let run_window () =
     par.pict.(3) <- (2048, m);
     par
   in 
-  run p prog "main";;
+  run_with_projcont p prog;;
 
 let run_bounds () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -533,11 +554,12 @@ let run_bounds () =
           "FLINE"; "1"; "2"; "5"; ","; "1"; ","; "1"; "2"; "7"; ","; "1"; "DISP";
         ]
       )]
-  in run (empty_projcont ()) prog "main";;
+  in
+  run_test prog;;
 
 let run_vw () =
   let prog =
-    compile
+    compile_test
       [("main",
         [ (* Checking that the axes are pixel perfect *)
           "VIEWWINDOW"; "MINUS"; "0"; "."; "0"; "1"; ","; "0"; "."; "0"; "1"; ","; "0"; "."; "0"; "0"; "5"; ","; "MINUS"; "1"; ","; "1"; ","; "0"; "."; "2"; "EOL";
@@ -570,11 +592,12 @@ let run_vw () =
         ]
       )]
   (* in prog ;;  *)
-  in run (empty_projcont ()) prog "main";;
+  in
+  run_test prog;;
 
 let run_drawstat () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "AXESON"; "EOL";
@@ -598,11 +621,12 @@ let run_drawstat () =
         ]
       )]
   (* in prog ;;  *)
-  in run (empty_projcont ()) prog "main";;
+  in
+  run_test prog;;
 
 let run_bgpict () =
   let prog =
-    compile
+    compile_test
       [("main",
         [ (* Checking RclPict, RclCapt, returning to the gscreen after the display of the capture *)
           "VIEWWINDOW"; "MINUS"; "0"; "."; "0"; "1"; ","; "0"; "."; "0"; "1"; ","; "0"; "."; "0"; "0"; "5"; ","; "MINUS"; "1"; ","; "1"; ","; "0"; "."; "2"; "EOL";
@@ -638,11 +662,11 @@ let run_bgpict () =
     par.capt.(7) <- c;
     par
   in
-  run p prog "main";;
+  run_with_projcont p prog;;
 
 let run_frame () =
   let prog =
-    compile
+    compile_test
       [("main",
         [ (* Checking that the texts do not erase the frame and are displayed correctly *)
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -653,11 +677,12 @@ let run_frame () =
           "TEXT"; "5"; "8"; ","; "1"; "2"; "4"; ","; "QUOTE"; "A"; "B"; "C"; "QUOTE"; "EOL";
         ]
       )]
-  in run (empty_projcont ()) prog "main";;
+  in
+  run_test prog;;
 
 let run_style () =
   let prog =
-    compile
+    compile_test
       [("main",
         [ (* Checking that each F-line is pixel perfect compared with Casio Basic *)
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -760,13 +785,14 @@ let run_style () =
           "FLINE"; "1"; "2"; "1"; ","; "6"; "2"; ","; "1"; "2"; "6"; ","; "4"; "8"; "DISP";
         ]
       )]
-  in run (empty_projcont ()) prog "main";;
+  in
+  run_test prog;;
 
 
 
 let run_broken () =
   let prog =
-    compile
+    compile_test
       [("main",
         [ (* Checking the Broken style *)
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -848,12 +874,13 @@ let run_broken () =
           "SKETCHBROKEN"; "FLINE"; "1"; "0"; "7"; ","; "4"; "5"; ","; "1"; "2"; "2"; ","; "6"; "0"; "DISP";
         ]
       )]
-  in run (empty_projcont ()) prog "main";;
+  in
+  run_test prog;;
 
 
 let run_broken2 () =
   let prog =
-    compile
+    compile_test
       [("main",
         [ (* Checking the Broken style *)
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -873,11 +900,11 @@ let run_broken2 () =
           "SKETCHBROKEN"; "FLINE"; "1"; "0"; ","; "6"; ","; "2"; "2"; ","; "6"; "DISP";
         ])]
   in
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
 let run_diagonal () =
   let prog =
-    compile
+    compile_test
       [("main",
         [ (* Checking the diagonals in Dot and Broken styles *)
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -900,11 +927,11 @@ let run_diagonal () =
           "SKETCHBROKEN"; "FLINE"; "7"; "3"; ","; "3"; "0"; ","; "9"; "0"; ","; "1"; "3"; "DISP";
         ])]
   in
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
 let run_graph () =
   let prog =
-    compile
+    compile_test
       [("main",
         [ (* Checking GraphY=, GraphY>=, GraphY>... *)
           "AXESOFF"; "EOL";
@@ -977,12 +1004,12 @@ let run_graph () =
           "GRAPHYLEQ"; "MINUS"; "X"; "POWER2"; "PLUS"; "1"; "DISP";
         ])]
   in
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
 
 let run_timer () =
   let prog =
-    compile
+    compile_test
       [("main",
         [ (* Checking GraphY=, GraphY>=, GraphY>... *)
           "VIEWWINDOW"; "MINUS"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -996,12 +1023,12 @@ let run_timer () =
           "QUOTE"; "A"; "QUOTE"; "EOL";
         ])]
   in
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
 (* Debug of Ace Combat level 9 *)
 let run_truncate () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -1023,13 +1050,13 @@ let run_truncate () =
         ])]
   in
   (* prog;; *)
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
 
 (* Test of erasing the black square in text and graphic modes *)
 let run_black_square () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -1058,13 +1085,13 @@ let run_black_square () =
     par.pict.(0) <- (2048, m);
     par
   in
-  run p prog "main";;
+  run_with_projcont p prog;;
 
 
 (* Debug Break *)
 let run_break () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "1"; "ASSIGN"; "X"; "EOL";
@@ -1077,13 +1104,13 @@ let run_break () =
           "X"; "DISP";
         ])]
   in
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
 
 (* Test of erasing the black square in text and graphic modes *)
 let run_stopict () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -1132,13 +1159,13 @@ let run_stopict () =
     par.pict.(0) <- (2048, m);
     par
   in
-  run p prog "main";;
+  run_with_projcont p prog;;
 
 
 (* Debug Timeless Remix decompression *)
 let run_dcmp () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "8"; "0"; "6"; "6"; "0"; "0"; "2"; "5"; "3"; "1"; "4"; "2"; "7"; "9"; "PLUS";
@@ -1215,12 +1242,12 @@ let run_dcmp () =
           "NEXT";
         ])]
   in
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
-
+(* Test for compressed pictures *)
 let run_compr () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -1236,7 +1263,7 @@ let run_compr () =
   in
   let p =
     let s = file_to_string "/mnt/c/users/blanc/desktop/jeux_casio_alex1186/airwolf/airwolf.g1m" in
-    let prj = g1m_reader s in
+    let prj = g1m_reader s true in
     prj.pict.(18) <- prj.pict.(1);
     (* for p = 10 to 17 do
       let (_,m) = prj.pict.(p) in
@@ -1254,12 +1281,12 @@ let run_compr () =
     done; *)
     prj
   in
-  run p prog "main";;
+  run_with_projcont p prog;;
 
-
+(* Test for speed of Picture drawing *)
 let run_speed_pict () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           (* "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL"; *)
@@ -1273,16 +1300,16 @@ let run_speed_pict () =
   in
   let p =
     let s = file_to_string "/mnt/c/users/blanc/desktop/jeux_casio_alex1186/airwolf/airwolf.g1m" in
-    let prj = g1m_reader s in
+    let prj = g1m_reader s true in
     prj.pict.(18) <- prj.pict.(1);
     prj
   in
-  run p prog "main";;
+  run_with_projcont p prog;;
 
 
 let run_circle () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "VIEWWINDOW"; "UMINUS"; "2"; ","; "2"; ","; "0"; ","; "UMINUS"; "1"; ","; "1"; ","; "0"; "EOL";
@@ -1295,13 +1322,13 @@ let run_circle () =
           "SKETCHBROKEN"; "CIRCLE"; "1"; ","; "0"; "."; "2"; ","; "0"; "."; "8"; "DISP";
         ])]
   in
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;
 
 
 (* Tests on BgPict update of the background *)
 let run_bgpict2 () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -1341,13 +1368,13 @@ let run_bgpict2 () =
     par.pict.(1) <- (2048, m2);
     par
   in
-  run p prog "main";;
+  run_with_projcont p prog;;
 
 
 (* Test for menu command *)
 let run_menu () =
   let prog =
-    compile
+    compile_test
       [("main",
         [
           "VIEWWINDOW"; "1"; ","; "1"; "2"; "7"; ","; "0"; ","; "1"; ","; "6"; "3"; ","; "0"; "EOL";
@@ -1385,4 +1412,4 @@ let run_menu () =
         ])]
   in
   (* prog;; *)
-  run (empty_projcont ()) prog "main";;
+  run_test prog;;

@@ -1,6 +1,14 @@
 (* Unit tests for Basic compilation *)
 
-let prog1 () = compile 
+(** Test functions **)
+
+(* Test compiling function, with verbose = true, display_all = false, ignore_errors = true *)
+let compile_test (progl : program list) : basic_code =
+  compile progl true false true;;
+
+(*******************************************************************************************)
+
+let prog1 () = compile_test 
   [("main",
   ["IF"; "1"; "EOL";  
   "THEN"; "QUOTE"; "A"; "QUOTE"; "DISP";
@@ -8,7 +16,7 @@ let prog1 () = compile
   "IFEND"; "EOL";
   "QUOTE"; "C"; "QUOTE"; "DISP"])];;
 
-let prog2 () = compile 
+let prog2 () = compile_test 
   [("main",
   ["GOTO"; "E"; "EOL";
   "IF"; "1"; "EOL";
@@ -25,7 +33,7 @@ let prog2 () = compile
   The content of the Then is evaluated, then it jumps to after the IfEnd, no error is raised.
  *)
 
-let prog3 () = compile
+let prog3 () = compile_test
   [("main",
     ["FOR"; "3"; "MINUS"; "2"; "ASSIGN"; "A";
       "TO"; "8"; "STEP"; "2"; "EOL";
@@ -37,7 +45,7 @@ let prog3 () = compile
     ]
   )];;
 
-let prog4 () = compile
+let prog4 () = compile_test
   [("AUX1",
     [
       "QUOTE"; "W"; "E"; "L"; "C"; "O"; "M"; "E"; " "; "T"; "O"; " "; "A"; "U"; "X"; "1"; "QUOTE"; "DISP";
@@ -64,7 +72,7 @@ let prog4 () = compile
   )];;
 
 (* Getkey *)
-let prog_getkey () = compile
+let prog_getkey () = compile_test
   [("main",
     [
       "WHILE"; "1"; "EOL";
@@ -78,7 +86,7 @@ let prog_getkey () = compile
   )];;
 
 (* If, Else If, Else, IfEnd *)
-let prog_if () = compile
+let prog_if () = compile_test
   [("main",
     [
       "IF"; "0"; "COLON"; "THEN"; "QUOTE"; "A"; "QUOTE"; "DISP";
@@ -112,7 +120,7 @@ let prog_if () = compile
 *)
 
 (* Missing IfEnd (allowed in Casio Basic) *)
-let prog_ifend () = compile
+let prog_ifend () = compile_test
   [("main",
     [
       "IF"; "0"; "COLON"; "THEN"; "QUOTE"; "A"; "QUOTE"; "DISP";
