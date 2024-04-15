@@ -207,10 +207,24 @@ let unit_tests_eval_num () =
       (["2"; "TIMES"; "2"; "NSQRT"; "8"; "1"], {re = 18.; im = 0.}); (* NSQRT <= TIMES *)
       (["2"; "INTDIV"; "2"; "NSQRT"; "8"; "1"], {re = 0.; im = 0.}); (* NSQRT <= INTDIV *)
       (["2"; "RMDR"; "2"; "NSQRT"; "8"; "1"], {re = 2.; im = 0.}); (* NSQRT <= RMDR *)
+      (* Omitted product *)
+      (["2"; "0"; "DIVIDED"; "2"; "TIMES"; "A"], {re = 100.; im = 0.}); (* TIMES = DIVIDED *)
+      (["2"; "0"; "DIVIDED"; "2"; "A"], {re = 1.; im = 0.}); (* OMITTEDTIMES < DIVIDED *)
+      (["2"; "0"; "DIVIDED"; "2"; "TIMES"; "LPAR"; "1"; "0"; "RPAR"], {re = 100.; im = 0.});
+      (["2"; "0"; "DIVIDED"; "2"; "LPAR"; "1"; "0"; "RPAR"], {re = 1.; im = 0.});
+      (["2"; "0"; "INTDIV"; "1"; "A"], {re = 2.; im = 0.}); (* OMITTEDTIMES <= INTDIV *)
+      (["2"; "A"; "INTDIV"; "4"], {re = 5.; im = 0.}); (* OMITTEDTIMES <= INTDIV *)
+      (["6"; "RMDR"; "1"; "A"], {re = 6.; im = 0.}); (* OMITTEDTIMES <= RMDR *)
+      (["2"; "A"; "RMDR"; "4"], {re = 0.; im = 0.}); (* OMITTEDTIMES <= RMDR *)
+      (["2"; "A"; "NSQRT"; "1"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"; "0"], {re = 20.; im = 0.}); (* NSQRT <= OMITTEDTIMES *)
+      (["3"; "NSQRT"; "2"; "7"; "A"], {re = 30.; im = 0.}); (* NSQRT <= OMITTEDTIMES *)
+      (["2"; "POWER"; "1"; "A"], {re = 20.; im = 0.}); (* POWER <= OMITTEDTIMES *)
+      (["2"; "A"; "POWER"; "2"], {re = 200.; im = 0.}); (* POWER <= OMITTEDTIMES *)
 
       (* 
            POWER
         << NSQRT
+        << OMITTEDTIMES
         << (INTDIV, RMDR)
         << (TIMES, DIVIDED)
         << (PLUS, MINUS)
@@ -221,8 +235,15 @@ let unit_tests_eval_num () =
 
     (* Tests for higher precedence of omitted multiplication *)
     (["INT"; "0"; "."; "5"; "A"], {re = 5.; im = 0.});
+    (["INT"; "0"; "."; "5"; "TIMES"; "A"], {re = 0.; im = 0.});
+    (["INT"; "1"; "."; "5"; "POWER"; "1"; "0"], {re = 57.; im = 0.});
+    (["INT"; "1"; "."; "5"; "NSQRT"; "2"; "7"], {re = 9.; im = 0.});
     (["1"; "PLUS"; "LPAR"; "4"; "RPAR"; "LPAR"; "0"; "RPAR"], {re = 1.; im = 0.});
     (["1"; "KILO"; "FRAC"; "."; "1"; "MINUS"; "1"], {re = 99.; im = 0.});
+    (["8"; "DIVIDED"; "2"; "TIMES"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 16.; im = 0.});
+    (["8"; "DIVIDED"; "2"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 1.; im = 0.});
+    (* (["8"; "FRACSIGN"; "2"; "TIMES"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 16.; im = 0.}); (* Not handled yet *)
+    (["8"; "FRACSIGN"; "2"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 16.; im = 0.}); *)
 
     (* Accuracy of Frac *)
     (["FRAC"; "1"; "5"; "4"; "."; "6"; "7"; "8"], {re = 0.678; im = 0.});

@@ -483,20 +483,22 @@ let rop_list = [
 (* List of handled operators and their index of precedence (1 = greatest *)
 (* The operators are ordered by frequency in usual expresssions *)
 let op_list = [
-  ("PLUS", 4); ("MINUS", 4);
-  ("TIMES", 3); ("DIVIDED", 3); ("FRACSIGN", 3);
+  ("PLUS", 5); ("MINUS", 5);
+  ("TIMES", 4); ("DIVIDED", 4); ("FRACSIGN", 4);
+  ("OMITTEDTIMES", 2);
   ("POWER", 0);
-  ("LEQ", 5); ("LESS", 5); ("GEQ", 5); ("GREATER", 5); ("EQUAL", 5); ("DIFFERENT", 5);
-  ("AND", 6);
-  ("OR", 7);
-  ("INTDIV", 2); ("RMDR", 2);
-  ("XOR", 7);
+  ("LEQ", 6); ("LESS", 6); ("GEQ", 6); ("GREATER", 6); ("EQUAL", 6); ("DIFFERENT", 6);
+  ("AND", 7);
+  ("OR", 8);
+  ("INTDIV", 3); ("RMDR", 3);
+  ("XOR", 8);
   ("NSQRT", 1);
   ];;
 
 (* All precedences were checked on a Casio calculator
        POWER
     << NSQRT
+    << OMITTEDTIMES
     << (INTDIV, RMDR)
     << (TIMES, DIVIDED, FRACSIGN)
     << (PLUS, MINUS)
@@ -525,7 +527,8 @@ let apply_op_single (o : string) (z1 : complex) (z2 : complex) : complex =
   (* Arithmetic *)
     | "PLUS" -> Complex.add z1 z2
     | "MINUS" -> Complex.sub z1 z2
-    | "TIMES" ->
+    | "TIMES"
+    | "OMITTEDTIMES" ->
       if z1.im = 0. && z2.im = 0.
         then complex_of_float (z1.re *. z2.re)
         else Complex.mul z1 z2

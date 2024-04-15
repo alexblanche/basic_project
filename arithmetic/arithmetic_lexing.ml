@@ -10,9 +10,9 @@ let left_assoc (s : string) : bool =
   (* (s <> "POWER");; *)
 
 (* Relation of precedence of operators *)
-(* 1 if o1 has greater precedence than o2
+(* 1 if o1 has greater precedence than o2 (o1 should be applied first)
    0 if o1 and o2 have equal precedence
-  -1 if o2 has greater precedence than o1 *)
+  -1 if o2 has greater precedence than o1 (o2 should be applied first) *)
 let rec precedence (o1 : string) (o2 : string) : int =
   try
     let p1 = List.assoc o1 op_list in

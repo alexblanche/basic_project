@@ -426,11 +426,11 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
     (* Add to a queue *)
     (* Case of omitted multiplication operator *)
     | Rpar :: (Lunop _) :: _, _
-    | Rpar :: (Function _) :: _, _ -> shunting_yard p (Rpar::(Op "TIMES")::List.tl alist) output_q op_q
-    | (Entity x1)::(Entity x2)::t, _ -> shunting_yard p t ((apply_op p "TIMES" x1 x2)::output_q) op_q
+    | Rpar :: (Function _) :: _, _ -> shunting_yard p (Rpar::(Op "OMITTEDTIMES")::List.tl alist) output_q op_q
+    | (Entity x1)::(Entity _)::_, _
     | (Entity x1):: Lpar ::_, _
     | (Entity x1)::(Lunop _)::_, _
-    | (Entity x1)::(Function _)::_, _ -> shunting_yard p ((Op "TIMES")::List.tl alist) (x1::output_q) op_q
+    | (Entity x1)::(Function _)::_, _ -> shunting_yard p ((Op "OMITTEDTIMES")::List.tl alist) (x1::output_q) op_q
     (* Normal number case *)
     | (Entity x)::t, _ -> shunting_yard p t (x::output_q) op_q
 
@@ -521,9 +521,15 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
             let noutq, nopq = right_reduce p output_q op_q in
             shunting_yard p alist noutq nopq
         else shunting_yard p t output_q ((Op o1)::op_q)
-    | (Op _)::t, (Lunop _)::opqt ->
-      let noutq, nopq = right_reduce p output_q op_q in
-      shunting_yard p alist noutq nopq
+    | (Op o)::t, (Lunop _)::opqt ->
+      (* If the operator is POWER, NSQRT or OMITTEDTIMES, the operator should be applied first,
+         otherwise the Lunop is applied first *)
+      if precedence o "OMITTEDTIMES" >= 0
+        then
+          shunting_yard p t output_q ((Op o)::op_q)
+        else
+          let noutq, nopq = right_reduce p output_q op_q in
+          shunting_yard p alist noutq nopq
     | (Op o)::t, _ -> shunting_yard p t output_q ((Op o)::op_q)
     
     (* Rpar *)
