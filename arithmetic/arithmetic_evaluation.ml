@@ -71,10 +71,11 @@ let get_var_val (var : float array) (i : int) : complex =
   access_var var i;;
 
 (* Returns the value of List a[i] *)
-let get_list_val (tlist : float array array) (a : int) (i : int) : complex =
+let get_list_val (tlist : float array array) (listfile : int) (a : int) (i : int) : complex =
   let l = tlist.(a) in
   let n = Array.length l in
-  get_complex l.(i) l.(i+n/2);;
+  let j = 6 * listfile + i in
+  get_complex l.(j) l.(j+n/2);;
 
 (* Returns the value of Mat a[i1][i2] *)
 let get_mat_val (tmat : float array array array) (a : int) (i1 : int) (i2 : int) : complex =
@@ -118,16 +119,17 @@ let rec get_val_numexpr (p : parameters) (n : entity) : complex =
     | Value z -> z
     | Variable (Var i) -> get_var_val p.var i
     | Variable Getkey -> complex_of_int !getkey
+    (* List Ans[e], List Ans stored at index 6 * 26 *)
     | Variable (ListIndex (Variable (Var 28), e)) ->
       let z = eval_num p e in
       (if not (is_int z)
         then failwith "get_val_numexpr: access to List from an index that is not an integer";
-      get_list_val p.list 26 (int_of_complex z - 1))
+      get_list_val p.list p.listfile (6 * 26) (int_of_complex z - 1))
     | Variable (ListIndex (a,e)) ->
       let z = eval_num p e in
       (if not (is_int z)
         then failwith "get_val_numexpr: access to List from an index that is not an integer";
-      get_list_val p.list (int_of_complex (get_val_numexpr p a) - 1) (int_of_complex z - 1))
+      get_list_val p.list p.listfile (int_of_complex (get_val_numexpr p a) - 1) (int_of_complex z - 1))
     | Variable (MatIndex (ai,e1,e2)) ->
       let z1 = eval_num p e1 in
       let z2 = eval_num p e2 in
@@ -145,16 +147,16 @@ and get_val_listexpr (p : parameters) (n : entity) : num_expr array =
     | VarList (Value z) ->
       (if not (is_int z)
         then failwith "get_val_list: access to List from an index that is not an integer";
-      float_to_numexpr_array p.list.(int_of_complex z - 1))
+      float_to_numexpr_array p.list.(6 * p.listfile + int_of_complex z - 1))
     | VarList (Variable (Var vi)) ->
       let z =
         if vi = 28 (* Ans *)
-          then complex_of_float 27. (* Index of List Ans *)
+          then complex_of_int (6 * 26) (* Index of List Ans *)
           else get_var_val p.var vi (* List _ *)
       in
       (if not (is_int z)
         then failwith "get_val_list: access to List from an index that is not an integer";
-      float_to_numexpr_array p.list.(int_of_complex z - 1))
+      float_to_numexpr_array p.list.(6 * p.listfile + int_of_complex z - 1))
     | _ -> failwith "get_val_listexpr: entity is a number or a matrix, or is accessed with a wrong index"
 
 (* Returns the value of the entity n, when n is a matrix *)

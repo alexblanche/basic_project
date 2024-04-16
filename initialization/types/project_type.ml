@@ -73,10 +73,14 @@ type parameters = {
   (* Variables: see variables.ml *)
   var : float array;
 
-  (* Lists: an array of 26 float arrays
+  (* Lists: an array of 6 * 26 + 1 float arrays
+    (for 6 list files of maximum 26 lists + List Ans)
     If a list contains n numbers (real or complex), it has length 2*n,
     n floats followed by n zeros, or n real parts followed by their n imaginary parts *)
   list : float array array;
+
+  (* Current List File index: between 0 and 5 *)
+  mutable listfile : int;
 
   (* Matrices: an array of 26 float matrices
     If a matrix contains n rows (of real or complex numbers), it has 2*n rows,
@@ -140,8 +144,10 @@ let empty_param () : parameters =
     (* Variables: see variables.ml *)
     var = alphamem;
 
-    (* Lists 1 to 26 + List Ans *)
-    list = Array.make 27 [||];
+    (* Lists 1 to 26 (for files 0 to 5) + List Ans *)
+    list = Array.make (6 * 26 + 1) [||];
+
+    listfile = 0;
 
     (* Mat A to Z + Mat Ans *)
     mat = Array.make 27 [||];
@@ -153,7 +159,7 @@ let empty_param () : parameters =
     str = Array.make 20 [];
 
     (* List _[0]: contain strings *)
-    listzero = Array.make 26 [];
+    listzero = Array.make (6 * 26) [];
     
     (* Complex numbers are represented in polar form if true, in carthesian form (a+ib) otherwise *)
     polar = false;

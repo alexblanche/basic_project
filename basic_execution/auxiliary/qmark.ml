@@ -87,6 +87,7 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
   tdraw ren;
   (* The writing line is not cleared on screen until a character is typed *)
   clear_line !writing_index;
+  erase_black_square_text ren;
 
   escape_activated := false;
   let ns = loop [] 0 in

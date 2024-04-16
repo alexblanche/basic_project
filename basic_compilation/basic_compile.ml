@@ -574,6 +574,11 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
         mem.menustack  <- (i, args) :: mem.menustack;
         aux t' (i+1))
 
+      | "FILE" :: t ->
+        let (e, t') = extract_expr t in
+        (set code i (Function ("FILE", [e]));
+        aux t' (i+1))
+
       (* Errors *)
       | lex :: _ -> fail lexlist i ("Compilation error: Unexpected command "^(String.escaped lex))
 

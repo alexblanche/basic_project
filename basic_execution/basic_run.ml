@@ -59,13 +59,14 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
       print_newline ());
 
     (* Debug, display of variable content *)
-    (* (try
-      print_endline ("D = "^(string_of_float (access_real_var p.var 3))^"; C = "^(string_of_float (access_real_var p.var 2)));
+    (try
+      (* print_endline ("D = "^(string_of_float (access_real_var p.var 3))^"; C = "^(string_of_float (access_real_var p.var 2)));
       let l = eval_list p (let e,_ = extract_expr ["DIM"; "MAT"; "A"] in e) in
       print_string ("Dim Mat A = "^(string_of_float (l.(0)))^"; "^(string_of_float (l.(1)))^"; "^(string_of_float (l.(2)))^"; "^(string_of_float (l.(3))));
-      print_newline ();
+      print_newline (); *)
+      (* print_endline ("p.listfile = "^(string_of_int p.listfile)); *)
     with
-      | _ -> ()); *)
+      | _ -> ());
 
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then
@@ -147,10 +148,6 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
             let ie = eval_num p iexp in
             if not (is_int vala && is_int ie)
               then run_fail i "Wrong index for list";
-            (* let t = p.list.(int_of_complex vala) in
-            let iint = int_of_complex ie in
-            t.(iint) <- z.re;
-            t.(iint + (Array.length t)/2) <- z.im) *)
             assign_var p (Value z) (ListIndex (Value vala, Complex ie)))
 
           | MatIndex (ai, iexp, jexp) ->
@@ -210,7 +207,7 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
         (* Just storing in List Ans/Mat Ans *)
         (* Display is not treated yet *)
         | ListContent t ->
-          (p.list.(26) <- numexpr_to_float_array t;
+          (p.list.(6 * 26) <- numexpr_to_float_array t;
           if i<n-1 && code.(i+1) = Disp then
             aux (i+2) (* Display to be treated here *)
           else aux (i+1))
@@ -383,9 +380,9 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
           | ListIndexZero a ->
             let vala = get_val_numexpr p a in
             let ai = int_of_complex vala - 1 in
-            (p.listzero.(ai) <- sl;
-            if Array.length p.list.(ai) = 0 then
-              p.list.(ai) <- [|0.;0.|])
+            (p.listzero.(6 * p.listfile + ai) <- sl;
+            if Array.length p.list.(6 * p.listfile + ai) = 0 then
+              p.list.(6 * p.listfile + ai) <- [|0.;0.|])
           | _ -> run_fail i "Wrong string in string assignment");
         aux (i+1))
 
@@ -400,10 +397,13 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
                 then int_of_complex ni
                 else run_fail i "Wrong index for list assignment"
         in
-        if nii >= 1 && nii <= 27 then
-          (p.list.(nii-1) <- t;
-          aux (i+1))
-        else run_fail i "Index out of bounds for list assignment"
+        ((if nii >= 1 && nii <= 26 then
+          p.list.(6 * p.listfile + nii - 1) <- t
+        else if nii = 27 then
+          p.list.(6 * 26) <- t
+        else
+          run_fail i "Index out of bounds for list assignment");
+        aux (i+1))
         
       | AssignMat (me, mi) ->
         let m = eval_mat p me in
@@ -424,13 +424,13 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
         let z = eval_num p e in
         ((match n with
           | VarList nl ->
-            (let li = get_val_numexpr p n in
+            (let li = get_val_numexpr p nl in
             if is_int li then
               let lii = int_of_complex li in
-              let len = (Array.length p.list.(lii-1))/2 in
+              let len = (Array.length p.list.(6 * p.listfile + lii-1))/2 in
               (for k = 0 to len-1 do
-                p.list.(lii-1).(k) <- z.re;
-                p.list.(lii-1).(k+len) <- z.im
+                p.list.(6 * p.listfile + lii-1).(k) <- z.re;
+                p.list.(6 * p.listfile + lii-1).(k+len) <- z.im
               done))
           | VarMat mi ->
             (let row = (Array.length p.mat.(mi)) / 2 in
@@ -498,6 +498,14 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
           then tdraw ren
           else gdraw ren);
         aux chosen_lbl)
+
+      | Function ("FILE", [e]) ->
+        let z = eval_num p e in
+        if is_int z && z.re >= 1. && z.re <= 6. then
+          (p.listfile <- int_of_complex z - 1;
+          aux (i+1))
+        else
+          run_fail i "Wrong File argument"
 
       (* Errors *)
       | Function ("MENU", _) -> run_fail i "Wrong arguments for Menu"

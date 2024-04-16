@@ -19,7 +19,7 @@ let assign_var (p : parameters) (x : entity) (v : variable) : unit =
       let ai = int_of_complex a in
       let ki = int_of_complex k in
       if ai >= 0 && ai <= 25 then
-        (let t = p.list.(ai-1) in
+        (let t = p.list.(6 * p.listfile + ai - 1) in
         if ki >= 1 && ki <= (Array.length t)/2 then
           (t.(ki-1) <- z.re;
           t.(ki-1 + (Array.length t)/2) <- z.im)
