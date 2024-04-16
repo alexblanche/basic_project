@@ -58,14 +58,14 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
       print_int i;
       print_newline ());
 
-    (try
-      print_string "C = ";
-      print_float (access_real_var p.var 2);
-      print_string "; D = ";
-      print_float (access_real_var p.var 3);
+    (* Debug, display of variable content *)
+    (* (try
+      print_endline ("D = "^(string_of_float (access_real_var p.var 3))^"; C = "^(string_of_float (access_real_var p.var 2)));
+      let l = eval_list p (let e,_ = extract_expr ["DIM"; "MAT"; "A"] in e) in
+      print_string ("Dim Mat A = "^(string_of_float (l.(0)))^"; "^(string_of_float (l.(1)))^"; "^(string_of_float (l.(2)))^"; "^(string_of_float (l.(3))));
       print_newline ();
     with
-      | _ -> ());
+      | _ -> ()); *)
 
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then
@@ -345,10 +345,10 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
         (match !for_info with
           | (vari, iback, asc, vto, vstep)::_ ->
             (let xi = (access_real_var p.var vari) +. vstep in
-            set_real_var p.var vari xi;
-
             if (asc && xi <= vto) || ((not asc) && xi >= vto)
-              then aux iback
+              then
+                (set_real_var p.var vari xi;
+                aux iback)
               else (* Exitting the loop *)
                 (for_info := List.tl !for_info;
                 aux (i+1)))
