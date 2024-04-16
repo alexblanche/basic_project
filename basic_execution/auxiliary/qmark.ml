@@ -24,6 +24,14 @@ let qmark (win : Sdlwindow.t) (ren : Sdlrender.t) : basic_expr =
             loop [] 0)
           else (* Nothing was typed: Exitting the program *)
             raise Runtime_interruption
+    else if key = Backspace && ns <> []
+      then if x <> 0
+        then
+          (locate ren [" "] (x-1) !writing_index;
+          wait_release ren true;
+          loop (List.tl ns) (x-1))
+        else (* going back one line: not handled yet *)
+          loop ns x
     else if List.mem key (* 0..9, '.': the symbol is the lexeme *)
         [KP_0; KP_1; KP_2; KP_3; KP_4; KP_5; KP_6; KP_7; KP_8; KP_9; KP_Period]
       then
