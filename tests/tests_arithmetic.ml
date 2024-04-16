@@ -220,10 +220,19 @@ let unit_tests_eval_num () =
       (["3"; "NSQRT"; "2"; "7"; "A"], {re = 30.; im = 0.}); (* NSQRT <= OMITTEDTIMES *)
       (["2"; "POWER"; "1"; "A"], {re = 20.; im = 0.}); (* POWER <= OMITTEDTIMES *)
       (["2"; "A"; "POWER"; "2"], {re = 200.; im = 0.}); (* POWER <= OMITTEDTIMES *)
+      (["8"; "FRACSIGN"; "2"; "TIMES"; "3"], {re = 12.; im = 0.}); (* FRACSIGN <= TIMES *)
+      (["6"; "FRACSIGN"; "2"; "DIVIDED"; "3"], {re = 1.; im = 0.}); (* FRACSIGN <= DIVIDED *)
+      (["8"; "DIVIDED"; "2"; "FRACSIGN"; "3"], {re = 12.; im = 0.}); (* FRACSIGN <= DIVIDED *)
+      (["8"; "FRACSIGN"; "4"; "INTDIV"; "3"], {re = 0.; im = 0.}); (* FRACSIGN <= INTDIV *)
+      (["8"; "FRACSIGN"; "2"; "A"], {re = 40.; im = 0.}); (* FRACSIGN <= OMITTEDTIMES *)
+      (["6"; "FRACSIGN"; "3"; "NSQRT"; "2"; "7"], {re = 2.; im = 0.}); (* NSQRT <= FRACSIGN *)
+      (["1"; "6"; "FRACSIGN"; "2"; "POWER"; "4"], {re = 1.; im = 0.}); (* POWER <= FRACSIGN *)
+      (["2"; "POWER"; "3"; "FRACSIGN"; "2"], {re = 4.; im = 0.}); (* POWER <= FRACSIGN *)
 
       (* 
            POWER
         << NSQRT
+        << FRACSIGN
         << OMITTEDTIMES
         << (INTDIV, RMDR)
         << (TIMES, DIVIDED)
@@ -242,8 +251,8 @@ let unit_tests_eval_num () =
     (["1"; "KILO"; "FRAC"; "."; "1"; "MINUS"; "1"], {re = 99.; im = 0.});
     (["8"; "DIVIDED"; "2"; "TIMES"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 16.; im = 0.});
     (["8"; "DIVIDED"; "2"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 1.; im = 0.});
-    (* (["8"; "FRACSIGN"; "2"; "TIMES"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 16.; im = 0.}); (* Not handled yet *)
-    (["8"; "FRACSIGN"; "2"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 16.; im = 0.}); *)
+    (["8"; "FRACSIGN"; "2"; "TIMES"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 16.; im = 0.}); (* Not handled yet *)
+    (["8"; "FRACSIGN"; "2"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 16.; im = 0.});
 
     (* Accuracy of Frac *)
     (["FRAC"; "1"; "5"; "4"; "."; "6"; "7"; "8"], {re = 0.678; im = 0.});
