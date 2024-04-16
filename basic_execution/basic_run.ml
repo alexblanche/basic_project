@@ -59,14 +59,14 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
       print_newline ());
 
     (* (try
-      (* print_string "Ans: ";
-      print_float (access_real_var p.var 28);
-      print_string "; anStart: ";
-      print_float (access_real_var p.var 32);
-      print_newline () *)
-      ()
+      print_string "B = ";
+      print_float (access_real_var p.var 1);
+      print_string "; A = ";
+      print_float (access_real_var p.var 0);
+      print_newline ()
     with
       | _ -> ()); *)
+    (* print_endline ("size of for_info: "^(string_of_int (List.length !for_info))); *)
 
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then
@@ -329,6 +329,9 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
           then run_fail i "Complex value given to a For loop"
         else if is_zero z3
           then run_fail i "The step value of a For loop is 0";
+
+        (* if true then
+          print_string ("vi = "^(string_of_int vi)^", z3.re = "^(string_of_float z3.re)^", z3.re > 0. ="^(if z3.re > 0. then "true" else "false")^"\n"); *)
           
         let asc = z3.re > 0. in
         for_info := (vi, i+1, asc, z2.re, z3.re)::!for_info;
@@ -347,12 +350,24 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
           | (vari, iback, asc, vto, vstep)::_ ->
             (let xi = (access_real_var p.var vari) +. vstep in
             set_real_var p.var vari xi;
+
+            (* if true then
+              print_string ("(index = "^(string_of_int i)^") NEXT: vari = "^(string_of_int vari)^", iback = "^(string_of_int iback)^" B = "^(string_of_float (access_real_var p.var 1))^"; A = "^(string_of_float (access_real_var p.var 0))^"; asc = "^(if asc then "true" else "false")^"; xi = "^(string_of_float xi)^"; vto = "^(string_of_float vto)^"\n"); *)
+
             if (asc && xi <= vto) || ((not asc) && xi >= vto)
               then aux iback
               else (* Exitting the loop *)
                 (for_info := List.tl !for_info;
                 aux (i+1)))
           | [] -> run_fail i "Unexpected Next")
+
+      | Breakfor j ->
+        (match !for_info with
+          | [] -> run_fail i "Unexpected Break"
+          | _::t ->
+            (for_info := t;
+            aux j)
+        )
       
       | Prog name ->
         (prog_goback := (i+1)::!prog_goback;

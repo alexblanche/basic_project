@@ -191,7 +191,7 @@ let rec process_next i t code mem =
           ((i+1),t))
         | _ -> fail t i "Compilation error: Unexpected Next")
     | ("break", jbr)::stack_t ->
-      (set code jbr (Goto (i+1));
+      (set code jbr (Breakfor (i+1));
       mem.stack <- stack_t;
       process_next i t code mem)
     | _ -> fail t i "Compilation error: Unexpected Next";;

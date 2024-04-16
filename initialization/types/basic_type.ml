@@ -43,6 +43,9 @@ type command =
     (* For (vi,e1,e2,e3,i): For e1->V To e2 Step e3 (if not, jump to line i)
       Where V is the variable of index vi *)
   | Next (* Closes a For loop *)
+  | Breakfor of int
+    (* Breakfor(l), jump to line l and drop one item of the "for" stack
+      (!for_info in basic_run) *)
 
   (* Graphic functions and other functions *)
   | Graphic of graphic (* Graphic screen functions *)
