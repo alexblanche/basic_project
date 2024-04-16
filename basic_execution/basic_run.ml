@@ -58,14 +58,14 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
       print_int i;
       print_newline ());
 
-    (* (try
-      print_string "B = ";
-      print_float (access_real_var p.var 1);
-      print_string "; A = ";
-      print_float (access_real_var p.var 0);
-      print_newline ()
+    (try
+      print_string "C = ";
+      print_float (access_real_var p.var 2);
+      print_string "; D = ";
+      print_float (access_real_var p.var 3);
+      print_newline ();
     with
-      | _ -> ()); *)
+      | _ -> ());
 
     (* Pause for 1/798s, overridden by Press on Tab *)
     if slowdown_condition () then

@@ -251,8 +251,9 @@ let unit_tests_eval_num () =
     (["1"; "KILO"; "FRAC"; "."; "1"; "MINUS"; "1"], {re = 99.; im = 0.});
     (["8"; "DIVIDED"; "2"; "TIMES"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 16.; im = 0.});
     (["8"; "DIVIDED"; "2"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 1.; im = 0.});
-    (["8"; "FRACSIGN"; "2"; "TIMES"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 16.; im = 0.}); (* Not handled yet *)
+    (["8"; "FRACSIGN"; "2"; "TIMES"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 16.; im = 0.});
     (["8"; "FRACSIGN"; "2"; "LPAR"; "2"; "PLUS"; "2"; "RPAR"], {re = 16.; im = 0.});
+    (["1"; "0"; "POWER"; "LPAR"; "2"; "RPAR"; "A"], {re = 1000.; im = 0.});
 
     (* Accuracy of Frac *)
     (["FRAC"; "1"; "5"; "4"; "."; "6"; "7"; "8"], {re = 0.678; im = 0.});
