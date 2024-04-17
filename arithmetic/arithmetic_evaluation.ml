@@ -428,6 +428,7 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
     (* Add to a queue *)
     (* Case of omitted multiplication operator *)
     | Rpar :: (Entity _) :: _, _
+    (* | Rpar :: Lpar :: _, _ *) (* This case is handled during lexing *)
     | Rpar :: (Lunop _) :: _, _
     | Rpar :: (Function _) :: _, _ -> shunting_yard p (Rpar::(Op "OMITTEDTIMES")::List.tl alist) output_q op_q
     | (Entity x1)::(Entity _)::_, _
@@ -436,6 +437,10 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
     | (Entity x1)::(Function _)::_, _ -> shunting_yard p ((Op "OMITTEDTIMES")::List.tl alist) (x1::output_q) op_q
     (* Normal number case *)
     | (Entity x)::t, _ -> shunting_yard p t (x::output_q) op_q
+    (* Lpar *)
+    | Lpar::t, _ -> shunting_yard p t output_q (Lpar::op_q)
+    (* Lunop *)
+    | (Lunop loa)::t, _ -> shunting_yard p t output_q ((Lunop loa)::op_q)
 
     (* Function evaluation *)
     | (Function (fname, el))::t, _ ->
@@ -493,12 +498,6 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
           shunting_yard p t ((apply_special_func p fname eval_el)::output_q) op_q)
       else
         failwith ("Arithmetic parsing: Unknown function "^fname))
-
-    (* Lpar *)
-    | Lpar::t, _ -> shunting_yard p t output_q (Lpar::op_q)
-    
-    (* Lunop *)
-    | (Lunop loa)::t, _ -> shunting_yard p t output_q ((Lunop loa)::op_q)
 
     (* Runop *)
     | (Runop ro)::t, _ ->
@@ -579,7 +578,7 @@ and eval_num (p : parameters) (e : num_expr) : complex =
     | StringExpr se ->
       (match eval_str p se with
         | Num_expr (Complex z) -> z
-        | _ -> failwith "eval_entity: error, string expression evaluation returned a non-numerical string value")
+        | _ -> failwith "eval_num: error, string expression evaluation returned a non-numerical string value")
     | _ -> failwith "eval_num: error, QMark provided";;
 
 (* List expression evaluation function *)

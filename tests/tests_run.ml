@@ -1413,3 +1413,37 @@ let run_menu () =
   in
   (* prog;; *)
   run_test prog;;
+
+(* Test for List "ABC" *)
+let run_proglistzero () =
+  let prog =
+    (*
+      "ABC" -> List 1[0]
+      List 1[0] DISP    // Displays ABC
+      "BCD" -> List "BCD"[0]
+      List "BCD"[1]     // Displays 0
+      2 -> List "BCD"[1]
+      List "BCD"[1]     // Displays 2
+      1 -> A
+      List "BCD"[A]     // Displays 2
+      0 -> A
+      List "BCD"[A]     // Displays BCD
+    *)
+    compile_test
+      [("main",
+        [
+          "QUOTE"; "A"; "B"; "C"; "QUOTE"; "ASSIGN"; "LIST"; "1"; "LSQBRACKET"; "0"; "EOL";
+          "LIST"; "1"; "LSQBRACKET"; "0"; "DISP";
+          (* "QUOTE"; "B"; "C"; "D"; "QUOTE"; "ASSIGN"; "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "0"; "EOL";
+          "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "1"; "DISP";
+          "2"; "ASSIGN"; "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "1"; "DISP";
+          "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "1"; "DISP";
+          "1"; "ASSIGN"; "A"; "EOL";
+          "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "A"; "DISP";
+          "0"; "ASSIGN"; "A"; "EOL";
+          "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "A"; "DISP";
+          *)
+      ])]
+  in
+  (* prog;; *)
+  run_test prog;;

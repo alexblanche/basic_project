@@ -205,21 +205,21 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
               aux (i+2))
             else aux (i+1))
 
-        (* Just storing in List Ans/Mat Ans *)
-        (* Display is not treated yet *)
-        | ListContent t ->
-          (p.list.(6 * 26) <- numexpr_to_float_array t;
-          if i<n-1 && code.(i+1) = Disp then
-            aux (i+2) (* Display to be treated here *)
-          else aux (i+1))
+          (* Just storing in List Ans/Mat Ans *)
+          (* Display is not treated yet *)
+          | ListContent t ->
+            (p.list.(6 * 26) <- numexpr_to_float_array t;
+            if i<n-1 && code.(i+1) = Disp then
+              aux (i+2) (* Display to be treated here *)
+            else aux (i+1))
 
-        | MatContent m ->
-          (p.mat.(26) <- numexpr_to_float_matrix m;
-          if i<n-1 && code.(i+1) = Disp then
-            aux (i+2) (* Display to be treated here *)
-          else aux (i+1))
-        
-        | _ -> run_fail i "Wrong output type of eval_entity")
+          | MatContent m ->
+            (p.mat.(26) <- numexpr_to_float_matrix m;
+            if i<n-1 && code.(i+1) = Disp then
+              aux (i+2) (* Display to be treated here *)
+            else aux (i+1))
+          
+          | _ -> run_fail i "Wrong output type of eval_entity")
       
       | String se ->
         (* A string alone is printed, an application of string function is not *)
