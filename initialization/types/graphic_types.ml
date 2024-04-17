@@ -13,7 +13,7 @@ type graphic =
   | PlotOff of num_expr * num_expr
   | Fline of num_expr * num_expr * num_expr * num_expr * (style option)
   | Text of num_expr * num_expr * string_expr
-  | Drawstat_Setup of int * bool * (drawstat_style option) * (entity option) * (entity option) * (drawstat_mark option)
+  | Drawstat_Setup of int * bool * (drawstat_style option) * (basic_expr option) * (basic_expr option) * (drawstat_mark option)
     (* Drawstat_Setup (i, drawon, ds_style, z1, z2, ds_mark)
       Sgph(i) drawon, ds_style, List z1, List z2, 1 (?), ds_mark
       The last four parameters are optional, but the ones present must be in order, with none missing in-between *)

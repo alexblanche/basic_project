@@ -344,19 +344,22 @@ let process_sgph i lexlist code mem : int * string list =
   
   let aux_get_list_index d =
     match d with
+      | "," :: "LIST" :: "QUOTE" :: q ->
+        let (sl, q') = aux_extract_str q in
+        (false, StringExpr (Str_content sl), q')
       | "," :: "LIST" :: a :: t ->
         if is_digit a then
           let (li, q) = read_int (a::t) true in
-          (false, Value (complex_of_int li), q)
+          (false, Arithm [Entity (Value (complex_of_int li))], q)
         else if is_var a then
-          (false, Variable (Var (var_index a)), t)
+          (false, Arithm [Entity (Variable (Var (var_index a)))], t)
         else
           fail lexlist i "Compilation error: Syntax error in Sgph command (List index)"
       | "," :: "LISTONE" :: t ->
-        (false, Value (complex_of_float 1.), t)
+        (false, Arithm [Entity (Value (complex_of_float 1.))], t)
       | "," :: "LISTTWO" :: t ->
-        (false, Value (complex_of_float 2.), t)
-      | [] -> (true, Value (complex_of_float 0.), [])
+        (false, Arithm [Entity (Value (complex_of_float 2.))], t)
+      | [] -> (true, Arithm [Entity (Value (complex_of_float 0.))], [])
       | _ -> fail lexlist i "Compilation error: Syntax error in Sgph command (List)"
   in
   let (stop, list1, d5) = aux_get_list_index d4 in

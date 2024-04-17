@@ -12,9 +12,9 @@ let assign_var (p : parameters) (x : entity) (v : variable) : unit =
       else failwith "Runtime error: Incorrect index of a variable during assignment"
 
     | Value z,
-      ListIndex (Value a, Complex k)
+      ListIndex (Complex a, Complex k)
     | Value z,
-      ListIndex (Value a, Arithm [Entity (Value k)])
+      ListIndex (Complex a, Arithm [Entity (Value k)])
       ->
       let ai = int_of_complex a in
       let ki = int_of_complex k in

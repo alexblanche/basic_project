@@ -72,10 +72,9 @@ let get_var_val (var : float array) (i : int) : complex =
 
 (* Returns the value of List a[i] *)
 let get_list_val (tlist : float array array) (listfile : int) (a : int) (i : int) : complex =
-  let l = tlist.(a) in
+  let l = tlist.(6 * listfile + a) in
   let n = Array.length l in
-  let j = 6 * listfile + i in
-  get_complex l.(j) l.(j+n/2);;
+  get_complex l.(i) l.(i+n/2);;
 
 (* Returns the value of Mat a[i1][i2] *)
 let get_mat_val (tmat : float array array array) (a : int) (i1 : int) (i2 : int) : complex =
@@ -120,22 +119,38 @@ let rec get_val_numexpr (p : parameters) (n : entity) : complex =
     | Variable (Var i) -> get_var_val p.var i
     | Variable Getkey -> complex_of_int !getkey
     (* List Ans[e], List Ans stored at index 6 * 26 *)
-    | Variable (ListIndex (Variable (Var 28), e)) ->
+
+    | Variable (ListIndex (Arithm [Entity (Variable (Var 28))], e)) ->
       let z = eval_num p e in
       (if not (is_int z)
         then failwith "get_val_numexpr: access to List from an index that is not an integer";
       get_list_val p.list p.listfile (6 * 26) (int_of_complex z - 1))
-    | Variable (ListIndex (a,e)) ->
+
+    (* List (value or variable) [e] *)
+    | Variable (ListIndex (Arithm [Entity a], e)) ->
       let z = eval_num p e in
       (if not (is_int z)
         then failwith "get_val_numexpr: access to List from an index that is not an integer";
       get_list_val p.list p.listfile (int_of_complex (get_val_numexpr p a) - 1) (int_of_complex z - 1))
+
+    (* List (string) [e] *)
+    | Variable (ListIndex (StringExpr (Str_content sl), e)) ->
+      let z = eval_num p e in
+      (if not (is_int z)
+        then failwith "get_val_numexpr: access to List from an index that is not an integer";
+      try
+        let ai = list_index_from_string p.listfile p.listzero sl in
+        get_list_val p.list p.listfile ai (int_of_complex z - 1)
+      with
+        | Not_found -> failwith "get_val_numexpr: List string index not found")
+
     | Variable (MatIndex (ai,e1,e2)) ->
       let z1 = eval_num p e1 in
       let z2 = eval_num p e2 in
       (if not ((is_int z1) && (is_int z2))
         then failwith "get_val_numexpr: access to Mat from an index that is not an integer";
       get_mat_val p.mat ai (int_of_complex z1 - 1) (int_of_complex z2 - 1))
+    
     | Variable Random -> complex_of_float (Random.float 1.)
     | _ -> failwith "get_val_numexpr: entity is a list or matrix"
 
@@ -144,19 +159,27 @@ let rec get_val_numexpr (p : parameters) (n : entity) : complex =
 and get_val_listexpr (p : parameters) (n : entity) : num_expr array =
   match n with
     | ListContent et -> Array.map (fun e -> Complex (eval_num p e)) et
-    | VarList (Value z) ->
+    | VarList (Arithm [Entity (Value z)]) ->
       (if not (is_int z)
         then failwith "get_val_list: access to List from an index that is not an integer";
       float_to_numexpr_array p.list.(6 * p.listfile + int_of_complex z - 1))
-    | VarList (Variable (Var vi)) ->
-      let z =
+    | VarList (Arithm [Entity (Variable (Var vi))]) ->
+      let i =
         if vi = 28 (* Ans *)
-          then complex_of_int (6 * 26) (* Index of List Ans *)
-          else get_var_val p.var vi (* List _ *)
+          then 6 * 26 (* Index of List Ans *)
+          else
+            let vali = get_var_val p.var vi in (* List _ *)
+            if not (is_int vali)
+              then failwith "get_val_list: access to List from an index that is not an integer"
+              else 6 * p.listfile + int_of_complex vali - 1
       in
-      (if not (is_int z)
-        then failwith "get_val_list: access to List from an index that is not an integer";
-      float_to_numexpr_array p.list.(6 * p.listfile + int_of_complex z - 1))
+      float_to_numexpr_array p.list.(i)
+    | VarList (StringExpr (Str_content sl)) ->
+      (try
+        let ai = list_index_from_string p.listfile p.listzero sl in
+        float_to_numexpr_array p.list.(ai)
+      with
+        | Not_found -> failwith "get_val_list: List string index not found")
     | _ -> failwith "get_val_listexpr: entity is a number or a matrix, or is accessed with a wrong index"
 
 (* Returns the value of the entity n, when n is a matrix *)
@@ -303,9 +326,17 @@ and eval_str (p : parameters) (se : string_expr) : string_expr =
     | Str_access si -> Str_content p.str.(si)
     | Str_Func (fname, sel) ->
       apply_str_func p fname (List.map (fun se -> eval_str p se) sel)
-    | ListIndexZero a ->
+    | ListIndexZero (Arithm [Entity a]) ->
       let vala = get_val_numexpr p a in
       Str_content p.listzero.(int_of_complex vala - 1)
+    | ListIndexZero (StringExpr (Str_content sl)) ->
+      (try
+        (* Just checking if sl is actually the name of a List *)
+        let _ = list_index_from_string p.listfile p.listzero sl in
+        Str_content sl
+      with
+        | Not_found -> failwith "eval_str: List string index not found")
+    | ListIndexZero _ -> failwith "eval_str: incorrect List index"
 
 (* Special functions evaluation *)
 (* Each function has type basic_expr list -> entity *)

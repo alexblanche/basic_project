@@ -111,9 +111,10 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic)
     | Graphic_Function ("DRAWSTAT", _) ->
       (Array.iter
         (fun (don, st, li1, li2, mk) ->
+          (* The indices of the lists are fixed at Sgph definition: no string value here *)
           if don then
-            (let l1 = get_val_listexpr p (VarList (Value (complex_of_int li1))) in
-            let l2 = get_val_listexpr p (VarList (Value (complex_of_int li2))) in
+            (let l1 = get_val_listexpr p (VarList (Arithm [Entity (Value (complex_of_int li1))])) in
+            let l2 = get_val_listexpr p (VarList (Arithm [Entity (Value (complex_of_int li2))])) in
             let pair_l = ref [] in
             Array.iter2
               (fun x y ->
@@ -241,23 +242,37 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic)
       partial_vwin ren p xl
 
     | Drawstat_Setup (sgphi, drawon, style_opt, list1_opt, list2_opt, mark_opt) ->
+      (* Current parameters: used as default when some parameters are omitted *)
       let (curr_drawon, curr_style, curr_list1, curr_list2, curr_mark) = p.sgph.(sgphi) in
+      
+      (* Auxiliary function that returns the index of a List *)
+      let get_list_index e =
+        match e with
+          | Arithm [Entity n] -> int_of_complex (eval_num p e)
+          | StringExpr (Str_content sl) ->
+            (try
+              1 + list_index_from_string p.listfile p.listzero sl
+            with
+              | Not_found -> graphic_fail i "List string index not found in Sgph DrawStat setup")
+          | _ -> graphic_fail i "Wrong List argument in Sgph DrawStat setup"
+        in
+
       (match style_opt, list1_opt, list2_opt, mark_opt with
         | None, None, None, None ->
           p.sgph.(sgphi) <- (drawon, curr_style, curr_list1, curr_list2, curr_mark)
         | Some style, None, None, None ->
           p.sgph.(sgphi) <- (drawon, style, curr_list1, curr_list2, curr_mark)
         | Some style, Some list1, None, None ->
-          let z1 = eval_num p (Arithm [Entity list1]) in
-          p.sgph.(sgphi) <- (drawon, style, int_of_complex z1, curr_list2, curr_mark)
+          let l1 = get_list_index list1 in
+          p.sgph.(sgphi) <- (drawon, style, l1, curr_list2, curr_mark)
         | Some style, Some list1, Some list2, None ->
-          let z1 = eval_num p (Arithm [Entity list1]) in
-          let z2 = eval_num p (Arithm [Entity list2]) in
-          p.sgph.(sgphi) <- (drawon, style, int_of_complex z1, int_of_complex z2, curr_mark)
+          let l1 = get_list_index list1 in
+          let l2 = get_list_index list2 in
+          p.sgph.(sgphi) <- (drawon, style, l1, l2, curr_mark)
         | Some style, Some list1, Some list2, Some mark ->
-          let z1 = eval_num p (Arithm [Entity list1]) in
-          let z2 = eval_num p (Arithm [Entity list2]) in
-          p.sgph.(sgphi) <- (drawon, style, int_of_complex z1, int_of_complex z2, mark)
+          let l1 = get_list_index list1 in
+          let l2 = get_list_index list2 in
+          p.sgph.(sgphi) <- (drawon, style, l1, l2, mark)
         | _ -> graphic_fail i "Wrong arguments for Sgph DrawStat setup")
 
     | Graphic_Function ("AXESON", _) ->

@@ -188,12 +188,15 @@ let rec extract_list_index (t : string list) : arithm * (string list) =
   (* Detection of the first variable *)
   let (a,t') =
     match t with
+      | "QUOTE" :: q ->
+        let (sl, q') = aux_extract_str q in
+        (StringExpr (Str_content sl), q')
       | a::q ->
         if is_letter_var a || a = "ANS" then
-          (Variable (Var (var_index a)), q)
+          (Arithm [Entity (Variable (Var (var_index a)))], q)
         else if is_digit a then
           let (i,q') = read_int t true in
-          (Value (complex_of_int i), q')
+          (Arithm [Entity (Value (complex_of_int i))], q')
         else failwith "extract_list_index: List should be followed by a number or a variable"
       | [] -> failwith "extract_list_index: Error, the list of lexemes is empty"
   in
@@ -506,10 +509,10 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
               aux (li::acc) t'
             | a::t' -> (* List a *)
               if is_letter_var a || a = "ANS" then
-                aux ((Entity (VarList (Variable (Var (var_index a)))))::acc) t'
+                aux ((Entity (VarList (Arithm [Entity (Variable (Var (var_index a)))])))::acc) t'
               else if is_digit a then
                 let (i,q) = read_int t true in
-                aux ((Entity (VarList (Value (complex_of_int i))))::acc) q
+                aux ((Entity (VarList (Arithm [Entity (Value (complex_of_int i))])))::acc) q
               else failwith "extract_expr: wrong list index"
             | _ -> failwith "extract_expr: syntax error in list access")
         

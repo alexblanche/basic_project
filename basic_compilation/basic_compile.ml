@@ -358,13 +358,17 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
       | "FILL" :: t ->
         (match extract_expr t with
+          | e, ","::"LIST"::"QUOTE"::q ->
+            let (sl, q') = aux_extract_str q in
+            (set code i (Function ("FILL", [e; Arithm [Entity (VarList (StringExpr (Str_content sl)))]]));
+            aux (match q' with [] -> [] | "RPAR"::q'' -> q'' | _ -> q') (i+1))
           | e, ","::"LIST"::a::t' ->
             if is_letter_var a then
-              (set code i (Function ("FILL", [e; Arithm [Entity (VarList (Variable (Var (var_index a))))]]));
+              (set code i (Function ("FILL", [e; Arithm [Entity (VarList (Arithm [Entity (Variable (Var (var_index a)))]))]]));
               aux (match t' with [] -> [] | "RPAR"::q -> q | _ -> t') (i+1))
             else if is_digit a then
               let (vi,q) = read_int (a::t') true in
-              (set code i (Function ("FILL", [e; Arithm [Entity (VarList (Value (complex_of_int vi)))]]));
+              (set code i (Function ("FILL", [e; Arithm [Entity (VarList (Arithm [Entity (Value (complex_of_int vi))]))]]));
               aux (match q with [] -> [] | "RPAR"::q' -> q' | _ -> q) (i+1))
             else fail lexlist i "Compilation error: wrong list index in Fill command"
 

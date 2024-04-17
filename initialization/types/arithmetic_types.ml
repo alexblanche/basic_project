@@ -26,7 +26,11 @@ type entity =
   | Variable of variable
   | ListContent of num_expr array (* {...} *)
   | MatContent of num_expr array array (* [[...][...]...] *)
-  | VarList of entity (* List _ (accepts Value or Variable) *)
+  | VarList of basic_expr
+    (* List _ 
+      Accepts Arithm [Entity (Value _)] (List 2),
+      Arithm [Entity (Variable _)] (List B),
+      or StringExpr (Str_content _) (List "ABC") *)
   | VarMat of int (* Mat _ *)
 
 and
@@ -34,7 +38,7 @@ and
 (* Type for Basic variables *)
 variable =
   | Var of int (* index: 0..25 = A ... Z, 26 = r, 27 = theta, 28 = Ans *)
-  | ListIndex of entity * num_expr (* ListIndex(x, e) = List x[e] *)
+  | ListIndex of basic_expr * num_expr (* ListIndex(x, e) = List x[e], x = value, variable, string *)
   | MatIndex of int * num_expr * num_expr (* MatIndex (x,e1,e2) -> Mat x[e1][e2] *)
   | Getkey (* its value depends on the key currently pressed *)
   | Random (* Ran# *)
@@ -63,7 +67,7 @@ string_expr =
   | Str_content of string list (* explicit definition of a string *)
   | Str_access of int (* Str i *)
   | Str_Func of string * string_expr list (* Function applied to several string_expr objects *)
-  | ListIndexZero of entity (* List x[0] *)
+  | ListIndexZero of basic_expr (* List x[0], x = value, variable, string *)
 
 and
 
