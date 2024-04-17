@@ -233,24 +233,22 @@ let new_param (proj : project_content) : parameters =
 
 (* Returns the index of the list associated with string sl *)
 let list_index_from_string (listfile : int) (listzero : string list array) (sl : string list) : int =
-  let n = Array.length listzero in
   let i = ref 0 in
   while (!i < 26 && listzero.(6 * listfile + !i) != sl) do
     incr i;
   done;
-  if !i = n
+  if !i = 26
     then raise Not_found
     else !i
 ;;
 
 (* Returns the first empty list (used when naming a new list) *)
-let index_of_first_empty_list (tlist : float array array) : int =
-  let n = Array.length tlist in
+let index_of_first_empty_list (listfile : int) (tlist : float array array) : int =
   let i = ref 0 in
-  while (!i < n && Array.length tlist.(!i) != 0) do
+  while (!i < 26 && Array.length tlist.(6 * listfile + !i) != 0) do
     incr i;
   done;
-  if !i = n
+  if !i = 26
     then raise Not_found
     else !i
 ;;

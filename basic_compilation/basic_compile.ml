@@ -93,14 +93,19 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                   (true, i+1, t''))
                 | _ -> fail lexlist i "Compilation error: Wrong assignment (->) of a matrix element")
 
+            | "LIST" :: "QUOTE" :: q ->
+              let (sl, q') = aux_extract_str q in
+              (set code i (AssignList (e, StringExpr (Str_content sl)));
+              (true, i+1, q'))
+
             | "LIST"::a::t'' ->
               (* Numerical is allowed, because entity functions have unspecified output type *)
               if is_letter_var a || a = "ANS" then
-                (set code i (AssignList (e, Variable (Var (var_index a))));
+                (set code i (AssignList (e, Arithm [Entity (Variable (Var (var_index a)))]));
                 (true, i+1, t''))
               else if is_digit a then
                 let (vi,q) = read_int (a::t'') true in
-                (set code i (AssignList (e, Value (complex_of_int vi)));
+                (set code i (AssignList (e, Arithm [Entity (Value (complex_of_int vi))]));
                 (true, i+1, q))
               else fail lexlist i "Compilation error: wrong list index"
 
@@ -110,16 +115,21 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
                 (true, i+1, t''))
               else fail lexlist i "extract_mat_index: wrong matrix index"
             
+            (* To do *)
+            (* | "DIM"::"LIST"::"QUOTE"::q ->  *)
+
             | "DIM"::"LIST"::a::t'' ->
               let dim_expr = Arithm [Function ("Init", [e])] in
               if is_letter_var a || a = "ANS" then
-                (set code i (AssignList (dim_expr, Variable (Var (var_index a))));
+                (set code i (AssignList (dim_expr, Arithm [Entity (Variable (Var (var_index a)))]));
                 (true, i+1, t''))
               else if is_digit a then
                 let (vi,q) = read_int (a::t'') true in
-                (set code i (AssignList (dim_expr, Value (complex_of_int vi)));
+                (set code i (AssignList (dim_expr, Arithm [Entity (Value (complex_of_int vi))]));
                 (true, i+1, q))
               else fail lexlist i "Compilation error: wrong list index in dimension assignment"
+
+            
 
             | "DIM"::"MAT"::a::t'' ->
               let dim_expr = Arithm [Function ("Init", [e])] in
@@ -317,15 +327,15 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | "CLRLIST" :: a :: t'' ->
         let empty_list = Arithm [Entity (ListContent [||])] in
         if is_letter_var a || a = "ANS" then (* ClrList A *)
-          (set code i (AssignList (empty_list, Variable (Var (var_index a))));
+          (set code i (AssignList (empty_list, Arithm [Entity (Variable (Var (var_index a)))]));
           aux t'' (i+1))
         else if is_digit a then (* ClrList 11 *)
           let (vi,q) = read_int (a::t'') true in
-          (set code i (AssignList (empty_list, Value (complex_of_int vi)));
+          (set code i (AssignList (empty_list, Arithm [Entity (Value (complex_of_int vi))]));
           aux q (i+1))
         else if a = "EOL" || a = "COLON" || a = "DISP" then (* ClrList (clears all lists)*)
           (for j = 1 to 20 do
-            set code (i+j-1) (AssignList (empty_list, Value (complex_of_int j)))
+            set code (i+j-1) (AssignList (empty_list, Arithm [Entity (Value (complex_of_int j))]))
           done;
           aux t'' (i+20))
         else fail lexlist i "Compilation error: Wrong index for ClrList"
@@ -333,7 +343,7 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
       | ["CLRLIST"] ->
         (let empty_list = Arithm [Entity (ListContent [||])] in
         for j = 1 to 20 do
-          set code (i+j-1) (AssignList (empty_list, Value (complex_of_int j)))
+          set code (i+j-1) (AssignList (empty_list, Arithm [Entity (Value (complex_of_int j))]))
         done;
         aux [] (i+20))
 

@@ -27,7 +27,7 @@ type command =
   | Assign of num_expr * variable (* expr -> X or expr -> List A[X] *)
   | AssignMult of num_expr * int * int (* expr -> X~Z *)
   (* Lists accept variables: 3->A, {1} -> List A will assign {1} to List 3 *)
-  | AssignList of list_expr * entity (* 2+3*{1,2,3} -> List A *)
+  | AssignList of list_expr * basic_expr (* 2+3*{1,2,3} -> List A *)
   (* Matrices and Strings do not accept variables *)
   | AssignMat of mat_expr * int (* 5*[[1,2][3,4]] -> Mat A *)
   | AssignStr of string_expr * string_expr

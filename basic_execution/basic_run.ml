@@ -405,12 +405,27 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
           | _ -> run_fail i "Wrong string in string assignment");
         aux (i+1))
 
-      | AssignList (le, n) ->
+      | AssignList (le, ei) ->
+        (* Code on top of older code, can be simplified... *)
         let t = eval_list p le in
-        let ni = get_val_numexpr p n in
+        let ni =
+          match ei with
+            | Arithm [Entity n] -> get_val_numexpr p n
+            | StringExpr (Str_content sl) ->
+              (try
+                let ai = list_index_from_string p.listfile p.listzero sl in
+                complex_of_int (1 + ai)
+              with
+                | Not_found ->
+                  (* Look for the first empty list *)
+                  let a_empty = index_of_first_empty_list p.listfile p.list in
+                  complex_of_int (1 + a_empty)
+              )
+            | _ -> run_fail i "Wrong parameter in list assignment"
+        in
         let nii =
-          match n with
-            | Variable (Var 28) (* Ans *) -> 27
+          match ei with
+            | Arithm [Entity (Variable (Var 28))] (* Ans *) -> 27
             | _ ->
               if is_int ni
                 then int_of_complex ni
