@@ -1444,5 +1444,5 @@ let run_proglistzero () =
           "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "A"; "DISP";
       ])]
   in
-  (* prog;; *)
+  prog,
   run_test prog;;

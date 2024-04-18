@@ -457,9 +457,9 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
             if is_zero (eval_num p e) then
               (let vala = get_val_numexpr p a in
               let ai = int_of_complex vala in
-              p.listzero.(6 * p.listfile + ai - 1) <- sl;
-              if Array.length p.list.(6 * p.listfile + ai - 1) = 0 then
-                p.list.(6 * p.listfile + ai - 1) <- [|0.;0.|])
+              p.listzero.(26 * p.listfile + ai - 1) <- sl;
+              if Array.length p.list.(26 * p.listfile + ai - 1) = 0 then
+                p.list.(26 * p.listfile + ai - 1) <- [|0.;0.|])
             else
               run_fail i "List index should be 0 in string assignment"
           | ListIndexZero (StringExpr (Str_content sl), e) ->
@@ -472,9 +472,9 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
                   (* Look for the first empty list *)
                   index_of_first_empty_list p.listfile p.list
               in
-              p.listzero.(6 * p.listfile + ai) <- sl;
+              p.listzero.(26 * p.listfile + ai) <- sl;
               if Array.length p.list.(6 * p.listfile + ai) = 0 then
-                p.list.(6 * p.listfile + ai) <- [|0.;0.|])
+                p.list.(26 * p.listfile + ai) <- [|0.;0.|])
               else
                 run_fail i "List index should be 0 in string assignment"
           | _ -> run_fail i "Wrong string in string assignment");
@@ -507,7 +507,7 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
                 else run_fail i "Wrong index for list assignment"
         in
         ((if nii >= 1 && nii <= 26 then
-          p.list.(6 * p.listfile + nii - 1) <- t
+          p.list.(26 * p.listfile + nii - 1) <- t
         else if nii = 27 then
           p.list.(6 * 26) <- t
         else
@@ -536,20 +536,20 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
             (let li = get_val_numexpr p nl in
             if is_int li then
               let lii = int_of_complex li in
-              let len = (Array.length p.list.(6 * p.listfile + lii - 1)) / 2 in
+              let len = (Array.length p.list.(26 * p.listfile + lii - 1)) / 2 in
               (for k = 0 to len-1 do
-                p.list.(6 * p.listfile + lii - 1).(k) <- z.re;
-                p.list.(6 * p.listfile + lii - 1).(k+len) <- z.im
+                p.list.(26 * p.listfile + lii - 1).(k) <- z.re;
+                p.list.(26 * p.listfile + lii - 1).(k+len) <- z.im
               done)
             else
               run_fail i "Incorrect parameter in Fill")
           | VarList (StringExpr (Str_content sl)) ->
             (try
               let ai = list_index_from_string p.listfile p.listzero sl in
-              let len = (Array.length p.list.(6 * p.listfile + ai)) / 2 in
+              let len = (Array.length p.list.(26 * p.listfile + ai)) / 2 in
               (for k = 0 to len-1 do
-                p.list.(6 * p.listfile + ai).(k) <- z.re;
-                p.list.(6 * p.listfile + ai).(k + len) <- z.im
+                p.list.(26 * p.listfile + ai).(k) <- z.re;
+                p.list.(26 * p.listfile + ai).(k + len) <- z.im
               done)
             with
               | Not_found -> run_fail i "List string index not found in Fill parameter")

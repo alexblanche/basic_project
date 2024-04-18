@@ -72,7 +72,7 @@ let get_var_val (var : float array) (i : int) : complex =
 
 (* Returns the value of List a[i] *)
 let get_list_val (tlist : float array array) (listfile : int) (a : int) (i : int) : complex =
-  let l = tlist.(6 * listfile + a) in
+  let l = tlist.(26 * listfile + a) in
   let n = Array.length l in
   get_complex l.(i) l.(i+n/2);;
 
@@ -162,7 +162,7 @@ and get_val_listexpr (p : parameters) (n : entity) : num_expr array =
     | VarList (Arithm [Entity (Value z)]) ->
       (if not (is_int z)
         then failwith "get_val_list: access to List from an index that is not an integer";
-      float_to_numexpr_array p.list.(6 * p.listfile + int_of_complex z - 1))
+      float_to_numexpr_array p.list.(26 * p.listfile + int_of_complex z - 1))
     | VarList (Arithm [Entity (Variable (Var vi))]) ->
       let i =
         if vi = 28 (* Ans *)
@@ -171,7 +171,7 @@ and get_val_listexpr (p : parameters) (n : entity) : num_expr array =
             let vali = get_var_val p.var vi in (* List _ *)
             if not (is_int vali)
               then failwith "get_val_list: access to List from an index that is not an integer"
-              else 6 * p.listfile + int_of_complex vali - 1
+              else 26 * p.listfile + int_of_complex vali - 1
       in
       float_to_numexpr_array p.list.(i)
     | VarList (StringExpr (Str_content sl)) ->
