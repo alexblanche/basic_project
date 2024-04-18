@@ -67,7 +67,7 @@ string_expr =
   | Str_content of string list (* explicit definition of a string *)
   | Str_access of int (* Str i *)
   | Str_Func of string * string_expr list (* Function applied to several string_expr objects *)
-  | ListIndexZero of basic_expr (* List x[0], x = value, variable, string *)
+  | ListIndexZero of basic_expr * num_expr (* List x[e], x = value, variable, string, e is a num_expr that should equal 0 *)
 
 and
 

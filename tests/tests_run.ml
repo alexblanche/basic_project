@@ -1434,7 +1434,7 @@ let run_proglistzero () =
         [
           "QUOTE"; "A"; "B"; "C"; "QUOTE"; "ASSIGN"; "LIST"; "1"; "LSQBRACKET"; "0"; "EOL";
           "LIST"; "1"; "LSQBRACKET"; "0"; "DISP";
-          (* "QUOTE"; "B"; "C"; "D"; "QUOTE"; "ASSIGN"; "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "0"; "EOL";
+          "QUOTE"; "B"; "C"; "D"; "QUOTE"; "ASSIGN"; "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "0"; "EOL";
           "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "1"; "DISP";
           "2"; "ASSIGN"; "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "1"; "DISP";
           "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "1"; "DISP";
@@ -1442,7 +1442,6 @@ let run_proglistzero () =
           "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "A"; "DISP";
           "0"; "ASSIGN"; "A"; "EOL";
           "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "A"; "DISP";
-          *)
       ])]
   in
   (* prog;; *)

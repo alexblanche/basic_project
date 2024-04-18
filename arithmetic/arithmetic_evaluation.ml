@@ -326,14 +326,20 @@ and eval_str (p : parameters) (se : string_expr) : string_expr =
     | Str_access si -> Str_content p.str.(si)
     | Str_Func (fname, sel) ->
       apply_str_func p fname (List.map (fun se -> eval_str p se) sel)
-    | ListIndexZero (Arithm [Entity a]) ->
+    | ListIndexZero (Arithm [Entity a], e) ->
       let vala = get_val_numexpr p a in
-      Str_content p.listzero.(int_of_complex vala - 1)
-    | ListIndexZero (StringExpr (Str_content sl)) ->
+      if is_zero (eval_num p e) then
+        Str_content p.listzero.(int_of_complex vala - 1)
+      else
+        failwith "eval_str: List index should be 0"
+    | ListIndexZero (StringExpr (Str_content sl), e) ->
       (try
         (* Just checking if sl is actually the name of a List *)
         let _ = list_index_from_string p.listfile p.listzero sl in
-        Str_content sl
+        if is_zero (eval_num p e) then
+          Str_content sl
+        else
+          failwith "eval_str: List index should be 0"
       with
         | Not_found -> failwith "eval_str: List string index not found")
     | ListIndexZero _ -> failwith "eval_str: incorrect List index"

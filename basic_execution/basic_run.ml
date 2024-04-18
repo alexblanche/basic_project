@@ -200,6 +200,71 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
           disp p ren writing_index;
           aux (i+2))
         else aux (i+1))
+
+      (* Special case, to detect List _[0] *)
+      | Expr (Arithm [Entity (Variable (ListIndex (ea , ej)))]) ->
+        let a =
+          match ea with
+            | Complex z ->
+              if is_int z then
+                int_of_complex z - 1
+              else run_fail i "Wrong list index in \"List _ [_]\" expression"
+            | Arithm _ ->
+              let z = eval_num p ea in
+              if is_int z then
+                int_of_complex z - 1
+              else run_fail i "Wrong list index in \"List _ [_]\" expression"
+            | StringExpr (Str_content sl) ->
+              (try
+                list_index_from_string p.listfile p.listzero sl
+              with
+                | Not_found -> failwith "List string index not found in \"List _ [_]\" expression")
+            | _ -> failwith "Wrong list index in \"List _ [_]\" expression"
+        in
+        let j = eval_num p ej in
+
+        if is_zero j then
+          (* Handle it like a normal string *)
+          (let s = p.listzero.(a) in
+          let sl = rev_lexlist_to_rev_symblist s true verbose in
+          text_screen := true;
+          line_feed ();
+          clear_line !writing_index;
+          let len = List.length sl in
+          (if len >= 21 then
+            if len < 147 (* 21*7 *)
+              then display_long_string sl
+              else display_extra_long_string sl
+          else
+            locate_no_refresh sl 0 !writing_index);
+          tdraw ren;
+          val_seen := false;
+          if (i <= n-2 && code.(i+1) = End
+            || i <= n-3 && code.(i+1) = Disp && code.(i+2) = End)
+            && !prog_goback = []
+            then (* End of the program *)
+              (if code.(i+1) = Disp
+                then disp p ren writing_index;
+              quit win ren true (* Quit after the string *))
+            else if i<n-1 && code.(i+1) = Disp then
+              (disp p ren writing_index;
+              aux (i+2))
+            else aux (i+1))
+
+        else
+          (* Handle it like a numerical expression *)
+          (let z = eval_num p (Arithm [Entity (Variable (ListIndex (Complex (complex_of_int (a + 1)), Complex j)))]) in
+          store_ans p.var z;
+          last_val := z;
+          val_seen := true;
+          if i<n-1 && code.(i+1) = Disp then
+            (text_screen := true;
+            line_feed ();
+            print_number z p.polar;
+            disp p ren writing_index;
+            aux (i+2))
+          else aux (i+1))
+
       
       | Expr (Arithm al) ->
         (match eval_entity p (Arithm al) with
@@ -388,20 +453,30 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
         in
         ((match si with
           | Str_access j -> p.str.(j) <- sl
-          | ListIndexZero (Arithm [Entity a]) ->
-            let vala = get_val_numexpr p a in
-            let ai = int_of_complex vala in
-            (p.listzero.(6 * p.listfile + ai - 1) <- sl;
-            if Array.length p.list.(6 * p.listfile + ai - 1) = 0 then
-              p.list.(6 * p.listfile + ai - 1) <- [|0.;0.|])
-          | ListIndexZero (StringExpr (Str_content sl)) ->
-            (try
-              let ai = list_index_from_string p.listfile p.listzero sl in
+          | ListIndexZero (Arithm [Entity a], e) ->
+            if is_zero (eval_num p e) then
+              (let vala = get_val_numexpr p a in
+              let ai = int_of_complex vala in
+              p.listzero.(6 * p.listfile + ai - 1) <- sl;
+              if Array.length p.list.(6 * p.listfile + ai - 1) = 0 then
+                p.list.(6 * p.listfile + ai - 1) <- [|0.;0.|])
+            else
+              run_fail i "List index should be 0 in string assignment"
+          | ListIndexZero (StringExpr (Str_content sl), e) ->
+            if is_zero (eval_num p e) then
+              (let ai =
+                try
+                  list_index_from_string p.listfile p.listzero sl
+                with
+                | Not_found ->
+                  (* Look for the first empty list *)
+                  index_of_first_empty_list p.listfile p.list
+              in
               p.listzero.(6 * p.listfile + ai) <- sl;
               if Array.length p.list.(6 * p.listfile + ai) = 0 then
-                p.list.(6 * p.listfile + ai) <- [|0.;0.|]
-            with
-              | Not_found -> run_fail i "List string index not found in assignment of string")
+                p.list.(6 * p.listfile + ai) <- [|0.;0.|])
+              else
+                run_fail i "List index should be 0 in string assignment"
           | _ -> run_fail i "Wrong string in string assignment");
         aux (i+1))
 
