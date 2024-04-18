@@ -95,8 +95,19 @@ let process_commands (code : (command array) ref) (prog : ((string * (string lis
 
             | "LIST" :: "QUOTE" :: q ->
               let (sl, q') = aux_extract_str q in
-              (set code i (AssignList (e, StringExpr (Str_content sl)));
-              (true, i+1, q'))
+              (match q' with
+                | "LSQBRACKET" :: _ ->
+                  let (li,t'') = extract_list_index (List.tl t') in
+                  (match li with
+                    | Entity (Variable lx) ->
+                      (set code i (Assign (e, lx));
+                      (true, i+1, t''))
+                    | _ -> fail lexlist i "Compilation error: Wrong assignment (->) of a list element"
+                  )
+                | _ ->
+                  (set code i (AssignList (e, StringExpr (Str_content sl)));
+                  (true, i+1, q'))
+              )
 
             | "LIST"::a::t'' ->
               (* Numerical is allowed, because entity functions have unspecified output type *)

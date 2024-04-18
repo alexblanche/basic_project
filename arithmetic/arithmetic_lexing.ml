@@ -493,6 +493,20 @@ and extract_expr (lexlist : string list) : basic_expr * (string list) =
         (* List a[e] and List a *)
         else if s = "LIST" then
           (match t with
+            | "QUOTE" :: q ->
+              (* List "..." *)
+              let (sl, q') = aux_extract_str q in
+              (match q' with
+                | "LSQBRACKET" :: _ ->
+                  (* List "..."[_] *)
+                  (* For safety, we go back and let extract_list_index do the entire extraction *)
+                  let (li, t') = extract_list_index t in
+                  aux (li::acc) t'
+                | _ ->
+                  (* List "..." *)
+                  aux ((Entity (VarList (StringExpr (Str_content sl))))::acc) q'
+              )
+
             | _::"LSQBRACKET"::_
             | _::"0"::"LSQBRACKET"::_
             | _::"1"::"LSQBRACKET"::_
