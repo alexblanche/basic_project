@@ -234,7 +234,7 @@ let new_param (proj : project_content) : parameters =
 (* Returns the index of the list associated with string sl *)
 let list_index_from_string (listfile : int) (listzero : string list array) (sl : string list) : int =
   let i = ref 0 in
-  while (!i < 26 && listzero.(26 * listfile + !i) != sl) do
+  while (!i < 26 && not (listzero.(26 * listfile + !i) = sl)) do
     incr i;
   done;
   if !i = 26

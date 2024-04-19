@@ -1422,7 +1422,7 @@ let run_proglistzero () =
       List 1[0] DISP    // Displays ABC
       "BCD" -> List "BCD"[0]
       List "BCD"[1]     // Displays 0
-      2 -> List "BCD"[1]
+      2 -> List "BCD"[1] // Displays 2
       List "BCD"[1]     // Displays 2
       1 -> A
       List "BCD"[A]     // Displays 2
@@ -1444,5 +1444,5 @@ let run_proglistzero () =
           "LIST"; "QUOTE"; "B"; "C"; "D"; "QUOTE"; "LSQBRACKET"; "A"; "DISP";
       ])]
   in
-  prog,
+  (* prog, *)
   run_test prog;;

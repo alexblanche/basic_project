@@ -126,6 +126,12 @@ let rec get_val_numexpr (p : parameters) (n : entity) : complex =
         then failwith "get_val_numexpr: access to List from an index that is not an integer";
       get_list_val p.list p.listfile (6 * 26) (int_of_complex z - 1))
 
+    | Variable (ListIndex (Complex za, e)) ->
+      let z = eval_num p e in
+      (if not (is_int z)
+        then failwith "get_val_numexpr: access to List from an index that is not an integer";
+      get_list_val p.list p.listfile (int_of_complex za - 1) (int_of_complex z - 1))
+
     (* List (value or variable) [e] *)
     | Variable (ListIndex (Arithm [Entity a], e)) ->
       let z = eval_num p e in
