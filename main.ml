@@ -1,5 +1,5 @@
 (* Temporary main function *)
-(* Used to launch all the programs in order *)
+(* Launches all the programs in order *)
 
 (* To be replaced by a makefile *)
 
@@ -76,7 +76,8 @@
 (*
 
 Games tested:
-  - TIMELESS, PAC-MAN, RUN & JUMP, SUPER RUN & JUMP, ACE COMBAT, TIMELESS REMIX, AIRWOLF, CLONELAB
+  - TIMELESS, PAC-MAN, RUN & JUMP, SUPER RUN & JUMP, ACE COMBAT, TIMELESS REMIX, AIRWOLF,
+    ICESLIDER, ARKENSTONE, CLONELAB, ROBSCAPE
 
 
 *** To do:

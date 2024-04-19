@@ -49,7 +49,10 @@ let tdraw (ren : Sdlrender.t) : unit =
             if t.(5*y+x) then
               acc := (ploton_rect (1+6*i+x) (8*j+y))::!acc
           done
-        done
+        done;
+        (* 2 exceptions: boxed B and R have dimensions 7*6, with one additional column on the left *)
+        if tscreen.(j).(i).[0] = '\229' && (tscreen.(j).(i).[1] = '\181' || tscreen.(j).(i).[1] = '\182') then
+          acc := (vertical_rect (1+6*i+(-1)) (8*j+0) (8*j+6))::!acc
     done
   done;
   clear_graph ren;
@@ -113,6 +116,9 @@ let rec fast_locate_aux (write : bool) (i : int) (j : int) (acc : Sdlrect.t list
               acc := (ploton_rect (1+6*k+x) (8*j+y))::!acc
           done
         done;
+        (* 2 exceptions: boxed B and R have dimensions 7*6, with one additional column on the left *)
+        (if s.[0] = '\229' && (s.[1] = '\181' || s.[1] = '\182') then
+          acc := (vertical_rect (1+6*i+(-1)) (8*j+0) (8*j+6))::!acc);
         fast_locate_aux write i j acc lt (k-1))
       | [] -> ();;
 
