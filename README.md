@@ -19,7 +19,7 @@ The program requires the library [OCamlSDL2](https://github.com/fccm/OCamlSDL2) 
 To launch a Casio program in G1M or G2M format:
 ```
 $ ocaml
-#use "main.ml";;
+#use "src/main.ml";;
 run "[filename].g1m";;
 ```
 
