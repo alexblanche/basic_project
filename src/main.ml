@@ -15,7 +15,7 @@
 #use "src/initialization/file_readers/file_reader.ml"
 #use "src/initialization/file_readers/bmp_reader.ml"
 
-#use "src/initialization/types/complex.ml"
+#use "src/initialization/types/complex_type.ml"
 #use "src/initialization/types/arithmetic_types.ml"
 #use "src/initialization/types/graphic_types.ml"
 #use "src/initialization/types/basic_type.ml"
