@@ -9,74 +9,74 @@
 #require "unix"
 
 (** Initialization **)
-#use "initialization/graphics/graphic_parameters.ml"
-#use "initialization/graphics/events.ml"
-#use "initialization/key_check.ml"
-#use "initialization/file_readers/file_reader.ml"
-#use "initialization/file_readers/bmp_reader.ml"
+#use "src/initialization/graphics/graphic_parameters.ml"
+#use "src/initialization/graphics/events.ml"
+#use "src/initialization/key_check.ml"
+#use "src/initialization/file_readers/file_reader.ml"
+#use "src/initialization/file_readers/bmp_reader.ml"
 
-#use "initialization/types/complex.ml"
-#use "initialization/types/arithmetic_types.ml"
-#use "initialization/types/graphic_types.ml"
-#use "initialization/types/basic_type.ml"
-#use "initialization/encodings/locate_format.ml"
-#use "initialization/variables.ml"
-#use "initialization/types/project_type.ml"
+#use "src/initialization/types/complex.ml"
+#use "src/initialization/types/arithmetic_types.ml"
+#use "src/initialization/types/graphic_types.ml"
+#use "src/initialization/types/basic_type.ml"
+#use "src/initialization/encodings/locate_format.ml"
+#use "src/initialization/variables.ml"
+#use "src/initialization/types/project_type.ml"
 
-#use "initialization/encodings/basic_encoding.ml"
-#use "initialization/encodings/command_display.ml"
+#use "src/initialization/encodings/basic_encoding.ml"
+#use "src/initialization/encodings/command_display.ml"
 
-#use "g1m_read_write/g1m_reader.ml"
+#use "src/g1m_read_write/g1m_reader.ml"
 
 (** Compilation **)
 (* Arithmetic *)
-#use "arithmetic/definitions/arithmetic_def.ml"
-#use "arithmetic/definitions/entity_functions.ml"
-#use "arithmetic/definitions/string_func.ml"
-#use "arithmetic/arithmetic_lexing.ml"
-#use "arithmetic/arithmetic_evaluation.ml"
+#use "src/arithmetic/definitions/arithmetic_def.ml"
+#use "src/arithmetic/definitions/entity_functions.ml"
+#use "src/arithmetic/definitions/string_func.ml"
+#use "src/arithmetic/arithmetic_lexing.ml"
+#use "src/arithmetic/arithmetic_evaluation.ml"
 
-#use "basic_compilation/initialization/data_structures.ml"
-#use "basic_compilation/initialization/compilation_error.ml"
-#use "basic_compilation/compile_aux.ml"
-#use "basic_compilation/process_commands.ml"
-#use "basic_compilation/basic_compile.ml"
+#use "src/basic_compilation/initialization/data_structures.ml"
+#use "src/basic_compilation/initialization/compilation_error.ml"
+#use "src/basic_compilation/compile_aux.ml"
+#use "src/basic_compilation/process_commands.ml"
+#use "src/basic_compilation/basic_compile.ml"
 
 (** Emulation **)
-#use "initialization/graphics/colors.ml"
-#use "initialization/graphics/graphics_lib.ml"
-#use "basic_execution/initialization/float_repr.ml"
-#use "basic_execution/initialization/timer.ml"
-#use "basic_execution/initialization/runtime_error.ml"
-#use "basic_execution/graphic_functions/general.ml"
-#use "basic_execution/graphic_functions/text_mode.ml"
-#use "basic_execution/graphic_functions/graphic_mode.ml"
-#use "basic_execution/graphic_functions/wait_press.ml"
-#use "basic_execution/graphic_functions/menu.ml"
-#use "basic_execution/auxiliary/run_aux.ml"
-#use "basic_execution/auxiliary/qmark.ml"
-#use "basic_execution/auxiliary/graphics/fline.ml"
-#use "basic_execution/auxiliary/graphics/graphic_commands_aux.ml"
-#use "basic_execution/auxiliary/graphics/execute_graphic_commands.ml"
-#use "basic_execution/basic_run.ml"
+#use "src/initialization/graphics/colors.ml"
+#use "src/initialization/graphics/graphics_lib.ml"
+#use "src/basic_execution/initialization/float_repr.ml"
+#use "src/basic_execution/initialization/timer.ml"
+#use "src/basic_execution/initialization/runtime_error.ml"
+#use "src/basic_execution/graphic_functions/general.ml"
+#use "src/basic_execution/graphic_functions/text_mode.ml"
+#use "src/basic_execution/graphic_functions/graphic_mode.ml"
+#use "src/basic_execution/graphic_functions/wait_press.ml"
+#use "src/basic_execution/graphic_functions/menu.ml"
+#use "src/basic_execution/auxiliary/run_aux.ml"
+#use "src/basic_execution/auxiliary/qmark.ml"
+#use "src/basic_execution/auxiliary/graphics/fline.ml"
+#use "src/basic_execution/auxiliary/graphics/graphic_commands_aux.ml"
+#use "src/basic_execution/auxiliary/graphics/execute_graphic_commands.ml"
+#use "src/basic_execution/basic_run.ml"
 
 (* Tests *)
 (* #use "tests/tests_run.ml" *)
 
 (* Main menu *)
-#use "main_menu/main_menu.ml"
+#use "src/main_menu/main_menu.ml"
 
 (* Picture generation *)
 (*
-#use "picture_editor/picture_edit.ml"
-#use "picture_editor/picture_creator.ml"
-#use "g1m_read_write/g1m_writer.ml"
+#use "src/picture_editor/picture_edit.ml"
+#use "src/picture_editor/picture_creator.ml"
+#use "src/g1m_read_write/g1m_writer.ml"
 *)
 
 (*
 
 Games tested:
-  - TIMELESS, PAC-MAN, RUN & JUMP, SUPER RUN & JUMP, ACE COMBAT, TIMELESS REMIX, AIRWOLF,
+  - TIMELESS, PAC-MAN, RUN & JUMP, SUPER RUN & JUMP, ACE COMBAT, TIMELESS REMIX, AIRWOLF, SNIPER
     ICESLIDER, ARKENSTONE, CLONELAB, ROBSCAPE
 
 
