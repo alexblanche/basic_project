@@ -1,7 +1,7 @@
 OPT = @ocamlopt
 FINDOPT = @ocamlfind opt
 MKDIR = @mkdir
-PRINT = @echo $@
+PRINT = @echo $<
 
 SUFFIXES ?= .ml .o .cmx .cmi
 .SUFFIXES: $(SUFFIXES) .
@@ -50,7 +50,8 @@ OBJS = $(BUILDDIR)/graphic_parameters.cmx \
 	$(BUILDDIR)/graphic_commands_aux.cmx \
 	$(BUILDDIR)/execute_graphic_commands.cmx \
 	$(BUILDDIR)/basic_run.cmx \
-	$(BUILDDIR)/main_menu.cmx
+	$(BUILDDIR)/main_menu.cmx \
+	$(BUILDDIR)/emulator_exec.cmx
 
 .PHONY: all clean
 
@@ -62,7 +63,7 @@ all: $(EXEC_EMULATOR)
 
 clean:
 	@rm -r $(BUILDDIR)
-#	@rm $(EXEC_EMULATOR)
+	@rm $(EXEC_EMULATOR)
 	
 $(BUILDDIR):
 	$(MKDIR) $@
@@ -449,20 +450,71 @@ $(BUILDDIR)/execute_graphic_commands.cmx: src/basic_execution/auxiliary/graphics
 		-open Graphic_commands_aux \
 		-open Arithmetic_types
 
-# #use "src/basic_execution/basic_run.ml"
 
-# (* Tests *)
-# (* #use "tests/tests_run.ml" *)
+$(BUILDDIR)/basic_run.cmx: src/basic_execution/basic_run.ml | $(BUILDDIR)
+	$(PRINT)
+	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+		-package sdl2 \
+		-package unix \
+		-linkpkg \
+		-open Project_type \
+		-open Basic_type \
+		-open Complex_type \
+		-open Key_check \
+		-open Graphic_parameters \
+		-open Text_mode \
+		-open Graphic_mode \
+		-open Run_aux \
+		-open Timer \
+		-open Colors \
+		-open Arithmetic_evaluation \
+		-open Qmark \
+		-open Runtime_error \
+		-open Variables \
+		-open General \
+		-open Execute_graphic_commands \
+		-open Float_repr \
+		-open Locate_format \
+		-open Arithmetic_types \
+		-open Menu
 
-# (* Main menu *)
-# #use "src/main_menu/main_menu.ml"
+
+$(BUILDDIR)/main_menu.cmx: src/main_menu/main_menu.ml | $(BUILDDIR)
+	$(PRINT)
+	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+		-package sdl2 \
+		-linkpkg \
+		-open Text_mode \
+		-open Graphics_lib \
+		-open G1m_reader \
+		-open Colors \
+		-open Graphic_parameters \
+		-open Locate_format \
+		-open Basic_type \
+		-open Project_type \
+		-open General \
+		-open Key_check \
+		-open Graphic_mode \
+		-open Variables \
+		-open Wait_press \
+		-open Basic_run \
+		-open Run_aux \
+		-open File_reader \
+		-open Basic_compile
+
+$(BUILDDIR)/emulator_exec.cmx: src/emulator_exec.ml | $(BUILDDIR)
+	$(PRINT)
+	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+		-package sdl2 \
+		-linkpkg \
+		-open Main_menu
 
 # Emulator executable
 $(EXEC_EMULATOR): $(OBJS)
-	$(PRINT)
+	@echo $(EXEC_EMULATOR)
 	$(FINDOPT) -o $(EXEC_EMULATOR) $(OBJS) \
 		-package unix \
-		-package sys \
 		-package sdl2 \
+		-package sdl2_ttf \
 		-linkpkg
 
