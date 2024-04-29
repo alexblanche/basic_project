@@ -79,7 +79,9 @@ $(BUILDDIR)/graphic_parameters.cmx: src/initialization/graphics/graphic_paramete
 		-linkpkg
 
 
-$(BUILDDIR)/events.cmx: src/initialization/graphics/events.ml | $(BUILDDIR)
+$(BUILDDIR)/events.cmx: src/initialization/graphics/events.ml \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -87,7 +89,9 @@ $(BUILDDIR)/events.cmx: src/initialization/graphics/events.ml | $(BUILDDIR)
 		-open Graphic_parameters
 
 
-$(BUILDDIR)/key_check.cmx: src/initialization/key_check.ml | $(BUILDDIR)
+$(BUILDDIR)/key_check.cmx: src/initialization/key_check.ml \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -112,19 +116,26 @@ $(BUILDDIR)/complex_type.cmx: src/initialization/types/complex_type.ml | $(BUILD
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
 
 
-$(BUILDDIR)/arithmetic_types.cmx: src/initialization/types/arithmetic_types.ml | $(BUILDDIR)
+$(BUILDDIR)/arithmetic_types.cmx: src/initialization/types/arithmetic_types.ml \
+	$(BUILDDIR)/complex_type.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Complex_type
 
 
-$(BUILDDIR)/graphic_types.cmx: src/initialization/types/graphic_types.ml | $(BUILDDIR)
+$(BUILDDIR)/graphic_types.cmx: src/initialization/types/graphic_types.ml \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Arithmetic_types
 
 
-$(BUILDDIR)/basic_type.cmx: src/initialization/types/basic_type.ml | $(BUILDDIR)
+$(BUILDDIR)/basic_type.cmx: src/initialization/types/basic_type.ml \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	$(BUILDDIR)/graphic_types.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Arithmetic_types \
@@ -136,13 +147,19 @@ $(BUILDDIR)/locate_format.cmx: src/initialization/encodings/locate_format.ml | $
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
 
 
-$(BUILDDIR)/variables.cmx: src/initialization/variables.ml | $(BUILDDIR)
+$(BUILDDIR)/variables.cmx: src/initialization/variables.ml \
+	$(BUILDDIR)/complex_type.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Complex_type
 
 
-$(BUILDDIR)/project_type.cmx: src/initialization/types/project_type.ml | $(BUILDDIR)
+$(BUILDDIR)/project_type.cmx: src/initialization/types/project_type.ml \
+	$(BUILDDIR)/graphic_types.cmx \
+	$(BUILDDIR)/variables.cmx \
+	$(BUILDDIR)/locate_format.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Graphic_types \
@@ -150,7 +167,9 @@ $(BUILDDIR)/project_type.cmx: src/initialization/types/project_type.ml | $(BUILD
 		-open Locate_format
 
 
-$(BUILDDIR)/basic_encoding.cmx: src/initialization/encodings/basic_encoding.ml | $(BUILDDIR)
+$(BUILDDIR)/basic_encoding.cmx: src/initialization/encodings/basic_encoding.ml \
+	$(BUILDDIR)/bmp_reader.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Bmp_reader
@@ -161,7 +180,11 @@ $(BUILDDIR)/command_display.cmx: src/initialization/encodings/command_display.ml
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
 
 
-$(BUILDDIR)/g1m_reader.cmx: src/g1m_read_write/g1m_reader.ml | $(BUILDDIR)
+$(BUILDDIR)/g1m_reader.cmx: src/g1m_read_write/g1m_reader.ml \
+	$(BUILDDIR)/basic_encoding.cmx \
+	$(BUILDDIR)/file_reader.cmx \
+	$(BUILDDIR)/project_type.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Basic_encoding \
@@ -169,20 +192,30 @@ $(BUILDDIR)/g1m_reader.cmx: src/g1m_read_write/g1m_reader.ml | $(BUILDDIR)
 		-open Project_type
 
 
-$(BUILDDIR)/arithmetic_def.cmx: src/arithmetic/definitions/arithmetic_def.ml | $(BUILDDIR)
+$(BUILDDIR)/arithmetic_def.cmx: src/arithmetic/definitions/arithmetic_def.ml \
+	$(BUILDDIR)/complex_type.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Complex_type
 
 
-$(BUILDDIR)/entity_functions.cmx: src/arithmetic/definitions/entity_functions.ml | $(BUILDDIR)
+$(BUILDDIR)/entity_functions.cmx: src/arithmetic/definitions/entity_functions.ml \
+	$(BUILDDIR)/complex_type.cmx \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Complex_type \
 		-open Arithmetic_types
 
 
-$(BUILDDIR)/string_func.cmx: src/arithmetic/definitions/string_func.ml | $(BUILDDIR)
+$(BUILDDIR)/string_func.cmx: src/arithmetic/definitions/string_func.ml \
+	$(BUILDDIR)/project_type.cmx \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	$(BUILDDIR)/complex_type.cmx \
+	$(BUILDDIR)/locate_format.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Project_type \
@@ -191,7 +224,14 @@ $(BUILDDIR)/string_func.cmx: src/arithmetic/definitions/string_func.ml | $(BUILD
 		-open Locate_format
 
 
-$(BUILDDIR)/arithmetic_lexing.cmx: src/arithmetic/arithmetic_lexing.ml | $(BUILDDIR)
+$(BUILDDIR)/arithmetic_lexing.cmx: src/arithmetic/arithmetic_lexing.ml \
+	$(BUILDDIR)/arithmetic_def.cmx \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	$(BUILDDIR)/variables.cmx \
+	$(BUILDDIR)/complex_type.cmx \
+	$(BUILDDIR)/string_func.cmx \
+	$(BUILDDIR)/entity_functions.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Arithmetic_def \
@@ -202,7 +242,17 @@ $(BUILDDIR)/arithmetic_lexing.cmx: src/arithmetic/arithmetic_lexing.ml | $(BUILD
 		-open Entity_functions
 
 
-$(BUILDDIR)/arithmetic_evaluation.cmx: src/arithmetic/arithmetic_evaluation.ml | $(BUILDDIR)
+$(BUILDDIR)/arithmetic_evaluation.cmx: src/arithmetic/arithmetic_evaluation.ml \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	$(BUILDDIR)/complex_type.cmx \
+	$(BUILDDIR)/variables.cmx \
+	$(BUILDDIR)/project_type.cmx \
+	$(BUILDDIR)/key_check.cmx \
+	$(BUILDDIR)/arithmetic_def.cmx \
+	$(BUILDDIR)/entity_functions.cmx \
+	$(BUILDDIR)/string_func.cmx \
+	$(BUILDDIR)/arithmetic_lexing.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Arithmetic_types \
@@ -216,7 +266,9 @@ $(BUILDDIR)/arithmetic_evaluation.cmx: src/arithmetic/arithmetic_evaluation.ml |
 		-open Arithmetic_lexing
 
 
-$(BUILDDIR)/data_structures.cmx: src/basic_compilation/initialization/data_structures.ml | $(BUILDDIR)
+$(BUILDDIR)/data_structures.cmx: src/basic_compilation/initialization/data_structures.ml \
+	$(BUILDDIR)/basic_type.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Basic_type
@@ -227,13 +279,24 @@ $(BUILDDIR)/compilation_error.cmx: src/basic_compilation/initialization/compilat
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
 
 
-$(BUILDDIR)/compile_aux.cmx: src/basic_compilation/compile_aux.ml | $(BUILDDIR)
+$(BUILDDIR)/compile_aux.cmx: src/basic_compilation/compile_aux.ml \
+	$(BUILDDIR)/compilation_error.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Compilation_error
 
 
-$(BUILDDIR)/process_commands.cmx: src/basic_compilation/process_commands.ml | $(BUILDDIR)
+$(BUILDDIR)/process_commands.cmx: src/basic_compilation/process_commands.ml \
+	$(BUILDDIR)/arithmetic_lexing.cmx \
+	$(BUILDDIR)/data_structures.cmx \
+	$(BUILDDIR)/compilation_error.cmx \
+	$(BUILDDIR)/basic_type.cmx \
+	$(BUILDDIR)/variables.cmx \
+	$(BUILDDIR)/graphic_types.cmx \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	$(BUILDDIR)/complex_type.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Arithmetic_lexing \
@@ -246,7 +309,19 @@ $(BUILDDIR)/process_commands.cmx: src/basic_compilation/process_commands.ml | $(
 		-open Complex_type
 
 
-$(BUILDDIR)/basic_compile.cmx: src/basic_compilation/basic_compile.ml | $(BUILDDIR)
+$(BUILDDIR)/basic_compile.cmx: src/basic_compilation/basic_compile.ml \
+	$(BUILDDIR)/basic_type.cmx \
+	$(BUILDDIR)/data_structures.cmx \
+	$(BUILDDIR)/compilation_error.cmx \
+	$(BUILDDIR)/arithmetic_lexing.cmx \
+	$(BUILDDIR)/variables.cmx \
+	$(BUILDDIR)/complex_type.cmx \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	$(BUILDDIR)/process_commands.cmx \
+	$(BUILDDIR)/compile_aux.cmx \
+	$(BUILDDIR)/graphic_types.cmx \
+	$(BUILDDIR)/project_type.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Basic_type \
@@ -267,7 +342,11 @@ $(BUILDDIR)/colors.cmx: src/initialization/graphics/colors.ml | $(BUILDDIR)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
 
 
-$(BUILDDIR)/graphics_lib.cmx: src/initialization/graphics/graphics_lib.ml | $(BUILDDIR)
+$(BUILDDIR)/graphics_lib.cmx: src/initialization/graphics/graphics_lib.ml \
+	$(BUILDDIR)/colors.cmx \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	$(BUILDDIR)/bmp_reader.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -278,14 +357,19 @@ $(BUILDDIR)/graphics_lib.cmx: src/initialization/graphics/graphics_lib.ml | $(BU
 		-open Bmp_reader
 
 
-$(BUILDDIR)/float_repr.cmx: src/basic_execution/initialization/float_repr.ml | $(BUILDDIR)
+$(BUILDDIR)/float_repr.cmx: src/basic_execution/initialization/float_repr.ml \
+	$(BUILDDIR)/complex_type.cmx \
+	$(BUILDDIR)/locate_format.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Complex_type \
 		-open Locate_format
 
 
-$(BUILDDIR)/timer.cmx: src/basic_execution/initialization/timer.ml | $(BUILDDIR)
+$(BUILDDIR)/timer.cmx: src/basic_execution/initialization/timer.ml \
+	$(BUILDDIR)/key_check.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -298,7 +382,9 @@ $(BUILDDIR)/runtime_error.cmx: src/basic_execution/initialization/runtime_error.
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
 
 	
-$(BUILDDIR)/general.cmx: src/basic_execution/graphic_functions/general.ml | $(BUILDDIR)
+$(BUILDDIR)/general.cmx: src/basic_execution/graphic_functions/general.ml \
+	$(BUILDDIR)/graphics_lib.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -306,7 +392,15 @@ $(BUILDDIR)/general.cmx: src/basic_execution/graphic_functions/general.ml | $(BU
 		-open Graphics_lib
 
 
-$(BUILDDIR)/text_mode.cmx: src/basic_execution/graphic_functions/text_mode.ml | $(BUILDDIR)
+$(BUILDDIR)/text_mode.cmx: src/basic_execution/graphic_functions/text_mode.ml \
+	$(BUILDDIR)/basic_encoding.cmx \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	$(BUILDDIR)/graphics_lib.cmx \
+	$(BUILDDIR)/colors.cmx \
+	$(BUILDDIR)/complex_type.cmx \
+	$(BUILDDIR)/float_repr.cmx \
+	$(BUILDDIR)/locate_format.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -320,7 +414,18 @@ $(BUILDDIR)/text_mode.cmx: src/basic_execution/graphic_functions/text_mode.ml | 
 		-open Locate_format
 
 
-$(BUILDDIR)/graphic_mode.cmx: src/basic_execution/graphic_functions/graphic_mode.ml | $(BUILDDIR)
+$(BUILDDIR)/graphic_mode.cmx: src/basic_execution/graphic_functions/graphic_mode.ml \
+	$(BUILDDIR)/basic_encoding.cmx \
+	$(BUILDDIR)/project_type.cmx \
+	$(BUILDDIR)/variables.cmx \
+	$(BUILDDIR)/complex_type.cmx \
+	$(BUILDDIR)/graphics_lib.cmx \
+	$(BUILDDIR)/colors.cmx \
+	$(BUILDDIR)/general.cmx \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	$(BUILDDIR)/float_repr.cmx \
+	$(BUILDDIR)/locate_format.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -337,7 +442,12 @@ $(BUILDDIR)/graphic_mode.cmx: src/basic_execution/graphic_functions/graphic_mode
 		-open Locate_format
 
 
-$(BUILDDIR)/wait_press.cmx: src/basic_execution/graphic_functions/wait_press.ml | $(BUILDDIR)
+$(BUILDDIR)/wait_press.cmx: src/basic_execution/graphic_functions/wait_press.ml \
+	$(BUILDDIR)/key_check.cmx \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	$(BUILDDIR)/text_mode.cmx \
+	$(BUILDDIR)/graphic_mode.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -348,7 +458,16 @@ $(BUILDDIR)/wait_press.cmx: src/basic_execution/graphic_functions/wait_press.ml 
 		-open Graphic_mode
 
 
-$(BUILDDIR)/menu.cmx: src/basic_execution/graphic_functions/menu.ml | $(BUILDDIR)
+$(BUILDDIR)/menu.cmx: src/basic_execution/graphic_functions/menu.ml \
+	$(BUILDDIR)/graphics_lib.cmx \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	$(BUILDDIR)/text_mode.cmx \
+	$(BUILDDIR)/colors.cmx \
+	$(BUILDDIR)/project_type.cmx \
+	$(BUILDDIR)/key_check.cmx \
+	$(BUILDDIR)/wait_press.cmx \
+	$(BUILDDIR)/graphic_mode.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -363,7 +482,19 @@ $(BUILDDIR)/menu.cmx: src/basic_execution/graphic_functions/menu.ml | $(BUILDDIR
 		-open Graphic_mode
 
 
-$(BUILDDIR)/run_aux.cmx: src/basic_execution/auxiliary/run_aux.ml | $(BUILDDIR)
+$(BUILDDIR)/run_aux.cmx: src/basic_execution/auxiliary/run_aux.ml \
+	$(BUILDDIR)/project_type.cmx \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	$(BUILDDIR)/variables.cmx \
+	$(BUILDDIR)/complex_type.cmx \
+	$(BUILDDIR)/text_mode.cmx \
+	$(BUILDDIR)/graphic_mode.cmx \
+	$(BUILDDIR)/command_display.cmx \
+	$(BUILDDIR)/locate_format.cmx \
+	$(BUILDDIR)/graphics_lib.cmx \
+	$(BUILDDIR)/wait_press.cmx \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -381,7 +512,17 @@ $(BUILDDIR)/run_aux.cmx: src/basic_execution/auxiliary/run_aux.ml | $(BUILDDIR)
 		-open Graphic_parameters
 
 
-$(BUILDDIR)/qmark.cmx: src/basic_execution/auxiliary/qmark.ml | $(BUILDDIR)
+$(BUILDDIR)/qmark.cmx: src/basic_execution/auxiliary/qmark.ml \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	$(BUILDDIR)/wait_press.cmx \
+	$(BUILDDIR)/key_check.cmx \
+	$(BUILDDIR)/text_mode.cmx \
+	$(BUILDDIR)/run_aux.cmx \
+	$(BUILDDIR)/command_display.cmx \
+	$(BUILDDIR)/locate_format.cmx \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	$(BUILDDIR)/arithmetic_lexing.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -397,7 +538,13 @@ $(BUILDDIR)/qmark.cmx: src/basic_execution/auxiliary/qmark.ml | $(BUILDDIR)
 		-open Arithmetic_lexing
 
 
-$(BUILDDIR)/fline.cmx: src/basic_execution/auxiliary/graphics/fline.ml | $(BUILDDIR)
+$(BUILDDIR)/fline.cmx: src/basic_execution/auxiliary/graphics/fline.ml \
+	$(BUILDDIR)/graphics_lib.cmx \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	$(BUILDDIR)/graphic_types.cmx \
+	$(BUILDDIR)/graphic_mode.cmx \
+	$(BUILDDIR)/project_type.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -409,7 +556,19 @@ $(BUILDDIR)/fline.cmx: src/basic_execution/auxiliary/graphics/fline.ml | $(BUILD
 		-open Project_type
 
 
-$(BUILDDIR)/graphic_commands_aux.cmx: src/basic_execution/auxiliary/graphics/graphic_commands_aux.ml | $(BUILDDIR)
+$(BUILDDIR)/graphic_commands_aux.cmx: src/basic_execution/auxiliary/graphics/graphic_commands_aux.ml \
+	$(BUILDDIR)/project_type.cmx \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	$(BUILDDIR)/graphic_mode.cmx \
+	$(BUILDDIR)/variables.cmx \
+	$(BUILDDIR)/complex_type.cmx \
+	$(BUILDDIR)/arithmetic_evaluation.cmx \
+	$(BUILDDIR)/fline.cmx \
+	$(BUILDDIR)/graphics_lib.cmx \
+	$(BUILDDIR)/general.cmx \
+	$(BUILDDIR)/graphic_types.cmx \
+	$(BUILDDIR)/timer.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -427,7 +586,24 @@ $(BUILDDIR)/graphic_commands_aux.cmx: src/basic_execution/auxiliary/graphics/gra
 		-open Graphic_types \
 		-open Timer
 
-$(BUILDDIR)/execute_graphic_commands.cmx: src/basic_execution/auxiliary/graphics/execute_graphic_commands.ml | $(BUILDDIR)
+$(BUILDDIR)/execute_graphic_commands.cmx: src/basic_execution/auxiliary/graphics/execute_graphic_commands.ml \
+	$(BUILDDIR)/project_type.cmx \
+	$(BUILDDIR)/graphic_types.cmx \
+	$(BUILDDIR)/arithmetic_evaluation.cmx \
+	$(BUILDDIR)/graphic_mode.cmx \
+	$(BUILDDIR)/fline.cmx \
+	$(BUILDDIR)/timer.cmx \
+	$(BUILDDIR)/complex_type.cmx \
+	$(BUILDDIR)/runtime_error.cmx \
+	$(BUILDDIR)/graphics_lib.cmx \
+	$(BUILDDIR)/text_mode.cmx \
+	$(BUILDDIR)/wait_press.cmx \
+	$(BUILDDIR)/run_aux.cmx \
+	$(BUILDDIR)/variables.cmx \
+	$(BUILDDIR)/general.cmx \
+	$(BUILDDIR)/graphic_commands_aux.cmx \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -451,7 +627,28 @@ $(BUILDDIR)/execute_graphic_commands.cmx: src/basic_execution/auxiliary/graphics
 		-open Arithmetic_types
 
 
-$(BUILDDIR)/basic_run.cmx: src/basic_execution/basic_run.ml | $(BUILDDIR)
+$(BUILDDIR)/basic_run.cmx: src/basic_execution/basic_run.ml \
+	$(BUILDDIR)/project_type.cmx \
+	$(BUILDDIR)/basic_type.cmx \
+	$(BUILDDIR)/complex_type.cmx \
+	$(BUILDDIR)/key_check.cmx \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	$(BUILDDIR)/text_mode.cmx \
+	$(BUILDDIR)/graphic_mode.cmx \
+	$(BUILDDIR)/run_aux.cmx \
+	$(BUILDDIR)/timer.cmx \
+	$(BUILDDIR)/colors.cmx \
+	$(BUILDDIR)/arithmetic_evaluation.cmx \
+	$(BUILDDIR)/qmark.cmx \
+	$(BUILDDIR)/runtime_error.cmx \
+	$(BUILDDIR)/variables.cmx \
+	$(BUILDDIR)/general.cmx \
+	$(BUILDDIR)/execute_graphic_commands.cmx \
+	$(BUILDDIR)/float_repr.cmx \
+	$(BUILDDIR)/locate_format.cmx \
+	$(BUILDDIR)/arithmetic_types.cmx \
+	$(BUILDDIR)/menu.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -479,7 +676,25 @@ $(BUILDDIR)/basic_run.cmx: src/basic_execution/basic_run.ml | $(BUILDDIR)
 		-open Menu
 
 
-$(BUILDDIR)/main_menu.cmx: src/main_menu/main_menu.ml | $(BUILDDIR)
+$(BUILDDIR)/main_menu.cmx: src/main_menu/main_menu.ml \
+	$(BUILDDIR)/text_mode.cmx \
+	$(BUILDDIR)/graphics_lib.cmx \
+	$(BUILDDIR)/g1m_reader.cmx \
+	$(BUILDDIR)/colors.cmx \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	$(BUILDDIR)/locate_format.cmx \
+	$(BUILDDIR)/basic_type.cmx \
+	$(BUILDDIR)/project_type.cmx \
+	$(BUILDDIR)/general.cmx \
+	$(BUILDDIR)/key_check.cmx \
+	$(BUILDDIR)/graphic_mode.cmx \
+	$(BUILDDIR)/variables.cmx \
+	$(BUILDDIR)/wait_press.cmx \
+	$(BUILDDIR)/basic_run.cmx \
+	$(BUILDDIR)/run_aux.cmx \
+	$(BUILDDIR)/file_reader.cmx \
+	$(BUILDDIR)/basic_compile.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
@@ -502,12 +717,16 @@ $(BUILDDIR)/main_menu.cmx: src/main_menu/main_menu.ml | $(BUILDDIR)
 		-open File_reader \
 		-open Basic_compile
 
-$(BUILDDIR)/emulator_exec.cmx: src/emulator_exec.ml | $(BUILDDIR)
+$(BUILDDIR)/emulator_exec.cmx: src/emulator_exec.ml \
+	$(BUILDDIR)/main_menu.cmx \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-linkpkg \
-		-open Main_menu
+		-open Main_menu \
+		-open Graphic_parameters
 
 # Emulator executable
 $(EXEC_EMULATOR): $(OBJS)

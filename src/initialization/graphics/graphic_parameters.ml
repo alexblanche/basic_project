@@ -8,6 +8,10 @@ let sdl_init () : unit =
 in
 sdl_init ();;
 
+let sdl_quit () : unit =
+  Sdl.quit ();
+  Sdlttf.quit ();;
+
 (* Exception raised when the window is closed *)
 exception Window_Closed;;
 
