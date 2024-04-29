@@ -8,10 +8,6 @@ let sdl_init () : unit =
 in
 sdl_init ();;
 
-let sdl_quit () : unit =
-  Sdl.quit ();
-  Sdlttf.quit ();;
-
 (* Exception raised when the window is closed *)
 exception Window_Closed;;
 
@@ -30,6 +26,12 @@ let resize_threshold = 15;;
 
 (* Font used for draw_string *)
 let font = Sdlttf.open_font ~file:"data/UbuntuMono-R.ttf" ~ptsize:16;;
+
+(* Closing *)
+let sdl_quit () : unit =
+  Sdlttf.close_font font;
+  Sdlttf.quit ();
+  Sdl.quit ();;
 
 
 (** Updating functions **)

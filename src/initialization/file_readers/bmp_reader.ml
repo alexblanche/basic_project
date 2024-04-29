@@ -180,4 +180,4 @@ let view_image (m : image_mat) : unit =
   loop ();
 
   Sdlwindow.destroy win;
-  Sdl.quit ();;
+  sdl_quit ();;

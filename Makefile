@@ -6,7 +6,7 @@ PRINT = @echo $<
 SUFFIXES ?= .ml .o .cmx .cmi
 .SUFFIXES: $(SUFFIXES) .
 
-EXEC_EMULATOR = main
+EXEC_EMULATOR = basic_emulator
 BUILDDIR = ./build
 
 OBJS = $(BUILDDIR)/graphic_parameters.cmx \
@@ -104,11 +104,14 @@ $(BUILDDIR)/file_reader.cmx: src/initialization/file_readers/file_reader.ml | $(
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
 
 
-$(BUILDDIR)/bmp_reader.cmx: src/initialization/file_readers/bmp_reader.ml | $(BUILDDIR)
+$(BUILDDIR)/bmp_reader.cmx: src/initialization/file_readers/bmp_reader.ml \
+	$(BUILDDIR)/graphic_parameters.cmx \
+	| $(BUILDDIR)
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg
+		-linkpkg \
+		-open Graphic_parameters
 
 
 $(BUILDDIR)/complex_type.cmx: src/initialization/types/complex_type.ml | $(BUILDDIR)
@@ -736,4 +739,3 @@ $(EXEC_EMULATOR): $(OBJS)
 		-package sdl2 \
 		-package sdl2_ttf \
 		-linkpkg
-
