@@ -3,7 +3,8 @@
 let () =
   match Sys.argv with
     | [| _; file_name |]
-    | [| _; "--verbose"; file_name |] ->
+    | [| _; "--verbose"; file_name |]
+    | [| _; file_name; "--verbose" |] ->
       (if Sys.file_exists file_name then
         if Array.length Sys.argv = 2 then
           run file_name

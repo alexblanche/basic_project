@@ -33,13 +33,17 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic)
       let z = eval_num p e in
       if is_int z && z.re >= 1. && z.re <= 20. then
         let m = Array.make_matrix 64 128 false in
-        (refresh_update ren p false;
-        for b = 0 to 63 do
+        (for b = 0 to 63 do
           for a = 0 to 127 do
             m.(b).(a) <- bgscreen.(b).(a) || gscreen.(b).(a)
           done
         done;
-        p.pict.(int_of_complex z - 1) <- (2048, m))
+        let p_index = int_of_complex z - 1 in
+        p.pict.(p_index) <- (2048, m);
+        refresh_update ren p false;
+        (* It the updated Pict was the BGPict, update at the next drawing *)
+        if p.bgpict = p_index then
+          background_changed := true)
       else graphic_fail i  "Wrong index for StoPict command"
 
     | Graphic_Function ("BGPICT", [e]) ->
@@ -149,8 +153,11 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic)
       let zy = eval_num p ey in
       let (a,b) = rescale p zx.re zy.re in
       ((if a >= 1 && a <= 127 && b >= 1 && b <= 63 then
-        (plotoff ren gscreen false a (64-b);
-        plotoff ren bgscreen false a (64-b);
+        ((* plotoff ren gscreen false a (64-b);
+        plotoff ren bgscreen false a (64-b); *)
+        (* No need to Sdlrender.fill_rect, since gdraw is called *)
+        gscreen.(64-b).(a) <- false;
+        bgscreen.(64-b).(a) <- false;
         (* Placing the coordinates in X, Y, as in Casio Basic *)
         set_var p.var 23 (complex_of_float zx.re);
         set_var p.var 24 (complex_of_float zy.re)));
