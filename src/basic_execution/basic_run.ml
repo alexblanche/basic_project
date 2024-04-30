@@ -74,7 +74,7 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
       Unix.sleepf timer.general;
 
     (* Switch to or from dark mode *)
-    if !key_pressed = RCtrl then
+    if !key_pressed = Sdlkeycode.RCtrl then
       (let time = Unix.gettimeofday () in
       if time -. !last_switch > 0.5 then
         (last_switch := time;

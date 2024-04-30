@@ -187,8 +187,8 @@ let func_table =
               then
                 complex_of_int (true_int_of_float z.re)
               else
-                {re = float_of_int (true_int_of_float z.re);
-                 im = float_of_int (true_int_of_float z.im)}
+                {Complex.re = float_of_int (true_int_of_float z.re);
+                 Complex.im = float_of_int (true_int_of_float z.im)}
           | _ -> failwith "Function error: Int has arity 1"
       in f)
     );
@@ -205,8 +205,8 @@ let func_table =
             if z.im = 0.
               then complex_of_float (intg z.re)
               else
-                {re = intg z.re;
-                 im = intg z.im}
+                {Complex.re = intg z.re;
+                 Complex.im = intg z.im}
           | _ -> failwith "Function error: Intg has arity 1"
       in f)
     );
@@ -219,13 +219,13 @@ let func_table =
             (* if z.im = 0.
               then complex_of_float (z.re -. float_of_int (true_int_of_float z.re))
               else
-                {re = z.re -. float_of_int (true_int_of_float z.re);
-                 im = z.im -. float_of_int (true_int_of_float z.im)} *)
+                {Complex.re = z.re -. float_of_int (true_int_of_float z.re);
+                 Complex.im = z.im -. float_of_int (true_int_of_float z.im)} *)
             if z.im = 0.
               then complex_of_float (accurate_frac z.re)
               else
-                {re = accurate_frac z.re;
-                 im = accurate_frac z.im}
+                {Complex.re = accurate_frac z.re;
+                 Complex.im = accurate_frac z.im}
           | _ -> failwith "Function error: Frac has arity 1"
       in f)
     );

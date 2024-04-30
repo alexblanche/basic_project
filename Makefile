@@ -1,5 +1,5 @@
-OPT = @ocamlopt
-FINDOPT = @ocamlfind opt
+OPT = @ocamlopt -principal
+FINDOPT = @ocamlfind opt -principal
 MKDIR = @mkdir
 PRINT = @echo $<
 
@@ -96,6 +96,7 @@ $(BUILDDIR)/key_check.cmx: src/initialization/key_check.ml \
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-linkpkg \
+		-open Sdlkeycode \
 		-open Graphic_parameters
 
 
@@ -530,6 +531,7 @@ $(BUILDDIR)/qmark.cmx: src/basic_execution/auxiliary/qmark.ml \
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-linkpkg \
+		-open Sdlkeycode \
 		-open Arithmetic_types \
 		-open Wait_press \
 		-open Key_check \

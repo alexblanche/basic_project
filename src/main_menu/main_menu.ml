@@ -135,7 +135,7 @@ let main_menu ((code, proglist) : basic_code) (proj : project_content) (content 
 
   set_color ren colors.pixels;
   getkey := 0;
-  key_pressed := Unknown;
+  key_pressed := Sdlkeycode.Unknown;
   
 
   let n = Array.length entries in
