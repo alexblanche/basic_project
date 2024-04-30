@@ -1446,3 +1446,25 @@ let run_proglistzero () =
   in
   (* prog, *)
   run_test prog;;
+
+
+  (* Test for Locate numerical expressions *)
+let run_locate () =
+  let prog =
+    (*
+      Prints A35B
+    *)
+    compile_test
+      [("main",
+        [
+          "0"; "ASSIGN"; "Q"; "EOL";
+          "LBRACKET"; "5"; "ASSIGN"; "LIST"; "1"; "EOL";
+          "QUOTE"; "B"; "QUOTE"; "ASSIGN"; "LIST"; "1"; "LSQBRACKET"; "0"; "EOL";
+          "LOCATE"; "5"; ","; "5"; ","; "QUOTE"; "A"; "QUOTE"; "EOL";
+          "LOCATE"; "6"; ","; "5"; ","; "3"; "EOL";
+          "LOCATE"; "7"; ","; "5"; ","; "LIST"; "1"; "LSQBRACKET"; "1"; "EOL";
+          "LOCATE"; "8"; ","; "5"; ","; "LIST"; "1"; "LSQBRACKET"; "Q"; "EOL";
+      ])]
+  in
+  (* prog, *)
+  run_test prog;;

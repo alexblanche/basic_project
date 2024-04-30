@@ -384,12 +384,12 @@ and extract_string_expr (lexlist : string list) : string_expr * string list =
         if String.length a = 1 && a >= "0" && a <= "9"
           then (Str_access ((Char.code a.[0])-48-1), [])
           else failwith "extract_string_expr: wrong index for string access"
-      | "LIST" :: t ->
+      (* | "LIST" :: t ->
         let (li,t') = extract_list_index t in
         (match li with
             | Entity (Variable (ListIndex (a, e))) ->
               (ListIndexZero (a, e), t')
-            | _ -> failwith "extract_string_expr: wrong index of list index zero")
+            | _ -> failwith "extract_string_expr: wrong index of list index zero") *)
       | s :: t ->
         if List.mem s string_func_list && not (List.mem s numerical_string_functions) then
           let (args, t') = aux_extract_str_args t in

@@ -327,27 +327,21 @@ and apply_rop (p : parameters) (ro : string) (n : entity) : entity =
 (* Returns a string_expr of the form Str_content _ or Num_expr (Complex _) (used as arguments of functions) *)
 and eval_str (p : parameters) (se : string_expr) : string_expr =
   match se with
+    (* Case of a list index: if the index is zero, it is a string, otherwise it is a number *)
+    | Num_expr (Arithm [Entity (Variable (ListIndex (ea , ej)))]) ->
+      let j = eval_num p ej in
+      if is_zero j then
+        let a = eval_num p ea in
+        Str_content p.listzero.(int_of_complex a - 1)
+      else
+        Num_expr (Complex (eval_num p (Arithm [Entity (Variable (ListIndex (ea , ej)))])))
+    
     | Num_expr e -> Num_expr (Complex (eval_num p e))
     | Str_content _ -> se
     | Str_access si -> Str_content p.str.(si)
     | Str_Func (fname, sel) ->
       apply_str_func p fname (List.map (fun se -> eval_str p se) sel)
-    | ListIndexZero (Arithm [Entity a], e) ->
-      let vala = get_val_numexpr p a in
-      if is_zero (eval_num p e) then
-        Str_content p.listzero.(int_of_complex vala - 1)
-      else
-        failwith "eval_str: List index should be 0"
-    | ListIndexZero (StringExpr (Str_content sl), e) ->
-      (try
-        (* Just checking if sl is actually the name of a List *)
-        let _ = list_index_from_string p.listfile p.listzero sl in
-        if is_zero (eval_num p e) then
-          Str_content sl
-        else
-          failwith "eval_str: List index should be 0"
-      with
-        | Not_found -> failwith "eval_str: List string index not found")
+    (* ListIndexZero should not occur here *)
     | ListIndexZero _ -> failwith "eval_str: incorrect List index"
 
 (* Special functions evaluation *)

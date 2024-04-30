@@ -60,12 +60,10 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
 
     (* Debug, display of variable content *)
     (* (try
-      (* print_endline ("D = "^(string_of_float (access_real_var p.var 3))^"; C = "^(string_of_float (access_real_var p.var 2)));
-      let l = eval_list p (let e,_ = extract_expr ["DIM"; "MAT"; "A"] in e) in
-      print_string ("Dim Mat A = "^(string_of_float (l.(0)))^"; "^(string_of_float (l.(1)))^"; "^(string_of_float (l.(2)))^"; "^(string_of_float (l.(3))));
-      print_newline (); *)
-      (* print_endline ("p.listfile = "^(string_of_int p.listfile)); *)
-      ()
+      print_endline ("Z = "^(string_of_float (access_real_var p.var 25)));
+      let z = eval_num p (let e,_ = extract_expr ["DIM"; "LIST"; "ANS"] in e) in
+      print_string ("Dim List Ans = "^(string_of_float (z.re)));
+      print_newline ();
     with
       | _ -> ()); *)
 
@@ -203,29 +201,30 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
 
       (* Special case, to detect List _[0] *)
       | Expr (Arithm [Entity (Variable (ListIndex (ea , ej)))]) ->
-        let a =
-          match ea with
-            | Complex z ->
-              if is_int z then
-                int_of_complex z - 1
-              else run_fail i "Wrong list index in \"List _ [_]\" expression"
-            | Arithm _ ->
-              let z = eval_num p ea in
-              if is_int z then
-                int_of_complex z - 1
-              else run_fail i "Wrong list index in \"List _ [_]\" expression"
-            | StringExpr (Str_content sl) ->
-              (try
-                list_index_from_string p.listfile p.listzero sl
-              with
-                | Not_found -> failwith "List string index not found in \"List _ [_]\" expression")
-            | _ -> failwith "Wrong list index in \"List _ [_]\" expression"
-        in
+        
         let j = eval_num p ej in
-
         if is_zero j then
+
           (* Handle it like a normal string *)
-          (let s = p.listzero.(a) in
+          (let a =
+            match ea with
+              | Complex z ->
+                if is_int z then
+                  int_of_complex z - 1
+                else run_fail i "Wrong list index in \"List _ [_]\" expression"
+              | Arithm _ ->
+                let z = eval_num p ea in
+                if is_int z then
+                  int_of_complex z - 1
+                else run_fail i "Wrong list index in \"List _ [_]\" expression"
+              | StringExpr (Str_content sl) ->
+                (try
+                  list_index_from_string p.listfile p.listzero sl
+                with
+                  | Not_found -> failwith "List string index not found in \"List _ [_]\" expression")
+              | _ -> failwith "Wrong list index in \"List _ [_]\" expression"
+          in
+          let s = p.listzero.(a) in
           let sl = rev_lexlist_to_rev_symblist s true verbose in
           text_screen := true;
           line_feed ();
@@ -253,7 +252,7 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
 
         else
           (* Handle it like a numerical expression *)
-          (let z = eval_num p (Arithm [Entity (Variable (ListIndex (Complex (complex_of_int (a + 1)), Complex j)))]) in
+          (let z = eval_num p (Arithm [Entity (Variable (ListIndex (ea , Complex j)))]) in
           store_ans p.var z;
           last_val := z;
           val_seen := true;
