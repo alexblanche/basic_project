@@ -1,6 +1,6 @@
 # Casio Basic emulator
 
-This project contains an emulator of Casio Basic programs, written on a Casio fx-9750GII (Graph 35+) / fx-9860GII (Graph 75). It aims at emulating the main functionalities of these systems.
+This project contains an emulator of Casio Basic programs written on a Casio fx-9750GII (Graph 35+) / fx-9860GII (Graph 75). It aims at emulating the main functionalities of these systems.
 
 <!-- Early demo, on the games I coded in high school:
 [![](https://markdown-videos-api.jorgenkh.no/youtube/Be-btigfZnY)](https://youtu.be/Be-btigfZnY) -->
@@ -13,8 +13,14 @@ The program receives the name of a G1M or G2M file containing a project (made up
 
 ### How to launch the emulator
 
-For convenience during development, the project is currently interpreted. It will be converted to compiled at a later date, but the main.ml program is temporarily used to launch all the subprograms.
-The program requires the library [OCamlSDL2](https://github.com/fccm/OCamlSDL2) in its latest version (as of october 2023) and [OCamlSDL2_TTF](https://github.com/fccm/OCamlSDL2_TTF).
+- The project can be compiled with the provided makefile:
+```
+$ make
+$ ./basic_emulator filename.g1m
+```
+Alternatively, use ```./basic_emulator --verbose filename.g1m``` to display compilation errors and runtime warnings.
+
+- The project can also be interpreted and run at toplevel (REPL). The ```main.ml``` program launches all the subprograms.
 
 To launch a Casio program in G1M or G2M format:
 ```
@@ -22,24 +28,25 @@ $ ocaml
 #use "src/main.ml";;
 run "[filename].g1m";;
 ```
+Alternatively, use ```run_verbose [filename].g1m``` to display compilation errors and runtime warnings.   
 
-Alternatively, use ```run_verbose [filename].g1m``` to display compilation errors and runtime warnings.
-
+The project requires the library [OCamlSDL2](https://github.com/fccm/OCamlSDL2) in its latest version (as of october 2023) and [OCamlSDL2_TTF](https://github.com/fccm/OCamlSDL2_TTF), and [SDL2](https://www.libsdl.org/) installed.
 To extract a G1M file from a Casio Basic program on a Casio calculator, see [FA-124](https://www.planet-casio.com/Fr/logiciels/voir_un_logiciel_casio.php?showid=16).
 
 ### Keybinds
 
 The keybinds are as follows:
-- Digits, +,-,*,/, Enter: Keypad
-- Arrows: keyboard arrows
-- EXE: Enter or keypad Enter
-- Shift: Left Shift
-- Alpha: Left Ctrl
-- A-Z, Space, "(" ")" ",": letters A-Z, Space, "(" ")" "," 
-- F1-F6: F1-F6
-- DEL: Backspace
-- MENU: Right Shift
-- EXIT: Delete
+| Calculator | Keyboard |
+| ```0 ... 9```, ```+```, ```-```, ```*```, ```/```, ```Enter```| Keypad |
+| ```&uarr; &darr; &larr; &rarr;``` | keyboard arrows |
+| ```EXE```| Enter or keypad Enter |
+| ```Shift``` | Left Shift |
+| ```Alpha``` | Left Ctrl |
+| ```A ... Z```, ```Space```, ```(```, ```)```, ```,``` | letters A-Z, Space, (, ), "," |
+| ```F1 ... F6``` | F1-F6 |
+| ```DEL``` | Backspace |
+| ```MENU``` | Right Shift |
+| ```EXIT``` | Delete |
 
 Esc quits the emulator. Tab speeds up the emulation.
 
