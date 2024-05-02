@@ -28,7 +28,7 @@ run "[filename].g1m";;
 ```
 Alternatively, use ```run_verbose [filename].g1m``` to display compilation errors and runtime warnings.   
 
-The project requires the library [OCamlSDL2](https://github.com/fccm/OCamlSDL2) in its latest version (as of october 2023) and [OCamlSDL2_TTF](https://github.com/fccm/OCamlSDL2_TTF), and [SDL2](https://www.libsdl.org/) installed.  
+The project requires the library [OCamlSDL2](https://github.com/fccm/OCamlSDL2) in its latest version (as of october 2023), [OCamlSDL2_TTF](https://github.com/fccm/OCamlSDL2_TTF) and [SDL2](https://www.libsdl.org/) installed.  
 To extract a G1M file from a Casio Basic program on a Casio calculator, see [FA-124](https://www.planet-casio.com/Fr/logiciels/voir_un_logiciel_casio.php?showid=16).
 
 ### Keybinds
@@ -37,7 +37,7 @@ The keybinds are as follows:
 | Calculator | Keyboard |
 | :-------- | :------- |
 | ```0 ... 9```, ```+```, ```-```, ```*```, ```/```, ```Enter```| Keypad |
-| ```&uarr; &darr; &larr; &rarr;``` | keyboard arrows |
+| ```↑ ↓ ← →``` | keyboard arrows |
 | ```EXE```| Enter or keypad Enter |
 | ```Shift``` | Left Shift |
 | ```Alpha``` | Left Ctrl |
