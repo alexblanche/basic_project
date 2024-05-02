@@ -21,8 +21,6 @@ $ ./basic_emulator filename.g1m
 Alternatively, use ```./basic_emulator --verbose filename.g1m``` to display compilation errors and runtime warnings.
 
 - The project can also be interpreted and run at toplevel (REPL). The ```main.ml``` program launches all the subprograms.
-
-To launch a Casio program in G1M or G2M format:
 ```
 $ ocaml
 #use "src/main.ml";;
@@ -30,13 +28,14 @@ run "[filename].g1m";;
 ```
 Alternatively, use ```run_verbose [filename].g1m``` to display compilation errors and runtime warnings.   
 
-The project requires the library [OCamlSDL2](https://github.com/fccm/OCamlSDL2) in its latest version (as of october 2023) and [OCamlSDL2_TTF](https://github.com/fccm/OCamlSDL2_TTF), and [SDL2](https://www.libsdl.org/) installed.
+The project requires the library [OCamlSDL2](https://github.com/fccm/OCamlSDL2) in its latest version (as of october 2023) and [OCamlSDL2_TTF](https://github.com/fccm/OCamlSDL2_TTF), and [SDL2](https://www.libsdl.org/) installed.  
 To extract a G1M file from a Casio Basic program on a Casio calculator, see [FA-124](https://www.planet-casio.com/Fr/logiciels/voir_un_logiciel_casio.php?showid=16).
 
 ### Keybinds
 
 The keybinds are as follows:
 | Calculator | Keyboard |
+| :-------- | :------- |
 | ```0 ... 9```, ```+```, ```-```, ```*```, ```/```, ```Enter```| Keypad |
 | ```&uarr; &darr; &larr; &rarr;``` | keyboard arrows |
 | ```EXE```| Enter or keypad Enter |
