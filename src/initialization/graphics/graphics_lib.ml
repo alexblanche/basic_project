@@ -3,7 +3,8 @@
 
 
 (* Closes the window win *)
-let close_graph (win : Sdlwindow.t) : unit =
+let close_graph (win : Sdlwindow.t) (ren : Sdlrender.t) : unit =
+	Sdlmissing.destroy_renderer ren;
 	Sdlwindow.destroy win;;
 
 (* Refresh function *)
@@ -439,5 +440,5 @@ let view_matrix (m : bool array array) : unit =
 			| _ -> loop ()
 	in
 	loop ();
-	close_graph win;
+	close_graph win ren;
 	Sdl.quit ();;

@@ -261,7 +261,7 @@ let view_side_by_side (img : image_mat) : bool array array =
       (* Quitting *)
       | Some (Window_Event {kind = WindowEvent_Close})
       | Some (KeyDown {keycode = Escape}) ->
-        (close_graph win;
+        (close_graph win ren;
         (* Output *)
         if fs_mode
           then mono_fs

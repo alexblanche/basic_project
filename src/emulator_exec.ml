@@ -16,7 +16,9 @@ let () =
       )
     | _ ->
       (sdl_quit ();
-      print_endline "Error: wrong arguments";
+      if Array.length Sys.argv <> 1 then
+        print_endline "Error: wrong arguments";
       let exec_name = Filename.basename (Sys.executable_name) in
-      print_endline ("Usage: ./"^exec_name^" file_name.ml or ./"^exec_name^" --verbose file_name.ml"))
+      print_endline ("Usage: ./"^exec_name^" file_name.g1m");
+      print_endline ("or ./"^exec_name^" --verbose file_name.g1m"))
 ;;

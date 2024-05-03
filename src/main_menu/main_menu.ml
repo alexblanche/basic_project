@@ -225,7 +225,7 @@ let main_menu ((code, proglist) : basic_code) (proj : project_content) (content 
   (* Exitting *)
   exit_key_check := true;
   Domain.join key_check_domain;
-  close_graph win;
+  close_graph win ren;
   sdl_quit ();;
 
 

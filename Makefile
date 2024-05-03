@@ -1,5 +1,6 @@
-OPT = @ocamlopt -principal
-FINDOPT = @ocamlfind opt -principal
+OCAMLOPT = @ocamlopt -principal
+OCAMLFINDOPT = @ocamlfind opt -principal
+OCAMLC = @ocamlc -principal
 MKDIR = @mkdir
 PRINT = @echo $<
 
@@ -35,6 +36,7 @@ OBJS = $(BUILDDIR)/graphic_parameters.cmx \
 	$(BUILDDIR)/process_commands.cmx \
 	$(BUILDDIR)/basic_compile.cmx \
 	$(BUILDDIR)/colors.cmx \
+	$(BUILDDIR)/sdlmissing.cmx \
 	$(BUILDDIR)/graphics_lib.cmx \
 	$(BUILDDIR)/float_repr.cmx \
 	$(BUILDDIR)/timer.cmx \
@@ -69,20 +71,35 @@ $(BUILDDIR):
 	$(MKDIR) $@
 
 ###########################################################
+# Compilation of the missing destroy_renderer function
+
+$(BUILDDIR)/sdlmissing_stub.o: sdl_missing/sdlmissing_stub.c sdl_missing/sdlmissing_stub.h | $(BUILDDIR)
+	$(PRINT)
+	$(OCAMLC) -c $< -o $@ \
+		-cclib -lSDL2
+
+
+$(BUILDDIR)/sdlmissing.cmx: sdl_missing/sdlmissing.ml | $(BUILDDIR)
+	$(PRINT)
+	$(OCAMLFINDOPT) -c $< -o $@ \
+		-package sdl2
+
+
+###########################################################
 # Compilation instructions for each file
 
 $(BUILDDIR)/graphic_parameters.cmx: src/initialization/graphics/graphic_parameters.ml | $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -c $< -o $@ \
 		-package sdl2 \
-		-package sdl2_ttf \
+		-package sdl2_ttf
 
 
 $(BUILDDIR)/events.cmx: src/initialization/graphics/events.ml \
 	$(BUILDDIR)/graphic_parameters.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Graphic_parameters
 
@@ -91,7 +108,7 @@ $(BUILDDIR)/key_check.cmx: src/initialization/key_check.ml \
 	$(BUILDDIR)/graphic_parameters.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Sdlkeycode \
 		-open Graphic_parameters
@@ -99,28 +116,28 @@ $(BUILDDIR)/key_check.cmx: src/initialization/key_check.ml \
 
 $(BUILDDIR)/file_reader.cmx: src/initialization/file_readers/file_reader.ml | $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
+	$(OCAMLOPT) -c $< -o $@
 
 
 $(BUILDDIR)/bmp_reader.cmx: src/initialization/file_readers/bmp_reader.ml \
 	$(BUILDDIR)/graphic_parameters.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Graphic_parameters
 
 
 $(BUILDDIR)/complex_type.cmx: src/initialization/types/complex_type.ml | $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
+	$(OCAMLOPT) -c $< -o $@
 
 
 $(BUILDDIR)/arithmetic_types.cmx: src/initialization/types/arithmetic_types.ml \
 	$(BUILDDIR)/complex_type.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Complex_type
 
 
@@ -128,7 +145,7 @@ $(BUILDDIR)/graphic_types.cmx: src/initialization/types/graphic_types.ml \
 	$(BUILDDIR)/arithmetic_types.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Arithmetic_types
 
 
@@ -137,21 +154,21 @@ $(BUILDDIR)/basic_type.cmx: src/initialization/types/basic_type.ml \
 	$(BUILDDIR)/graphic_types.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Arithmetic_types \
 		-open Graphic_types
 
 
 $(BUILDDIR)/locate_format.cmx: src/initialization/encodings/locate_format.ml | $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
+	$(OCAMLOPT) -c $< -o $@
 
 
 $(BUILDDIR)/variables.cmx: src/initialization/variables.ml \
 	$(BUILDDIR)/complex_type.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Complex_type
 
 
@@ -161,7 +178,7 @@ $(BUILDDIR)/project_type.cmx: src/initialization/types/project_type.ml \
 	$(BUILDDIR)/locate_format.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Graphic_types \
 		-open Variables \
 		-open Locate_format
@@ -171,13 +188,13 @@ $(BUILDDIR)/basic_encoding.cmx: src/initialization/encodings/basic_encoding.ml \
 	$(BUILDDIR)/bmp_reader.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Bmp_reader
 
 
 $(BUILDDIR)/command_display.cmx: src/initialization/encodings/command_display.ml | $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
+	$(OCAMLOPT) -c $< -o $@
 
 
 $(BUILDDIR)/g1m_reader.cmx: src/g1m_read_write/g1m_reader.ml \
@@ -186,7 +203,7 @@ $(BUILDDIR)/g1m_reader.cmx: src/g1m_read_write/g1m_reader.ml \
 	$(BUILDDIR)/project_type.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Basic_encoding \
 		-open File_reader \
 		-open Project_type
@@ -196,7 +213,7 @@ $(BUILDDIR)/arithmetic_def.cmx: src/arithmetic/definitions/arithmetic_def.ml \
 	$(BUILDDIR)/complex_type.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Complex_type
 
 
@@ -205,7 +222,7 @@ $(BUILDDIR)/entity_functions.cmx: src/arithmetic/definitions/entity_functions.ml
 	$(BUILDDIR)/arithmetic_types.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Complex_type \
 		-open Arithmetic_types
 
@@ -217,7 +234,7 @@ $(BUILDDIR)/string_func.cmx: src/arithmetic/definitions/string_func.ml \
 	$(BUILDDIR)/locate_format.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Project_type \
 		-open Arithmetic_types \
 		-open Complex_type \
@@ -233,7 +250,7 @@ $(BUILDDIR)/arithmetic_lexing.cmx: src/arithmetic/arithmetic_lexing.ml \
 	$(BUILDDIR)/entity_functions.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Arithmetic_def \
 		-open Arithmetic_types \
 		-open Variables \
@@ -254,7 +271,7 @@ $(BUILDDIR)/arithmetic_evaluation.cmx: src/arithmetic/arithmetic_evaluation.ml \
 	$(BUILDDIR)/arithmetic_lexing.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Arithmetic_types \
 		-open Complex_type \
 		-open Variables \
@@ -270,20 +287,20 @@ $(BUILDDIR)/data_structures.cmx: src/basic_compilation/initialization/data_struc
 	$(BUILDDIR)/basic_type.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Basic_type
 
 
 $(BUILDDIR)/compilation_error.cmx: src/basic_compilation/initialization/compilation_error.ml | $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
+	$(OCAMLOPT) -c $< -o $@
 
 
 $(BUILDDIR)/compile_aux.cmx: src/basic_compilation/compile_aux.ml \
 	$(BUILDDIR)/compilation_error.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Compilation_error
 
 
@@ -298,7 +315,7 @@ $(BUILDDIR)/process_commands.cmx: src/basic_compilation/process_commands.ml \
 	$(BUILDDIR)/complex_type.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Arithmetic_lexing \
 		-open Data_structures \
 		-open Compilation_error \
@@ -323,7 +340,7 @@ $(BUILDDIR)/basic_compile.cmx: src/basic_compilation/basic_compile.ml \
 	$(BUILDDIR)/project_type.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Basic_type \
 		-open Data_structures \
 		-open Compilation_error \
@@ -339,21 +356,27 @@ $(BUILDDIR)/basic_compile.cmx: src/basic_compilation/basic_compile.ml \
 
 $(BUILDDIR)/colors.cmx: src/initialization/graphics/colors.ml | $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
+	$(OCAMLOPT) -c $< -o $@
 
 
 $(BUILDDIR)/graphics_lib.cmx: src/initialization/graphics/graphics_lib.ml \
 	$(BUILDDIR)/colors.cmx \
 	$(BUILDDIR)/graphic_parameters.cmx \
 	$(BUILDDIR)/bmp_reader.cmx \
+	$(BUILDDIR)/sdlmissing_stub.o \
+	$(BUILDDIR)/sdlmissing.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) \
+		sdlmissing_stub.o sdlmissing.cmx -cclib -lSDL2 \
+		 -c $< -o $@ \
 		-package sdl2 \
 		-package sdl2_ttf \
 		-open Colors \
 		-open Graphic_parameters \
-		-open Bmp_reader
+		-open Bmp_reader \
+		-open Sdlmissing
+		
 
 
 $(BUILDDIR)/float_repr.cmx: src/basic_execution/initialization/float_repr.ml \
@@ -361,7 +384,7 @@ $(BUILDDIR)/float_repr.cmx: src/basic_execution/initialization/float_repr.ml \
 	$(BUILDDIR)/locate_format.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-open Complex_type \
 		-open Locate_format
 
@@ -370,21 +393,21 @@ $(BUILDDIR)/timer.cmx: src/basic_execution/initialization/timer.ml \
 	$(BUILDDIR)/key_check.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Key_check
 
 
 $(BUILDDIR)/runtime_error.cmx: src/basic_execution/initialization/runtime_error.ml | $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@
+	$(OCAMLOPT) -c $< -o $@
 
 	
 $(BUILDDIR)/general.cmx: src/basic_execution/graphic_functions/general.ml \
 	$(BUILDDIR)/graphics_lib.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Graphics_lib
 
@@ -399,7 +422,7 @@ $(BUILDDIR)/text_mode.cmx: src/basic_execution/graphic_functions/text_mode.ml \
 	$(BUILDDIR)/locate_format.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Basic_encoding \
 		-open Graphic_parameters \
@@ -423,7 +446,7 @@ $(BUILDDIR)/graphic_mode.cmx: src/basic_execution/graphic_functions/graphic_mode
 	$(BUILDDIR)/locate_format.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Basic_encoding \
 		-open Project_type \
@@ -444,7 +467,7 @@ $(BUILDDIR)/wait_press.cmx: src/basic_execution/graphic_functions/wait_press.ml 
 	$(BUILDDIR)/graphic_mode.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Key_check \
 		-open Graphic_parameters \
@@ -463,7 +486,7 @@ $(BUILDDIR)/menu.cmx: src/basic_execution/graphic_functions/menu.ml \
 	$(BUILDDIR)/graphic_mode.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Graphics_lib \
 		-open Graphic_parameters \
@@ -489,7 +512,7 @@ $(BUILDDIR)/run_aux.cmx: src/basic_execution/auxiliary/run_aux.ml \
 	$(BUILDDIR)/graphic_parameters.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Project_type \
 		-open Arithmetic_types \
@@ -516,7 +539,7 @@ $(BUILDDIR)/qmark.cmx: src/basic_execution/auxiliary/qmark.ml \
 	$(BUILDDIR)/arithmetic_lexing.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Sdlkeycode \
 		-open Arithmetic_types \
@@ -538,7 +561,7 @@ $(BUILDDIR)/fline.cmx: src/basic_execution/auxiliary/graphics/fline.ml \
 	$(BUILDDIR)/project_type.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Graphics_lib \
 		-open Graphic_parameters \
@@ -561,7 +584,7 @@ $(BUILDDIR)/graphic_commands_aux.cmx: src/basic_execution/auxiliary/graphics/gra
 	$(BUILDDIR)/timer.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-package unix \
 		-open Project_type \
@@ -595,7 +618,7 @@ $(BUILDDIR)/execute_graphic_commands.cmx: src/basic_execution/auxiliary/graphics
 	$(BUILDDIR)/arithmetic_types.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-package unix \
 		-open Project_type \
@@ -639,7 +662,7 @@ $(BUILDDIR)/basic_run.cmx: src/basic_execution/basic_run.ml \
 	$(BUILDDIR)/menu.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-package unix \
 		-open Project_type \
@@ -684,7 +707,7 @@ $(BUILDDIR)/main_menu.cmx: src/main_menu/main_menu.ml \
 	$(BUILDDIR)/basic_compile.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Text_mode \
 		-open Graphics_lib \
@@ -709,7 +732,7 @@ $(BUILDDIR)/emulator_exec.cmx: src/emulator_exec.ml \
 	$(BUILDDIR)/graphic_parameters.cmx \
 	| $(BUILDDIR)
 	$(PRINT)
-	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
+	$(OCAMLFINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-open Main_menu \
 		-open Graphic_parameters
@@ -717,8 +740,9 @@ $(BUILDDIR)/emulator_exec.cmx: src/emulator_exec.ml \
 # Emulator executable
 $(EXEC_EMULATOR): $(OBJS)
 	@echo $(EXEC_EMULATOR)
-	$(FINDOPT) -o $(EXEC_EMULATOR) $(OBJS) \
+	$(OCAMLFINDOPT) -o $(EXEC_EMULATOR) $(OBJS) \
 		-package unix \
 		-package sdl2 \
 		-package sdl2_ttf \
-		-linkpkg
+		-linkpkg \
+		$(BUILDDIR)/sdlmissing_stub.o -cclib -lSDL2
