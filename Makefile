@@ -76,7 +76,6 @@ $(BUILDDIR)/graphic_parameters.cmx: src/initialization/graphics/graphic_paramete
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-package sdl2_ttf \
-		-linkpkg
 
 
 $(BUILDDIR)/events.cmx: src/initialization/graphics/events.ml \
@@ -85,7 +84,6 @@ $(BUILDDIR)/events.cmx: src/initialization/graphics/events.ml \
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Graphic_parameters
 
 
@@ -95,7 +93,6 @@ $(BUILDDIR)/key_check.cmx: src/initialization/key_check.ml \
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Sdlkeycode \
 		-open Graphic_parameters
 
@@ -111,7 +108,6 @@ $(BUILDDIR)/bmp_reader.cmx: src/initialization/file_readers/bmp_reader.ml \
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Graphic_parameters
 
 
@@ -355,7 +351,6 @@ $(BUILDDIR)/graphics_lib.cmx: src/initialization/graphics/graphics_lib.ml \
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-package sdl2_ttf \
-		-linkpkg \
 		-open Colors \
 		-open Graphic_parameters \
 		-open Bmp_reader
@@ -377,7 +372,6 @@ $(BUILDDIR)/timer.cmx: src/basic_execution/initialization/timer.ml \
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Key_check
 
 
@@ -392,7 +386,6 @@ $(BUILDDIR)/general.cmx: src/basic_execution/graphic_functions/general.ml \
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Graphics_lib
 
 
@@ -408,7 +401,6 @@ $(BUILDDIR)/text_mode.cmx: src/basic_execution/graphic_functions/text_mode.ml \
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Basic_encoding \
 		-open Graphic_parameters \
 		-open Graphics_lib \
@@ -433,7 +425,6 @@ $(BUILDDIR)/graphic_mode.cmx: src/basic_execution/graphic_functions/graphic_mode
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Basic_encoding \
 		-open Project_type \
 		-open Variables \
@@ -455,7 +446,6 @@ $(BUILDDIR)/wait_press.cmx: src/basic_execution/graphic_functions/wait_press.ml 
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Key_check \
 		-open Graphic_parameters \
 		-open Text_mode \
@@ -475,7 +465,6 @@ $(BUILDDIR)/menu.cmx: src/basic_execution/graphic_functions/menu.ml \
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Graphics_lib \
 		-open Graphic_parameters \
 		-open Text_mode \
@@ -502,7 +491,6 @@ $(BUILDDIR)/run_aux.cmx: src/basic_execution/auxiliary/run_aux.ml \
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Project_type \
 		-open Arithmetic_types \
 		-open Variables \
@@ -530,7 +518,6 @@ $(BUILDDIR)/qmark.cmx: src/basic_execution/auxiliary/qmark.ml \
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Sdlkeycode \
 		-open Arithmetic_types \
 		-open Wait_press \
@@ -553,7 +540,6 @@ $(BUILDDIR)/fline.cmx: src/basic_execution/auxiliary/graphics/fline.ml \
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Graphics_lib \
 		-open Graphic_parameters \
 		-open Graphic_types \
@@ -578,7 +564,6 @@ $(BUILDDIR)/graphic_commands_aux.cmx: src/basic_execution/auxiliary/graphics/gra
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-package unix \
-		-linkpkg \
 		-open Project_type \
 		-open Arithmetic_types \
 		-open Graphic_mode \
@@ -613,7 +598,6 @@ $(BUILDDIR)/execute_graphic_commands.cmx: src/basic_execution/auxiliary/graphics
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-package unix \
-		-linkpkg \
 		-open Project_type \
 		-open Graphic_types \
 		-open Arithmetic_evaluation \
@@ -658,7 +642,6 @@ $(BUILDDIR)/basic_run.cmx: src/basic_execution/basic_run.ml \
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
 		-package unix \
-		-linkpkg \
 		-open Project_type \
 		-open Basic_type \
 		-open Complex_type \
@@ -703,7 +686,6 @@ $(BUILDDIR)/main_menu.cmx: src/main_menu/main_menu.ml \
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Text_mode \
 		-open Graphics_lib \
 		-open G1m_reader \
@@ -729,7 +711,6 @@ $(BUILDDIR)/emulator_exec.cmx: src/emulator_exec.ml \
 	$(PRINT)
 	$(FINDOPT) -I $(BUILDDIR) -c $< -o $@ \
 		-package sdl2 \
-		-linkpkg \
 		-open Main_menu \
 		-open Graphic_parameters
 

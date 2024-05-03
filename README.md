@@ -66,6 +66,9 @@ Do not hesitate to open an issue if you encounter an error when running a progra
 This project also contains:
 - A graphical interface to draw and modify monochromatic images
 - BMP image conversion to monochromatic image through the Floyd-Steinberg dithering algorithm or the simple threshold algorithm
+
+<img src="https://github.com/alexblanche/basic_project/blob/main/data/mono_conv.jpg" width="80%">
+
 - A general G1M/G2M file reader/writer: extraction/generation of all types of objects (programs, lists, matrices, pictures, captures, strings) from/into a G1M file that can then be transfered to a Casio calculator
 
 These tools are present but no interface has been added yet. I will implement one in the future.
