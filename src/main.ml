@@ -1,7 +1,5 @@
-(* Temporary main function *)
-(* Launches all the programs in order *)
-
-(* To be replaced by a makefile *)
+(* Main program for interactive mode *)
+(* Launches all the programs in order of dependency *)
 
 #use "topfind"
 #require "sdl2"
@@ -44,6 +42,7 @@
 
 (** Emulation **)
 #use "src/initialization/graphics/colors.ml"
+let destroy_renderer ren = ();;
 #use "src/initialization/graphics/graphics_lib.ml"
 #use "src/basic_execution/initialization/float_repr.ml"
 #use "src/basic_execution/initialization/timer.ml"

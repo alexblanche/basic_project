@@ -2,4 +2,4 @@
   I do the binding myself here. *)
 
 external destroy_renderer : Sdlrender.t -> unit
-= "caml_SDL_DestroyRenderer"
+  = "caml_SDL_DestroyRenderer"

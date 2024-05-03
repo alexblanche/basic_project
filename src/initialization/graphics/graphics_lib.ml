@@ -4,7 +4,7 @@
 
 (* Closes the window win *)
 let close_graph (win : Sdlwindow.t) (ren : Sdlrender.t) : unit =
-	Sdlmissing.destroy_renderer ren;
+	(* Sdlmissing. *)destroy_renderer ren;
 	Sdlwindow.destroy win;;
 
 (* Refresh function *)
