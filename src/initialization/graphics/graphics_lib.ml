@@ -1,7 +1,6 @@
 (* Creation and manipulation of 64*128 monochrome pictures *)
 (* Uses SDL2 and SDL2_TTF libraries *)
 
-
 (* Closes the window win *)
 let close_graph (win : Sdlwindow.t) (ren : Sdlrender.t) : unit =
 	(* Sdlmissing. *)destroy_renderer ren;
@@ -383,7 +382,7 @@ let config (grid : bool) (bg : Sdlrender.t -> unit) : Sdlwindow.t * Sdlrender.t 
 			~title:"Basic Project Inferface"
 			~pos:(`pos 400, `pos 200)
 			~dims:(2 * !margin_h + !width, 2 * !margin_v + !height)
-			~flags:[]
+			~flags:[Resizable]
 	in
 	let renderer =
 		Sdlrender.create_renderer ~win:window ~index:0 ~flags:[]

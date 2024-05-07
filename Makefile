@@ -739,8 +739,8 @@ $(BUILDDIR)/emulator_exec.cmx: src/emulator_exec.ml \
 
 # Emulator executable
 $(EXEC_EMULATOR): $(OBJS)
-	@echo $(EXEC_EMULATOR)
-	$(OCAMLFINDOPT) -o $(EXEC_EMULATOR) $(OBJS) \
+	@echo $@
+	$(OCAMLFINDOPT) -o $@ $(OBJS) \
 		-package unix \
 		-package sdl2 \
 		-package sdl2_ttf \

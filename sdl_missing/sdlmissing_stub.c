@@ -8,8 +8,7 @@
 #include "sdlmissing_stub.h"
 
 CAMLprim value
-caml_SDL_DestroyRenderer(value renderer)
-{
+caml_SDL_DestroyRenderer(value renderer) {
     SDL_DestroyRenderer(SDL_Renderer_val(renderer));
     return Val_unit;
 }
