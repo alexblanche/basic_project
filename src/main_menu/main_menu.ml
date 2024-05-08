@@ -136,10 +136,8 @@ let main_menu ((code, proglist) : basic_code) (proj : project_content) (content 
   set_color ren colors.pixels;
   getkey := 0;
   key_pressed := Sdlkeycode.Unknown;
-  
 
   let n = Array.length entries in
-
 
   let rec prog_select_loop (pindex : int) (highest : int) : int =
     (* Window closed *)
