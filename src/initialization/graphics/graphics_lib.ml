@@ -382,10 +382,10 @@ let config (grid : bool) (bg : Sdlrender.t -> unit) : Sdlwindow.t * Sdlrender.t 
 			~title:"Basic Project Inferface"
 			~pos:(`pos 400, `pos 200)
 			~dims:(2 * !margin_h + !width, 2 * !margin_v + !height)
-			~flags:[Resizable]
+			~flags:[Sdlwindow.Resizable]
 	in
 	let renderer =
-		Sdlrender.create_renderer ~win:window ~index:0 ~flags:[]
+		Sdlrender.create_renderer ~win:window ~index:(-1) ~flags:[]
 	in
 	Sdlrender.set_draw_blend_mode renderer SdlblendMode.BNone;
 	
