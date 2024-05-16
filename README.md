@@ -2,12 +2,15 @@
 
 This project contains an emulator of Casio Basic programs written on a Casio fx-9750GII (Graph 35+) / fx-9860GII (Graph 75). It aims at emulating the main functionalities of these systems.
 
-Video demo, on games I coded in high school:  
+Video demo on YouTube, on games I coded in high school:  
 
 <!-- [![](https://markdown-videos-api.jorgenkh.no/youtube/lWjqz2yUfag)](https://youtu.be/lWjqz2yUfag) -->
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=lWjqz2yUfag
-" target="_blank"><img src="https://github.com/alexblanche/basic_project/blob/main/data/screen.png" 
-alt="" width="80%" border="auto" /></a>
+<div align="center">
+	<a href="http://www.youtube.com/watch?feature=player_embedded&v=lWjqz2yUfag" target="_blank">
+        <img src="https://github.com/alexblanche/basic_project/blob/main/data/screen.png" alt="View on YouTube" width="80%" />
+    </a>
+</div>
+
 
 <!-- ![Screen](https://github.com/alexblanche/basic_project/blob/main/data/screen.png) -->
 
