@@ -469,10 +469,13 @@ and shunting_yard (p : parameters) (alist : arithm list) (output_q : entity list
     | Rpar :: (Lunop _) :: _, _
     | Rpar :: (Function _) :: _, _ -> shunting_yard p (Rpar::(Op "OMITTEDTIMES")::List.tl alist) output_q op_q
     | (Entity x1)::(Entity _)::_, _
-    | (Entity x1):: Lpar ::_, _
     | (Entity x1)::(Lunop _)::_, _
     | (Entity x1)::(Function _)::_, _ -> shunting_yard p ((Op "OMITTEDTIMES")::List.tl alist) (x1::output_q) op_q
-    (* Normal number case *)
+
+    (* Weak omitted TIMES: has a slightly lesser precedence than OMITTEDTIMES (used to treat the "GH case", see tests/tests_arithmetic.ml) *)
+    | (Entity x) :: Lpar :: _, _ -> shunting_yard p ((Op "WEAKOMTIMES")::List.tl alist) (x::output_q) op_q
+    
+      (* Normal number case *)
     | (Entity x)::t, _ -> shunting_yard p t (x::output_q) op_q
     (* Lpar *)
     | Lpar::t, _ -> shunting_yard p t output_q (Lpar::op_q)

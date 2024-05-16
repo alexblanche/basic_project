@@ -104,7 +104,7 @@ let unit_tests_lexer () =
       ]);
 
     (["DIM"; "LIST"; "2"; "5"; "EQUAL"; "1"],
-      [Lunop ("DIM", false); Entity (VarList (Value {Complex.re = 25.; im = 0.}));
+      [Lunop ("DIM", false); Entity (VarList (Arithm [Entity (Value  {Complex.re = 25.; im = 0.})]));
         Op "EQUAL"; Entity (Value {Complex.re = 1.; im = 0.})]);
     ];
     print_endline "-----------------------------------------";
@@ -124,6 +124,8 @@ let unit_tests_eval_num () =
   set_var p.var 0 (complex_of_float 10.);
   (* 3+4i -> B *)
   set_var p.var 1 (get_complex 3. 4.);
+  (* 2 -> C *)
+  set_var p.var 2 (complex_of_float 2.);
   (* List 1 *)
   p.list.(0) <- [| 5.; 2.; 3.; 1. |];
 
@@ -256,6 +258,13 @@ let unit_tests_eval_num () =
     (["1"; "0"; "POWER"; "LPAR"; "2"; "RPAR"; "A"], {re = 1000.; im = 0.});
     (["8"; "DIVIDED"; "LPAR"; "2"; "RPAR"; "LPAR"; "4"; "RPAR"], {re = 1.; im = 0.});
     (["8"; "DIVIDED"; "LPAR"; "2"; "RPAR"; "TIMES"; "LPAR"; "4"; "RPAR"], {re = 16.; im = 0.});
+
+    (* More omitted product edge cases ("GH case"), WEAKOMTIMES *)
+    (["NOT"; "0"; "LPAR"; "0"], {re = 0.; im = 0.});
+    (["INT"; "2"; "."; "6"; "LPAR"; "A"], {re = 20.; im = 0.});
+    (["INT"; "2"; "."; "6"; "A"], {re = 26.; im = 0.});
+    (["INT"; "2"; "."; "6"; "C"; "LPAR"; "A"], {re = 50.; im = 0.});
+    (["INT"; "2"; "."; "6"; "C"; "A"], {re = 52.; im = 0.});
 
     (* Accuracy of Frac *)
     (["FRAC"; "1"; "5"; "4"; "."; "6"; "7"; "8"], {re = 0.678; im = 0.});
