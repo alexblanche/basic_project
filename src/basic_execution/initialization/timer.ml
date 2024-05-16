@@ -3,7 +3,7 @@
 (* If this condition is false, the sleepf functions are not called
   (i.e. the emulator runs as fast as possible) *)
 let slowdown_condition () =
-  !key_pressed <> Sdlkeycode.Tab;;
+  not !speed_up;;
 
 type timer_constants =
 {

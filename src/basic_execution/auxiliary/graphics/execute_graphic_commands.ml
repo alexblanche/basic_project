@@ -40,8 +40,7 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic)
         done;
         let p_index = int_of_complex z - 1 in
         p.pict.(p_index) <- (2048, m);
-        refresh_update ren p false;
-        (* It the updated Pict was the BGPict, update at the next drawing *)
+        (* If the updated Pict was the BGPict, update at the next drawing *)
         if p.bgpict = p_index then
           background_changed := true)
       else graphic_fail i  "Wrong index for StoPict command"
@@ -49,16 +48,22 @@ let apply_graphic (ren : Sdlrender.t) (p : parameters) (i : int) (g : graphic)
     | Graphic_Function ("BGPICT", [e]) ->
       let z = eval_num p e in
       if is_int z && z.re >= 1. && z.re <= 20. then
-        p.bgpict <- int_of_complex z - 1
-        (* In Casio Basic, some display after BGPict does NOT feature the background pict. *)
-        (* let (bgpict_size, m) = p.pict.(p.bgpict) in
-        (if bgpict_size >= 1024 then
+        (p.bgpict <- int_of_complex z - 1;
+        (* /!\ Observation:
+           On the calculator, display after BGPict does NOT feature the background pict.
+         *)
+        (**********
+        let (bgpict_size, m) = p.pict.(p.bgpict) in
+        if bgpict_size >= 1024 then
           for b = 0 to 63 do
             for a = 0 to 127 do
               bgscreen.(b).(a) <- m.(b).(a) || bgscreen.(b).(a)
             done
-          done); *)
-        (* background_changed := true) *)
+          done;
+        background_changed := true
+        **********)
+        refresh_update ren p !text_screen
+        )
       else graphic_fail i  "Wrong index for BGPict command"
 
     | Graphic_Function ("RCLCAPT", [e]) ->

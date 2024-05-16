@@ -211,7 +211,8 @@ let main_menu ((code, proglist) : basic_code) (proj : project_content) (content 
         | Invalid_argument s
         | Failure s -> (print_string "Runtime failure: "; print_endline s)
         | Not_found -> print_endline "Runtime error: Not_found");
-      menu_loop ())
+        if not !exit_key_check then
+          menu_loop ())
   in
   
   (* Running the menu loop *)

@@ -15,6 +15,8 @@ let getkey = ref 0;;
 (* Contains the key pressed (type Sdlkeycode.t) *)
 let key_pressed = ref Sdlkeycode.Unknown;;
 
+(* Speedup variable: true when Tab is pressed *)
+let speed_up = ref false;;
 
 (* Getkey values *)
 (* Returns the Getkey value of the given key, as observerd on a Casio calculator *)
@@ -90,15 +92,20 @@ let rec key_check () =
         (getkey := get_getkey_val key;
         key_pressed := key);
       key_check ()) *)
-      (getkey := get_getkey_val key;
-      key_pressed := key;
+      (if key = Sdlkeycode.Tab then
+        speed_up := true
+      else
+        (getkey := get_getkey_val key;
+        key_pressed := key);
       key_check ())
 
 
     | Some (KeyUp {keycode = key}) ->
       (if key = !key_pressed then
         (getkey := 0;
-        key_pressed := Unknown);
+        key_pressed := Unknown)
+      else if key = Sdlkeycode.Tab then
+        speed_up := false;
       key_check ())
     
     (* | Some Controller_Button_Down -> (print_endline "Controller button down"; key_check ())
