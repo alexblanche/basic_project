@@ -7,7 +7,8 @@ Video demo on YouTube, on games I coded in high school:
 <!-- [![](https://markdown-videos-api.jorgenkh.no/youtube/lWjqz2yUfag)](https://youtu.be/lWjqz2yUfag) -->
 <div align="center">
 	<a href="http://www.youtube.com/watch?feature=player_embedded&v=lWjqz2yUfag" target="_blank">
-        <img src="https://github.com/alexblanche/basic_project/blob/main/data/screen.png" alt="View on YouTube" width="80%" />
+        <img src="https://github.com/alexblanche/basic_project/blob/main/data/screen.png"
+            alt="https://youtu.be/lWjqz2yUfag" width="80%" />
     </a>
 </div>
 

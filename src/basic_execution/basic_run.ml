@@ -60,10 +60,11 @@ let run_program (win : Sdlwindow.t) (ren : Sdlrender.t)
 
     (* Debug, display of variable content *)
     (* (try
-      print_endline ("Z = "^(string_of_float (access_real_var p.var 25)));
-      let z = eval_num p (let e,_ = extract_expr ["DIM"; "LIST"; "ANS"] in e) in
+      (* print_endline ("Y = "^(string_of_float (access_real_var p.var 24))); *)
+      (* let z = eval_num p (let e,_ = extract_expr ["DIM"; "LIST"; "ANS"] in e) in
       print_string ("Dim List Ans = "^(string_of_float (z.re)));
-      print_newline ();
+      print_newline (); *)
+      ()
     with
       | _ -> ()); *)
 

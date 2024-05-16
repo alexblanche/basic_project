@@ -138,14 +138,16 @@ let disp_graphic (ren : Sdlrender.t) (is_not_the_end : bool) : unit =
 
 (** Displaying of long strings **)
 
-(* Handles the display of strings of length 21 < len < 21*7 symbols *)
+(* Handles the display of strings of length 21 <= len < 21*7 symbols *)
 let display_long_string (sl : string list) : unit =
   let rec aux sl =
     match split_k sl 21 with
       | [], _ -> ()
       | slk, [] ->
         (locate_no_refresh slk 0 !writing_index;
-        if List.length slk = 21
+        (* When the string takes the whole line, a line is skipped,
+           except when it is the lowest line of the tscreen *)
+        if List.length slk = 21 && !writing_index <> 6
           then line_feed ())
       | slk, slnk ->
         (locate_no_refresh slk 0 !writing_index;
