@@ -6,8 +6,8 @@ Video demo, on games I coded in high school:
 
 <!-- [![](https://markdown-videos-api.jorgenkh.no/youtube/lWjqz2yUfag)](https://youtu.be/lWjqz2yUfag) -->
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=lWjqz2yUfag
-" target="_blank"><img src="http://img.youtube.com/vi/lWjqz2yUfag/0.jpg" 
-alt="" width="80%" /></a>
+" target="_blank"><img src="https://github.com/alexblanche/basic_project/blob/main/data/screen.png" 
+alt="" width="80%" border="auto" /></a>
 
 <!-- ![Screen](https://github.com/alexblanche/basic_project/blob/main/data/screen.png) -->
 
