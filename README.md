@@ -1,6 +1,7 @@
 # Casio Basic emulator
 
-This project contains an emulator that replicates the execution of Casio Basic programs on Casio fx-9750GII (Graph 35+) / fx-9860GII (Graph 75) calculators. It only emulates the behavior of these systems, not the hardware. See the <a href= "https://youtu.be/lWjqz2yUfag">demo on YouTube</a>, running games I coded in high school (available in the ```games``` folder).  
+This project contains an emulator that replicates the execution of Casio Basic programs on Casio fx-9750GII (Graph 35+) / fx-9860GII (Graph 75) calculators. It only emulates the behavior of these systems, not the hardware.  
+See the <a href= "https://youtu.be/lWjqz2yUfag">demo on YouTube</a>, running games I coded in high school (available in the ```games``` folder).  
 
 <!-- [![](https://markdown-videos-api.jorgenkh.no/youtube/lWjqz2yUfag)](https://youtu.be/lWjqz2yUfag) -->
 <div align="center">
@@ -58,13 +59,14 @@ Esc quits the emulator. Tab speeds up the emulation.
 ## Remarks
 - The emulated Casio models are fx-9750GII (Graph 35+) / fx-9860GII (Graph 75). More modern models are not handled, and the compatibility with older models is not guaranteed.
 - Only the main functionalities are implemented, some programs may not be supported or run as expected.
-- Supported functionalities include: arithmetic (including complex numbers, list and matrix arithmetic, string functions), string display (including Locate), graphic display (PlotOn, F-Line, DrawStat), picture and capture dispay (RclPict, RclCapt, StoPict, BGPict), "?", menu.
+- Supported functionalities include: arithmetic (including complex numbers, list and matrix arithmetic, string functions), string display (including Locate, all characters supported), graphic display (DrawStat, Text, PlotOn/Off, PixelOn/Off, F-Line, GraphY>, ...), picture and capture display (RclPict, RclCapt, StoPict, BGPict), "?", menu.
+- The emulator features a robust arithmetic expression evaluator, accurate to the emulated models' behavior. In a ViewWindow of size 127x63, the graphic functions are pixel-perfect.
 
 ### Games tested
 
 The emulator was tested on the games I coded in 2011-2013, which can all be found on [Planet Casio](https://www.planet-casio.com/): [Timeless](https://www.planet-casio.com/Fr/programmes/programme2007-1-timeless-alex-1186-jeux-reflexion.html), [Timeless Remix](https://www.planet-casio.com/Fr/programmes/programme2228-last-timeless-remix-alex-1186-jeux-reflexion.html), [Super Run & Jump](https://www.planet-casio.com/Fr/programmes/programme2156-1-super-run-jump-alex-1186-jeux-actionsport.html), [Ace Combat](https://www.planet-casio.com/Fr/programmes/programme1960-1-ace-combat-alex-1186-jeux-directiontir.html), [Airwolf](https://www.planet-casio.com/Fr/programmes/programme2240-1-airwolf-alex-1186-jeux-directiontir.html), and the great [CloneLab](https://www.planet-casio.com/Fr/programmes/programme1984-1-clonelab-ne0tux-jeux-reflexion.html) by Ne0tux. The games I coded are also available in the ```games``` folder.
 
-Do not hesitate to open an issue if you encounter an error when running a program (highly probable), or if the program does not open the G1M file (even more probable).
+Do not hesitate to open an issue if you encounter an error when running a program (highly probable), or if a G1M file cannot be read.
 
 
 # Other tools
@@ -77,9 +79,3 @@ This project also contains:
 - A general G1M/G2M file reader/writer: extraction/generation of all types of objects (programs, lists, matrices, pictures, captures, strings) from/into a G1M file that can then be transfered to a Casio calculator
 
 These tools are present but no interface has been added yet. I will implement one in the future.
-
-
-## To come next
-- A converter from abstract Basic code to readable "Custom Basic" code
-- A lexer of Custom Basic into a list of lexemes, that can then be handled by the emulator
-- A Picture edition general interface, that opens BMP files and writes G1M files

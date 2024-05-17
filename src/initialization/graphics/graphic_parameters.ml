@@ -48,7 +48,16 @@ let update_parameters (new_width : int) (new_height : int) : unit =
   height := 64 * !size;
   margin_h := (new_width - !width)/2;
   margin_v := (new_height - !height)/2;
-  parameters_updated := true;;
+  parameters_updated := true;
+  
+  (*** Test for alternative resize method (see config in graphics_lib.ml) ***
+  size := 1;
+  width := 128 * !size;
+  height := 64 * !size;
+  margin_h := 1;
+  margin_v := 1;
+  ***************************************************************************)
+  ();;
 
 (* Parameters initialization *)
-update_parameters (!width+2*40) (!height+2*40);;
+update_parameters (!width + 2*40) (!height + 2*40);;

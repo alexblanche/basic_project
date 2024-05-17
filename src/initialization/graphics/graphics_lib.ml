@@ -385,9 +385,15 @@ let config (grid : bool) (bg : Sdlrender.t -> unit) : Sdlwindow.t * Sdlrender.t 
 			~flags:[Sdlwindow.Resizable]
 	in
 	let renderer =
-		Sdlrender.create_renderer ~win:window ~index:(-1) ~flags:[]
+		Sdlrender.create_renderer ~win:window ~index:(-1) ~flags:[Sdlrender.Accelerated]
 	in
 	Sdlrender.set_draw_blend_mode renderer SdlblendMode.BNone;
+
+	(*** Test for alternative resize method ***
+	(* More robust, lighter on the CPU, but does not allow for the 1-pixel frame *)
+	Sdlrender.set_logical_size renderer (128 + 2 + 2 * 1, 64 + 2 + 2 * 1);
+	Sdlrender.set_scale renderer (13., 13.);
+	*******************************************)
 	
 	print_bg renderer grid bg;
 	refresh renderer;
