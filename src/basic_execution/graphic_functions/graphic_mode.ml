@@ -10,7 +10,7 @@
   If the Picture is compressed, the following Pictures are printed until the number of bytes printed reach
   2048.
   
-  This does not enable tweaking of Picture behavior (to my knowledge unseen as I type these lines), such as:
+  This does not allow tweaking of Picture behavior (to my knowledge unseen as I type these lines), such as:
   - Pict 1 contains image A (1024 bytes), Pict 10 contains a blank screen (1024 bytes) and image B (1024 bytes),
     RclPict 1 draws image A, RclPict 10 draws image B, {Pict 1, 10} take up 3*1024 bytes, instead of 4*1024 normally *)
 

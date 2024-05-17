@@ -1,8 +1,6 @@
 # Casio Basic emulator
 
-This project contains an emulator of Casio Basic programs written on a Casio fx-9750GII (Graph 35+) / fx-9860GII (Graph 75). It aims at emulating the main functionalities of these systems.
-
-Video demo on YouTube, on games I coded in high school:  
+This project contains an emulator that replicates the execution of Casio Basic programs on Casio fx-9750GII (Graph 35+) / fx-9860GII (Graph 75) calculators. It only emulates the behavior of these systems, not the hardware.  
 
 <!-- [![](https://markdown-videos-api.jorgenkh.no/youtube/lWjqz2yUfag)](https://youtu.be/lWjqz2yUfag) -->
 <div align="center">
@@ -11,6 +9,10 @@ Video demo on YouTube, on games I coded in high school:
             alt="https://youtu.be/lWjqz2yUfag" width="80%" />
     </a>
 </div>
+<a href= "https://youtu.be/lWjqz2yUfag">Video demo on YouTube</a>, running games I coded in high school   
+
+<iframe width="80%" src="https://www.youtube.com/embed/lWjqz2yUfag?si=MdGfMF1XBXVXZeGe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
+</iframe>
 
 
 <!-- ![Screen](https://github.com/alexblanche/basic_project/blob/main/data/screen.png) -->
@@ -21,7 +23,7 @@ The program receives the name of a G1M or G2M file containing a project (made up
 
 ### How to launch the emulator
 
-- The project can be compiled with the provided makefile:
+- On Linux, the project can be compiled with the provided makefile:
 ```
 $ make
 $ ./basic_emulator filename.g1m
@@ -64,7 +66,7 @@ Esc quits the emulator. Tab speeds up the emulation.
 
 ### Games tested
 
-The emulator was tested on the games I coded in 2011-2013, which can all be found on [Planet Casio](https://www.planet-casio.com/): [Timeless](https://www.planet-casio.com/Fr/programmes/programme2007-1-timeless-alex-1186-jeux-reflexion.html), [Timeless Remix](https://www.planet-casio.com/Fr/programmes/programme2228-last-timeless-remix-alex-1186-jeux-reflexion.html), [Super Run & Jump](https://www.planet-casio.com/Fr/programmes/programme2156-1-super-run-jump-alex-1186-jeux-actionsport.html), [Ace Combat](https://www.planet-casio.com/Fr/programmes/programme1960-1-ace-combat-alex-1186-jeux-directiontir.html), [Airwolf](https://www.planet-casio.com/Fr/programmes/programme2240-1-airwolf-alex-1186-jeux-directiontir.html), and the great [CloneLab](https://www.planet-casio.com/Fr/programmes/programme1984-1-clonelab-ne0tux-jeux-reflexion.html) by Ne0tux.
+The emulator was tested on the games I coded in 2011-2013, which can all be found on [Planet Casio](https://www.planet-casio.com/): [Timeless](https://www.planet-casio.com/Fr/programmes/programme2007-1-timeless-alex-1186-jeux-reflexion.html), [Timeless Remix](https://www.planet-casio.com/Fr/programmes/programme2228-last-timeless-remix-alex-1186-jeux-reflexion.html), [Super Run & Jump](https://www.planet-casio.com/Fr/programmes/programme2156-1-super-run-jump-alex-1186-jeux-actionsport.html), [Ace Combat](https://www.planet-casio.com/Fr/programmes/programme1960-1-ace-combat-alex-1186-jeux-directiontir.html), [Airwolf](https://www.planet-casio.com/Fr/programmes/programme2240-1-airwolf-alex-1186-jeux-directiontir.html), and the great [CloneLab](https://www.planet-casio.com/Fr/programmes/programme1984-1-clonelab-ne0tux-jeux-reflexion.html) by Ne0tux. The games I coded are also available in the ```games``` folder.
 
 Do not hesitate to open an issue if you encounter an error when running a program (highly probable), or if the program does not open the G1M file (even more probable).
 
