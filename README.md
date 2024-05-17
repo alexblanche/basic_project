@@ -1,6 +1,6 @@
 # Casio Basic emulator
 
-This project contains an emulator that replicates the execution of Casio Basic programs on Casio fx-9750GII (Graph 35+) / fx-9860GII (Graph 75) calculators. It only emulates the behavior of these systems, not the hardware.  
+This project contains an emulator that replicates the execution of Casio Basic programs on Casio fx-9750GII (Graph 35+) / fx-9860GII (Graph 75) calculators. It only emulates the behavior of these systems, not the hardware. See the <a href= "https://youtu.be/lWjqz2yUfag">demo on YouTube</a>, running games I coded in high school (available in the ```games``` folder).  
 
 <!-- [![](https://markdown-videos-api.jorgenkh.no/youtube/lWjqz2yUfag)](https://youtu.be/lWjqz2yUfag) -->
 <div align="center">
@@ -9,13 +9,9 @@ This project contains an emulator that replicates the execution of Casio Basic p
             alt="https://youtu.be/lWjqz2yUfag" width="80%" />
     </a>
 </div>
-<a href= "https://youtu.be/lWjqz2yUfag">Video demo on YouTube</a>, running games I coded in high school   
-
-<iframe width="80%" src="https://www.youtube.com/embed/lWjqz2yUfag?si=MdGfMF1XBXVXZeGe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
-</iframe>
-
 
 <!-- ![Screen](https://github.com/alexblanche/basic_project/blob/main/data/screen.png) -->
+
 
 ## How it works
 
